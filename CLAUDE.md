@@ -35,13 +35,15 @@ Postgres holds desired state; the gateway reconciles the firewall from it
 every 15s. The admin dashboard (dashboard/server.mjs) binds the tailnet on
 the HOST, outside the island. bin/kidnet is the CLI the agent drives.
 
-bin/ holds sixteen scripts: kidnet (the control surface), kidnet-report
-(the weekly digest), kidnet-quiz (the learn-to-earn bank manager) and thirteen
-background workers driven by systemd timers.
+bin/ holds seventeen scripts: kidnet (the control surface), kidnet-report
+(the weekly digest), kidnet-quiz (the learn-to-earn bank manager),
+kidnet-quiz-suggest (the evidence briefing for writing new banks, which calls
+no AI service) and thirteen background workers driven by systemd timers.
 deploy.sh installs fourteen of them and enables six timers; the seventh,
 kids-iot-policy.timer, is installed but left disabled because the household
 IoT policy is switched on deliberately (docs/HOUSEHOLD-SECURITY.md).
-kidnet-report is run from the repo. docs/CLI.md is the reference.
+kidnet-report, kidnet-quiz and kidnet-quiz-suggest are run from the repo.
+docs/CLI.md is the reference.
 
 ## Iron rules
 

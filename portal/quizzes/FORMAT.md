@@ -123,22 +123,57 @@ have: flat random sampling, no ramp. Nothing needs to be backfilled.
 
 ## Anti-grind rules (server-enforced, NOT in this file)
 
-The file format stays static. The server enforces:
+The file format stays static. The server enforces the rules below, and the
+numbers in brackets are the defaults. All three are settable per household and
+overridable per child on the dashboard's Learn to earn screen, under **The
+rules of earning** (`earn_settings`, `config/db/schema-quizbanks.sql`). A bank
+file never carries them, because they are a household's call and not a bank
+author's.
 
 1. **Cooldown per bank.** After a round (pass or fail), that bank locks
-   for a cooldown (recommended: 6 hours, or once per day per bank). No
-   retry-spamming until the right answers fall out.
+   for a cooldown (6 hours). No retry-spamming until the right answers
+   fall out.
 2. **Daily earn cap.** Total quiz earnings per kid per day are capped
-   (recommended: 30 minutes) regardless of how many banks they pass.
-   The portal shows progress toward the cap, and hitting it is framed as
-   "maxed out for today, nice work", never as a penalty.
+   (30 minutes) regardless of how many banks they pass. The portal shows
+   progress toward the cap, and hitting it is framed as "maxed out for
+   today, nice work", never as a penalty.
 3. **Mastery bonus.** A perfect round (all questions right) earns a small
-   bonus on top of `minutes_per_pass` (recommended: +5 minutes). The bonus
-   counts toward the daily cap.
+   bonus on top of `minutes_per_pass` (+5 minutes). The bonus counts
+   toward the daily cap.
 4. **Grading is server-side.** The client never receives `answer_index`.
    The server samples the round, holds the answers, and grades the
    submission. (Yes, the raw JSON is in a public repo. Reading the source
    to learn the answers is studying. That is allowed.)
+
+## The other shelf: banks kept in the database
+
+Everything above describes a bank as a FILE in this directory. There is a
+second place a bank can live, and it matters if you are writing tooling.
+
+A parent can write a bank on the dashboard's **Learn to earn** screen. Those
+banks are stored in Postgres (`quiz_banks` and `quiz_bank_questions`, see
+`config/db/schema-quizbanks.sql`) and never written here, because this
+directory is tracked in git and a `git pull` would delete a family's own
+content. The portal merges the two shelves when it loads: files first, then
+the database, and a file wins a clash of ids.
+
+The two shelves differ in exactly two ways.
+
+| | File bank | Database bank |
+|---|---|---|
+| Size before it goes live | 4x `questions_per_round`, enforced by `tools/validate-quizzes.mjs` | one full round, `questions_per_round` |
+| Edited with | `bin/kidnet-quiz`, or a pull request | the dashboard, question by question |
+
+The size difference is deliberate and it is the one rule that bends. A parent
+who has written twelve good questions should not be told to write twenty-eight
+more before their child sees any of them. The dashboard says "live, but small"
+on a bank under 4x and shows how far off it is. Nothing else changes: same
+grading, same ramp, same cooldown, same cap.
+
+A bank an agent writes goes in as a file, through `bin/kidnet-quiz install`.
+There is no bulk import into the database side yet, so a whole bank cannot be
+pasted into the dashboard: it is typed in a question at a time or installed as
+a file. `docs/runbooks/quiz-suggestions.md` covers which to choose.
 
 ## Contributing a bank
 

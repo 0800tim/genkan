@@ -333,9 +333,12 @@ Particularly welcome:
 - **Teachers and tutors.** The quiz banks that kids earn time from are plain
   JSON files, and each question can carry a difficulty from 1 to 5 so a round
   opens with warm-ups and gets harder as the kid goes. Your own agent can write
-  one on any topic in a few minutes (docs/runbooks/quiz-on-demand.md). If you
-  know how to teach a subject well, a good bank is worth more than any feature
-  I could write.
+  one on any topic in a few minutes (docs/runbooks/quiz-on-demand.md), and
+  docs/runbooks/quiz-suggestions.md is the recurring version: it looks at what
+  one child has actually been doing and proposes the next bank for them. A
+  parent with no agent at all can write and edit a bank straight in the
+  dashboard. If you know how to teach a subject well, a good bank is worth more
+  than any feature I could write.
 - **Anyone who can break it.** Especially the filter bypasses. Found one? Open
   an issue. That is the whole spirit of the household bug bounty, scaled up.
 

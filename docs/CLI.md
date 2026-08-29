@@ -4,21 +4,23 @@ Every command Hearth ships, what it takes, and what it actually does. Written
 from the scripts themselves, so if this file and a script disagree, the script
 is right and this file is a bug.
 
-There are sixteen executables in `bin/`. One of them, `kidnet`, is the control
+There are seventeen executables in `bin/`. One of them, `kidnet`, is the control
 surface a parent or an agent drives by hand. The rest are background workers
-that timers run, plus `kidnet-report` and `kidnet-quiz`, which you run when you
-want to read something or to change what the kids can learn from.
+that timers run, plus `kidnet-report`, `kidnet-quiz` and `kidnet-quiz-suggest`,
+which you run when you want to read something or to change what the kids can
+learn from.
 
-`deploy.sh` installs fourteen of them into `/usr/local/bin`. `kidnet-report` and
-`kidnet-quiz` are not among them: run those from the repo
-(`bin/kidnet-report`, `bin/kidnet-quiz`), because they read files that live
-there.
+`deploy.sh` installs fourteen of them into `/usr/local/bin`. `kidnet-report`,
+`kidnet-quiz` and `kidnet-quiz-suggest` are not among them: run those from the
+repo (`bin/kidnet-report`, `bin/kidnet-quiz`, `bin/kidnet-quiz-suggest`),
+because they read files that live there.
 
 | Command | Run by | What it is for |
 |---|---|---|
 | [`kidnet`](#kidnet) | you, or your agent | the control surface: on, off, categories, time, devices |
 | [`kidnet-report`](#kidnet-report) | you, weekly | the family digest, read only |
 | [`kidnet-quiz`](#kidnet-quiz) | you, or your agent | manage the learn-to-earn quiz banks |
+| [`kidnet-quiz-suggest`](#kidnet-quiz-suggest) | you, or your agent | brief an agent on what one child should be quizzed on next |
 | [`kidnet-meter`](#kidnet-meter) | `kids-meter.timer` | ticks a minute off each active child's daily budget |
 | [`kidnet-catmap`](#kidnet-catmap) | `kids-metering.timer` | learns which addresses are gaming, video or a download |
 | [`kidnet-catmeter`](#kidnet-catmeter) | `kids-metering.timer` | counts active category minutes, enforces category budgets |
@@ -721,6 +723,40 @@ The island container is left alone unless you ask for it, because SIGHUP only
 reloads a portal already running the code that handles it. On a box that has
 not been redeployed since bank reloading landed, a HUP would stop the process
 instead of reloading it.
+
+---
+
+## kidnet-quiz-suggest
+
+    kidnet-quiz-suggest                     the children it can brief on
+    kidnet-quiz-suggest <kid>               the briefing
+    kidnet-quiz-suggest <kid> --days 60     a longer window (default 30)
+    kidnet-quiz-suggest <kid> --top 15      more rows per section (default 10)
+    kidnet-quiz-suggest <kid> --quiet       the briefing without the closing prompt
+
+The research half of "keep feeding them new quizzes". It gathers what one
+child passes, what they avoid, which questions they keep getting wrong, what
+their devices have been looking up that nothing else explains, and which bank
+ids are taken, then prints it as one briefing with a prompt on the end.
+`docs/runbooks/quiz-suggestions.md` is the recipe for what to do with it.
+
+**It calls no AI service.** It reads Postgres and `portal/quizzes`, and writes
+to your terminal. Hearth has no telemetry and talks to no cloud, and this
+script is not the exception. Handing the output to an agent is a decision you
+make, one paste at a time.
+
+Every section says so plainly when it is empty, and says so differently when
+the query failed, because "nothing yet" and "this broke" are not the same
+answer. A fresh install prints a briefing that is mostly empty, which is
+correct: there is nothing to go on until the kids have taken some rounds and
+`kids-dnslog.timer` has filled `dns_log`.
+
+| Variable | Default | Effect |
+|---|---|---|
+| `HEARTH_REPO` | the parent of `bin/` | where the banks live |
+| `QUIZ_DIR` | `$HEARTH_REPO/portal/quizzes` | the file bank directory |
+| `PG_CONTAINER` | `postgres` | the Postgres container |
+| `KIDS_DB` | `kids_network` | the database |
 
 ---
 

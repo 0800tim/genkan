@@ -1,0 +1,251 @@
+#!/usr/bin/env bash
+# hearth:summary=Gather what a child has been learning and reading about, as a briefing for writing new quizzes.
+#
+# The research half of "keep feeding them new quizzes". An agent that is going
+# to write a bank for one child needs to know what that child already passes,
+# what they avoid, what they get wrong, and what they have actually been
+# curious about lately. All of that is already in this household's database.
+# This script reads it and prints it as one briefing you can paste.
+#
+#   kidnet-quiz-suggest                 the children it can brief on
+#   kidnet-quiz-suggest <kid>           the briefing
+#   kidnet-quiz-suggest <kid> --days 60 a longer window (default 30)
+#   kidnet-quiz-suggest <kid> --top 15  more rows per section (default 10)
+#   kidnet-quiz-suggest <kid> --quiet   the briefing without the closing prompt
+#
+# IT TALKS TO NOTHING. No AI service, no cloud, no telemetry: it reads
+# Postgres and portal/quizzes and writes to your terminal. Hearth does not
+# phone home and this script is not the exception. Handing the output to an
+# agent is your decision, made by you, one paste at a time.
+#
+# The recipe for what to do with it is docs/runbooks/quiz-suggestions.md.
+# Write the bank, check it with `kidnet-quiz validate`, then either install it
+# as a file or type it into the dashboard's Learn to earn screen.
+set -euo pipefail
+
+SELF="$(readlink -f "$0")"
+REPO="${HEARTH_REPO:-$(cd "$(dirname "$SELF")/.." && pwd)}"
+QUIZ_DIR="${QUIZ_DIR:-$REPO/portal/quizzes}"
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB="${KIDS_DB:-kids_network}"
+DAYS=30
+TOP=10
+QUIET=0
+KID=""
+
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --days) DAYS="${2:?--days needs a number}"; shift 2;;
+    --top)  TOP="${2:?--top needs a number}"; shift 2;;
+    --quiet) QUIET=1; shift;;
+    -h|--help|help) awk 'NR>2 && /^#/ { sub(/^# ?/, ""); print; next } NR>2 { exit }' "$SELF"; exit 0;;
+    -*) echo "kidnet-quiz-suggest: unknown flag $1" >&2; exit 1;;
+    *)  KID="$1"; shift;;
+  esac
+done
+[[ "$DAYS" =~ ^[0-9]{1,4}$ ]] || { echo "kidnet-quiz-suggest: --days must be a whole number" >&2; exit 1; }
+[[ "$TOP"  =~ ^[0-9]{1,3}$ ]] || { echo "kidnet-quiz-suggest: --top must be a whole number" >&2; exit 1; }
+command -v docker >/dev/null || { echo "kidnet-quiz-suggest: needs docker to reach Postgres" >&2; exit 1; }
+
+psqll(){ docker exec -i "$PG_CONTAINER" psql -U postgres -d "$DB" -tAF$'\t' -c "$1"; }
+# A section that says something friendly when there is nothing in it yet. An
+# empty section is the normal state of a new install, not a fault.
+# An empty section and a broken section are different things, and saying
+# "nothing yet" when the query actually failed is the sort of lie that costs
+# somebody an afternoon.
+show(){ local out; out=$(psqll "$1" 2>&1 || true)
+        if printf '%s' "$out" | grep -q '^ERROR:'; then
+          printf '%s' "$out" | grep '^ERROR:' | head -1 | sed 's/^/  could not read this: /'
+        elif [ -n "$out" ]; then printf '%s\n' "$out" | fold -sw 74 | sed 's/^/  /'
+        else echo "  ${2:-(nothing recorded yet)}"; fi; }
+head2(){ echo; echo "== $1"; }
+
+if [ -z "$KID" ]; then
+  echo "kidnet-quiz-suggest <child>. Children on this network:"
+  show "SELECT name || COALESCE(', ' || age::text, '') FROM children
+         WHERE kind='child' AND active ORDER BY age" "no children set up yet"
+  echo
+  echo "Then read docs/runbooks/quiz-suggestions.md for what to do with the briefing."
+  exit 0
+fi
+
+# The banks on the shelf as files. Only well formed ids, because these go into
+# a query below and a filename is not a thing to trust blindly.
+FILE_IDS=""
+if [ -d "$QUIZ_DIR" ]; then
+  for f in "$QUIZ_DIR"/*.json; do
+    [ -e "$f" ] || continue
+    b="$(basename "$f" .json)"
+    [[ "$b" =~ ^[a-z0-9-]{1,48}$ ]] && FILE_IDS="$FILE_IDS $b"
+  done
+fi
+# The same list as a SQL fragment, so a file bank nobody has touched still gets
+# a row in the table below instead of quietly not existing.
+FILE_UNION=""
+for b in $FILE_IDS; do FILE_UNION="$FILE_UNION UNION SELECT '$b'"; done
+# quiz_banks arrived with the dashboard's bank editor (schema-quizbanks.sql).
+# An install that has not loaded it yet still gets a briefing, so the fragment
+# is only added when the table is really there.
+DBBANK_UNION=""
+if [ "$(psqll "SELECT to_regclass('public.quiz_banks') IS NOT NULL" 2>/dev/null | head -1)" = "t" ]; then
+  DBBANK_UNION="UNION SELECT id FROM quiz_banks WHERE active"
+fi
+
+[[ "$KID" =~ ^[A-Za-z0-9_-]{1,32}$ ]] || { echo "kidnet-quiz-suggest: bad name '$KID'" >&2; exit 1; }
+CID="$(psqll "SELECT id FROM children WHERE lower(name)=lower('$KID')" | head -1)"
+[ -n "$CID" ] || { echo "kidnet-quiz-suggest: unknown child '$KID'" >&2; exit 1; }
+WHO="$(psqll "SELECT name || COALESCE(', aged ' || age::text, '') || ', on the ' || policy_tier || ' filter level'
+                FROM children WHERE id=$CID" | head -1)"
+
+echo "Hearth: a briefing for writing quizzes"
+echo "$WHO"
+echo "Window: the last $DAYS days. Every line below came out of this household's"
+echo "own database. Nothing was sent anywhere to produce it."
+
+head2 "What is on their list, and how it is going"
+echo "  bank                   on   pays  rounds  passed  correct  last round"
+show "SELECT rpad(b.bank_id,22) || ' ' ||
+             rpad(CASE WHEN COALESCE(s.enabled,true) THEN 'yes' ELSE 'no' END,4) ||
+             lpad(COALESCE(s.minutes::text,'-'),5) || '  ' ||
+             lpad(COALESCE(f.rounds::text,'0'),6) || '  ' ||
+             lpad(COALESCE(f.passes::text,'0'),6) || '  ' ||
+             lpad(COALESCE(round(100*f.accuracy)::text || '%','-'),7) || '  ' ||
+             COALESCE(to_char(f.last_ts,'YYYY-MM-DD'),'never')
+        FROM (SELECT DISTINCT bank_id FROM quiz_settings
+              UNION SELECT DISTINCT bank_id FROM quiz_rounds
+              $FILE_UNION $DBBANK_UNION) b
+        LEFT JOIN quiz_settings s ON s.bank_id=b.bank_id AND s.child_id=$CID
+        LEFT JOIN quiz_form f ON f.bank_id=b.bank_id AND f.child_id=$CID
+       ORDER BY COALESCE(f.rounds,0) DESC, b.bank_id" \
+     "no quiz settings or rounds recorded for them yet"
+echo
+echo "  'on' is whether it is on this child's list. 'pays' is the price you set"
+echo "  for THEM: a dash means they get the bank's own figure. A bank with no"
+echo "  rounds and no passes is one they have never opened."
+
+head2 "Banks they have never opened (still on their list)"
+show "SELECT string_agg(bank_id, ', ' ORDER BY bank_id) FROM (
+        SELECT b.bank_id FROM (SELECT DISTINCT bank_id FROM quiz_settings
+                               $FILE_UNION $DBBANK_UNION) b
+        LEFT JOIN quiz_settings s ON s.bank_id=b.bank_id AND s.child_id=$CID
+        WHERE COALESCE(s.enabled,true)
+          AND NOT EXISTS (SELECT 1 FROM quiz_rounds r WHERE r.child_id=$CID AND r.bank_id=b.bank_id)
+      ) x" "nothing: they have tried everything on their list"
+
+head2 "How they go by difficulty (1 warm-up .. 5 stretch)"
+show "SELECT 'level ' || difficulty || ': ' || lpad(round(100*accuracy)::text,3) || '% of ' || asked || ' questions'
+        FROM quiz_difficulty_form WHERE child_id=$CID ORDER BY difficulty" \
+     "no ramped banks taken yet, so there is nothing to pitch against"
+
+head2 "Questions they keep getting wrong (4+ goes, under half right)"
+QTMP="$(mktemp)"; WTMP="$(mktemp)"; trap 'rm -f "$QTMP" "$WTMP"' EXIT
+psqll "SELECT bank_id, question_id, prompt FROM quiz_bank_questions" > "$QTMP" 2>/dev/null || true
+psqll "SELECT r.bank_id, a.question_id, count(*) FILTER (WHERE a.correct), count(*)
+         FROM quiz_answers a JOIN quiz_rounds r ON r.id=a.round_id
+        WHERE r.child_id=$CID AND r.ts > now() - interval '$DAYS days'
+        GROUP BY 1,2
+       HAVING count(*) >= 4 AND count(*) FILTER (WHERE a.correct)::numeric / count(*) < 0.5
+        ORDER BY count(*) FILTER (WHERE a.correct)::numeric / count(*), count(*) DESC
+        LIMIT $TOP" > "$WTMP" 2>/dev/null || true
+# The rows come in by file, not by pipe: this python is fed to the interpreter
+# on stdin, so stdin is already spoken for.
+python3 - "$QUIZ_DIR" "$QTMP" "$WTMP" <<'PY'
+# The prompt text lives in one of two places: a JSON file on the shelf, or the
+# quiz_bank_questions table for a bank the parent wrote on the dashboard. The
+# briefing is useless without it, so look in both.
+import json, os, sys
+quiz_dir, dbfile, rowfile = sys.argv[1], sys.argv[2], sys.argv[3]
+prompts = {}
+try:
+    for f in sorted(os.listdir(quiz_dir)):
+        if not f.endswith(".json"): continue
+        try: b = json.load(open(os.path.join(quiz_dir, f), encoding="utf-8"))
+        except Exception: continue
+        for q in b.get("questions") or []:
+            if isinstance(q, dict) and q.get("id"):
+                prompts[(str(b.get("id")), str(q["id"]))] = str(q.get("prompt", ""))
+except OSError:
+    pass
+try:
+    for line in open(dbfile, encoding="utf-8"):
+        parts = line.rstrip("\n").split("\t")
+        if len(parts) >= 3: prompts[(parts[0], parts[1])] = parts[2]
+except OSError:
+    pass
+rows = 0
+for line in open(rowfile, encoding="utf-8"):
+    p = line.rstrip("\n").split("\t")
+    if len(p) < 4: continue
+    bank, qid, right, asked = p[0], p[1], p[2], p[3]
+    text = prompts.get((bank, qid), "(the question is no longer in the bank)")
+    print(f"  {bank:<22} {qid:<10} {right}/{asked}  {text[:90]}")
+    rows += 1
+if not rows:
+    print("  nothing they are stuck on, or not enough rounds yet to tell")
+PY
+
+head2 "What they have been reading about"
+echo "  Domains their own devices looked up, leaving out anything Hearth already"
+echo "  files as a known service or a metered category. What is left is the"
+echo "  curiosity signal: sites they went to that nothing else explains."
+show "SELECT lpad(count(*)::text,5) || '  ' || dl.domain
+        FROM dns_log dl JOIN devices d ON d.id = dl.device_id
+       WHERE d.child_id = $CID AND dl.ts > now() - interval '$DAYS days'
+         AND dl.action = 'allowed'
+         AND COALESCE(dl.category,'other') IN ('other','unknown')
+         AND NOT EXISTS (SELECT 1 FROM service_domains sd WHERE dl.domain LIKE '%' || sd.domain)
+         AND NOT EXISTS (SELECT 1 FROM category_domains cd WHERE dl.domain LIKE '%' || cd.domain)
+         AND dl.domain NOT LIKE '%.arpa' AND dl.domain NOT LIKE '%.local'
+       GROUP BY dl.domain HAVING count(*) > 2
+       ORDER BY count(*) DESC LIMIT $TOP" \
+     "no DNS history for their devices in this window (kids-dnslog.timer fills dns_log)"
+
+head2 "Services they actually use"
+show "SELECT lpad(sum(su.used_min)::text,5) || ' min  ' || rpad(s.label,18) || s.category
+        FROM service_usage su JOIN services s ON s.id = su.service_id
+       WHERE su.child_id = $CID AND su.day > CURRENT_DATE - $DAYS
+       GROUP BY s.label, s.category HAVING sum(su.used_min) > 0
+       ORDER BY sum(su.used_min) DESC LIMIT $TOP" \
+     "no metered service minutes in this window"
+
+head2 "Where their screen time goes"
+show "SELECT lpad(sum(used_min)::text,5) || ' min  ' || category
+        FROM category_usage WHERE child_id = $CID AND day > CURRENT_DATE - $DAYS
+       GROUP BY category HAVING sum(used_min) > 0 ORDER BY sum(used_min) DESC" \
+     "no metered category minutes in this window"
+
+head2 "Bank ids already taken (do not reuse one)"
+{ for b in $FILE_IDS; do echo "$b"; done; psqll "SELECT id FROM quiz_banks" 2>/dev/null || true; } \
+  | sort -u | paste -sd' ' - | fold -sw 72 | sed 's/^/  /'
+
+if [ "$QUIET" = 0 ]; then
+cat <<PROMPT
+
+== The prompt to give your agent
+Copy everything from here down, with the briefing above it, into your own AI
+agent. It never leaves this house until you paste it.
+------------------------------------------------------------------------
+You are writing a learn-to-earn quiz bank for one child in a household that
+runs Hearth (github.com/0800tim/hearth). Above this line is a briefing about
+that child, generated from the household's own database.
+
+Read docs/runbooks/quiz-suggestions.md in the Hearth repo first. It has the
+full recipe. In short:
+
+1. From the briefing, pick ONE topic this child is plainly interested in, or
+   one they are visibly stuck on. Say in one sentence which line of the
+   briefing made you pick it. Do not pick a topic that is already a bank.
+2. Research the topic properly, with web search. Verify every answer against
+   a real source. A wrong answer takes minutes off a child for being right.
+3. Emit one JSON bank in the exact format in portal/quizzes/FORMAT.md:
+   40 to 60 questions, exactly four plausible choices each, difficulty 1 to 5
+   on every question, and one friendly explanation on every question. Pitch
+   difficulty 1 at what this child already gets right.
+4. Save it as /tmp/<bank-id>.json and run:
+      bin/kidnet-quiz validate /tmp/<bank-id>.json
+   Fix anything it reports. Do not edit the validator.
+5. Tell the parent what you wrote, why, and what you could not verify.
+   Do not install it. That is the parent's call.
+------------------------------------------------------------------------
+PROMPT
+fi

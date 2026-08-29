@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS quiz_banks (
   questions_per_round int  NOT NULL DEFAULT 10,
   source_note         text,                       -- where the content came from, and when it was checked
   active              boolean NOT NULL DEFAULT true,  -- false = a draft, invisible to the kids
+  next_qid            int  NOT NULL DEFAULT 1,     -- the next question number, so an id is never reused
   created_by          text,
   created_ts          timestamptz NOT NULL DEFAULT now(),
   updated_ts          timestamptz NOT NULL DEFAULT now(),
@@ -91,10 +92,21 @@ CREATE TABLE IF NOT EXISTS quiz_bank_questions (
 );
 CREATE INDEX IF NOT EXISTS quiz_bank_questions_bank_idx ON quiz_bank_questions (bank_id, seq);
 
+-- Question ids are never reused, even after a question is deleted, because
+-- quiz_answers keeps the id of every question a child was ever asked and a
+-- reused id would silently merge two different questions' results.
+ALTER TABLE quiz_banks ADD COLUMN IF NOT EXISTS next_qid int NOT NULL DEFAULT 1;
+
 -- What the portal reads: one row per bank with its questions counted, so it
 -- can decide in one query whether a bank is big enough to serve.
-CREATE OR REPLACE VIEW quiz_bank_summary AS
-SELECT b.*, count(qq.question_id)::int AS questions,
+-- Dropped and recreated rather than replaced, because CREATE OR REPLACE VIEW
+-- refuses to change a column list and adding a column to quiz_banks changes
+-- one. Nothing depends on this view but the queries that run against it.
+DROP VIEW IF EXISTS quiz_bank_summary;
+CREATE VIEW quiz_bank_summary AS
+SELECT b.id, b.title, b.emoji, b.suggested_age_min, b.minutes_per_pass, b.pass_mark,
+       b.questions_per_round, b.source_note, b.active, b.created_by, b.created_ts, b.updated_ts,
+       count(qq.question_id)::int AS questions,
        count(qq.difficulty)::int AS labelled,
        max(qq.updated_ts) AS last_question_ts
 FROM quiz_banks b

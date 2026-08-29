@@ -19,7 +19,11 @@ screen time by studying". This one is the network side.
   `tools/validate-quizzes.mjs`, and the format is documented in
   `portal/quizzes/FORMAT.md`. A good bank from someone who knows how to teach a
   subject is worth more than most features. `docs/runbooks/curriculum-generation.md`
-  is written so an agent can produce one for another country's curriculum.
+  is written so an agent can produce one for another country's curriculum, and
+  `docs/runbooks/quiz-suggestions.md` is the recurring version: an agent reads
+  what one child has actually been doing and proposes the next bank for them.
+  A parent can also write a bank in the dashboard, in which case it is stored
+  in the database rather than here, so a repo update cannot delete it.
 - **Packaging and other distros.** It is Docker plus standard Linux tooling, so
   it should run anywhere. `docs/setup/generic-linux.md` is the contract.
 

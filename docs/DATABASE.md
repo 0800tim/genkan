@@ -48,11 +48,12 @@ create.
 | 11 | `schema-goals.sql` | goals: one agreed weekly target per child, read by the dashboard's Week and kid pages |
 | 12 | `schema-policies.sql` | the household security layer: vendor clouds and their domains, per-class and per-device IoT policy, parent grants, and the `device_policy_effective` view |
 | 13 | `schema-tasks.sql` | per-child job offers and quiz bank settings: `task_offers`, `quiz_settings`, two more columns on `tasks`, and the `task_offer_effective` view the dashboard's Learn to earn screen and the portal both read |
+| 15 | `schema-quizbanks.sql` | `quiz_banks` and `quiz_bank_questions`, the quiz banks a parent writes on the dashboard rather than as a file in `portal/quizzes`, plus `earn_settings` and the `earn_settings_effective` view: the cooldown, the daily cap, the perfect-round bonus and the fallback price of a pass, per household and per child |
 | 14 | `schema-quizresults.sql` | `quiz_rounds` and `quiz_answers`, every graded quiz round including the failed ones, plus the `quiz_form` and `quiz_difficulty_form` views the portal's difficulty ramp reads |
-| 15 | `seed.sql` | the three policy tiers, placeholder children, and the always_allow rows |
-| 16 | `schema-presence.sql` | `devices.present_at`: "on the wire right now", as distinct from `last_seen`, which comes from the lease list and outlives the device |
-| 17 | `schema-appliance.sql` | a fourth device class, `appliance`: not a person's and not smart-home kit, so full internet, no owner, no time limits, never caught by a kids control |
-| 18 | `schema-roles.sql` | the four household roles (child, guest-child, guest-adult, adult), the `people` view with the role flags, the `people_in_scope()` and `ips_in_scope()` scope functions, and `household_roster` |
+| 16 | `seed.sql` | the three policy tiers, placeholder children, and the always_allow rows |
+| 17 | `schema-presence.sql` | `devices.present_at`: "on the wire right now", as distinct from `last_seen`, which comes from the lease list and outlives the device |
+| 18 | `schema-appliance.sql` | a fourth device class, `appliance`: not a person's and not smart-home kit, so full internet, no owner, no time limits, never caught by a kids control |
+| 19 | `schema-roles.sql` | the four household roles (child, guest-child, guest-adult, adult), the `people` view with the role flags, the `people_in_scope()` and `ips_in_scope()` scope functions, and `household_roster` |
 
 These ordering constraints are load-bearing:
 
@@ -70,6 +71,12 @@ These ordering constraints are load-bearing:
   runs quizzes and still pays out minutes, just without the difficulty ramp.
 - `schema-tasks.sql` must come **after** `schema-time.sql`, because it adds columns
   to `tasks`, and after `schema-people.sql`, because every offer is per child.
+- `schema-quizbanks.sql` must come **after** `schema.sql`, because `earn_settings`
+  hangs off `children`. Like the results file, it is optional in the sense that
+  the portal degrades rather than fails without it: no database banks appear,
+  and the earn numbers fall back to the constants the portal has always
+  shipped. Its `quiz_bank_summary` view is dropped and recreated rather than
+  replaced, so adding a column to `quiz_banks` later does not break a re-run.
 - `schema-presence.sql` and `schema-appliance.sql` must come **after**
   `schema-devices.sql`, because both alter the `devices` table that file
   finishes shaping. Neither touches a view, so they sit safely between the seed
@@ -85,14 +92,15 @@ Load them:
 for f in schema schema-categories schema-time schema-safety schema-earn \
          schema-people schema-devices schema-flags schema-services \
          schema-voice schema-goals schema-policies schema-tasks \
-         schema-quizresults seed schema-presence schema-appliance \
-         schema-roles; do
+         schema-quizresults schema-quizbanks seed schema-presence \
+         schema-appliance schema-roles; do
   psql "$KIDS_DB_URL" -v ON_ERROR_STOP=1 -f config/db/$f.sql
 done
 ```
 
-`demo/reseed.sh` runs exactly this list, in this order, every night, which is
-the closest thing this project has to a test of the load order.
+`config/db/load.sh` is the list that actually runs, and `test/schema-test.sh`
+proves it against an empty database. If this table and that script ever
+disagree, the script is right and this table is the bug.
 
 `schema-voice.sql` is only needed if you run the optional voice module
 (`voice/`). It is harmless to load either way, and the table it creates is the

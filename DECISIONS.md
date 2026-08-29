@@ -689,3 +689,61 @@ Every child's name anywhere in this repo is invented. Most documents use Ada,
 Ben and Cleo, `docs/HOUSEHOLD-ROLES.md` uses Robin, Toby and Elsie, and the
 public demo's household is Piper, Rangi and Nova. The real names live only in
 the database on the family's own box, and never in a tracked file.
+
+## The parent could not make content, only switch it on (2026-08-30)
+
+The Learn to earn screen let a parent decide who a bank was offered to and what
+a pass paid them. It did not let them write one. Every quiz in the house came
+from an agent editing JSON in `portal/quizzes`, which is fine for the person
+who built this and useless for a parent on the couch. Three things followed
+from that gap.
+
+**Banks a parent writes live in the database, not the repo.** `portal/quizzes`
+is tracked in git. A family's own bank sitting in there is one `git pull` away
+from being deleted, and a spelling list for one child is not something to open
+a pull request about. So `quiz_banks` and `quiz_bank_questions`
+(`config/db/schema-quizbanks.sql`) hold them, and the portal merges the two
+shelves at load: files first, then the database, a file winning a clash of ids.
+The dashboard refuses to create an id a file already owns, so a clash means
+somebody installed a file over the top, and installing a file is the more
+deliberate act of the two.
+
+**One rule bends, and it is the size rule.** A file bank needs four rounds'
+worth of questions before the validator will pass it. A database bank goes live
+once it holds one full round. A parent who has written twelve good questions
+should not be told to write twenty-eight more before their child sees any of
+them. The bank's card says "live, but small" and shows how far off four rounds
+it is. Nothing else differs: same server-side grading, same difficulty ramp,
+same cooldown, same cap.
+
+**The earn numbers stopped being constants.** The cooldown, the daily cap, the
+perfect-round bonus and the fallback price of a pass were four numbers in
+`portal.mjs` that only an editor could change. They are now `earn_settings`,
+one household row and an optional row per child, resolved by
+`earn_settings_effective`, with the old constants as the last fallback. A
+household that never opens the screen behaves exactly as it did. Each one is
+explained in plain language on the screen itself, because a number with no
+explanation gets set to something silly once and then never touched again.
+
+**Performance is shown per question, not just per bank.** `quiz_rounds` and
+`quiz_answers` already recorded every graded round including the failures, and
+nothing read them back to the parent. A bank now shows its pass rate, its
+average score, the questions nearly always got wrong and the ones nearly always
+got right. A bank nobody passes writes no `time_events` row at all, so the
+failures were the half of the picture that was invisible. The prompt text now
+goes to the browser so those lists mean something; the choices and the answer
+index still never leave the server.
+
+**The AI half is a runbook and a briefing command, not a service.**
+`bin/kidnet-quiz-suggest` gathers what one child passes, avoids, gets wrong and
+has been looking up, and prints it with a prompt on the end.
+`docs/runbooks/quiz-suggestions.md` is the recipe. The script calls no AI and
+Hearth ships no scheduler for it: the recurrence and the model call are the
+parent's own agent, and the briefing leaves the house only when a human pastes
+it. That is the boundary, and it is a design position rather than a missing
+feature.
+
+Still not built, and said plainly in the runbook: nothing runs on a schedule,
+nothing measures whether a suggestion worked, and a whole bank written as JSON
+cannot be pasted into the dashboard. It goes in as a file through
+`kidnet-quiz install`, or it is typed a question at a time.
