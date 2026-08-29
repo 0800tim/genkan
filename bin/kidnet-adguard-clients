@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+# hearth:summary=Sync AdGuard's per-child clients to the real assigned device IPs.
+#
+# AdGuard applies the age tier (SafeSearch, blocked services, per-client rules)
+# by CLIENT, and a client is identified by IP. Those IPs must therefore track
+# whichever devices a parent has actually assigned to each child, otherwise the
+# tiers land on the wrong devices (a stale seed config had Cleo's tier pointed
+# at addresses that later belonged to a parent's phone).
+#
+# Run after any device assignment. Idempotent, and never touches the guest
+# catch-all client.
+set -uo pipefail
+: "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}" "${ADGUARD_PASS:?set ADGUARD_PASS}"
+psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+
+MAP=$(psqll "
+  SELECT c.name||'|'||coalesce(string_agg(host(d.reserved_ip), ',' ORDER BY d.reserved_ip), '')
+  FROM children c
+  LEFT JOIN devices d ON d.child_id=c.id AND d.reserved_ip IS NOT NULL
+        AND d.is_active AND d.category='personal'
+  WHERE c.kind='child'
+  GROUP BY c.name")
+[ -n "$MAP" ] || { echo "kidnet-adguard-clients: no children"; exit 0; }
+
+ADGUARD_URL="$ADGUARD_URL" ADGUARD_USER="$ADGUARD_USER" ADGUARD_PASS="$ADGUARD_PASS" MAP="$MAP" python3 <<'PY'
+import os,json,base64,urllib.request
+BASE=os.environ["ADGUARD_URL"]
+auth=base64.b64encode(f'{os.environ["ADGUARD_USER"]}:{os.environ["ADGUARD_PASS"]}'.encode()).decode()
+def call(path,data=None):
+    r=urllib.request.Request(BASE+path,data=(json.dumps(data).encode() if data else None),
+                             method=("POST" if data else "GET"))
+    r.add_header("Authorization","Basic "+auth); r.add_header("Content-Type","application/json")
+    b=urllib.request.urlopen(r,timeout=10).read()
+    return json.loads(b) if b else {}
+want={}
+for line in os.environ["MAP"].splitlines():
+    if not line.strip(): continue
+    name,ips=line.split("|",1)
+    want[name.strip()]=[i for i in ips.split(",") if i.strip()]
+clients={c.get("name"):c for c in (call("/control/clients").get("clients") or [])}
+changed=0
+parkn={}
+for name,ips in want.items():
+    c=clients.get(name)
+    if not c:
+        print(f"  no AdGuard client named {name}; create it or rename one to match"); continue
+    if not ips:
+        # A child with no assigned devices must match NOTHING. Leaving stale
+        # IDs behind is the exact bug this tool exists to fix: the tier would
+        # keep applying to whatever device later inherited that address.
+        # AdGuard refuses a client with no identifiers, so park it on a
+        # TEST-NET-1 address (RFC 5737, reserved for documentation and never
+        # routable), which is the closest thing to "matches nothing".
+        # Unique per child: AdGuard requires client identifiers to be unique,
+        # so every parked child needs its own reserved address.
+        PARK="192.0.2.%d" % (parkn.setdefault(name, len(parkn)+1))
+        if c.get("ids") and c.get("ids")!=[PARK]:
+            new=dict(c); new["ids"]=[PARK]
+            try:
+                call("/control/clients/update",{"name":name,"data":new})
+                print(f"  {name}: no assigned devices, parked on {PARK} so it matches nothing")
+                changed+=1
+            except Exception as e:
+                print(f"  {name}: could not clear IDs ({e}); tier may still match old addresses")
+        else:
+            print(f"  {name}: no assigned devices")
+        continue
+    if sorted(c.get("ids") or [])==sorted(ips):
+        continue
+    new=dict(c); new["ids"]=ips
+    call("/control/clients/update",{"name":name,"data":new})
+    print(f"  {name}: ids -> {', '.join(ips)}")
+    changed+=1
+print(f"kidnet-adguard-clients: {changed} client(s) updated")
+PY

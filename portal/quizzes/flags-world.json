@@ -1,0 +1,731 @@
+{
+  "id": "flags-world",
+  "title": "Flags of the World",
+  "emoji": "🚩",
+  "suggested_age_min": 9,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "questions": [
+    {
+      "id": "fl-001",
+      "prompt": "🇳🇿 Which country?",
+      "choices": [
+        "Australia",
+        "Fiji",
+        "New Zealand",
+        "Samoa"
+      ],
+      "answer_index": 2,
+      "explanation": "New Zealand's flag has the Union Jack and four red stars of the Southern Cross."
+    },
+    {
+      "id": "fl-002",
+      "prompt": "🇦🇺 Which country?",
+      "choices": [
+        "Australia",
+        "Fiji",
+        "New Zealand",
+        "United Kingdom"
+      ],
+      "answer_index": 0,
+      "explanation": "Australia's flag has six white stars, including the big Commonwealth Star."
+    },
+    {
+      "id": "fl-003",
+      "prompt": "🇼🇸 Which country?",
+      "choices": [
+        "New Zealand",
+        "Fiji",
+        "Tonga",
+        "Samoa"
+      ],
+      "answer_index": 3,
+      "explanation": "Samoa's flag is red with a blue corner holding the Southern Cross."
+    },
+    {
+      "id": "fl-004",
+      "prompt": "🇹🇴 Which country?",
+      "choices": [
+        "Denmark",
+        "Samoa",
+        "Tonga",
+        "Switzerland"
+      ],
+      "answer_index": 2,
+      "explanation": "Tonga's flag is red with a red cross in the white corner."
+    },
+    {
+      "id": "fl-005",
+      "prompt": "🇫🇯 Which country?",
+      "choices": [
+        "Australia",
+        "Fiji",
+        "Tuvalu",
+        "Samoa"
+      ],
+      "answer_index": 1,
+      "explanation": "Fiji's flag is light blue with its shield from the coat of arms."
+    },
+    {
+      "id": "fl-006",
+      "prompt": "🇨🇰 Which country?",
+      "choices": [
+        "Fiji",
+        "Cook Islands",
+        "Tuvalu",
+        "New Zealand"
+      ],
+      "answer_index": 1,
+      "explanation": "The Cook Islands flag has a ring of 15 stars, one for each island."
+    },
+    {
+      "id": "fl-007",
+      "prompt": "🇵🇬 Which country?",
+      "choices": [
+        "Vanuatu",
+        "Fiji",
+        "Solomon Islands",
+        "Papua New Guinea"
+      ],
+      "answer_index": 3,
+      "explanation": "Papua New Guinea's flag shows a bird of paradise and the Southern Cross."
+    },
+    {
+      "id": "fl-008",
+      "prompt": "🇻🇺 Which country?",
+      "choices": [
+        "Tonga",
+        "Papua New Guinea",
+        "Vanuatu",
+        "Solomon Islands"
+      ],
+      "answer_index": 2,
+      "explanation": "Vanuatu's flag has a yellow Y shape and a boar's tusk."
+    },
+    {
+      "id": "fl-009",
+      "prompt": "🇯🇵 Which country?",
+      "choices": [
+        "South Korea",
+        "Bangladesh",
+        "Japan",
+        "China"
+      ],
+      "answer_index": 2,
+      "explanation": "Japan's flag is a red sun on a white background."
+    },
+    {
+      "id": "fl-010",
+      "prompt": "🇨🇳 Which country?",
+      "choices": [
+        "China",
+        "Singapore",
+        "Vietnam",
+        "Japan"
+      ],
+      "answer_index": 0,
+      "explanation": "China's flag is red with five yellow stars."
+    },
+    {
+      "id": "fl-011",
+      "prompt": "🇮🇳 Which country?",
+      "choices": [
+        "India",
+        "Niger",
+        "Ireland",
+        "Sri Lanka"
+      ],
+      "answer_index": 0,
+      "explanation": "India's flag has saffron, white and green bands with a blue wheel."
+    },
+    {
+      "id": "fl-012",
+      "prompt": "🇰🇷 Which country?",
+      "choices": [
+        "South Korea",
+        "Thailand",
+        "China",
+        "Japan"
+      ],
+      "answer_index": 0,
+      "explanation": "South Korea's flag has a red and blue circle with black bars around it."
+    },
+    {
+      "id": "fl-013",
+      "prompt": "🇹🇭 Which country?",
+      "choices": [
+        "France",
+        "Thailand",
+        "Costa Rica",
+        "Netherlands"
+      ],
+      "answer_index": 1,
+      "explanation": "Thailand's flag has red, white and blue stripes with a wide blue middle."
+    },
+    {
+      "id": "fl-014",
+      "prompt": "🇻🇳 Which country?",
+      "choices": [
+        "Morocco",
+        "Turkey",
+        "Vietnam",
+        "China"
+      ],
+      "answer_index": 2,
+      "explanation": "Vietnam's flag is red with one big yellow star."
+    },
+    {
+      "id": "fl-015",
+      "prompt": "🇮🇩 Which country?",
+      "choices": [
+        "Singapore",
+        "Indonesia",
+        "Monaco",
+        "Poland"
+      ],
+      "answer_index": 1,
+      "explanation": "Indonesia's flag is red over white, very like Monaco's."
+    },
+    {
+      "id": "fl-016",
+      "prompt": "🇵🇭 Which country?",
+      "choices": [
+        "Malaysia",
+        "Cuba",
+        "Philippines",
+        "Thailand"
+      ],
+      "answer_index": 2,
+      "explanation": "The Philippine flag has a golden sun inside a white triangle."
+    },
+    {
+      "id": "fl-017",
+      "prompt": "🇲🇾 Which country?",
+      "choices": [
+        "Liberia",
+        "Indonesia",
+        "United States",
+        "Malaysia"
+      ],
+      "answer_index": 3,
+      "explanation": "Malaysia's flag has red and white stripes with a crescent and star."
+    },
+    {
+      "id": "fl-018",
+      "prompt": "🇸🇬 Which country?",
+      "choices": [
+        "Turkey",
+        "Poland",
+        "Indonesia",
+        "Singapore"
+      ],
+      "answer_index": 3,
+      "explanation": "Singapore's flag is red and white with a crescent and five small stars."
+    },
+    {
+      "id": "fl-019",
+      "prompt": "🇳🇵 Which country?",
+      "choices": [
+        "Bhutan",
+        "Pakistan",
+        "India",
+        "Nepal"
+      ],
+      "answer_index": 3,
+      "explanation": "Nepal has the world's only non-rectangular national flag, made of two triangles."
+    },
+    {
+      "id": "fl-020",
+      "prompt": "🇹🇷 Which country?",
+      "choices": [
+        "Morocco",
+        "Tunisia",
+        "Pakistan",
+        "Turkey"
+      ],
+      "answer_index": 3,
+      "explanation": "Turkey's flag is red with a white crescent moon and star."
+    },
+    {
+      "id": "fl-021",
+      "prompt": "🇸🇦 Which country?",
+      "choices": [
+        "Iran",
+        "Pakistan",
+        "Saudi Arabia",
+        "United Arab Emirates"
+      ],
+      "answer_index": 2,
+      "explanation": "Saudi Arabia's flag is green with white Arabic writing and a sword."
+    },
+    {
+      "id": "fl-022",
+      "prompt": "🇦🇪 Which country?",
+      "choices": [
+        "United Arab Emirates",
+        "Sudan",
+        "Jordan",
+        "Kuwait"
+      ],
+      "answer_index": 0,
+      "explanation": "The UAE flag has green, white and black stripes with a red bar at the pole."
+    },
+    {
+      "id": "fl-023",
+      "prompt": "🇵🇰 Which country?",
+      "choices": [
+        "Bangladesh",
+        "Saudi Arabia",
+        "Pakistan",
+        "Turkey"
+      ],
+      "answer_index": 2,
+      "explanation": "Pakistan's flag is dark green with a white crescent, star and stripe."
+    },
+    {
+      "id": "fl-024",
+      "prompt": "🇬🇧 Which country?",
+      "choices": [
+        "United States",
+        "United Kingdom",
+        "Australia",
+        "New Zealand"
+      ],
+      "answer_index": 1,
+      "explanation": "The Union Jack combines the crosses of England, Scotland and Ireland."
+    },
+    {
+      "id": "fl-025",
+      "prompt": "🇫🇷 Which country?",
+      "choices": [
+        "France",
+        "Netherlands",
+        "Italy",
+        "Russia"
+      ],
+      "answer_index": 0,
+      "explanation": "France's flag is blue, white and red in vertical stripes."
+    },
+    {
+      "id": "fl-026",
+      "prompt": "🇩🇪 Which country?",
+      "choices": [
+        "Netherlands",
+        "Belgium",
+        "Germany",
+        "Austria"
+      ],
+      "answer_index": 2,
+      "explanation": "Germany's flag is black, red and gold in horizontal bands."
+    },
+    {
+      "id": "fl-027",
+      "prompt": "🇮🇹 Which country?",
+      "choices": [
+        "Italy",
+        "Hungary",
+        "Mexico",
+        "Ireland"
+      ],
+      "answer_index": 0,
+      "explanation": "Italy's flag is green, white and red in vertical stripes."
+    },
+    {
+      "id": "fl-028",
+      "prompt": "🇪🇸 Which country?",
+      "choices": [
+        "Spain",
+        "Germany",
+        "Italy",
+        "Portugal"
+      ],
+      "answer_index": 0,
+      "explanation": "Spain's flag is red and yellow with the coat of arms near the pole."
+    },
+    {
+      "id": "fl-029",
+      "prompt": "🇵🇹 Which country?",
+      "choices": [
+        "Spain",
+        "Italy",
+        "Portugal",
+        "Brazil"
+      ],
+      "answer_index": 2,
+      "explanation": "Portugal's flag is green and red with a globe and shield."
+    },
+    {
+      "id": "fl-030",
+      "prompt": "🇬🇷 Which country?",
+      "choices": [
+        "Uruguay",
+        "Israel",
+        "Greece",
+        "Finland"
+      ],
+      "answer_index": 2,
+      "explanation": "Greece's flag has blue and white stripes with a white cross in the corner."
+    },
+    {
+      "id": "fl-031",
+      "prompt": "🇳🇱 Which country?",
+      "choices": [
+        "Russia",
+        "France",
+        "Luxembourg",
+        "Netherlands"
+      ],
+      "answer_index": 3,
+      "explanation": "The Dutch flag is red, white and blue in horizontal bands."
+    },
+    {
+      "id": "fl-032",
+      "prompt": "🇧🇪 Which country?",
+      "choices": [
+        "Romania",
+        "Belgium",
+        "France",
+        "Germany"
+      ],
+      "answer_index": 1,
+      "explanation": "Belgium's flag is black, yellow and red in vertical stripes."
+    },
+    {
+      "id": "fl-033",
+      "prompt": "🇨🇭 Which country?",
+      "choices": [
+        "Switzerland",
+        "Denmark",
+        "Austria",
+        "Tonga"
+      ],
+      "answer_index": 0,
+      "explanation": "Switzerland's flag is a square red flag with a white cross."
+    },
+    {
+      "id": "fl-034",
+      "prompt": "🇸🇪 Which country?",
+      "choices": [
+        "Sweden",
+        "Finland",
+        "Norway",
+        "Denmark"
+      ],
+      "answer_index": 0,
+      "explanation": "Sweden's flag is blue with a yellow Nordic cross."
+    },
+    {
+      "id": "fl-035",
+      "prompt": "🇳🇴 Which country?",
+      "choices": [
+        "Iceland",
+        "Sweden",
+        "Denmark",
+        "Norway"
+      ],
+      "answer_index": 3,
+      "explanation": "Norway's flag is red with a blue cross outlined in white."
+    },
+    {
+      "id": "fl-036",
+      "prompt": "🇩🇰 Which country?",
+      "choices": [
+        "Switzerland",
+        "Sweden",
+        "Denmark",
+        "Norway"
+      ],
+      "answer_index": 2,
+      "explanation": "Denmark's flag, the Dannebrog, is red with a plain white cross."
+    },
+    {
+      "id": "fl-037",
+      "prompt": "🇫🇮 Which country?",
+      "choices": [
+        "Greece",
+        "Finland",
+        "Sweden",
+        "Norway"
+      ],
+      "answer_index": 1,
+      "explanation": "Finland's flag is white with a blue Nordic cross."
+    },
+    {
+      "id": "fl-038",
+      "prompt": "🇮🇸 Which country?",
+      "choices": [
+        "Denmark",
+        "Norway",
+        "Iceland",
+        "Finland"
+      ],
+      "answer_index": 2,
+      "explanation": "Iceland's flag is blue with a red cross outlined in white."
+    },
+    {
+      "id": "fl-039",
+      "prompt": "🇮🇪 Which country?",
+      "choices": [
+        "Italy",
+        "Ivory Coast",
+        "India",
+        "Ireland"
+      ],
+      "answer_index": 3,
+      "explanation": "Ireland's flag is green, white and orange in vertical stripes."
+    },
+    {
+      "id": "fl-040",
+      "prompt": "🇵🇱 Which country?",
+      "choices": [
+        "Monaco",
+        "Poland",
+        "Czechia",
+        "Indonesia"
+      ],
+      "answer_index": 1,
+      "explanation": "Poland's flag is white over red."
+    },
+    {
+      "id": "fl-041",
+      "prompt": "🇺🇦 Which country?",
+      "choices": [
+        "Kazakhstan",
+        "Poland",
+        "Ukraine",
+        "Sweden"
+      ],
+      "answer_index": 2,
+      "explanation": "Ukraine's flag is blue sky over a golden field of wheat."
+    },
+    {
+      "id": "fl-042",
+      "prompt": "🇦🇹 Which country?",
+      "choices": [
+        "Germany",
+        "Poland",
+        "Latvia",
+        "Austria"
+      ],
+      "answer_index": 3,
+      "explanation": "Austria's flag is red, white, red in horizontal bands."
+    },
+    {
+      "id": "fl-043",
+      "prompt": "🇺🇸 Which country?",
+      "choices": [
+        "Malaysia",
+        "Liberia",
+        "United States",
+        "United Kingdom"
+      ],
+      "answer_index": 2,
+      "explanation": "The US flag has 50 stars and 13 stripes."
+    },
+    {
+      "id": "fl-044",
+      "prompt": "🇨🇦 Which country?",
+      "choices": [
+        "Canada",
+        "Peru",
+        "United States",
+        "Austria"
+      ],
+      "answer_index": 0,
+      "explanation": "Canada's flag has a red maple leaf between two red bars."
+    },
+    {
+      "id": "fl-045",
+      "prompt": "🇲🇽 Which country?",
+      "choices": [
+        "Italy",
+        "Ireland",
+        "Spain",
+        "Mexico"
+      ],
+      "answer_index": 3,
+      "explanation": "Mexico's flag is like Italy's but with an eagle and snake emblem in the middle."
+    },
+    {
+      "id": "fl-046",
+      "prompt": "🇧🇷 Which country?",
+      "choices": [
+        "Colombia",
+        "Brazil",
+        "Argentina",
+        "Portugal"
+      ],
+      "answer_index": 1,
+      "explanation": "Brazil's flag is green with a yellow diamond and a starry blue globe."
+    },
+    {
+      "id": "fl-047",
+      "prompt": "🇦🇷 Which country?",
+      "choices": [
+        "Greece",
+        "Argentina",
+        "Honduras",
+        "Uruguay"
+      ],
+      "answer_index": 1,
+      "explanation": "Argentina's flag is light blue and white with a golden sun."
+    },
+    {
+      "id": "fl-048",
+      "prompt": "🇨🇱 Which country?",
+      "choices": [
+        "Panama",
+        "United States",
+        "Cuba",
+        "Chile"
+      ],
+      "answer_index": 3,
+      "explanation": "Chile's flag has a single white star on a blue square."
+    },
+    {
+      "id": "fl-049",
+      "prompt": "🇵🇪 Which country?",
+      "choices": [
+        "Peru",
+        "Austria",
+        "Canada",
+        "Chile"
+      ],
+      "answer_index": 0,
+      "explanation": "Peru's flag is red, white, red in vertical bands."
+    },
+    {
+      "id": "fl-050",
+      "prompt": "🇨🇴 Which country?",
+      "choices": [
+        "Colombia",
+        "Venezuela",
+        "Ecuador",
+        "Spain"
+      ],
+      "answer_index": 0,
+      "explanation": "Colombia's flag is yellow, blue and red, with a big yellow band on top."
+    },
+    {
+      "id": "fl-051",
+      "prompt": "🇯🇲 Which country?",
+      "choices": [
+        "Jamaica",
+        "South Africa",
+        "Ghana",
+        "Brazil"
+      ],
+      "answer_index": 0,
+      "explanation": "Jamaica's flag is the only national flag with no red, white or blue."
+    },
+    {
+      "id": "fl-052",
+      "prompt": "🇨🇺 Which country?",
+      "choices": [
+        "Cuba",
+        "Panama",
+        "Philippines",
+        "Chile"
+      ],
+      "answer_index": 0,
+      "explanation": "Cuba's flag has blue and white stripes and a red triangle with a star."
+    },
+    {
+      "id": "fl-053",
+      "prompt": "🇿🇦 Which country?",
+      "choices": [
+        "Kenya",
+        "Jamaica",
+        "South Africa",
+        "Zimbabwe"
+      ],
+      "answer_index": 2,
+      "explanation": "South Africa's flag has six colours in a sideways Y design."
+    },
+    {
+      "id": "fl-054",
+      "prompt": "🇪🇬 Which country?",
+      "choices": [
+        "Egypt",
+        "Yemen",
+        "Syria",
+        "Iraq"
+      ],
+      "answer_index": 0,
+      "explanation": "Egypt's flag is red, white and black with a golden eagle."
+    },
+    {
+      "id": "fl-055",
+      "prompt": "🇰🇪 Which country?",
+      "choices": [
+        "Tanzania",
+        "South Africa",
+        "Malawi",
+        "Kenya"
+      ],
+      "answer_index": 3,
+      "explanation": "Kenya's flag has a Maasai shield and spears in the middle."
+    },
+    {
+      "id": "fl-056",
+      "prompt": "🇳🇬 Which country?",
+      "choices": [
+        "Nigeria",
+        "Ireland",
+        "Ghana",
+        "Pakistan"
+      ],
+      "answer_index": 0,
+      "explanation": "Nigeria's flag is green, white, green in vertical bands."
+    },
+    {
+      "id": "fl-057",
+      "prompt": "🇬🇭 Which country?",
+      "choices": [
+        "Cameroon",
+        "Ethiopia",
+        "Ghana",
+        "Senegal"
+      ],
+      "answer_index": 2,
+      "explanation": "Ghana's flag has red, gold and green stripes with a black star."
+    },
+    {
+      "id": "fl-058",
+      "prompt": "🇲🇦 Which country?",
+      "choices": [
+        "Tunisia",
+        "Turkey",
+        "Vietnam",
+        "Morocco"
+      ],
+      "answer_index": 3,
+      "explanation": "Morocco's flag is red with a green five-pointed star."
+    },
+    {
+      "id": "fl-059",
+      "prompt": "🇪🇹 Which country?",
+      "choices": [
+        "Bolivia",
+        "Ethiopia",
+        "Ghana",
+        "Senegal"
+      ],
+      "answer_index": 1,
+      "explanation": "Ethiopia's flag is green, yellow and red with a blue circle and star."
+    },
+    {
+      "id": "fl-060",
+      "prompt": "🇹🇿 Which country?",
+      "choices": [
+        "Tanzania",
+        "Uganda",
+        "Zambia",
+        "Kenya"
+      ],
+      "answer_index": 0,
+      "explanation": "Tanzania's flag has a black diagonal band edged in yellow."
+    }
+  ]
+}

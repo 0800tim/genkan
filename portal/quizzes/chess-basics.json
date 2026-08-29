@@ -1,0 +1,452 @@
+{
+  "id": "chess-basics",
+  "title": "Chess Basics",
+  "emoji": "♟️",
+  "suggested_age_min": 9,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Written for HEARTH, August 2026. Piece movement, values, tactics names, famous openings and mate patterns, all described in words so no diagrams are needed.",
+  "questions": [
+    {
+      "id": "ch-001",
+      "prompt": "How many squares are on a chessboard?",
+      "choices": ["36", "49", "64", "81"],
+      "answer_index": 2,
+      "explanation": "The board is 8 by 8, which makes 64 squares."
+    },
+    {
+      "id": "ch-002",
+      "prompt": "Who moves first in a game of chess?",
+      "choices": ["Black", "White", "Whoever is younger", "Decided by coin toss"],
+      "answer_index": 1,
+      "explanation": "White always makes the first move, which is a tiny head start."
+    },
+    {
+      "id": "ch-003",
+      "prompt": "How many pieces (including pawns) does each player start with?",
+      "choices": ["8", "12", "16", "20"],
+      "answer_index": 2,
+      "explanation": "Each side starts with 16: eight pawns, two rooks, two knights, two bishops, a queen and a king."
+    },
+    {
+      "id": "ch-004",
+      "prompt": "How does a rook move?",
+      "choices": [
+        "Any number of squares along a rank or file (straight lines)",
+        "Diagonally only",
+        "One square in any direction",
+        "In an L shape"
+      ],
+      "answer_index": 0,
+      "explanation": "Rooks slide any distance horizontally or vertically."
+    },
+    {
+      "id": "ch-005",
+      "prompt": "How does a bishop move?",
+      "choices": [
+        "Straight lines only",
+        "Any number of squares diagonally",
+        "One square diagonally",
+        "In an L shape"
+      ],
+      "answer_index": 1,
+      "explanation": "Bishops slide any distance along diagonals, so each one stays on its starting colour forever."
+    },
+    {
+      "id": "ch-006",
+      "prompt": "Which piece can jump over other pieces?",
+      "choices": ["The queen", "The rook", "The knight", "The bishop"],
+      "answer_index": 2,
+      "explanation": "Only the knight jumps; everyone else needs a clear path."
+    },
+    {
+      "id": "ch-007",
+      "prompt": "How does a knight move?",
+      "choices": [
+        "Two squares one way, then one square at right angles (an L shape)",
+        "Diagonally any distance",
+        "One square in any direction",
+        "Three squares straight ahead"
+      ],
+      "answer_index": 0,
+      "explanation": "The knight's L shaped hop makes it tricky, and it always lands on the opposite colour square."
+    },
+    {
+      "id": "ch-008",
+      "prompt": "How does the queen move?",
+      "choices": [
+        "Like a rook and a bishop combined",
+        "Only diagonally",
+        "Only in straight lines",
+        "Like a knight"
+      ],
+      "answer_index": 0,
+      "explanation": "The queen slides any distance in straight lines or diagonals, making her the strongest piece."
+    },
+    {
+      "id": "ch-009",
+      "prompt": "How far can the king move on a normal turn?",
+      "choices": [
+        "One square in any direction",
+        "Two squares in any direction",
+        "Any distance in a straight line",
+        "It cannot move"
+      ],
+      "answer_index": 0,
+      "explanation": "The king steps just one square at a time, except for the special castling move."
+    },
+    {
+      "id": "ch-010",
+      "prompt": "How do pawns capture?",
+      "choices": [
+        "Straight ahead",
+        "One square diagonally forward",
+        "Sideways",
+        "Backwards only"
+      ],
+      "answer_index": 1,
+      "explanation": "Pawns walk straight but capture diagonally, one square forward to the left or right."
+    },
+    {
+      "id": "ch-011",
+      "prompt": "How many squares can a pawn move on its very first move?",
+      "choices": ["Only one", "One or two", "Up to three", "Any number"],
+      "answer_index": 1,
+      "explanation": "From its home square a pawn may step one or leap two squares forward."
+    },
+    {
+      "id": "ch-012",
+      "prompt": "What happens when a pawn reaches the far end of the board?",
+      "choices": [
+        "It is removed from the game",
+        "It promotes, usually to a queen",
+        "It becomes a king",
+        "It must stop and stay there"
+      ],
+      "answer_index": 1,
+      "explanation": "A promoting pawn becomes a queen, rook, bishop or knight, and nearly everyone picks a queen."
+    },
+    {
+      "id": "ch-013",
+      "prompt": "What is 'en passant'?",
+      "choices": [
+        "A special pawn capture of a pawn that just moved two squares past it",
+        "Castling on the queen's side",
+        "A draw offer",
+        "Promoting to a knight"
+      ],
+      "answer_index": 0,
+      "explanation": "If an enemy pawn jumps two squares and lands beside your pawn, you may capture it as if it had moved one."
+    },
+    {
+      "id": "ch-014",
+      "prompt": "In castling, which two pieces move on the same turn?",
+      "choices": [
+        "The king and a rook",
+        "The king and the queen",
+        "Two rooks",
+        "The queen and a bishop"
+      ],
+      "answer_index": 0,
+      "explanation": "Castling slides the king two squares towards a rook and hops that rook to the other side of him."
+    },
+    {
+      "id": "ch-015",
+      "prompt": "Which of these makes castling illegal right now?",
+      "choices": [
+        "Your king would pass through a square attacked by the enemy",
+        "You are winning on points",
+        "Your queen has already moved",
+        "It is after move 20"
+      ],
+      "answer_index": 0,
+      "explanation": "You cannot castle out of, through or into check, and king and rook must both be unmoved with clear space between."
+    },
+    {
+      "id": "ch-016",
+      "prompt": "Using the usual point values, how much is a queen worth?",
+      "choices": ["5 points", "7 points", "9 points", "12 points"],
+      "answer_index": 2,
+      "explanation": "The queen counts as about 9 points, the most valuable piece after the priceless king."
+    },
+    {
+      "id": "ch-017",
+      "prompt": "How many points is a rook usually worth?",
+      "choices": ["3", "4", "5", "6"],
+      "answer_index": 2,
+      "explanation": "A rook is worth about 5 points, more than a bishop or knight at about 3 each."
+    },
+    {
+      "id": "ch-018",
+      "prompt": "Which two pieces are usually valued at about 3 points each?",
+      "choices": [
+        "Bishop and knight",
+        "Rook and bishop",
+        "Queen and rook",
+        "Pawn and knight"
+      ],
+      "answer_index": 0,
+      "explanation": "Bishops and knights, the minor pieces, are each worth roughly 3 pawns."
+    },
+    {
+      "id": "ch-019",
+      "prompt": "What does 'check' mean?",
+      "choices": [
+        "The king is attacked and must be made safe this move",
+        "The game is over",
+        "A piece has been captured",
+        "A player has offered a draw"
+      ],
+      "answer_index": 0,
+      "explanation": "Check means the king is under attack, and you must block, capture the attacker or move the king."
+    },
+    {
+      "id": "ch-020",
+      "prompt": "What is checkmate?",
+      "choices": [
+        "The king is in check and there is no legal way out, ending the game",
+        "The king has been captured",
+        "Both players run out of time",
+        "A pawn reaches the last rank"
+      ],
+      "answer_index": 0,
+      "explanation": "Checkmate ends the game on the spot; the king is attacked and nothing can save him."
+    },
+    {
+      "id": "ch-021",
+      "prompt": "What is stalemate?",
+      "choices": [
+        "A win for the stronger side",
+        "A draw: the player to move has no legal moves but is not in check",
+        "Another word for checkmate",
+        "When both queens are captured"
+      ],
+      "answer_index": 1,
+      "explanation": "Stalemate is a draw, which is why the winning side must be careful not to trap the enemy king by accident."
+    },
+    {
+      "id": "ch-022",
+      "prompt": "What is a 'fork' in chess?",
+      "choices": [
+        "One piece attacking two or more enemy pieces at once",
+        "Two pieces defending each other",
+        "Splitting your pawns",
+        "Trading queens"
+      ],
+      "answer_index": 0,
+      "explanation": "A fork attacks two targets at once, and knights are famous for forking king and queen."
+    },
+    {
+      "id": "ch-023",
+      "prompt": "What is a 'pin'?",
+      "choices": [
+        "A piece cannot safely move because a more valuable piece stands behind it on the same line",
+        "Trapping a knight in the corner",
+        "Blocking a pawn",
+        "A type of draw"
+      ],
+      "answer_index": 0,
+      "explanation": "A pinned piece is stuck shielding something more valuable behind it, like its king or queen."
+    },
+    {
+      "id": "ch-024",
+      "prompt": "What is a 'skewer'?",
+      "choices": [
+        "An attack on a valuable piece that, when it moves, exposes a piece behind it",
+        "Three pawns in a row",
+        "A knight trapped at the edge",
+        "Castling long"
+      ],
+      "answer_index": 0,
+      "explanation": "A skewer is a pin in reverse: the big piece must move and you win the one hiding behind it."
+    },
+    {
+      "id": "ch-025",
+      "prompt": "What is a 'discovered attack'?",
+      "choices": [
+        "Moving one piece so another piece behind it suddenly attacks",
+        "Finding a lost piece",
+        "Attacking with two pawns",
+        "An illegal move"
+      ],
+      "answer_index": 0,
+      "explanation": "You move one piece out of the way and unmask an attack from the piece behind, sometimes with check."
+    },
+    {
+      "id": "ch-026",
+      "prompt": "What is a 'sacrifice'?",
+      "choices": [
+        "Giving up material on purpose to gain a bigger advantage",
+        "Losing a piece by mistake",
+        "Offering a draw",
+        "Resigning the game"
+      ],
+      "answer_index": 0,
+      "explanation": "A sacrifice trades material for something better, like an attack on the king."
+    },
+    {
+      "id": "ch-027",
+      "prompt": "What is the fastest possible checkmate, needing only two moves by the loser?",
+      "choices": ["Fool's mate", "Scholar's mate", "Back rank mate", "Smothered mate"],
+      "answer_index": 0,
+      "explanation": "Fool's mate punishes terrible pawn moves; White plays f3 and g4 and Black's queen mates on h4."
+    },
+    {
+      "id": "ch-028",
+      "prompt": "Scholar's mate is the classic four move attack. Which squares does it target?",
+      "choices": [
+        "The f7 square (or f2 for Black), next to the king",
+        "The corner squares",
+        "The centre squares e4 and d4",
+        "The a and h files"
+      ],
+      "answer_index": 0,
+      "explanation": "Queen and bishop gang up on the weak f7 pawn, so learn to spot it and defend."
+    },
+    {
+      "id": "ch-029",
+      "prompt": "What is a back rank mate?",
+      "choices": [
+        "Checkmate by a queen or rook on the home row, with the king fenced in by its own pawns",
+        "Mate delivered by a pawn",
+        "Mate in the middle of the board",
+        "Mate with two knights"
+      ],
+      "answer_index": 0,
+      "explanation": "A rook or queen slides to the back row where the castled king is trapped behind its own pawns, so give your king an escape hatch."
+    },
+    {
+      "id": "ch-030",
+      "prompt": "What is a smothered mate?",
+      "choices": [
+        "A knight checkmates a king completely boxed in by its own pieces",
+        "Mate using every one of your pieces",
+        "Mate by advancing all eight pawns",
+        "A draw by repetition"
+      ],
+      "answer_index": 0,
+      "explanation": "Only a knight can deliver it, because the trapped king's own pieces block every escape square."
+    },
+    {
+      "id": "ch-031",
+      "prompt": "The opening 1.e4 e5 2.Nf3 Nc6 3.Bb5 is one of the oldest known. What is it called?",
+      "choices": [
+        "The Ruy Lopez (Spanish Opening)",
+        "The Sicilian Defence",
+        "The King's Gambit",
+        "The Caro-Kann"
+      ],
+      "answer_index": 0,
+      "explanation": "The Ruy Lopez is named after a 16th century Spanish priest and is still played at world championship level."
+    },
+    {
+      "id": "ch-032",
+      "prompt": "Black replies to 1.e4 with 1...c5. Which famous opening is this?",
+      "choices": [
+        "The French Defence",
+        "The Sicilian Defence",
+        "The Italian Game",
+        "The Queen's Gambit"
+      ],
+      "answer_index": 1,
+      "explanation": "The Sicilian Defence is the most popular fighting reply to 1.e4."
+    },
+    {
+      "id": "ch-033",
+      "prompt": "The Queen's Gambit starts 1.d4 d5 2.c4. What is White offering?",
+      "choices": [
+        "A pawn, to lure Black's centre pawn away",
+        "The queen",
+        "A draw",
+        "A knight for a bishop"
+      ],
+      "answer_index": 0,
+      "explanation": "White offers the c pawn to pull Black's pawn off the centre; it is a gambit of a pawn, never the queen."
+    },
+    {
+      "id": "ch-034",
+      "prompt": "Which opening begins 1.e4 e5 2.Nf3 Nc6 3.Bc4, aiming the bishop at f7?",
+      "choices": [
+        "The Italian Game",
+        "The Sicilian Defence",
+        "The English Opening",
+        "The Dutch Defence"
+      ],
+      "answer_index": 0,
+      "explanation": "The Italian Game develops the bishop to c4, eyeing Black's weakest square, f7."
+    },
+    {
+      "id": "ch-035",
+      "prompt": "Which four squares are considered the centre of the board?",
+      "choices": [
+        "e4, d4, e5 and d5",
+        "a1, a8, h1 and h8",
+        "b2, g2, b7 and g7",
+        "e1, d1, e8 and d8"
+      ],
+      "answer_index": 0,
+      "explanation": "Controlling the central squares e4, d4, e5 and d5 gives your pieces the most reach."
+    },
+    {
+      "id": "ch-036",
+      "prompt": "Which of these is good general opening advice?",
+      "choices": [
+        "Develop your knights and bishops early and castle your king to safety",
+        "Bring your queen out on move two",
+        "Move the same piece many times",
+        "Push all your edge pawns first"
+      ],
+      "answer_index": 0,
+      "explanation": "Fast development, centre control and early castling win far more games than early queen raids."
+    },
+    {
+      "id": "ch-037",
+      "prompt": "In chess notation, what does O-O mean?",
+      "choices": [
+        "Castling on the king's side",
+        "Two captures in a row",
+        "A double check",
+        "Pawn promotion"
+      ],
+      "answer_index": 0,
+      "explanation": "O-O is kingside (short) castling and O-O-O is queenside (long) castling."
+    },
+    {
+      "id": "ch-038",
+      "prompt": "In notation, why is N used for the knight instead of K?",
+      "choices": [
+        "K is already taken by the king",
+        "N stands for 'noble'",
+        "It comes from French",
+        "It was a printing error that stuck"
+      ],
+      "answer_index": 0,
+      "explanation": "The king claimed K, so the knight takes N."
+    },
+    {
+      "id": "ch-039",
+      "prompt": "In serious games, what does the 'touch move' rule say?",
+      "choices": [
+        "If you deliberately touch one of your pieces, you must move it if you legally can",
+        "You may touch pieces while you think",
+        "You must announce every check by touching your king",
+        "You lose if you touch the board"
+      ],
+      "answer_index": 0,
+      "explanation": "Touch it, move it, so decide with your eyes and only reach out when you are sure."
+    },
+    {
+      "id": "ch-040",
+      "prompt": "In 1997, world champion Garry Kasparov was beaten in a match by Deep Blue. What was Deep Blue?",
+      "choices": [
+        "An IBM chess computer",
+        "A Russian grandmaster",
+        "A chess playing robot dog",
+        "A team of schoolkids"
+      ],
+      "answer_index": 0,
+      "explanation": "IBM's Deep Blue was the first computer to beat a reigning world champion in a match, a famous moment for AI."
+    }
+  ]
+}

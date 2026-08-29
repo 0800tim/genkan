@@ -1,0 +1,217 @@
+<title>Hearth</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  --bg:#F5F3EC; --surface:#FBFAF5; --ink:#1C2A2A; --muted:#586460; --line:#DED9CC;
+  --accent:#1F7A66; --accent-soft:#E4EEE9; --off:#B4553F; --off-soft:#F3E4DE; --amber:#B47B22;
+  --shadow:0 1px 0 rgba(28,42,42,.04), 0 10px 30px -18px rgba(28,42,42,.28);
+}
+:root:not([data-theme="light"]){
+  @media (prefers-color-scheme: dark){
+    --bg:#121618; --surface:#1A2023; --ink:#ECEADF; --muted:#95A099; --line:#2A3336;
+    --accent:#54C4A6; --accent-soft:#17302A; --off:#D8785E; --off-soft:#331F1A; --amber:#DCA644;
+    --shadow:0 1px 0 rgba(0,0,0,.2), 0 18px 40px -22px rgba(0,0,0,.7);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#121618; --surface:#1A2023; --ink:#ECEADF; --muted:#95A099; --line:#2A3336;
+  --accent:#54C4A6; --accent-soft:#17302A; --off:#D8785E; --off-soft:#331F1A; --amber:#DCA644;
+  --shadow:0 1px 0 rgba(0,0,0,.2), 0 18px 40px -22px rgba(0,0,0,.7);
+}
+*{box-sizing:border-box;margin:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--bg);color:var(--ink);
+  font-family:"IBM Plex Sans",system-ui,sans-serif;font-size:17px;line-height:1.62;
+  -webkit-font-smoothing:antialiased;padding:clamp(20px,5vw,64px) 20px}
+.wrap{max-width:760px;margin:0 auto}
+.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:12px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:clamp(44px,9vw,76px);
+  line-height:1.0;letter-spacing:-.02em;text-wrap:balance;margin:.28em 0 .12em}
+.thesis{font-family:"Fraunces",Georgia,serif;font-weight:500;font-size:clamp(20px,3.6vw,26px);
+  line-height:1.32;color:var(--ink);text-wrap:balance;max-width:20ch}
+h1 .tld{color:var(--accent)}
+.lede{color:var(--muted);font-size:18px;margin-top:18px;max-width:60ch}
+.masthead{border-bottom:1px solid var(--line);padding-bottom:30px;margin-bottom:34px}
+/* schematic */
+.schematic{margin:26px 0 4px;color:var(--muted)}
+.schematic svg{width:100%;height:auto;display:block;max-width:640px}
+/* sections */
+section{margin:38px 0}
+h2{font-family:"Fraunces",Georgia,serif;font-weight:600;font-size:clamp(24px,4vw,30px);
+  letter-spacing:-.01em;margin-bottom:6px;text-wrap:balance}
+h2 + .sub{color:var(--muted);margin-bottom:20px}
+p{max-width:64ch}
+p + p{margin-top:12px}
+/* feature rows with the on/off chip motif */
+.feat{display:grid;grid-template-columns:auto 1fr;gap:14px 16px;align-items:start;
+  padding:16px 0;border-top:1px solid var(--line)}
+.feat:first-of-type{border-top:none}
+.chip{font-family:"IBM Plex Mono",monospace;font-size:11px;font-weight:600;letter-spacing:.06em;
+  padding:5px 9px;border-radius:999px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;margin-top:3px}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;
+  box-shadow:0 0 8px currentColor}
+.on{color:var(--accent);background:var(--accent-soft)}
+.off{color:var(--off);background:var(--off-soft)}
+.feat h3{font-size:17px;font-weight:600;margin-bottom:3px}
+.feat p{color:var(--muted);font-size:15.5px;max-width:56ch}
+/* honesty + ethos cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  padding:22px 24px;box-shadow:var(--shadow)}
+.limits li{list-style:none;padding:11px 0;border-top:1px solid var(--line);color:var(--muted);font-size:15.5px}
+.limits li:first-child{border-top:none;padding-top:2px}
+.limits b{color:var(--ink);font-weight:600}
+/* name aside */
+.name-aside{border-left:2px solid var(--accent);padding:4px 0 4px 22px}
+.name-aside .nameline{font-family:"Fraunces",Georgia,serif;font-size:clamp(19px,3vw,23px);
+  font-weight:500;line-height:1.34;color:var(--ink);text-wrap:balance;margin:6px 0 10px;max-width:34ch}
+.name-aside p{color:var(--muted);font-size:15.5px;max-width:58ch}
+.ethos{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;
+  background:var(--line);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.ethos div{background:var(--surface);padding:18px 20px}
+.ethos .k{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.ethos .v{font-size:15px;color:var(--muted)}.ethos .v b{color:var(--ink);font-weight:600}
+/* collab CTA */
+.cta{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+  padding:clamp(24px,4vw,34px);box-shadow:var(--shadow);margin-top:6px}
+.cta h2{margin-bottom:10px}
+.ways{margin:18px 0 0;padding:0}
+.ways li{list-style:none;display:flex;gap:12px;padding:9px 0;font-size:15.5px;color:var(--muted)}
+.ways .m{font-family:"IBM Plex Mono",monospace;color:var(--accent);font-weight:600;flex:none;width:2ch}
+.ways b{color:var(--ink);font-weight:600}
+footer{margin-top:42px;padding-top:22px;border-top:1px solid var(--line);
+  color:var(--muted);font-size:13.5px;line-height:1.7}
+footer .note{font-family:"IBM Plex Mono",monospace;font-size:12px;letter-spacing:.02em}
+a{color:var(--accent);text-decoration:none;border-bottom:1px solid color-mix(in srgb,var(--accent) 35%,transparent)}
+a:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:2px}
+@media (prefers-reduced-motion:no-preference){
+  .feat{transition:none}
+}
+</style>
+<div class="wrap">
+  <header class="masthead">
+    <div class="eyebrow">Open-source &middot; self-hosted &middot; built by a parent</div>
+    <h1>Hearth<span class="tld">.</span></h1>
+    <p class="thesis">A home network that hands parents back the off switch.</p>
+    <p class="lede">It turns any always-on computer into the gateway for a separate kids&rsquo; network,
+      so screen time, games and YouTube answer to you, from your phone, in plain words. Music, homework
+      and talking to Mum and Dad stay free.</p>
+    <div class="schematic" aria-hidden="true">
+      <svg viewBox="0 0 640 96" fill="none" stroke="currentColor" stroke-width="1.5">
+        <rect x="8" y="34" width="96" height="34" rx="7"/>
+        <text x="56" y="56" font-family="IBM Plex Mono, monospace" font-size="12" fill="currentColor" stroke="none" text-anchor="middle">internet</text>
+        <line x1="104" y1="51" x2="150" y2="51" stroke-dasharray="4 4"/>
+        <rect x="150" y="30" width="120" height="42" rx="8" stroke="var(--accent)"/>
+        <text x="210" y="49" font-family="IBM Plex Mono, monospace" font-size="12" fill="var(--accent)" stroke="none" text-anchor="middle">Hearth</text>
+        <text x="210" y="63" font-family="IBM Plex Mono, monospace" font-size="9.5" fill="currentColor" stroke="none" text-anchor="middle">the gateway</text>
+        <line x1="270" y1="51" x2="316" y2="51"/>
+        <line x1="316" y1="51" x2="316" y2="18"/><line x1="316" y1="51" x2="316" y2="84"/>
+        <line x1="316" y1="18" x2="470" y2="18"/><line x1="316" y1="51" x2="470" y2="51"/><line x1="316" y1="84" x2="470" y2="84"/>
+        <rect x="470" y="6" width="162" height="24" rx="6"/><text x="551" y="22" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" stroke="none" text-anchor="middle">kids&rsquo; wi-fi</text>
+        <rect x="470" y="39" width="162" height="24" rx="6"/><text x="551" y="55" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" stroke="none" text-anchor="middle">the wired PC</text>
+        <rect x="470" y="72" width="162" height="24" rx="6"/><text x="551" y="88" font-family="IBM Plex Mono, monospace" font-size="11" fill="currentColor" stroke="none" text-anchor="middle">guests (walled off)</text>
+      </svg>
+    </div>
+  </header>
+
+  <section>
+    <h2>The problem every parent knows</h2>
+    <p>The doom-scroll, the &ldquo;one more Roblox game&rdquo;, the YouTube hole that swallows a Saturday.
+      The apps are built by professionals to defeat a child&rsquo;s self-control, and the off switch is
+      buried in ten different settings menus. Worse, one blunt filter can&rsquo;t be right for an 11, a 14
+      and a 16-year-old at once. Hearth puts the off switch in one place, and makes it fit each kid.</p>
+  </section>
+
+  <section>
+    <h2>What it does</h2>
+    <p class="sub">Everything below is a tap on your phone, or a sentence to the household assistant:
+      &ldquo;turn off Ben&rsquo;s internet&rdquo;, &ldquo;kill gaming&rdquo;, &ldquo;dinner&rdquo;.</p>
+
+    <div class="feat"><span class="chip on">PER&nbsp;KID</span>
+      <div><h3>Age-tiered, not one-size-fits-all</h3>
+      <p>The 11-year-old gets tight rails; the 16-year-old gets a light touch and honesty. Each child, their own rules.</p></div></div>
+
+    <div class="feat"><span class="chip on">TIMED</span>
+      <div><h3>A clock that only counts what matters</h3>
+      <p>Games and YouTube are metered against a daily budget. Music, chess, homework and messaging you are never timed. Singing in the shower to Spotify is free.</p></div></div>
+
+    <div class="feat"><span class="chip off">GAMING&nbsp;OFF</span>
+      <div><h3>Switch off one thing, not everything</h3>
+      <p>Kill Roblox, Fortnite and Steam while chess, music and Google Docs keep working. Or flip the whole internet off. Or just video and scrolling.</p></div></div>
+
+    <div class="feat"><span class="chip on">STUDY&nbsp;MODE</span>
+      <div><h3>Homework without the rabbit holes</h3>
+      <p>One switch: schoolwork sites and music stay on, games and video go dark.</p></div></div>
+
+    <div class="feat"><span class="chip off">TIME&rsquo;S&nbsp;UP</span>
+      <div><h3>Earn it back, don&rsquo;t just get blocked</h3>
+      <p>When the time runs out, their screen shows a friendly page: <em>&ldquo;do the dishes for +30 minutes, then come see Dad.&rdquo;</em> Chores and study buy time back.</p></div></div>
+
+    <div class="feat"><span class="chip on">SAFER</span>
+      <div><h3>Filtering with a conscience</h3>
+      <p>Adult, gambling and self-harm content blocked, SafeSearch forced. And youth help lines stay reachable even when a child is switched off.</p></div></div>
+
+    <div class="feat"><span class="chip off">WALLED&nbsp;OFF</span>
+      <div><h3>Guests can&rsquo;t touch your home</h3>
+      <p>Visitors get internet on the kids&rsquo; island, fully sealed off from your own computers and files.</p></div></div>
+  </section>
+
+  <section>
+    <h2>What it won&rsquo;t pretend to do</h2>
+    <p class="sub">The honesty that most parental-control ads skip.</p>
+    <div class="card"><ul class="limits">
+      <li><b>It can&rsquo;t read inside apps.</b> Bullying in Snapchat or Instagram DMs is encrypted and invisible to any network tool. That needs a different kind of app, and we&rsquo;ll point you to one.</li>
+      <li><b>It can&rsquo;t touch mobile data.</b> Cellular never crosses your home network. Google Family Link is the lever there, and Hearth is built to run happily alongside it.</li>
+      <li><b>A determined teenager can get around it</b> &mdash; so we made that the point. A built-in household &ldquo;bug bounty&rdquo; rewards kids for finding a bypass and <em>showing you how</em>, turning the arms race into a genuine lesson in how networks work.</li>
+    </ul></div>
+  </section>
+
+  <section>
+    <h2>How it&rsquo;s built</h2>
+    <div class="ethos">
+      <div><div class="k">Runs on</div><div class="v">Any always-on Linux box &mdash; <b>an old PC or a Raspberry Pi</b>. Router-agnostic.</div></div>
+      <div><div class="k">Your data</div><div class="v"><b>Never leaves your house.</b> No cloud, no telemetry, no accounts.</div></div>
+      <div><div class="k">Licence</div><div class="v"><b>MIT, free forever.</b> No ads, no subscription, ever.</div></div>
+      <div><div class="k">Kin project</div><div class="v">Sibling to <b>unrot</b> &mdash; earn screen time by learning. Same spirit.</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="name-aside">
+      <div class="eyebrow">Why &ldquo;Hearth&rdquo;?</div>
+      <p class="nameline">The hearth is the floor of a fireplace &mdash; the one warm spot a family
+        once gathered around every evening.</p>
+      <p>Over centuries the word came to mean home and togetherness itself (it&rsquo;s a close cousin
+        of <em>heart</em>). It felt right for a project whose whole aim is to pull a family back from
+        separate screens in separate rooms, toward the warm centre again. Using a bit of technology to
+        undo what technology did to family evenings.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="cta">
+      <div class="eyebrow">The ask</div>
+      <h2>Help make it awesome</h2>
+      <p>Right now this is one dad and a home full of test subjects. It gets genuinely good when other
+        parents and tinkerers pile in, because every home, every router and every kid is different.
+        If any of this speaks to you, there&rsquo;s a job for you whether or not you write code:</p>
+      <ul class="ways">
+        <li><span class="m">01</span><div><b>Try it on your gear.</b> Different routers and access points need testing. Break it, tell us how.</div></li>
+        <li><span class="m">02</span><div><b>Sharpen the parenting.</b> What&rsquo;s a fair budget? When should the 16-year-old&rsquo;s rules loosen? This is as much a parenting question as a technical one.</div></li>
+        <li><span class="m">03</span><div><b>Grow the lists.</b> Help decide what counts as &ldquo;gaming&rdquo; vs &ldquo;homework&rdquo; vs &ldquo;just music&rdquo;, and keep it current.</div></li>
+        <li><span class="m">04</span><div><b>Write, translate, design.</b> Setup guides a non-technical parent can actually follow.</div></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <p class="note">Hearth is a working title &mdash; naming it is the first thing we&rsquo;ll do together.</p>
+    <p>Open-source, MIT-licensed, and built in the open. To get involved, reply on the Facebook post
+      or watch for the public repo alongside <a href="https://github.com/0800tim/unrot">unrot</a>.
+      Made by a parent, for parents who&rsquo;d like their evenings back.</p>
+  </footer>
+</div>

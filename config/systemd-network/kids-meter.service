@@ -1,0 +1,7 @@
+# Installed to /etc/systemd/system/ by deploy.sh.
+[Unit]
+Description=Kids-network time meter tick
+[Service]
+Type=oneshot
+EnvironmentFile=/srv/projects/internal/kids-network/secrets.env
+ExecStart=/usr/local/bin/kidnet-meter

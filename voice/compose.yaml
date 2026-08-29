@@ -1,0 +1,156 @@
+# Hearth voice: the optional "Hey Claudia" stack.
+#
+# Deliberately a SEPARATE compose file from the repo root. The gateway,
+# AdGuard and the portal are the things a family depends on; a microphone is
+# not. Nothing in the core stack references anything here, and if this whole
+# file is missing the island runs exactly as before.
+#
+# Run it alongside the core stack:
+#   docker compose -f compose.yaml -f voice/compose.yaml up -d
+# or on its own, since it shares no service names:
+#   docker compose -f voice/compose.yaml up -d
+#
+# Containment, same rules as the rest of the project:
+#   - nothing privileged, cap_drop ALL everywhere
+#   - NO network_mode: service:gateway. The voice stack must not sit inside the
+#     island namespace: it has no business near kids0 or the firewall.
+#   - NO docker socket. A container with the socket owns the host, which would
+#     make the microphone the most powerful thing in the house. The voice agent
+#     reaches the control surface the same way a phone does, over HTTP to the
+#     dashboard's audited /api/act, carrying DASH_TOKEN.
+#   - models and voiceprints live in NAMED VOLUMES, not bind mounts into the
+#     repo, so nothing personal can ever end up staged for a commit.
+name: hearth-voice
+
+services:
+  # Wake word. Listens continuously, emits a Wyoming detection event and
+  # nothing else. This is the only service that touches the mic.
+  wakeword:
+    image: rhasspy/wyoming-openwakeword:1.10.0
+    container_name: hearth-voice-wake
+    cap_drop: [ALL]
+    # The mic. Comment this out when audio arrives from a Pi satellite over
+    # the network instead of from a USB mic on this box.
+    devices:
+      - /dev/snd:/dev/snd
+    group_add:
+      - "${AUDIO_GID:-29}"   # host 'audio' group; getent group audio | cut -d: -f3
+    volumes:
+      - wake-models:/data
+    command: >
+      --uri tcp://0.0.0.0:10400
+      --custom-model-dir /data
+      --preload-model hey_claudia
+      --threshold 0.6
+    networks: [voice]
+    restart: unless-stopped
+
+  # Speech to text. Short command phrases, so base.en is plenty; move to
+  # small.en only if the box has cores to spare, and never a GPU: this
+  # machine's day job is the firewall.
+  whisper:
+    image: rhasspy/wyoming-whisper-cpp:2.5.0
+    container_name: hearth-voice-stt
+    cap_drop: [ALL]
+    volumes:
+      - whisper-models:/data
+    command: >
+      --uri tcp://0.0.0.0:10300
+      --model base.en
+      --language en
+      --data-dir /data
+    networks: [voice]
+    restart: unless-stopped
+
+  # Text to speech. Speaks the confirmation back so the family knows whether
+  # anything happened. Piper is small and fast enough to be instant.
+  piper:
+    image: rhasspy/wyoming-piper:1.6.2
+    container_name: hearth-voice-tts
+    cap_drop: [ALL]
+    volumes:
+      - piper-voices:/data
+    command: >
+      --uri tcp://0.0.0.0:10200
+      --voice en_GB-alba-medium
+      --data-dir /data
+      --download-dir /data
+    networks: [voice]
+    restart: unless-stopped
+
+  # Speaker identification. ECAPA-TDNN embeddings from SpeechBrain: given a
+  # clip, return the closest enrolled name and a similarity score.
+  #
+  # That score is ADVISORY. It is not a permission and it does not gate
+  # anything on its own (voice/README.md, voice/intents.md). Enrolled
+  # voiceprints live in the speaker-prints volume, never in Postgres, never in
+  # a backup that leaves the house, and `voice/enrolment.md` documents how a
+  # parent deletes them.
+  speakerid:
+    build:
+      context: .
+      dockerfile: speakerid/Dockerfile   # not written yet, see voice/README.md
+    image: hearth/speakerid:dev
+    container_name: hearth-voice-speakerid
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs: [/tmp]
+    volumes:
+      - speaker-models:/models          # the ECAPA checkpoint
+      - speaker-prints:/prints          # the family's enrolled embeddings
+    environment:
+      PORT: 10500
+      MATCH_THRESHOLD: "0.55"           # advisory floor for reporting a name
+    networks: [voice]
+    restart: unless-stopped
+    profiles: [voice]                   # off until the image is built
+
+  # The glue: wake -> transcript -> speaker guess -> intent -> kidnet -> audit
+  # -> phone push -> spoken reply. Everything family-specific lives here.
+  voice-agent:
+    build:
+      context: .
+      dockerfile: agent/Dockerfile      # not written yet, see voice/README.md
+    image: hearth/voice-agent:dev
+    container_name: hearth-voice-agent
+    cap_drop: [ALL]
+    read_only: true
+    tmpfs: [/tmp]
+    depends_on: [wakeword, whisper, piper]
+    env_file: [../secrets.env]          # DASH_TOKEN, PGPASSWORD, push creds
+    environment:
+      WAKE_URI: tcp://wakeword:10400
+      STT_URI: tcp://whisper:10300
+      TTS_URI: tcp://piper:10200
+      SPEAKERID_URI: http://speakerid:10500
+      # The audited control surface, on the HOST, outside the island. Same
+      # door the dashboard buttons and the phone agent go through.
+      CONTROL_URL: http://host.docker.internal:8899/api/act
+      # Audit rows go straight to Postgres as the limited kids_app role.
+      PGHOST: postgres
+      PGDATABASE: kids_network
+      PGUSER: kids_app
+      MIC_NAME: kitchen               # lands in voice_events.source
+      CONFIRM_TIMEOUT_SEC: "20"
+      # Fail closed on the thing that actually matters: if the parent push
+      # cannot be delivered, a time grant does not happen. An unwitnessed
+      # grant is worse than a kid waiting.
+      REQUIRE_NOTIFY_FOR_GRANTS: "1"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks: [voice, postgres]
+    restart: unless-stopped
+    profiles: [voice]                   # off until the image is built
+
+networks:
+  voice:
+    driver: bridge       # private to the voice stack, no route to the island
+  postgres:
+    external: true       # the shared postgres container's network
+
+volumes:
+  wake-models:           # the custom "hey claudia" openWakeWord model
+  whisper-models:        # downloaded whisper.cpp weights
+  piper-voices:          # downloaded Piper voices
+  speaker-models:        # the ECAPA-TDNN checkpoint
+  speaker-prints:        # the family's enrolled voiceprints. Personal data.

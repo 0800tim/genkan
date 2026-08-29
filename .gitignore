@@ -1,0 +1,10 @@
+# Local build artefacts / secrets never belong in the repo
+*.log
+*.local
+secrets.env
+config.env
+node_modules/
+dashboard/node_modules/
+# Commercial thinking lives in ../hearth-commercial, never here
+COMMERCIAL*
+commercial/

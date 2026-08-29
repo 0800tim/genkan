@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+# hearth:summary=Meter active minutes per category (gaming, video) and enforce budgets.
+#
+# Runs every minute. Refreshes the category IP sets from category_ips (learned
+# from DNS answers), reads and RESETS the per-device byte counters, and for any
+# device that pulled more than a small threshold this minute counts one active
+# minute for that child + category. When a child hits their category budget,
+# that category is blocked (DNS via kidnet-adguard, plus the category set), and
+# music/schoolwork are never touched. See METERING.md.
+set -euo pipefail
+GW="${GW_CONTAINER:-hearth-gw}"
+# nft access: container by default; NFT_NS=<netns> for tests, NFT_DIRECT=1 for host.
+nftx(){ if [ -n "${NFT_NS:-}" ]; then sudo ip netns exec "$NFT_NS" nft "$@"
+        elif [ "${NFT_DIRECT:-0}" = 1 ]; then nft "$@"
+        else docker exec "$GW" nft "$@"; fi; }
+psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+# Bytes/minute that count as "actively using" (not idle keepalive).
+: "${GAMING_THRESH:=51200}"   # ~50 KB/min
+: "${VIDEO_THRESH:=256000}"   # ~250 KB/min, video is high bitrate
+
+nftx list set inet kids gaming_ips >/dev/null 2>&1 || { echo "kidnet-catmeter: firewall/sets not loaded"; exit 0; }
+
+# 1. Refresh the category IP sets from what we've learned (last 24h of answers).
+for cat in gaming video; do
+  ips=$(psqll "SELECT host(ip) FROM category_ips WHERE category='$cat' AND seen > now() - interval '24 hours'" | paste -sd, || true)
+  [ -n "$ips" ] && nftx add element inet kids "${cat}_ips" "{ $ips }" 2>/dev/null || true
+done
+
+# 2. Read + reset the per-device counters (reset => this read is the minute's delta).
+tick_from_set(){ # <cat> <thresh> <setname>
+  local cat="$1" thresh="$2" set="$3" json
+  json=$(nftx -j list set inet kids "$set" 2>/dev/null) || return 0
+  echo "$json" | python3 -c "
+import sys,json
+d=json.load(sys.stdin)
+for blk in d.get('nftables',[]):
+    s=blk.get('set')
+    if not s or s.get('name')!='$set': continue
+    for e in s.get('elem',[]) or []:
+        el=e.get('elem') if isinstance(e,dict) and 'elem' in e else e
+        if not isinstance(el,dict): continue
+        ip=el.get('val'); c=el.get('counter',{})
+        b=c.get('bytes',0)
+        if isinstance(ip,str) and b>=$thresh: print(ip)
+"
+}
+declare -A active=()
+for pair in "gaming $GAMING_THRESH gaming_dev" "video $VIDEO_THRESH video_dev"; do
+  set -- $pair; cat="$1"; thresh="$2"; setn="$3"
+  for ip in $(tick_from_set "$cat" "$thresh" "$setn"); do
+    # attribute to the child owning this reserved IP
+    cid=$(psqll "SELECT child_id FROM devices WHERE host(reserved_ip)='$ip' AND is_active LIMIT 1")
+    [ -n "$cid" ] || continue
+    psqll "INSERT INTO category_usage(child_id,day,category,used_min) VALUES($cid,CURRENT_DATE,'$cat',1)
+           ON CONFLICT (child_id,day,category) DO UPDATE SET used_min=category_usage.used_min+1" >/dev/null
+    active["$cid:$cat"]=1
+  done
+  nftx flush set inet kids "$setn" 2>/dev/null || true   # reset for next minute
+done
+
+# 3. Enforce budgets: any child over their category budget gets that category blocked.
+enforce=0
+while IFS='|' read -r cid cat used budget; do
+  [ -n "$cid" ] || continue
+  if [ "$used" -ge "$budget" ]; then
+    already=$(psqll "SELECT blocked FROM category_state WHERE child_id=$cid AND category='$cat'")
+    if [ "$already" != "t" ]; then
+      psqll "INSERT INTO category_state(child_id,category,blocked,set_by) VALUES($cid,'$cat',true,'over-budget')
+             ON CONFLICT (child_id,category) DO UPDATE SET blocked=true, since=now(), set_by='over-budget'" >/dev/null
+      name=$(psqll "SELECT name FROM children WHERE id=$cid")
+      echo "kidnet-catmeter: $name hit their $cat budget ($used/$budget min); blocking $cat"
+      enforce=1
+    fi
+  fi
+done < <(psqll "SELECT u.child_id||'|'||u.category||'|'||u.used_min||'|'||b.daily_min
+  FROM category_usage u JOIN category_budgets b ON b.child_id=u.child_id AND b.category=u.category
+  WHERE u.day=CURRENT_DATE")
+
+# Push any new category blocks to the DNS layer.
+[ "$enforce" = 1 ] && [ -n "${ADGUARD_PASS:-}" ] && { d="$(dirname "$0")/kidnet-adguard"; [ -x "$d" ] && "$d" apply >/dev/null 2>&1 || true; }
+n_active=${#active[@]}
+echo "kidnet-catmeter: tick done ($n_active active child/category this minute)"

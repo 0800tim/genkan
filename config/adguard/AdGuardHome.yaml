@@ -1,0 +1,380 @@
+# HEARTH: AdGuard Home seed configuration for the kids' island.
+# Target: AdGuard Home v0.107.79 (config schema_version 34). Pin the container
+# image to this version; the schema migrates forward automatically but not back.
+#
+# How this file is used:
+#   - It is the FIRST BOOT seed. compose.yaml copies it into the adguard-conf
+#     volume on first start (never bind-mount the repo file: AdGuard rewrites
+#     its config at runtime and STRIPS EVERY COMMENT on the first UI/API change).
+#   - No host networking needed, despite what AdGuard's own docs assume: the
+#     container joins the GATEWAY's namespace (network_mode: service:gateway),
+#     where the physical kids0 lives, and has CAP_NET_RAW there. That gives
+#     the DHCP server its raw sockets while keeping full isolation.
+#   - nftables (config/nftables/kids.nft) is what keeps the kids' subnet away
+#     from the web UI port; AdGuard itself binds wide.
+#
+# Values are the generic shipped defaults: gateway 192.168.60.1 on
+# 192.168.60.0/24, placeholder kids child-11 / child-14 / child-16.
+
+http:
+  # Web UI + REST API. Reachable from the main LAN; nftables blocks the kids'
+  # subnet from reaching it (bug-bounty target, see BUG-BOUNTY.md).
+  address: 0.0.0.0:3000
+  session_ttl: 720h
+  pprof:
+    enabled: false
+    port: 6060
+
+users:
+  # Placeholder credentials: admin / change-me-on-deploy.
+  # NOTE: client names must match the `children.name` values in Postgres,
+  # because kidnet-adguard renders per-child rules as $client=<name>. Rename
+  # these to the real household names at setup (kidnet-adguard then matches).
+  # REPLACE AT DEPLOY. deploy.sh does this automatically: it generates a
+  # random password, writes the bcrypt hash here in the seed copy, and stores
+  # the plaintext in secrets.env (ADGUARD_PASS) for kidnet-adguard. This
+  # tracked file must NEVER contain a real or known hash: it is public.
+  # kidnet reads the real credentials from secrets.env (gitignored).
+  - name: admin
+    password: REPLACE_AT_DEPLOY_WITH_BCRYPT_HASH
+
+auth_attempts: 5
+block_auth_min: 15
+
+theme: auto
+language: ""
+
+dns:
+  # 0.0.0.0 inside the container (host network), so it answers on kids0
+  # (192.168.60.1). nftables stops the main LAN and the internet reaching it.
+  bind_hosts:
+    - 0.0.0.0
+  port: 53
+
+  # Upstream choice, with the honest trade-offs:
+  #   Quad9 (Swiss non-profit): blocks known-malware domains upstream, does
+  #     not log or sell personal data, slightly slower from NZ than Cloudflare.
+  #   Cloudflare (US company): fastest from NZ, promises 24h log deletion and
+  #     is independently audited, but you are trusting a large US ad-adjacent
+  #     company's promise. 1.1.1.2 variant adds malware blocking.
+  #   Mullvad (Swedish VPN company): strongest no-logging stance, DoH only,
+  #     usually the slowest of the three from NZ. Uncomment to prefer it.
+  # Both active upstreams are encrypted (DoT), so the ISP sees only that DNS
+  # happened, not what was asked.
+  upstream_dns:
+    - tls://dns.quad9.net
+    - tls://security.cloudflare-dns.com
+    # - https://dns.mullvad.net/dns-query
+  upstream_mode: load_balance
+
+  # Plain-IP resolvers used only to look up the upstream hostnames above.
+  bootstrap_dns:
+    - 9.9.9.10
+    - 149.112.112.10
+    - 1.1.1.1
+
+  # Per-device logs are the point of HEARTH, so do not anonymise client IPs.
+  anonymize_client_ip: false
+
+  # Do not serve the host's /etc/hosts entries to the kids' island.
+  hostsfile_enabled: false
+
+  cache_enabled: true
+  cache_size: 4194304
+  cache_optimistic: true
+
+  edns_client_subnet:
+    enabled: false
+    use_custom: false
+    custom_ip: ""
+
+filtering:
+  protection_enabled: true
+  filtering_enabled: true
+  filters_update_interval: 24
+
+  # "default" answers blocked queries with a null IP for A/AAAA. Per-kid
+  # portal redirects are NOT done here: kidnet adds $client dnsrewrite rules
+  # via the API instead (see INTEGRATION.md).
+  blocking_mode: default
+  blocked_response_ttl: 10
+
+  # Global toggles stay OFF: SafeSearch, Safe Browsing and the parental web
+  # service are set per client below, so the tiers differ.
+  safebrowsing_enabled: false
+  parental_enabled: false
+  safe_search:
+    enabled: false
+    bing: true
+    duckduckgo: true
+    ecosia: true
+    google: true
+    pixabay: true
+    yandex: true
+    youtube: true
+
+  # Stable local names for the gateway and the captive portal.
+  rewrites:
+    - domain: hearth.home
+      answer: 192.168.60.1
+    - domain: portal.hearth.home
+      answer: 192.168.60.1
+
+  # No global service blocks; services are blocked per client (per tier).
+  blocked_services:
+    schedule:
+      time_zone: Local
+    ids: []
+
+# Blocklists are GLOBAL in AdGuard Home (they cannot be assigned per client),
+# so this set is the union the strictest tier needs, tuned so the overlap is
+# defensible for the teen and guest tiers too. Rationale, alternatives and
+# false-positive notes: see blocklists.md in this directory.
+filters:
+  - enabled: true
+    url: https://adguardteam.github.io/AdGuardSDNSFilter/Filters/filter.txt
+    name: AdGuard DNS filter (ads and trackers)
+    id: 1
+  - enabled: true
+    url: https://nsfw.oisd.nl
+    name: OISD NSFW (adult)
+    id: 1001
+  - enabled: true
+    url: https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/tif.medium.txt
+    name: HaGeZi Threat Intelligence Feeds medium (malware, phishing, scam)
+    id: 1002
+  - enabled: true
+    url: https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/gambling.txt
+    name: HaGeZi Gambling
+    id: 1003
+  - enabled: true
+    url: https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/doh-vpn-proxy-bypass.txt
+    name: HaGeZi DoH/VPN/Proxy bypass (filter evasion)
+    id: 1004
+
+whitelist_filters: []
+
+# Rules here are the SEED. At runtime kidnet OWNS this list: it renders the
+# whole set from the database (always_allow plus active blocks) and replaces
+# it via POST /control/filtering/set_rules. Keep the safety exceptions in that
+# renderer; see INTEGRATION.md.
+user_rules:
+  # Safety net: NZ youth help lines always resolve, whatever else is blocked.
+  # @@ with $important wins over every blocklist rule, including $important
+  # blocks. The plain @@ ... $dnsrewrite twins cancel any dnsrewrite rule
+  # (portal redirects) for the same domains.
+  - "@@||1737.org.nz^$important"
+  - "@@||1737.org.nz^$dnsrewrite"
+  - "@@||youthline.co.nz^$important"
+  - "@@||youthline.co.nz^$dnsrewrite"
+  - "@@||kidsline.org.nz^$important"
+  - "@@||kidsline.org.nz^$dnsrewrite"
+  - "@@||thelowdown.co.nz^$important"
+  - "@@||thelowdown.co.nz^$dnsrewrite"
+  - "@@||sparklers.org.nz^$important"
+  - "@@||sparklers.org.nz^$dnsrewrite"
+  # Schoolwork survives everything (scope=safety in the database).
+  - "@@||khanacademy.org^$important"
+  - "@@||khanacademy.org^$dnsrewrite"
+  - "@@||education.govt.nz^$important"
+  - "@@||education.govt.nz^$dnsrewrite"
+  - "@@||drive.google.com^$important"
+  - "@@||drive.google.com^$dnsrewrite"
+  - "@@||docs.google.com^$important"
+  - "@@||docs.google.com^$dnsrewrite"
+  - "@@||classroom.google.com^$important"
+  - "@@||classroom.google.com^$dnsrewrite"
+
+querylog:
+  # The per-kid "what sites" view and the dns_log ingestion source.
+  # 30 days is enough for the weekly reports and any follow-up conversation;
+  # a family does not need a permanent archive of its children's browsing.
+  enabled: true
+  file_enabled: true
+  interval: 720h
+  size_memory: 1000
+  ignored: []
+  ignored_enabled: false
+
+statistics:
+  enabled: true
+  interval: 720h
+  ignored: []
+  ignored_enabled: false
+
+dhcp:
+  # AdGuard is the island's single DHCP server. The Deco AP is in bridge mode
+  # and must never run DHCP (see PLAN.md).
+  enabled: true
+  interface_name: kids0
+  local_domain_name: hearth
+  dhcpv4:
+    gateway_ip: 192.168.60.1
+    subnet_mask: 255.255.255.0
+    range_start: 192.168.60.100
+    range_end: 192.168.60.199
+    # 24 hours: long enough to be stable, short enough that a removed device
+    # falls off within a day.
+    lease_duration: 86400
+    icmp_timeout_msec: 1000
+    options: []
+  # Per-kid DHCP reservations (fixed IP per MAC) are added at deploy time via
+  # the API (POST /control/dhcp/add_static_lease), never committed here:
+  # MAC addresses are household-specific. See INTEGRATION.md.
+
+clients:
+  runtime_sources:
+    whois: false
+    arp: true
+    rdns: false
+    dhcp: true
+    hosts: false
+  # The four tiers. Kid devices are matched by their reserved IPs (exact IP
+  # match beats the guest subnet match). Add each new device's reserved IP to
+  # its kid's ids list. Placeholder IPs follow config/devices.conf.
+  persistent:
+    - name: child-11
+      # young tier, about age 11: tight filtering, SafeSearch and YouTube
+      # restricted forced, social media services blocked.
+      tags:
+        - user_child
+      ids:
+        - 192.168.60.101
+        - 192.168.60.102
+      use_global_settings: false
+      filtering_enabled: true
+      safebrowsing_enabled: true
+      parental_enabled: true
+      safe_search:
+        enabled: true
+        bing: true
+        duckduckgo: true
+        ecosia: true
+        google: true
+        pixabay: true
+        yandex: true
+        youtube: true
+      use_global_blocked_services: false
+      blocked_services:
+        schedule:
+          time_zone: Local
+        ids:
+          - 4chan
+          - 9gag
+          - tiktok
+          - instagram
+          - snapchat
+          - twitter
+          - reddit
+          - twitch
+          - discord
+          - onlyfans
+          - tinder
+          - grindr
+      ignore_querylog: false
+      ignore_statistics: false
+    - name: child-14
+      # standard tier, about age 14: harmful categories blocked, SafeSearch
+      # and YouTube restricted on, social allowed but logged.
+      tags:
+        - user_child
+      ids:
+        - 192.168.60.111
+        - 192.168.60.112
+      use_global_settings: false
+      filtering_enabled: true
+      safebrowsing_enabled: true
+      parental_enabled: true
+      safe_search:
+        enabled: true
+        bing: true
+        duckduckgo: true
+        ecosia: true
+        google: true
+        pixabay: true
+        yandex: true
+        youtube: true
+      use_global_blocked_services: false
+      blocked_services:
+        schedule:
+          time_zone: Local
+        ids:
+          - 4chan
+          - onlyfans
+          - tinder
+          - grindr
+      ignore_querylog: false
+      ignore_statistics: false
+    - name: child-16
+      # teen tier, about age 16: light touch on purpose. Only the seriously
+      # harmful is blocked (adult, malware, VPN bypass come from the global
+      # lists). No SafeSearch forcing, no parental web service.
+      tags:
+        - user_child
+      ids:
+        - 192.168.60.121
+        - 192.168.60.122
+      use_global_settings: false
+      filtering_enabled: true
+      safebrowsing_enabled: true
+      parental_enabled: false
+      safe_search:
+        enabled: false
+        bing: true
+        duckduckgo: true
+        ecosia: true
+        google: true
+        pixabay: true
+        yandex: true
+        youtube: true
+      use_global_blocked_services: false
+      blocked_services:
+        schedule:
+          time_zone: Local
+        ids:
+          - onlyfans
+          - tinder
+          - grindr
+      ignore_querylog: false
+      ignore_statistics: false
+    - name: guest
+      # guest tier: any island device without a reservation. Adult, malware
+      # and VPN blocking come from the global lists; no SafeSearch forcing,
+      # no service blocks, and no logging of people who are not ours.
+      # Exact-IP client matches above take precedence over this subnet match.
+      tags:
+        - user_regular
+      ids:
+        - 192.168.60.0/24
+      use_global_settings: false
+      filtering_enabled: true
+      safebrowsing_enabled: true
+      parental_enabled: false
+      safe_search:
+        enabled: false
+        bing: true
+        duckduckgo: true
+        ecosia: true
+        google: true
+        pixabay: true
+        yandex: true
+        youtube: true
+      use_global_blocked_services: true
+      ignore_querylog: true
+      ignore_statistics: true
+
+log:
+  file: ""
+  max_backups: 0
+  max_size: 100
+  max_age: 3
+  compress: false
+  local_time: false
+  verbose: false
+
+os:
+  group: ""
+  user: ""
+  rlimit_nofile: 0
+
+schema_version: 34

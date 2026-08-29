@@ -1,0 +1,8 @@
+[Unit]
+Description=Hearth per-category metering (learn IPs, count active minutes, enforce budgets)
+After=docker.service
+[Service]
+Type=oneshot
+EnvironmentFile=/srv/projects/internal/kids-network/secrets.env
+# Learn category IPs from DNS answers, then meter + enforce.
+ExecStart=/bin/sh -c '/usr/local/bin/kidnet-catmap; /usr/local/bin/kidnet-catmeter'

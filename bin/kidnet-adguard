@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# Renders the DNS-layer enforcement into AdGuard Home: per-child category
+# blocks become $client dnsrewrite rules that send a blocked category's
+# domains to the portal IP, so the kid gets the "time's up / blocked" page
+# instead of a dead connection. The nft layer (kidnet off/on) is the coarse
+# internet switch; this is the surgical per-category layer (gaming, video,
+# social) that keeps Spotify and schoolwork up.
+#
+# AdGuard's filtering rules are a single global list, so we RENDER THE WHOLE
+# LIST every time from the database (safety-net allows first, then every
+# active category block). One API call, no drift. Idempotent.
+set -euo pipefail
+: "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}" "${ADGUARD_PASS:?set ADGUARD_PASS}"
+: "${PORTAL_IP:=192.168.60.1}"
+psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+
+render(){
+  # Safety net first: these @@ exceptions must precede any block.
+  psqll "SELECT '@@||'||domain||'^\$important' FROM always_allow WHERE scope='safety' ORDER BY domain"
+  psqll "SELECT '@@||'||domain||'^\$dnsrewrite' FROM always_allow WHERE scope='safety' ORDER BY domain"
+  # Flagged on-ramps (Tor, darknet directories) -> the portal for EVERY child,
+  # always, not only when a category is blocked. A plain blocklist entry gives
+  # a dead connection; sending them to the portal means the kid gets the warm
+  # "this one is blocked, come find me, you are not in trouble" page instead.
+  # Self-harm patterns are deliberately excluded: those are a care signal and
+  # must never hit a blocking page (the help lines stay reachable).
+  psqll "
+    SELECT '||'||f.pattern||'^\$client='||c.name||',dnsrewrite=${PORTAL_IP}'
+    FROM flag_domains f CROSS JOIN children c
+    WHERE f.category IN ('tor','darknet','drugs') AND c.kind='child'
+      AND f.pattern NOT LIKE '%.onion'
+    ORDER BY c.name, f.pattern"
+
+  # Every active per-child category block -> a $client dnsrewrite to the portal.
+  # client tag is the child's name, matching the AdGuard client objects.
+  psqll "
+    SELECT '||'||cd.domain||'^\$client='||c.name||',dnsrewrite=${PORTAL_IP}'
+    FROM category_state cs
+    JOIN children c ON c.id=cs.child_id
+    JOIN category_domains cd ON cd.category=cs.category
+    WHERE cs.blocked AND cs.category IN ('gaming','video','social')
+    ORDER BY c.name, cd.domain"
+}
+
+apply(){
+  local rules; rules=$(render)
+  # Build the JSON {"rules":[...]} safely with python.
+  ADGUARD_URL="$ADGUARD_URL" ADGUARD_USER="$ADGUARD_USER" ADGUARD_PASS="$ADGUARD_PASS" \
+  python3 - "$rules" <<'PYEOF'
+import json,sys,os,urllib.request,base64
+rules=[r for r in sys.argv[1].splitlines() if r.strip()]
+body=json.dumps({"rules":rules}).encode()
+u=os.environ["ADGUARD_URL"]+"/control/filtering/set_rules"
+req=urllib.request.Request(u,data=body,method="POST")
+auth=base64.b64encode(f'{os.environ["ADGUARD_USER"]}:{os.environ["ADGUARD_PASS"]}'.encode()).decode()
+req.add_header("Authorization","Basic "+auth); req.add_header("Content-Type","application/json")
+try:
+    urllib.request.urlopen(req,timeout=8)
+    print(f"kidnet-adguard: applied {len(rules)} rules")
+except Exception as e:
+    print(f"kidnet-adguard: FAILED to apply rules: {e}",file=sys.stderr); sys.exit(1)
+PYEOF
+}
+
+case "${1:-apply}" in
+  apply)  apply;;
+  render) render;;
+  *) echo "usage: kidnet-adguard [apply|render]"; exit 1;;
+esac

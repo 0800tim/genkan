@@ -1,0 +1,81 @@
+#!/usr/bin/env bash
+# hearth:summary=Count real bytes per service per device, and roll them up daily.
+#
+# Generates its own nftables sets and metering chain from the services table,
+# so adding a service is a database row, not a firewall edit. For each metered
+# service it maintains:
+#   svc_<name>_ips  the destination addresses learned from DNS answers
+#   svc_<name>_dev  a dynamic per-device counter (who used it, how many bytes)
+# The chain only counts. It never accepts or drops, so it cannot change any
+# verdict or affect connectivity.
+#
+# Runs every minute: refresh the address sets, read and reset the counters,
+# add the delta to service_usage, and count an active minute when a device
+# moved more than a small threshold (so idle keepalive does not register).
+set -uo pipefail
+GW="${GW_CONTAINER:-hearth-gw}"
+nftx(){ if [ -n "${NFT_NS:-}" ]; then sudo ip netns exec "$NFT_NS" nft "$@"
+        elif [ "${NFT_DIRECT:-0}" = 1 ]; then nft "$@"
+        else docker exec -i "$GW" nft "$@"; fi; }
+psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+: "${SERVICE_ACTIVE_BYTES:=51200}"   # >50KB in a minute counts as active use
+
+nftx list table inet kids >/dev/null 2>&1 || { echo "kidnet-servicemeter: firewall not loaded"; exit 0; }
+
+SERVICES=$(psqll "SELECT name FROM services WHERE metered ORDER BY name")
+[ -n "$SERVICES" ] || exit 0
+
+# 1. Ensure the sets and the counting chain exist, and refresh the address sets.
+{
+  echo "table inet kids {"
+  for s in $SERVICES; do
+    echo "  set svc_${s}_ips { type ipv4_addr; flags interval; }"
+    echo "  set svc_${s}_dev { type ipv4_addr; flags dynamic; counter; }"
+  done
+  echo "  chain servicemetering {"
+  echo "    type filter hook forward priority 20; policy accept;"
+  for s in $SERVICES; do
+    echo "    iifname \"kids0\" ip daddr @svc_${s}_ips update @svc_${s}_dev { ip saddr }"
+  done
+  echo "  }"
+  echo "}"
+} | nftx -f - 2>/dev/null || true
+
+for s in $SERVICES; do
+  ips=$(psqll "SELECT host(si.ip) FROM service_ips si JOIN services sv ON sv.id=si.service_id
+               WHERE sv.name='$s' AND si.seen > now() - interval '24 hours'" | grep -E '^[0-9]' | paste -sd,)
+  [ -n "$ips" ] && nftx add element inet kids "svc_${s}_ips" "{ $ips }" 2>/dev/null
+done
+
+# 2. Read + reset the per-device counters, attribute to the owning child.
+total=0
+for s in $SERVICES; do
+  json=$(nftx -j list set inet kids "svc_${s}_dev" 2>/dev/null) || continue
+  rows=$(printf '%s' "$json" | SVC="$s" python3 -c "
+import sys,json,os
+try: d=json.load(sys.stdin)
+except Exception: sys.exit(0)
+for b in d.get('nftables',[]):
+    st=b.get('set')
+    if not st or st.get('name')!='svc_'+os.environ['SVC']+'_dev': continue
+    for e in st.get('elem',[]) or []:
+        el=e.get('elem') if isinstance(e,dict) and 'elem' in e else e
+        if not isinstance(el,dict): continue
+        ip=el.get('val'); c=el.get('counter') or {}
+        if isinstance(ip,str) and c.get('bytes',0)>0: print(f\"{ip}\t{c['bytes']}\")
+" 2>/dev/null)
+  [ -n "$rows" ] || continue
+  while IFS=$'\t' read -r ip bytes; do
+    [ -n "${ip:-}" ] || continue
+    cid=$(psqll "SELECT child_id FROM devices WHERE host(reserved_ip)='$ip' AND is_active LIMIT 1")
+    [ -n "$cid" ] || continue
+    mins=0; [ "$bytes" -ge "$SERVICE_ACTIVE_BYTES" ] && mins=1
+    psqll "INSERT INTO service_usage(child_id,day,service_id,bytes,used_min)
+           SELECT $cid, CURRENT_DATE, id, $bytes, $mins FROM services WHERE name='$s'
+           ON CONFLICT (child_id,day,service_id)
+           DO UPDATE SET bytes=service_usage.bytes+$bytes, used_min=service_usage.used_min+$mins" >/dev/null
+    total=$((total+1))
+  done <<< "$rows"
+  nftx flush set inet kids "svc_${s}_dev" 2>/dev/null
+done
+echo "kidnet-servicemeter: recorded $total device/service sample(s)"

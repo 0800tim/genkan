@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# hearth:summary=Pull AdGuard's DNS query log into the dns_log table.
+# Timer-driven. Newest-first paging, stops at the last stored timestamp, maps
+# client IP -> device -> child, inserts. Powers the per-kid "what sites" view
+# and category metering. Logs DOMAINS only, never content.
+set -euo pipefail
+: "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}" "${ADGUARD_PASS:?set ADGUARD_PASS}"
+PAGES="${DNSLOG_PAGES:-20}"
+DB_EXEC=(docker exec -i postgres psql -U postgres -d kids_network)
+SINCE=$("${DB_EXEC[@]}" -tAc "SELECT COALESCE(to_char(max(ts) AT TIME ZONE 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS'),'') FROM dns_log")
+
+TSV=$(ADGUARD_URL="$ADGUARD_URL" ADGUARD_USER="$ADGUARD_USER" ADGUARD_PASS="$ADGUARD_PASS" SINCE="$SINCE" PAGES="$PAGES" python3 <<'PY'
+import os,json,urllib.request,urllib.parse,base64,sys,csv
+url=os.environ["ADGUARD_URL"]; since=os.environ["SINCE"]; pages=int(os.environ["PAGES"])
+auth=base64.b64encode(f'{os.environ["ADGUARD_USER"]}:{os.environ["ADGUARD_PASS"]}'.encode()).decode()
+def get(u):
+    # AdGuard restarts (config change, upgrade) reset connections. A transient
+    # failure must not fail the unit: the next tick picks up what we missed.
+    r=urllib.request.Request(u); r.add_header("Authorization","Basic "+auth)
+    try:
+        return json.load(urllib.request.urlopen(r,timeout=10))
+    except Exception as e:
+        print(f"kidnet-dnslog: AdGuard unavailable ({e}); will retry next tick", file=sys.stderr)
+        raise SystemExit(0)
+rows=[]; older=None; stop=False
+for _ in range(pages):
+    u=url+"/control/querylog?limit=100"+(f"&older_than={urllib.parse.quote(older)}" if older else "")
+    d=get(u); data=d.get("data") or []
+    if not data: break
+    for e in data:
+        t=(e.get("time") or "")[:19]
+        if since and t<=since: stop=True; break
+        name=((e.get("question") or {}).get("name") or "").rstrip(".").lower()
+        if not name: continue
+        reason=e.get("reason") or ""
+        action="blocked" if (reason.startswith("Filtered") or reason.startswith("Rewrite")) else "allowed"
+        rows.append((t.replace("T"," "), e.get("client") or "", name, action))
+    older=d.get("oldest") or (data[-1].get("time") if data else None)
+    if stop or not older: break
+w=csv.writer(sys.stdout,delimiter="\t")
+for r in rows: w.writerow(r)
+PY
+)
+[ -z "$TSV" ] && { echo "kidnet-dnslog: nothing new"; exit 0; }
+# Stage + join client IP to device/child, then insert.
+printf '%s\n' "$TSV" | "${DB_EXEC[@]}" -qc "
+CREATE TEMP TABLE _dl(ts timestamptz, client_ip inet, domain text, action text);
+COPY _dl FROM STDIN WITH (FORMAT text);
+INSERT INTO dns_log(ts, device_id, client_ip, domain, action)
+SELECT dl.ts, d.id, dl.client_ip, dl.domain, dl.action
+FROM _dl dl LEFT JOIN devices d ON host(d.reserved_ip)=host(dl.client_ip);
+" 
+N=$(printf '%s\n' "$TSV" | grep -c . || true)
+echo "kidnet-dnslog: ingested $N row(s)"

@@ -1,0 +1,7 @@
+[Unit]
+Description=Hearth per-service accounting (learn service IPs, count bytes per kid)
+After=docker.service
+[Service]
+Type=oneshot
+EnvironmentFile=/srv/projects/internal/kids-network/secrets.env
+ExecStart=/bin/sh -c '/usr/local/bin/kidnet-servicemap; /usr/local/bin/kidnet-servicemeter'

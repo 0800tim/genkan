@@ -1,0 +1,9 @@
+# Install to /etc/systemd/system/ (or --user) at deploy. Fires kidnet-meter
+# every minute so time budgets actually tick down.
+[Unit]
+Description=Kids-network time meter (every minute)
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=1min
+[Install]
+WantedBy=timers.target

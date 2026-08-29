@@ -1,0 +1,612 @@
+{
+  "id": "nz-road-code",
+  "title": "NZ Road Code",
+  "emoji": "🚗",
+  "suggested_age_min": 15,
+  "minutes_per_pass": 12,
+  "pass_mark": 9,
+  "questions_per_round": 10,
+  "source_note": "Adapted with permission from the family's own Drive SWAT app (the DriveSwat database, recovered from the family's old server and reattached to the household SQL Server). Facts re-verified against the official NZ Road Code and NZTA Waka Kotahi guidance, August 2026. Corrections made during the port: roundabouts in NZ are travelled clockwise, the give-way-to-buses rule applies in zones of 60 km/h or less, and outdated WoF and Limited Speed Zone questions were dropped. Heads up for maintainers: the graduated licensing system changes on 25 January 2027 (learner periods, zero alcohol for all learner and restricted drivers, no full-licence practical test), so re-verify the licensing questions then.",
+  "questions": [
+    {
+      "id": "rc-001",
+      "prompt": "Which side of the road do you drive on in New Zealand?",
+      "choices": [
+        "The right",
+        "The left",
+        "Either side",
+        "The centre"
+      ],
+      "answer_index": 1,
+      "explanation": "In Aotearoa we drive on the left, always."
+    },
+    {
+      "id": "rc-002",
+      "prompt": "What is the usual speed limit in urban (built-up) areas unless signs say otherwise?",
+      "choices": [
+        "40 km/h",
+        "50 km/h",
+        "60 km/h",
+        "70 km/h"
+      ],
+      "answer_index": 1,
+      "explanation": "The default urban speed limit is 50 km/h unless a sign shows a different limit."
+    },
+    {
+      "id": "rc-003",
+      "prompt": "What is the usual maximum speed limit on the open road unless signs say otherwise?",
+      "choices": [
+        "80 km/h",
+        "90 km/h",
+        "100 km/h",
+        "110 km/h"
+      ],
+      "answer_index": 2,
+      "explanation": "The default open road limit is 100 km/h, and some motorways are signposted 110 km/h."
+    },
+    {
+      "id": "rc-004",
+      "prompt": "In good conditions, what rule gives a safe following distance behind the vehicle in front?",
+      "choices": [
+        "The 1 second rule",
+        "The 2 second rule",
+        "The 3 second rule",
+        "The 5 second rule"
+      ],
+      "answer_index": 1,
+      "explanation": "Stay at least 2 seconds behind the vehicle in front in good, dry conditions."
+    },
+    {
+      "id": "rc-005",
+      "prompt": "In wet or slippery conditions, how many seconds should your following distance be?",
+      "choices": [
+        "2 seconds",
+        "3 seconds",
+        "4 seconds",
+        "6 seconds"
+      ],
+      "answer_index": 2,
+      "explanation": "Stretch the gap to at least 4 seconds when the road is wet, icy or gravelly."
+    },
+    {
+      "id": "rc-006",
+      "prompt": "How do you actually check the 2 second rule while driving?",
+      "choices": [
+        "Guess two car lengths",
+        "Watch your speedo for two seconds",
+        "Pick a roadside marker and count two seconds after the car ahead passes it",
+        "Flash your lights and count the reply"
+      ],
+      "answer_index": 2,
+      "explanation": "Pick a fixed point like a power pole, and if you reach it before you finish counting two seconds, drop back."
+    },
+    {
+      "id": "rc-007",
+      "prompt": "What is the legal alcohol limit for drivers under 20 years old?",
+      "choices": [
+        "Zero",
+        "30 mg per 100 ml of blood",
+        "50 mg per 100 ml of blood",
+        "80 mg per 100 ml of blood"
+      ],
+      "answer_index": 0,
+      "explanation": "Under 20 the limit is zero, meaning no alcohol at all before driving."
+    },
+    {
+      "id": "rc-008",
+      "prompt": "What is the legal blood alcohol limit for drivers aged 20 and over?",
+      "choices": [
+        "Zero",
+        "30 mg per 100 ml of blood",
+        "50 mg per 100 ml of blood",
+        "80 mg per 100 ml of blood"
+      ],
+      "answer_index": 2,
+      "explanation": "For drivers 20 and over the limit is 50 mg of alcohol per 100 ml of blood (250 mcg per litre of breath)."
+    },
+    {
+      "id": "rc-009",
+      "prompt": "What is the only thing that sobers you up after drinking alcohol?",
+      "choices": [
+        "Strong coffee",
+        "A cold shower",
+        "Time",
+        "Fresh air and exercise"
+      ],
+      "answer_index": 2,
+      "explanation": "Only time removes alcohol from your body, nothing speeds it up."
+    },
+    {
+      "id": "rc-010",
+      "prompt": "What effect does caffeine have on alcohol impairment?",
+      "choices": [
+        "It cancels the alcohol out",
+        "It halves the impairment",
+        "It has no effect on the impairment",
+        "It makes you legally sober"
+      ],
+      "answer_index": 2,
+      "explanation": "Coffee might make you feel more awake, but your reactions and judgement stay impaired."
+    },
+    {
+      "id": "rc-011",
+      "prompt": "What must you do at a give way sign?",
+      "choices": [
+        "Always stop completely",
+        "Slow down and be ready to stop for crossing traffic",
+        "Speed up and merge quickly",
+        "Sound your horn before entering"
+      ],
+      "answer_index": 1,
+      "explanation": "Slow down, be ready to stop, and give way to any traffic that would cross your path."
+    },
+    {
+      "id": "rc-012",
+      "prompt": "What must you do at a stop sign?",
+      "choices": [
+        "Slow down and go if it looks clear",
+        "Stop completely, then go when it is safe",
+        "Stop only if other traffic is coming",
+        "Give way to the right only"
+      ],
+      "answer_index": 1,
+      "explanation": "A stop sign means a complete stop every time, then move off only when it is safe."
+    },
+    {
+      "id": "rc-013",
+      "prompt": "What shape is a stop sign?",
+      "choices": [
+        "Circle",
+        "Square",
+        "Octagon (8 sides)",
+        "Triangle"
+      ],
+      "answer_index": 2,
+      "explanation": "The 8 sided red octagon is unique so you can recognise a stop sign even from the back."
+    },
+    {
+      "id": "rc-014",
+      "prompt": "What does a triangle shaped sign pointing downwards mean?",
+      "choices": [
+        "Stop",
+        "Give way",
+        "No entry",
+        "Road narrows"
+      ],
+      "answer_index": 1,
+      "explanation": "The upside down triangle is the give way sign."
+    },
+    {
+      "id": "rc-015",
+      "prompt": "What does a yellow diamond shaped sign mean?",
+      "choices": [
+        "Information",
+        "A rule you must follow",
+        "A warning of a hazard ahead",
+        "Roadworks payment zone"
+      ],
+      "answer_index": 2,
+      "explanation": "Yellow diamonds are permanent warning signs that alert you to hazards ahead."
+    },
+    {
+      "id": "rc-016",
+      "prompt": "What does a round sign with a red border usually tell you?",
+      "choices": [
+        "Something you must not do",
+        "A hazard warning",
+        "Tourist information",
+        "A recommended speed"
+      ],
+      "answer_index": 0,
+      "explanation": "Red circles are prohibition signs, like no entry or no right turn."
+    },
+    {
+      "id": "rc-017",
+      "prompt": "A yellow sign on a curve recommends 35 km/h. What does that mean?",
+      "choices": [
+        "The legal limit drops to 35 km/h",
+        "35 km/h is a safe speed for the curve in good conditions",
+        "Only trucks must slow to 35 km/h",
+        "You must not go under 35 km/h"
+      ],
+      "answer_index": 1,
+      "explanation": "Advisory speed signs recommend a safe speed in good conditions, they are not the legal limit."
+    },
+    {
+      "id": "rc-018",
+      "prompt": "Which way do you travel around a roundabout in New Zealand?",
+      "choices": [
+        "Clockwise, keeping left as you enter",
+        "Anticlockwise, keeping right as you enter",
+        "Either way if it is clear",
+        "Straight across the middle island"
+      ],
+      "answer_index": 0,
+      "explanation": "Because we drive on the left, traffic flows clockwise around NZ roundabouts."
+    },
+    {
+      "id": "rc-019",
+      "prompt": "How do you signal when going straight ahead at a roundabout?",
+      "choices": [
+        "Signal right as you enter",
+        "Signal left as you enter",
+        "No signal entering, then signal left as you exit",
+        "No signal at all"
+      ],
+      "answer_index": 2,
+      "explanation": "Going straight through, you do not signal on entry but you signal left as you leave."
+    },
+    {
+      "id": "rc-020",
+      "prompt": "How do you signal when turning right at a roundabout?",
+      "choices": [
+        "Left signal the whole way",
+        "Right signal on entry, then left signal as you exit",
+        "Right signal the whole way round",
+        "No signal is needed at roundabouts"
+      ],
+      "answer_index": 1,
+      "explanation": "Signal right into the roundabout, then flick on a left signal as you pass the exit before yours."
+    },
+    {
+      "id": "rc-021",
+      "prompt": "At an uncontrolled T intersection, who gives way?",
+      "choices": [
+        "The vehicle on the road that ends (the bottom of the T)",
+        "The vehicle on the through road",
+        "Whoever got there first",
+        "The bigger vehicle"
+      ],
+      "answer_index": 0,
+      "explanation": "Traffic on the terminating road gives way to everything on the road that continues."
+    },
+    {
+      "id": "rc-022",
+      "prompt": "Two cars reach an uncontrolled crossroads at the same time and their paths cross. Who gives way?",
+      "choices": [
+        "The car on the right",
+        "The car on the left",
+        "The faster car",
+        "The car going uphill"
+      ],
+      "answer_index": 1,
+      "explanation": "Give way to your right, so the car on the left is the one that waits."
+    },
+    {
+      "id": "rc-023",
+      "prompt": "You are turning right at an intersection. Who must you give way to?",
+      "choices": [
+        "Nobody if you signalled early",
+        "Only vehicles coming from your right",
+        "Oncoming vehicles going straight or turning left",
+        "Only pedestrians"
+      ],
+      "answer_index": 2,
+      "explanation": "Right turners give way to oncoming traffic going straight through or turning left."
+    },
+    {
+      "id": "rc-024",
+      "prompt": "You are turning from a side road onto a main road. A car is coming along the main road. Who gives way?",
+      "choices": [
+        "The car on the main road",
+        "You do, because you are entering from the side road",
+        "Whoever arrived first",
+        "Neither, the main road car must stop"
+      ],
+      "answer_index": 1,
+      "explanation": "Traffic entering from a side road gives way to all traffic on the road it is joining."
+    },
+    {
+      "id": "rc-025",
+      "prompt": "Who gives way when a vehicle is entering a motorway from an on ramp?",
+      "choices": [
+        "Vehicles already on the motorway",
+        "The vehicle entering the motorway",
+        "The vehicle in the slowest lane",
+        "Nobody, it is first in first served"
+      ],
+      "answer_index": 1,
+      "explanation": "Merging traffic gives way to vehicles already on the motorway and joins when there is a safe gap."
+    },
+    {
+      "id": "rc-026",
+      "prompt": "Who has right of way at a pedestrian crossing?",
+      "choices": [
+        "Whoever got there first",
+        "The pedestrian",
+        "The vehicle",
+        "Cyclists only"
+      ],
+      "answer_index": 1,
+      "explanation": "You must slow down and give way to anyone on or stepping onto a pedestrian crossing."
+    },
+    {
+      "id": "rc-027",
+      "prompt": "What is the speed limit when passing a stopped school bus that is picking up or dropping off children?",
+      "choices": [
+        "20 km/h in either direction",
+        "30 km/h from behind only",
+        "40 km/h with care",
+        "The posted limit"
+      ],
+      "answer_index": 0,
+      "explanation": "Pass a stopped school bus at no more than 20 km/h, from either direction, and watch for kids."
+    },
+    {
+      "id": "rc-028",
+      "prompt": "A bus at a bus stop is signalling to pull out. When must you give way to it?",
+      "choices": [
+        "Never, buses always give way to cars",
+        "Only on motorways",
+        "On roads with a speed limit of 60 km/h or less, when it is safe",
+        "Only during rush hour"
+      ],
+      "answer_index": 2,
+      "explanation": "In zones of 60 km/h or less you give way to a bus signalling out from a stop, when you can do so safely."
+    },
+    {
+      "id": "rc-029",
+      "prompt": "How much room should you give a cyclist when you pass them?",
+      "choices": [
+        "0.5 metres",
+        "1 metre",
+        "At least 1.5 metres",
+        "3 metres"
+      ],
+      "answer_index": 2,
+      "explanation": "The Road Code says give cyclists at least 1.5 metres of space when passing."
+    },
+    {
+      "id": "rc-030",
+      "prompt": "There is a solid yellow line on your side of the centre line. What does it mean?",
+      "choices": [
+        "You may overtake with care",
+        "You must not cross it to overtake",
+        "You may cross it only at night",
+        "The road is one way"
+      ],
+      "answer_index": 1,
+      "explanation": "A solid yellow line on your side marks a no passing zone because it is too dangerous to overtake."
+    },
+    {
+      "id": "rc-031",
+      "prompt": "What does a broken white centre line mean?",
+      "choices": [
+        "No overtaking ever",
+        "You may cross it to overtake when it is safe",
+        "Cycle lane boundary",
+        "Road narrows ahead"
+      ],
+      "answer_index": 1,
+      "explanation": "You may cross a broken white centre line to overtake, but only when you can see it is safe."
+    },
+    {
+      "id": "rc-032",
+      "prompt": "A broken yellow line runs beside a solid yellow centre line. Who may overtake?",
+      "choices": [
+        "Traffic on the broken line side",
+        "Traffic on the solid line side",
+        "Both sides",
+        "Neither side"
+      ],
+      "answer_index": 0,
+      "explanation": "If the broken line is on your side you may overtake, and if the solid line is on your side you must not."
+    },
+    {
+      "id": "rc-033",
+      "prompt": "When must your vehicle's headlights be on?",
+      "choices": [
+        "Only when it is completely dark",
+        "From 30 minutes after sunset until 30 minutes before sunrise, and when visibility is poor",
+        "Only on the open road at night",
+        "Whenever it is raining, day or night"
+      ],
+      "answer_index": 1,
+      "explanation": "Lights go on from half an hour after sunset to half an hour before sunrise, and any time you cannot see clearly."
+    },
+    {
+      "id": "rc-034",
+      "prompt": "During the day, you must turn your headlights on when you cannot clearly see a person or vehicle how far away?",
+      "choices": [
+        "50 metres",
+        "100 metres",
+        "200 metres",
+        "500 metres"
+      ],
+      "answer_index": 1,
+      "explanation": "If you cannot clearly see 100 metres ahead, in fog or heavy rain for example, turn your lights on."
+    },
+    {
+      "id": "rc-035",
+      "prompt": "When following another vehicle at night, you must dip your headlights when you are within what distance?",
+      "choices": [
+        "100 metres",
+        "150 metres",
+        "200 metres",
+        "300 metres"
+      ],
+      "answer_index": 2,
+      "explanation": "Dip your lights within 200 metres of the vehicle ahead so you do not dazzle the driver in their mirrors."
+    },
+    {
+      "id": "rc-036",
+      "prompt": "Which lights should you use when driving in thick fog?",
+      "choices": [
+        "High beam headlights",
+        "Low beam (dipped) headlights",
+        "Hazard lights only",
+        "No lights, to reduce glare"
+      ],
+      "answer_index": 1,
+      "explanation": "Use dipped headlights in fog because high beam reflects off the fog and blinds you."
+    },
+    {
+      "id": "rc-037",
+      "prompt": "How close to an intersection are you allowed to park (unless marked spaces say otherwise)?",
+      "choices": [
+        "No closer than 3 metres",
+        "No closer than 6 metres",
+        "No closer than 10 metres",
+        "Right up to the corner"
+      ],
+      "answer_index": 1,
+      "explanation": "Keep parked cars at least 6 metres back from intersections so everyone can see and turn safely."
+    },
+    {
+      "id": "rc-038",
+      "prompt": "What do double yellow lines painted along the edge of the road by the kerb mean?",
+      "choices": [
+        "Parking for 5 minutes only",
+        "Loading zone",
+        "No stopping or parking at any time",
+        "Residents' parking"
+      ],
+      "answer_index": 2,
+      "explanation": "Double yellow lines by the kerb mean no stopping or parking there at any time."
+    },
+    {
+      "id": "rc-039",
+      "prompt": "You park facing uphill with a kerb. Which way should you turn your front wheels?",
+      "choices": [
+        "Towards the kerb",
+        "Away from the kerb",
+        "Straight ahead",
+        "It makes no difference"
+      ],
+      "answer_index": 1,
+      "explanation": "Point the wheels away from the kerb uphill, so if the car rolls back the tyre catches on the kerb."
+    },
+    {
+      "id": "rc-040",
+      "prompt": "You park facing downhill with a kerb. Which way should you turn your front wheels?",
+      "choices": [
+        "Towards the kerb",
+        "Away from the kerb",
+        "Straight ahead",
+        "It makes no difference"
+      ],
+      "answer_index": 0,
+      "explanation": "Point the wheels into the kerb downhill, so the kerb stops the car if it rolls forward."
+    },
+    {
+      "id": "rc-041",
+      "prompt": "Are you allowed to park on the right hand side of the road, facing oncoming traffic?",
+      "choices": [
+        "Yes, if it is convenient",
+        "Yes, but only at night",
+        "No, you must park in the direction of travel",
+        "Yes, on quiet streets"
+      ],
+      "answer_index": 2,
+      "explanation": "Park on the left in the direction you were travelling, facing the same way as the traffic flow."
+    },
+    {
+      "id": "rc-042",
+      "prompt": "You are driving on a learner licence. Where must your supervisor be?",
+      "choices": [
+        "Anywhere in the car",
+        "In the front passenger seat",
+        "In the back seat",
+        "Following in another car"
+      ],
+      "answer_index": 1,
+      "explanation": "Your supervisor must sit beside you in the front passenger seat whenever you drive."
+    },
+    {
+      "id": "rc-043",
+      "prompt": "Where must L plates be displayed on a learner driver's car?",
+      "choices": [
+        "On the dashboard",
+        "On the rear window only",
+        "Clearly visible at both the front and the back",
+        "On the driver's door"
+      ],
+      "answer_index": 2,
+      "explanation": "An L plate must be clearly visible from both the front and the back of the vehicle."
+    },
+    {
+      "id": "rc-044",
+      "prompt": "How old must you be to apply for your learner licence?",
+      "choices": [
+        "15",
+        "16",
+        "17",
+        "18"
+      ],
+      "answer_index": 1,
+      "explanation": "You can sit your learner licence theory test from age 16."
+    },
+    {
+      "id": "rc-045",
+      "prompt": "Under the current rules, how long must you hold your learner licence before you can sit your restricted test?",
+      "choices": [
+        "3 months",
+        "6 months",
+        "9 months",
+        "24 months"
+      ],
+      "answer_index": 1,
+      "explanation": "At least 6 months on your learner licence first (this is changing in 2027, so check NZTA when you apply)."
+    },
+    {
+      "id": "rc-046",
+      "prompt": "Between which hours can a restricted licence holder drive without a supervisor?",
+      "choices": [
+        "Any time, day or night",
+        "5 am to 10 pm",
+        "6 am to midnight",
+        "7 am to 7 pm"
+      ],
+      "answer_index": 1,
+      "explanation": "On a restricted licence you can drive solo between 5 am and 10 pm, and you need a supervisor outside those hours."
+    },
+    {
+      "id": "rc-047",
+      "prompt": "What must you carry with you whenever you drive?",
+      "choices": [
+        "Your driver licence",
+        "Your vehicle's ownership papers",
+        "Your insurance certificate",
+        "Your passport"
+      ],
+      "answer_index": 0,
+      "explanation": "You must have your driver licence with you every time you drive."
+    },
+    {
+      "id": "rc-048",
+      "prompt": "What is the minimum legal tread depth for car tyres in New Zealand?",
+      "choices": [
+        "1 mm",
+        "1.5 mm",
+        "2 mm",
+        "3 mm"
+      ],
+      "answer_index": 1,
+      "explanation": "Tyres need at least 1.5 mm of tread across most of the tyre to be legal and to grip in the wet."
+    },
+    {
+      "id": "rc-049",
+      "prompt": "You are involved in a crash and someone is hurt. What must you do?",
+      "choices": [
+        "Drive home and phone your insurer",
+        "Stop, help if you safely can, and call 111",
+        "Stop only if the crash was your fault",
+        "Swap numbers and leave"
+      ],
+      "answer_index": 1,
+      "explanation": "Always stop, check people are okay, help if it is safe, and call 111 when anyone is injured."
+    },
+    {
+      "id": "rc-050",
+      "prompt": "An ambulance comes up behind you with its siren on and lights flashing. What should you do?",
+      "choices": [
+        "Speed up so you are not in the way",
+        "Stop exactly where you are",
+        "Pull over to the left and stop when it is safe",
+        "Carry on at the same speed"
+      ],
+      "answer_index": 2,
+      "explanation": "Move left and stop as soon as it is safe so the emergency vehicle can get past."
+    }
+  ]
+}

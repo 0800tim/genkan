@@ -1,0 +1,491 @@
+{
+  "id": "science-basics",
+  "title": "Science Basics",
+  "emoji": "🔬",
+  "suggested_age_min": 11,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "questions": [
+    {
+      "id": "sci-001",
+      "prompt": "What is the chemical formula for water?",
+      "choices": [
+        "O2",
+        "CO2",
+        "H2O",
+        "H2O2"
+      ],
+      "answer_index": 2,
+      "explanation": "Each water molecule is two hydrogen atoms joined to one oxygen atom."
+    },
+    {
+      "id": "sci-002",
+      "prompt": "Which planet is closest to the Sun?",
+      "choices": [
+        "Mars",
+        "Venus",
+        "Earth",
+        "Mercury"
+      ],
+      "answer_index": 3,
+      "explanation": "Mercury whips around the Sun in just 88 Earth days."
+    },
+    {
+      "id": "sci-003",
+      "prompt": "Which planet is known as the Red Planet?",
+      "choices": [
+        "Mercury",
+        "Mars",
+        "Venus",
+        "Jupiter"
+      ],
+      "answer_index": 1,
+      "explanation": "Mars looks red because its surface is covered in rusty iron oxide dust."
+    },
+    {
+      "id": "sci-004",
+      "prompt": "Which is the largest planet in our solar system?",
+      "choices": [
+        "Earth",
+        "Neptune",
+        "Saturn",
+        "Jupiter"
+      ],
+      "answer_index": 3,
+      "explanation": "Jupiter is so big that more than 1,300 Earths could fit inside it."
+    },
+    {
+      "id": "sci-005",
+      "prompt": "Which gas do plants take in for photosynthesis?",
+      "choices": [
+        "Hydrogen",
+        "Carbon dioxide",
+        "Nitrogen",
+        "Oxygen"
+      ],
+      "answer_index": 1,
+      "explanation": "Plants use carbon dioxide, water and sunlight to make their food."
+    },
+    {
+      "id": "sci-006",
+      "prompt": "Which gas do plants release during photosynthesis?",
+      "choices": [
+        "Nitrogen",
+        "Methane",
+        "Carbon dioxide",
+        "Oxygen"
+      ],
+      "answer_index": 3,
+      "explanation": "The oxygen we breathe mostly comes from plants and ocean algae."
+    },
+    {
+      "id": "sci-007",
+      "prompt": "Which gas makes up most of Earth's atmosphere?",
+      "choices": [
+        "Oxygen",
+        "Carbon dioxide",
+        "Argon",
+        "Nitrogen"
+      ],
+      "answer_index": 3,
+      "explanation": "The air is about 78 percent nitrogen and only 21 percent oxygen."
+    },
+    {
+      "id": "sci-008",
+      "prompt": "What force pulls objects towards the centre of the Earth?",
+      "choices": [
+        "Air pressure",
+        "Magnetism",
+        "Friction",
+        "Gravity"
+      ],
+      "answer_index": 3,
+      "explanation": "Gravity is why dropped things fall and why the Moon stays in orbit."
+    },
+    {
+      "id": "sci-009",
+      "prompt": "What is the centre of an atom called?",
+      "choices": [
+        "The molecule",
+        "The nucleus",
+        "The shell",
+        "The electron"
+      ],
+      "answer_index": 1,
+      "explanation": "The nucleus holds the protons and neutrons, with electrons whizzing around it."
+    },
+    {
+      "id": "sci-010",
+      "prompt": "What electric charge does an electron have?",
+      "choices": [
+        "Neutral",
+        "Positive",
+        "It changes constantly",
+        "Negative"
+      ],
+      "answer_index": 3,
+      "explanation": "Electrons are negative, protons are positive, neutrons are neutral."
+    },
+    {
+      "id": "sci-011",
+      "prompt": "Which element has the chemical symbol O?",
+      "choices": [
+        "Gold",
+        "Osmium",
+        "Oxygen",
+        "Hydrogen"
+      ],
+      "answer_index": 2,
+      "explanation": "O for oxygen, the gas your body needs every second."
+    },
+    {
+      "id": "sci-012",
+      "prompt": "Which element has the chemical symbol Fe?",
+      "choices": [
+        "Iron",
+        "Tin",
+        "Lead",
+        "Fluorine"
+      ],
+      "answer_index": 0,
+      "explanation": "Fe comes from ferrum, the Latin word for iron."
+    },
+    {
+      "id": "sci-013",
+      "prompt": "Which element has the chemical symbol Au?",
+      "choices": [
+        "Gold",
+        "Silver",
+        "Copper",
+        "Aluminium"
+      ],
+      "answer_index": 0,
+      "explanation": "Au comes from aurum, the Latin word for gold."
+    },
+    {
+      "id": "sci-014",
+      "prompt": "At sea level, water boils at what temperature?",
+      "choices": [
+        "100 °C",
+        "90 °C",
+        "80 °C",
+        "120 °C"
+      ],
+      "answer_index": 0,
+      "explanation": "Water boils at 100 degrees Celsius at sea level, lower up a mountain."
+    },
+    {
+      "id": "sci-015",
+      "prompt": "At what temperature does fresh water freeze?",
+      "choices": [
+        "5 °C",
+        "-10 °C",
+        "0 °C",
+        "10 °C"
+      ],
+      "answer_index": 2,
+      "explanation": "Zero degrees Celsius was actually defined from water's freezing point."
+    },
+    {
+      "id": "sci-016",
+      "prompt": "Which organ pumps blood around your body?",
+      "choices": [
+        "The liver",
+        "The heart",
+        "The kidneys",
+        "The lungs"
+      ],
+      "answer_index": 1,
+      "explanation": "Your heart beats about 100,000 times every day."
+    },
+    {
+      "id": "sci-017",
+      "prompt": "What is the largest organ of the human body?",
+      "choices": [
+        "The lungs",
+        "The brain",
+        "The skin",
+        "The liver"
+      ],
+      "answer_index": 2,
+      "explanation": "Skin counts as an organ, and it is by far the biggest one you have."
+    },
+    {
+      "id": "sci-018",
+      "prompt": "How many bones does an adult human have?",
+      "choices": [
+        "106",
+        "412",
+        "206",
+        "306"
+      ],
+      "answer_index": 2,
+      "explanation": "Babies start with around 300 bones, and many fuse together as they grow."
+    },
+    {
+      "id": "sci-019",
+      "prompt": "Which of these do plant cells have that animal cells do not?",
+      "choices": [
+        "A cell membrane",
+        "A nucleus",
+        "Cytoplasm",
+        "A cell wall"
+      ],
+      "answer_index": 3,
+      "explanation": "The stiff cell wall helps plants stand up without a skeleton."
+    },
+    {
+      "id": "sci-020",
+      "prompt": "What does DNA stand for?",
+      "choices": [
+        "Dinucleic acid",
+        "Deoxyribonuclear acid",
+        "Deoxyribose nitrogen acid",
+        "Deoxyribonucleic acid"
+      ],
+      "answer_index": 3,
+      "explanation": "DNA is the molecule that carries the instructions for building you."
+    },
+    {
+      "id": "sci-021",
+      "prompt": "What kind of object is the Sun?",
+      "choices": [
+        "A galaxy",
+        "A star",
+        "A comet",
+        "A planet"
+      ],
+      "answer_index": 1,
+      "explanation": "The Sun is an ordinary star that just happens to be very close to us."
+    },
+    {
+      "id": "sci-022",
+      "prompt": "About how long does the Moon take to orbit the Earth?",
+      "choices": [
+        "About a week",
+        "About a year",
+        "About a month",
+        "About a day"
+      ],
+      "answer_index": 2,
+      "explanation": "One trip around Earth takes the Moon about 27 days."
+    },
+    {
+      "id": "sci-023",
+      "prompt": "Sound travels fastest through which of these?",
+      "choices": [
+        "Solids",
+        "A vacuum",
+        "Air",
+        "Warm gas"
+      ],
+      "answer_index": 0,
+      "explanation": "Particles in a solid are packed tightly, so vibrations pass along quickly."
+    },
+    {
+      "id": "sci-024",
+      "prompt": "Why do you see lightning before you hear the thunder?",
+      "choices": [
+        "Sound gets blocked by clouds",
+        "Thunder happens after the lightning",
+        "Light travels much faster than sound",
+        "Your eyes react faster than your ears"
+      ],
+      "answer_index": 2,
+      "explanation": "Light reaches you almost instantly, while sound takes about 3 seconds per kilometre."
+    },
+    {
+      "id": "sci-025",
+      "prompt": "Solar panels turn sunlight into what?",
+      "choices": [
+        "Sound",
+        "Wind",
+        "Electricity",
+        "Heat only"
+      ],
+      "answer_index": 2,
+      "explanation": "Solar cells turn light energy straight into electrical energy."
+    },
+    {
+      "id": "sci-026",
+      "prompt": "What are the three common states of matter?",
+      "choices": [
+        "Hot, cold and warm",
+        "Ice, water and air",
+        "Hard, soft and runny",
+        "Solid, liquid and gas"
+      ],
+      "answer_index": 3,
+      "explanation": "Most everyday stuff is a solid, a liquid or a gas, and plasma makes a fourth."
+    },
+    {
+      "id": "sci-027",
+      "prompt": "What is it called when a liquid turns into a gas?",
+      "choices": [
+        "Condensation",
+        "Freezing",
+        "Melting",
+        "Evaporation"
+      ],
+      "answer_index": 3,
+      "explanation": "Puddles disappear on a sunny day because the water evaporates."
+    },
+    {
+      "id": "sci-028",
+      "prompt": "What is it called when a gas turns into a liquid?",
+      "choices": [
+        "Condensation",
+        "Sublimation",
+        "Boiling",
+        "Evaporation"
+      ],
+      "answer_index": 0,
+      "explanation": "Water droplets on a cold window are condensation from the air."
+    },
+    {
+      "id": "sci-029",
+      "prompt": "An animal that eats only plants is called what?",
+      "choices": [
+        "An omnivore",
+        "A herbivore",
+        "A carnivore",
+        "A predator"
+      ],
+      "answer_index": 1,
+      "explanation": "Herbivores eat plants, carnivores eat meat, omnivores eat both."
+    },
+    {
+      "id": "sci-030",
+      "prompt": "A whale is which kind of animal?",
+      "choices": [
+        "A reptile",
+        "A mammal",
+        "A fish",
+        "An amphibian"
+      ],
+      "answer_index": 1,
+      "explanation": "Whales breathe air and feed their babies milk, so they are mammals."
+    },
+    {
+      "id": "sci-031",
+      "prompt": "How many legs does an insect have?",
+      "choices": [
+        "10",
+        "8",
+        "4",
+        "6"
+      ],
+      "answer_index": 3,
+      "explanation": "Six legs is the insect rule; spiders have eight, so they are not insects."
+    },
+    {
+      "id": "sci-032",
+      "prompt": "How many legs does a spider have?",
+      "choices": [
+        "12",
+        "8",
+        "10",
+        "6"
+      ],
+      "answer_index": 1,
+      "explanation": "Eight legs makes spiders arachnids, not insects."
+    },
+    {
+      "id": "sci-033",
+      "prompt": "How long does Earth take to spin once on its axis?",
+      "choices": [
+        "About a month",
+        "About 24 hours",
+        "About 12 hours",
+        "About 365 days"
+      ],
+      "answer_index": 1,
+      "explanation": "One full spin gives us one day and one night."
+    },
+    {
+      "id": "sci-034",
+      "prompt": "How long does Earth take to orbit the Sun?",
+      "choices": [
+        "About 365 days",
+        "About 30 days",
+        "About 24 hours",
+        "About 100 days"
+      ],
+      "answer_index": 0,
+      "explanation": "One full orbit is one year, which is why a year has about 365 days."
+    },
+    {
+      "id": "sci-035",
+      "prompt": "On the pH scale, what does a value of 7 mean?",
+      "choices": [
+        "Neutral",
+        "Strongly alkaline",
+        "Radioactive",
+        "Strongly acidic"
+      ],
+      "answer_index": 0,
+      "explanation": "Pure water sits at pH 7, right in the middle of the scale."
+    },
+    {
+      "id": "sci-036",
+      "prompt": "What happens when you push the north poles of two magnets together?",
+      "choices": [
+        "They pull together",
+        "They lose their magnetism",
+        "Nothing happens",
+        "They push apart"
+      ],
+      "answer_index": 3,
+      "explanation": "Like poles repel and opposite poles attract."
+    },
+    {
+      "id": "sci-037",
+      "prompt": "Which of these materials conducts electricity well?",
+      "choices": [
+        "Rubber",
+        "Copper",
+        "Dry wood",
+        "Plastic"
+      ],
+      "answer_index": 1,
+      "explanation": "That is why electrical wires are usually made of copper."
+    },
+    {
+      "id": "sci-038",
+      "prompt": "Which green pigment lets plants capture light energy?",
+      "choices": [
+        "Melanin",
+        "Keratin",
+        "Chlorophyll",
+        "Haemoglobin"
+      ],
+      "answer_index": 2,
+      "explanation": "Chlorophyll is what makes leaves look green."
+    },
+    {
+      "id": "sci-039",
+      "prompt": "What is the scientific unit of force?",
+      "choices": [
+        "The newton",
+        "The joule",
+        "The watt",
+        "The volt"
+      ],
+      "answer_index": 0,
+      "explanation": "It is named after Isaac Newton, who described how forces work."
+    },
+    {
+      "id": "sci-040",
+      "prompt": "How does a vaccine protect you?",
+      "choices": [
+        "It replaces your immune system",
+        "It makes your blood too thick for germs",
+        "It kills every germ in your body",
+        "It teaches your immune system to recognise a germ"
+      ],
+      "answer_index": 3,
+      "explanation": "After a vaccine, your immune system remembers the germ and fights it fast."
+    }
+  ]
+}

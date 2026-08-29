@@ -1,0 +1,15 @@
+[Unit]
+Description=Hearth Tor relay list refresh (daily)
+
+[Timer]
+OnBootSec=10min
+OnCalendar=daily
+# The Tor consensus churns hourly but slowly, so daily is plenty for a home.
+# The random delay spreads our fetches instead of hammering the Tor Project's
+# directory API on the stroke of midnight, and Persistent catches up after the
+# box has been off rather than leaving the list stale for another day.
+RandomizedDelaySec=2h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

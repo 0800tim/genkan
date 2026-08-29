@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Runs every minute (systemd timer). For each child currently ALLOWED online
+# with a device active in the last ~2 min, spend 1 minute. kidnet flips them
+# to the captive portal at 0. Bonus/earn adds minutes back and reopens.
+set -euo pipefail
+KN="$(command -v kidnet || echo "$(dirname "$0")/kidnet")"
+psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+# Active kids = have a device seen recently, not already internet-blocked,
+# and a real daily budget (teen 999 = effectively unlimited, skip).
+for kid in $(psqll "
+  SELECT DISTINCT c.name FROM children c
+  JOIN devices d ON d.child_id=c.id
+  JOIN time_ledger l ON l.child_id=c.id AND l.day=CURRENT_DATE
+  WHERE d.last_seen > now() - interval '2 minutes'
+    AND l.budget_min < 999
+    AND NOT EXISTS (SELECT 1 FROM category_state cs WHERE cs.child_id=c.id AND cs.category='internet' AND cs.blocked)
+"); do
+  bash "$KN" spend "$kid" 1 >/dev/null || true
+done

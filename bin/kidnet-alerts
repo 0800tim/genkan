@@ -1,0 +1,50 @@
+#!/usr/bin/env bash
+# hearth:summary=Raise alerts when a device reaches a flagged domain.
+#
+# Scans newly ingested dns_log rows against flag_domains and writes an alert
+# per match. This is the "tell me about the genuinely concerning stuff" layer,
+# separate from ordinary blocking: Tor/darknet signals, self-harm (a CARE
+# alert, never disciplinary), VPN-bypass attempts.
+#
+# The ethos: an alert is a prompt to have a conversation, not a verdict on a
+# kid. The dashboard and the family agent surface these; what happens next is
+# a talk, not an automatic punishment.
+set -uo pipefail
+psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+LOOKBACK="${ALERT_LOOKBACK:-15 minutes}"
+
+# One alert per (child, pattern) per day, so a busy device does not spam.
+n=$(psqll "
+WITH hits AS (
+  -- Most SPECIFIC pattern wins per child+domain: bridges.torproject.org is a
+  -- stronger signal (deliberate block evasion) than plain torproject.org, and
+  -- we want one alert describing the worst thing seen, not one per pattern.
+  SELECT DISTINCT ON (d.child_id, l.domain)
+         d.child_id, d.id AS device_id, f.pattern, f.category, f.severity, f.note, l.domain, l.ts
+  FROM dns_log l
+  JOIN devices d  ON d.id = l.device_id
+  JOIN flag_domains f ON l.domain ILIKE '%' || f.pattern
+  WHERE l.ts > now() - interval '$LOOKBACK'
+  ORDER BY d.child_id, l.domain,
+           (f.severity='urgent') DESC, length(f.pattern) DESC, l.ts DESC
+)
+INSERT INTO alerts(child_id, device_id, severity, category, domain, detail)
+SELECT h.child_id, h.device_id, h.severity, h.category, h.domain,
+       coalesce(h.note,'flagged domain') || ' (matched ' || h.pattern || ')'
+FROM hits h
+WHERE NOT EXISTS (
+  SELECT 1 FROM alerts a
+  WHERE a.child_id IS NOT DISTINCT FROM h.child_id
+    AND a.category = h.category
+    AND a.ts::date = CURRENT_DATE
+)
+RETURNING 1" | grep -c 1 || true)
+
+if [ "${n:-0}" -gt 0 ]; then
+  echo "kidnet-alerts: raised $n new alert(s)"
+  psqll "SELECT coalesce(c.name,'unknown')||': '||a.severity||' '||a.category||' '||coalesce(a.domain,'')
+         FROM alerts a LEFT JOIN children c ON c.id=a.child_id
+         WHERE a.ts > now() - interval '2 minutes' ORDER BY a.ts DESC" | sed 's/^/  /'
+else
+  echo "kidnet-alerts: nothing new"
+fi

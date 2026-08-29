@@ -1,0 +1,7 @@
+[Unit]
+Description=Hearth device discovery (AdGuard DHCP leases -> devices table)
+After=docker.service
+[Service]
+Type=oneshot
+EnvironmentFile=/srv/projects/internal/kids-network/secrets.env
+ExecStart=/usr/local/bin/kidnet-devicescan

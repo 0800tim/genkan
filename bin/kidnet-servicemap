@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# hearth:summary=Learn which IPs belong to which service (YouTube, Netflix, ...) from DNS answers.
+#
+# The same trick the category meter uses, one level finer. Because we are the
+# resolver, a device resolving googlevideo.com tells us those IPs are YouTube.
+# The firewall then counts real BYTES to those addresses, so "how much Netflix
+# this week" is a measurement, not a guess, without decrypting anything.
+#
+# Honest limits (surfaced in the dashboard): services on shared CDNs blur,
+# YouTube Music counts as YouTube, and a VPN hides destinations entirely.
+set -uo pipefail
+: "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}" "${ADGUARD_PASS:?set ADGUARD_PASS}"
+PAGES="${SERVICEMAP_PAGES:-15}"
+DB=(docker exec -i postgres psql -U postgres -d kids_network)
+
+MAP=$("${DB[@]}" -tAc "SELECT s.name||' '||d.domain FROM service_domains d JOIN services s ON s.id=d.service_id")
+[ -n "$MAP" ] || { echo "kidnet-servicemap: no service domains configured"; exit 0; }
+
+TSV=$(ADGUARD_URL="$ADGUARD_URL" ADGUARD_USER="$ADGUARD_USER" ADGUARD_PASS="$ADGUARD_PASS" PAGES="$PAGES" MAP="$MAP" python3 <<'PY'
+import os,json,urllib.request,urllib.parse,base64,sys,csv
+url=os.environ["ADGUARD_URL"]; pages=int(os.environ["PAGES"])
+auth=base64.b64encode(f'{os.environ["ADGUARD_USER"]}:{os.environ["ADGUARD_PASS"]}'.encode()).decode()
+svc={}
+for line in os.environ["MAP"].splitlines():
+    if not line.strip(): continue
+    name,dom=line.split(" ",1); svc[dom.strip().lower()]=name
+def which(host):
+    host=host.rstrip(".").lower(); parts=host.split(".")
+    # longest suffix wins, so nflxvideo.net beats a bare netflix.com guess
+    for i in range(len(parts)):
+        suf=".".join(parts[i:])
+        if suf in svc: return svc[suf]
+    return None
+def get(u):
+    r=urllib.request.Request(u); r.add_header("Authorization","Basic "+auth)
+    try: return json.load(urllib.request.urlopen(r,timeout=8))
+    except Exception: raise SystemExit(0)
+seen=set(); rows=[]; older=None
+for _ in range(pages):
+    u=url+"/control/querylog?limit=100"+(f"&older_than={urllib.parse.quote(older)}" if older else "")
+    d=get(u); data=d.get("data") or []
+    if not data: break
+    for e in data:
+        name=(e.get("question") or {}).get("name","")
+        s=which(name)
+        if not s: continue
+        for a in (e.get("answer") or []):
+            if a.get("type")=="A":
+                ip=a.get("value","")
+                if ip and (ip,s) not in seen:
+                    seen.add((ip,s)); rows.append((ip,s))
+    older=d.get("oldest") or (data[-1].get("time") if data else None)
+    if not older: break
+w=csv.writer(sys.stdout,delimiter="\t")
+for ip,s in rows: w.writerow([ip,s])
+PY
+)
+[ -z "$TSV" ] && { echo "kidnet-servicemap: nothing new"; exit 0; }
+printf '%s\n' "$TSV" | "${DB[@]}" -qc "
+CREATE TEMP TABLE _si(ip inet, sname text);
+COPY _si FROM STDIN WITH (FORMAT text);
+INSERT INTO service_ips(ip, service_id, seen)
+SELECT i.ip, s.id, now() FROM _si i JOIN services s ON s.name=i.sname
+ON CONFLICT (ip, service_id) DO UPDATE SET seen=now();"
+N=$(printf '%s\n' "$TSV" | grep -c . || true)
+echo "kidnet-servicemap: tagged $N ip/service pair(s)"

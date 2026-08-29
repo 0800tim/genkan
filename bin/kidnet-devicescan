@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+# hearth:summary=Discover devices from AdGuard's DHCP leases into the devices table.
+#
+# When a phone/laptop joins the kids' wifi it gets a DHCP lease from AdGuard.
+# This pulls those leases (MAC, hostname, IP) and upserts a devices row per MAC,
+# owned by nobody until the parent assigns it. Refreshes last_seen so the
+# dashboard shows who is online. Runs on a short timer. Logs devices, not people.
+set -euo pipefail
+: "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}" "${ADGUARD_PASS:?set ADGUARD_PASS}"
+DB=(docker exec -i postgres psql -U postgres -d kids_network)
+
+TSV=$(ADGUARD_URL="$ADGUARD_URL" ADGUARD_USER="$ADGUARD_USER" ADGUARD_PASS="$ADGUARD_PASS" python3 <<'PY'
+import os,json,urllib.request,base64,sys,csv
+url=os.environ["ADGUARD_URL"]
+auth=base64.b64encode(f'{os.environ["ADGUARD_USER"]}:{os.environ["ADGUARD_PASS"]}'.encode()).decode()
+r=urllib.request.Request(url+"/control/dhcp/status"); r.add_header("Authorization","Basic "+auth)
+try: d=json.load(urllib.request.urlopen(r,timeout=8))
+except Exception as e: print(f"devicescan: cannot read DHCP status: {e}",file=sys.stderr); sys.exit(0)
+w=csv.writer(sys.stdout,delimiter="\t")
+for L in (d.get("leases") or [])+(d.get("static_leases") or []):
+    mac=(L.get("mac") or "").lower(); ip=L.get("ip") or ""; host=L.get("hostname") or ""
+    if mac and ip: w.writerow([mac,ip,host])
+PY
+)
+[ -z "$TSV" ] && { echo "kidnet-devicescan: no DHCP leases (server not serving yet?)"; exit 0; }
+printf '%s\n' "$TSV" | "${DB[@]}" -qc "
+CREATE TEMP TABLE _lease(mac text, ip inet, hostname text);
+COPY _lease FROM STDIN WITH (FORMAT text);
+-- New MAC -> create an unassigned device row. Known MAC -> refresh seen + hostname.
+INSERT INTO devices(mac, hostname, kind, is_active, first_seen, last_seen)
+SELECT mac::macaddr, NULLIF(hostname,''), 'unknown', true, now(), now() FROM _lease
+ON CONFLICT (mac) DO UPDATE SET last_seen=now(),
+  hostname=COALESCE(NULLIF(EXCLUDED.hostname,''), devices.hostname), is_active=true;
+-- Refresh the live lease table too (drives 'kidnet leases').
+INSERT INTO dhcp_leases(ip, mac, hostname, active, starts)
+SELECT ip, mac::macaddr, NULLIF(hostname,''), true, now() FROM _lease
+ON CONFLICT (ip) DO UPDATE SET mac=EXCLUDED.mac, hostname=EXCLUDED.hostname, active=true;"
+# Auto-classify anything new (personal / iot / infra).
+d="$(dirname "$0")/kidnet-classify"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
+N=$(printf '%s\n' "$TSV" | grep -c . || true)
+echo "kidnet-devicescan: saw $N device(s) on the network"

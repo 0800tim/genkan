@@ -1,0 +1,178 @@
+#!/usr/bin/env bash
+# kidnet-report - weekly per-child digest from the HEARTH gateway's Postgres.
+# A conversation starter for the family, not a spy report: time totals, top
+# sites and things worth a chat. It never shows message content, because the
+# network cannot see inside encrypted apps and would not print it if it could.
+# Read-only: this script only ever SELECTs.
+#
+#   kidnet-report <child> [week]   one child's week
+#   kidnet-report all [week]       every child (kind='child')
+#
+#   [week] picks the Monday-to-Sunday week to report:
+#     (blank)      the current week, so far
+#     last         the previous full week (use this for the Monday digest)
+#     YYYY-MM-DD   the week containing that date
+#
+# Output is plain text, fine on a terminal or piped into a message.
+set -euo pipefail
+psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+# Same input gates as kidnet: names and dates only, nothing else reaches SQL.
+ck_name(){ [[ "$1" =~ ^[A-Za-z0-9_-]{1,32}$ ]] || { echo "kidnet-report: bad name '$1'" >&2; exit 1; }; }
+ck_date(){ [[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || { echo "kidnet-report: bad week '$1' (use last, or YYYY-MM-DD)" >&2; exit 1; }; }
+tid(){ ck_name "$1"; psqll "SELECT id FROM children WHERE lower(name)=lower('$1')"; }
+hm(){ local m="${1:-0}"; if [ "$m" -lt 60 ]; then echo "${m} min"; else echo "$((m/60))h $((m%60))m"; fi; }
+
+# Resolve [week] to W0 (Monday, inclusive) and W1 (next Monday, exclusive).
+week_bounds(){ local ref
+  case "${1:-}" in
+    "")   ref=$(date +%F);;
+    last) ref=$(date -d '7 days ago' +%F);;
+    *)    ck_date "$1"; ref="$1"
+          date -d "$ref" >/dev/null 2>&1 || { echo "kidnet-report: '$ref' is not a real date" >&2; exit 1; };;
+  esac
+  W0=$(date -d "$ref -$(( $(date -d "$ref" +%u) - 1 )) days" +%F)
+  W1=$(date -d "$W0 +7 days" +%F)
+}
+
+report_one(){ local kid="$1" cid name total days busiest hrs gaming video
+  local top blocked al fl qn qm qtopics ch tn tm any
+  cid=$(tid "$kid"); [ -n "$cid" ] || { echo "kidnet-report: unknown child '$kid'" >&2; return 1; }
+  name=$(psqll "SELECT name FROM children WHERE id=$cid")
+
+  echo "HEARTH weekly digest: $name"
+  echo "Week $(date -d "$W0" '+%a %-d %b') to $(date -d "$W1 -1 day" '+%a %-d %b %Y')"
+  echo "Something to talk about together, not a report card."
+  echo
+
+  # --- Time online (the minute meter writes time_ledger.used_min) ---------
+  total=$(psqll "SELECT COALESCE(sum(used_min),0) FROM time_ledger
+                 WHERE child_id=$cid AND day >= '$W0' AND day < '$W1'")
+  echo "Time online"
+  if [ "${total:-0}" -gt 0 ]; then
+    days=$(psqll "SELECT count(*) FROM time_ledger
+                  WHERE child_id=$cid AND used_min > 0 AND day >= '$W0' AND day < '$W1'")
+    busiest=$(psqll "SELECT to_char(day,'Dy')||' ('||used_min||' min)' FROM time_ledger
+                     WHERE child_id=$cid AND day >= '$W0' AND day < '$W1'
+                     ORDER BY used_min DESC, day LIMIT 1")
+    echo "  $(hm "$total") metered across $days day(s); busiest day: $busiest"
+  else
+    # Teen tier (budget 999) is not minute-metered; estimate from DNS activity.
+    hrs=$(psqll "SELECT count(DISTINCT date_trunc('hour', l.ts)) FROM dns_log l
+                 JOIN devices d ON d.id=l.device_id
+                 WHERE d.child_id=$cid AND l.ts >= '$W0' AND l.ts < '$W1'")
+    if [ "${hrs:-0}" -gt 0 ]; then
+      echo "  no metered minutes recorded; devices were active in about $hrs hour-block(s) (from DNS activity)"
+    else
+      echo "  no online time recorded this week"
+    fi
+  fi
+  echo
+
+  # --- Metered categories (gaming/video; music + schoolwork never metered) -
+  echo "Metered categories"
+  any=0
+  for cat in gaming video; do
+    m=$(psqll "SELECT COALESCE(sum(used_min),0) FROM category_usage
+               WHERE child_id=$cid AND category='$cat' AND day >= '$W0' AND day < '$W1'")
+    if [ "${m:-0}" -gt 0 ]; then
+      d=$(psqll "SELECT count(*) FROM category_usage
+                 WHERE child_id=$cid AND category='$cat' AND used_min > 0
+                   AND day >= '$W0' AND day < '$W1'")
+      echo "  $cat: $(hm "$m") over $d day(s)"
+      any=1
+    fi
+  done
+  if [ "$any" = 0 ]; then echo "  no metered gaming or video this week"; fi
+  echo "  (music and schoolwork are never metered)"
+  echo
+
+  # --- Top sites (allowed lookups only) -----------------------------------
+  echo "Top sites"
+  top=$(psqll "SELECT '  '||l.domain||'  ('||count(*)||' lookups)'
+               FROM dns_log l JOIN devices d ON d.id=l.device_id
+               WHERE d.child_id=$cid AND l.action='allowed'
+                 AND l.ts >= '$W0' AND l.ts < '$W1'
+               GROUP BY l.domain ORDER BY count(*) DESC, l.domain LIMIT 10")
+  if [ -n "$top" ]; then echo "$top"; else echo "  no browsing recorded this week"; fi
+  blocked=$(psqll "SELECT count(*) FROM dns_log l JOIN devices d ON d.id=l.device_id
+                   WHERE d.child_id=$cid AND l.action='blocked'
+                     AND l.ts >= '$W0' AND l.ts < '$W1'")
+  if [ "${blocked:-0}" -gt 0 ]; then echo "  (the filter also declined $blocked lookup(s))"; fi
+  echo
+
+  # --- Worth a chat: alerts raised, plus flag_domains matched in the log --
+  echo "Worth a chat"
+  al=$(psqll "SELECT '  '||to_char(ts,'Dy HH24:MI')||'  ['||severity||'] '
+                   ||COALESCE(category,'general')
+                   ||COALESCE(': '||domain, '')||COALESCE('  '||detail, '')
+              FROM alerts WHERE child_id=$cid AND ts >= '$W0' AND ts < '$W1'
+              ORDER BY ts")
+  fl=$(psqll "SELECT '  '||f.category||' ['||f.severity||']  '||l.domain
+                   ||'  ('||count(*)||'x'||COALESCE(', '||f.note,'')||')'
+              FROM dns_log l JOIN devices d ON d.id=l.device_id
+              JOIN flag_domains f ON l.domain ILIKE '%'||f.pattern
+              WHERE d.child_id=$cid AND l.ts >= '$W0' AND l.ts < '$W1'
+              GROUP BY f.category, f.severity, f.note, l.domain
+              ORDER BY count(*) DESC")
+  if [ -n "$al$fl" ]; then
+    [ -z "$al" ] || echo "$al"
+    [ -z "$fl" ] || echo "$fl"
+    echo "  (these are conversation prompts, not verdicts: ask, do not accuse)"
+  else
+    echo "  nothing flagged this week"
+  fi
+  echo
+
+  # --- Earned: quizzes (auto-credited) and chores (parent-approved) -------
+  echo "Earned"
+  any=0
+  qn=$(psqll "SELECT count(*) FROM time_events
+              WHERE child_id=$cid AND kind='earn' AND reason LIKE 'quiz:%'
+                AND ts >= '$W0' AND ts < '$W1'")
+  if [ "${qn:-0}" -gt 0 ]; then
+    qm=$(psqll "SELECT COALESCE(sum(minutes),0) FROM time_events
+                WHERE child_id=$cid AND kind='earn' AND reason LIKE 'quiz:%'
+                  AND ts >= '$W0' AND ts < '$W1'")
+    qtopics=$(psqll "SELECT string_agg(DISTINCT substr(reason,6), ', ')
+                     FROM time_events
+                     WHERE child_id=$cid AND kind='earn' AND reason LIKE 'quiz:%'
+                       AND ts >= '$W0' AND ts < '$W1'")
+    echo "  quizzes passed: $qn (+$qm min) on: $qtopics"
+    any=1
+  fi
+  ch=$(psqll "SELECT '  chore approved: '||t.name||'  (+'||t.minutes||' min, '
+                   ||to_char(ec.decided_ts,'Dy')||')'
+              FROM earn_claims ec JOIN tasks t ON t.id=ec.task_id
+              WHERE ec.child_id=$cid AND ec.status='approved'
+                AND ec.decided_ts >= '$W0' AND ec.decided_ts < '$W1'
+              ORDER BY ec.decided_ts")
+  if [ -n "$ch" ]; then echo "$ch"; any=1; fi
+  # Chores/tasks credited straight from the CLI (kidnet earn) show as task:*.
+  tn=$(psqll "SELECT count(*) FROM time_events
+              WHERE child_id=$cid AND kind='earn' AND reason LIKE 'task:%'
+                AND ts >= '$W0' AND ts < '$W1'")
+  if [ "${tn:-0}" -gt 0 ]; then
+    tm=$(psqll "SELECT COALESCE(sum(minutes),0) FROM time_events
+                WHERE child_id=$cid AND kind='earn' AND reason LIKE 'task:%'
+                  AND ts >= '$W0' AND ts < '$W1'")
+    echo "  tasks credited by a parent: $tn (+$tm min)"
+    any=1
+  fi
+  if [ "$any" = 0 ]; then echo "  no quizzes or chores this week (the portal is always open)"; fi
+}
+
+case "${1:-}" in
+  ""|-h|--help|help) sed -n '2,/^set -euo/p' "$0" | sed '$d; s/^# \{0,1\}//';;
+  all)
+    week_bounds "${2:-}"
+    first=1
+    for c in $(psqll "SELECT name FROM children WHERE kind='child' ORDER BY name"); do
+      if [ "$first" = 1 ]; then first=0; else printf '\n%s\n\n' '----------------------------------------'; fi
+      report_one "$c"
+    done
+    if [ "$first" = 1 ]; then echo "kidnet-report: no children in the database yet"; fi;;
+  *)
+    ck_name "$1"
+    week_bounds "${2:-}"
+    report_one "$1";;
+esac

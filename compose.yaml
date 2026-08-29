@@ -1,0 +1,84 @@
+# The Hearth stack. Everything island-facing lives in ONE network namespace:
+# the gateway container owns it (and the physical kids0 NIC, handed in by
+# host/kids-nic-warden.sh); the portal and AdGuard join it with
+# network_mode: service:gateway. Nothing here runs privileged, nothing uses
+# host networking, so no service in this file can touch the host's firewall,
+# the main LAN or the tailnet.
+#
+# The admin dashboard is NOT here: it binds the tailnet on the host
+# (systemd --user kids-dashboard.service) and stays outside the island.
+name: hearth
+
+services:
+  gateway:
+    build:
+      context: .
+      dockerfile: gateway/Dockerfile
+    container_name: hearth-gw
+    cap_add: [NET_ADMIN, NET_RAW]
+    cap_drop: [ALL]
+    sysctls:
+      net.ipv4.ip_forward: 1
+      net.ipv6.conf.all.forwarding: 0
+    env_file: [secrets.env]
+    environment:
+      KIDS_GW_IP: ${KIDS_GW_IP:-192.168.60.1}
+      KIDS_SUBNET: ${KIDS_SUBNET:-192.168.60.0/24}
+      # AdGuard shares this namespace, so its API is on loopback here.
+      ADGUARD_LOCAL: http://127.0.0.1:3000
+    networks: [postgres]
+    restart: unless-stopped
+    # AdGuard's web UI lives in this namespace on :3000. Publish it to the
+    # host's loopback only; reach it over the tailnet via the host if needed.
+    ports:
+      - "127.0.0.1:8853:3000"
+
+  portal:
+    image: node:22-slim
+    container_name: hearth-portal
+    network_mode: "service:gateway"
+    depends_on: [gateway]
+    working_dir: /app
+    # BIND 0.0.0.0 is safe here: "everywhere" inside this namespace means
+    # kids0 and the gateway's docker leg, nothing else.
+    environment:
+      BIND: 0.0.0.0
+      PORT: 80
+      QUIZ_DIR: /quizzes
+      IN_CONTAINER: 1
+    env_file: [secrets.env]
+    volumes:
+      - ./dashboard:/app:ro
+      - ./portal/quizzes:/quizzes:ro
+    command: node portal.mjs
+    restart: unless-stopped
+
+  adguard:
+    image: adguard/adguardhome:v0.107.79
+    container_name: hearth-adguard
+    network_mode: "service:gateway"
+    depends_on: [gateway]
+    # DHCP raw sockets need NET_RAW + NET_BIND_SERVICE; the image chowns its
+    # own dirs at start (file caps). Deliberately NO NET_ADMIN: adguard shares
+    # the gateway's netns, so NET_ADMIN would let a compromised resolver flush
+    # our firewall. It never needs to touch nftables.
+    cap_add: [NET_RAW, NET_BIND_SERVICE, CHOWN, DAC_OVERRIDE, FOWNER, SETUID, SETGID]
+    cap_drop: [ALL]
+    volumes:
+      # Seed-copy, never bind-mount the repo file: AdGuard rewrites its
+      # config at runtime (and strips comments), which would dirty the repo.
+      - ./config/adguard/AdGuardHome.yaml:/seed/AdGuardHome.yaml:ro
+      - adguard-conf:/opt/adguardhome/conf
+      - adguard-work:/opt/adguardhome/work
+    entrypoint: ["/bin/sh","-c",
+      "[ -f /opt/adguardhome/conf/AdGuardHome.yaml ] || cp /seed/AdGuardHome.yaml /opt/adguardhome/conf/AdGuardHome.yaml; exec /opt/adguardhome/AdGuardHome --no-check-update -c /opt/adguardhome/conf/AdGuardHome.yaml -w /opt/adguardhome/work"]
+    restart: unless-stopped
+    profiles: [island]   # enabled at deploy once config/adguard is finalised
+
+networks:
+  postgres:
+    external: true       # the shared postgres container's network
+
+volumes:
+  adguard-conf:
+  adguard-work:

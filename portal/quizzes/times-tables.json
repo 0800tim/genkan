@@ -1,0 +1,731 @@
+{
+  "id": "times-tables",
+  "title": "Times Tables",
+  "emoji": "✖️",
+  "suggested_age_min": 9,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "questions": [
+    {
+      "id": "tt-001",
+      "prompt": "3 × 4 = ?",
+      "choices": [
+        "2",
+        "12",
+        "13",
+        "14"
+      ],
+      "answer_index": 1,
+      "explanation": "3 groups of 4 make 12."
+    },
+    {
+      "id": "tt-002",
+      "prompt": "5 × 6 = ?",
+      "choices": [
+        "40",
+        "36",
+        "30",
+        "29"
+      ],
+      "answer_index": 2,
+      "explanation": "5 groups of 6 make 30."
+    },
+    {
+      "id": "tt-003",
+      "prompt": "2 × 9 = ?",
+      "choices": [
+        "20",
+        "9",
+        "18",
+        "17"
+      ],
+      "answer_index": 2,
+      "explanation": "2 groups of 9 make 18."
+    },
+    {
+      "id": "tt-004",
+      "prompt": "4 × 4 = ?",
+      "choices": [
+        "16",
+        "15",
+        "20",
+        "26"
+      ],
+      "answer_index": 0,
+      "explanation": "4 groups of 4 make 16."
+    },
+    {
+      "id": "tt-005",
+      "prompt": "10 × 7 = ?",
+      "choices": [
+        "77",
+        "72",
+        "70",
+        "63"
+      ],
+      "answer_index": 2,
+      "explanation": "10 groups of 7 make 70."
+    },
+    {
+      "id": "tt-006",
+      "prompt": "5 × 5 = ?",
+      "choices": [
+        "15",
+        "35",
+        "25",
+        "20"
+      ],
+      "answer_index": 2,
+      "explanation": "5 groups of 5 make 25."
+    },
+    {
+      "id": "tt-007",
+      "prompt": "3 × 8 = ?",
+      "choices": [
+        "23",
+        "25",
+        "34",
+        "24"
+      ],
+      "answer_index": 3,
+      "explanation": "3 groups of 8 make 24."
+    },
+    {
+      "id": "tt-008",
+      "prompt": "6 × 4 = ?",
+      "choices": [
+        "24",
+        "34",
+        "18",
+        "20"
+      ],
+      "answer_index": 0,
+      "explanation": "6 groups of 4 make 24."
+    },
+    {
+      "id": "tt-009",
+      "prompt": "2 × 7 = ?",
+      "choices": [
+        "14",
+        "12",
+        "4",
+        "15"
+      ],
+      "answer_index": 0,
+      "explanation": "2 groups of 7 make 14."
+    },
+    {
+      "id": "tt-010",
+      "prompt": "9 × 3 = ?",
+      "choices": [
+        "27",
+        "18",
+        "26",
+        "36"
+      ],
+      "answer_index": 0,
+      "explanation": "9 groups of 3 make 27."
+    },
+    {
+      "id": "tt-011",
+      "prompt": "4 × 5 = ?",
+      "choices": [
+        "18",
+        "15",
+        "22",
+        "20"
+      ],
+      "answer_index": 3,
+      "explanation": "4 groups of 5 make 20."
+    },
+    {
+      "id": "tt-012",
+      "prompt": "8 × 2 = ?",
+      "choices": [
+        "16",
+        "14",
+        "24",
+        "26"
+      ],
+      "answer_index": 0,
+      "explanation": "8 groups of 2 make 16."
+    },
+    {
+      "id": "tt-013",
+      "prompt": "6 × 7 = ?",
+      "choices": [
+        "42",
+        "43",
+        "32",
+        "36"
+      ],
+      "answer_index": 0,
+      "explanation": "6 groups of 7 make 42."
+    },
+    {
+      "id": "tt-014",
+      "prompt": "7 × 8 = ?",
+      "choices": [
+        "48",
+        "66",
+        "46",
+        "56"
+      ],
+      "answer_index": 3,
+      "explanation": "7 groups of 8 make 56."
+    },
+    {
+      "id": "tt-015",
+      "prompt": "8 × 8 = ?",
+      "choices": [
+        "64",
+        "56",
+        "65",
+        "72"
+      ],
+      "answer_index": 0,
+      "explanation": "8 groups of 8 make 64."
+    },
+    {
+      "id": "tt-016",
+      "prompt": "9 × 6 = ?",
+      "choices": [
+        "54",
+        "52",
+        "45",
+        "55"
+      ],
+      "answer_index": 0,
+      "explanation": "9 groups of 6 make 54."
+    },
+    {
+      "id": "tt-017",
+      "prompt": "7 × 7 = ?",
+      "choices": [
+        "56",
+        "48",
+        "50",
+        "49"
+      ],
+      "answer_index": 3,
+      "explanation": "7 groups of 7 make 49."
+    },
+    {
+      "id": "tt-018",
+      "prompt": "8 × 6 = ?",
+      "choices": [
+        "48",
+        "50",
+        "49",
+        "42"
+      ],
+      "answer_index": 0,
+      "explanation": "8 groups of 6 make 48."
+    },
+    {
+      "id": "tt-019",
+      "prompt": "9 × 9 = ?",
+      "choices": [
+        "90",
+        "81",
+        "72",
+        "79"
+      ],
+      "answer_index": 1,
+      "explanation": "9 groups of 9 make 81."
+    },
+    {
+      "id": "tt-020",
+      "prompt": "7 × 9 = ?",
+      "choices": [
+        "61",
+        "64",
+        "56",
+        "63"
+      ],
+      "answer_index": 3,
+      "explanation": "7 groups of 9 make 63."
+    },
+    {
+      "id": "tt-021",
+      "prompt": "6 × 6 = ?",
+      "choices": [
+        "37",
+        "46",
+        "35",
+        "36"
+      ],
+      "answer_index": 3,
+      "explanation": "6 groups of 6 make 36."
+    },
+    {
+      "id": "tt-022",
+      "prompt": "8 × 9 = ?",
+      "choices": [
+        "72",
+        "74",
+        "71",
+        "64"
+      ],
+      "answer_index": 0,
+      "explanation": "8 groups of 9 make 72."
+    },
+    {
+      "id": "tt-023",
+      "prompt": "7 × 4 = ?",
+      "choices": [
+        "28",
+        "29",
+        "24",
+        "18"
+      ],
+      "answer_index": 0,
+      "explanation": "7 groups of 4 make 28."
+    },
+    {
+      "id": "tt-024",
+      "prompt": "9 × 4 = ?",
+      "choices": [
+        "36",
+        "38",
+        "45",
+        "34"
+      ],
+      "answer_index": 0,
+      "explanation": "9 groups of 4 make 36."
+    },
+    {
+      "id": "tt-025",
+      "prompt": "11 × 11 = ?",
+      "choices": [
+        "119",
+        "121",
+        "122",
+        "120"
+      ],
+      "answer_index": 1,
+      "explanation": "11 groups of 11 make 121."
+    },
+    {
+      "id": "tt-026",
+      "prompt": "12 × 12 = ?",
+      "choices": [
+        "132",
+        "156",
+        "144",
+        "146"
+      ],
+      "answer_index": 2,
+      "explanation": "12 groups of 12 make 144."
+    },
+    {
+      "id": "tt-027",
+      "prompt": "11 × 12 = ?",
+      "choices": [
+        "142",
+        "120",
+        "130",
+        "132"
+      ],
+      "answer_index": 3,
+      "explanation": "11 groups of 12 make 132."
+    },
+    {
+      "id": "tt-028",
+      "prompt": "12 × 7 = ?",
+      "choices": [
+        "82",
+        "84",
+        "74",
+        "91"
+      ],
+      "answer_index": 1,
+      "explanation": "12 groups of 7 make 84."
+    },
+    {
+      "id": "tt-029",
+      "prompt": "12 × 8 = ?",
+      "choices": [
+        "94",
+        "88",
+        "104",
+        "96"
+      ],
+      "answer_index": 3,
+      "explanation": "12 groups of 8 make 96."
+    },
+    {
+      "id": "tt-030",
+      "prompt": "11 × 9 = ?",
+      "choices": [
+        "101",
+        "108",
+        "99",
+        "109"
+      ],
+      "answer_index": 2,
+      "explanation": "11 groups of 9 make 99."
+    },
+    {
+      "id": "tt-031",
+      "prompt": "12 × 6 = ?",
+      "choices": [
+        "62",
+        "78",
+        "74",
+        "72"
+      ],
+      "answer_index": 3,
+      "explanation": "12 groups of 6 make 72."
+    },
+    {
+      "id": "tt-032",
+      "prompt": "11 × 8 = ?",
+      "choices": [
+        "87",
+        "88",
+        "78",
+        "90"
+      ],
+      "answer_index": 1,
+      "explanation": "11 groups of 8 make 88."
+    },
+    {
+      "id": "tt-033",
+      "prompt": "12 × 9 = ?",
+      "choices": [
+        "118",
+        "108",
+        "99",
+        "98"
+      ],
+      "answer_index": 1,
+      "explanation": "12 groups of 9 make 108."
+    },
+    {
+      "id": "tt-034",
+      "prompt": "13 × 3 = ?",
+      "choices": [
+        "36",
+        "39",
+        "42",
+        "52"
+      ],
+      "answer_index": 1,
+      "explanation": "13 groups of 3 make 39."
+    },
+    {
+      "id": "tt-035",
+      "prompt": "15 × 4 = ?",
+      "choices": [
+        "60",
+        "62",
+        "59",
+        "45"
+      ],
+      "answer_index": 0,
+      "explanation": "15 groups of 4 make 60."
+    },
+    {
+      "id": "tt-036",
+      "prompt": "14 × 5 = ?",
+      "choices": [
+        "72",
+        "70",
+        "65",
+        "60"
+      ],
+      "answer_index": 1,
+      "explanation": "14 groups of 5 make 70."
+    },
+    {
+      "id": "tt-037",
+      "prompt": "25 × 4 = ?",
+      "choices": [
+        "99",
+        "101",
+        "100",
+        "75"
+      ],
+      "answer_index": 2,
+      "explanation": "25 groups of 4 make 100."
+    },
+    {
+      "id": "tt-038",
+      "prompt": "16 × 3 = ?",
+      "choices": [
+        "32",
+        "45",
+        "48",
+        "50"
+      ],
+      "answer_index": 2,
+      "explanation": "16 groups of 3 make 48."
+    },
+    {
+      "id": "tt-039",
+      "prompt": "15 × 6 = ?",
+      "choices": [
+        "90",
+        "100",
+        "96",
+        "92"
+      ],
+      "answer_index": 0,
+      "explanation": "15 groups of 6 make 90."
+    },
+    {
+      "id": "tt-040",
+      "prompt": "13 × 4 = ?",
+      "choices": [
+        "62",
+        "39",
+        "52",
+        "48"
+      ],
+      "answer_index": 2,
+      "explanation": "13 groups of 4 make 52."
+    },
+    {
+      "id": "tt-041",
+      "prompt": "56 ÷ 7 = ?",
+      "choices": [
+        "18",
+        "10",
+        "6",
+        "8"
+      ],
+      "answer_index": 3,
+      "explanation": "56 split into 7 equal groups gives 8 in each."
+    },
+    {
+      "id": "tt-042",
+      "prompt": "72 ÷ 8 = ?",
+      "choices": [
+        "5",
+        "9",
+        "8",
+        "11"
+      ],
+      "answer_index": 1,
+      "explanation": "72 split into 8 equal groups gives 9 in each."
+    },
+    {
+      "id": "tt-043",
+      "prompt": "81 ÷ 9 = ?",
+      "choices": [
+        "9",
+        "8",
+        "10",
+        "13"
+      ],
+      "answer_index": 0,
+      "explanation": "81 split into 9 equal groups gives 9 in each."
+    },
+    {
+      "id": "tt-044",
+      "prompt": "42 ÷ 6 = ?",
+      "choices": [
+        "5",
+        "7",
+        "17",
+        "9"
+      ],
+      "answer_index": 1,
+      "explanation": "42 split into 6 equal groups gives 7 in each."
+    },
+    {
+      "id": "tt-045",
+      "prompt": "63 ÷ 9 = ?",
+      "choices": [
+        "8",
+        "3",
+        "7",
+        "5"
+      ],
+      "answer_index": 2,
+      "explanation": "63 split into 9 equal groups gives 7 in each."
+    },
+    {
+      "id": "tt-046",
+      "prompt": "48 ÷ 6 = ?",
+      "choices": [
+        "6",
+        "10",
+        "8",
+        "18"
+      ],
+      "answer_index": 2,
+      "explanation": "48 split into 6 equal groups gives 8 in each."
+    },
+    {
+      "id": "tt-047",
+      "prompt": "36 ÷ 4 = ?",
+      "choices": [
+        "8",
+        "7",
+        "9",
+        "11"
+      ],
+      "answer_index": 2,
+      "explanation": "36 split into 4 equal groups gives 9 in each."
+    },
+    {
+      "id": "tt-048",
+      "prompt": "54 ÷ 6 = ?",
+      "choices": [
+        "6",
+        "7",
+        "8",
+        "9"
+      ],
+      "answer_index": 3,
+      "explanation": "54 split into 6 equal groups gives 9 in each."
+    },
+    {
+      "id": "tt-049",
+      "prompt": "64 ÷ 8 = ?",
+      "choices": [
+        "8",
+        "4",
+        "9",
+        "12"
+      ],
+      "answer_index": 0,
+      "explanation": "64 split into 8 equal groups gives 8 in each."
+    },
+    {
+      "id": "tt-050",
+      "prompt": "45 ÷ 5 = ?",
+      "choices": [
+        "19",
+        "10",
+        "9",
+        "8"
+      ],
+      "answer_index": 2,
+      "explanation": "45 split into 5 equal groups gives 9 in each."
+    },
+    {
+      "id": "tt-051",
+      "prompt": "40 ÷ 8 = ?",
+      "choices": [
+        "9",
+        "1",
+        "5",
+        "4"
+      ],
+      "answer_index": 2,
+      "explanation": "40 split into 8 equal groups gives 5 in each."
+    },
+    {
+      "id": "tt-052",
+      "prompt": "28 ÷ 4 = ?",
+      "choices": [
+        "5",
+        "9",
+        "7",
+        "17"
+      ],
+      "answer_index": 2,
+      "explanation": "28 split into 4 equal groups gives 7 in each."
+    },
+    {
+      "id": "tt-053",
+      "prompt": "132 ÷ 12 = ?",
+      "choices": [
+        "5",
+        "11",
+        "12",
+        "17"
+      ],
+      "answer_index": 1,
+      "explanation": "132 split into 12 equal groups gives 11 in each."
+    },
+    {
+      "id": "tt-054",
+      "prompt": "144 ÷ 12 = ?",
+      "choices": [
+        "2",
+        "12",
+        "22",
+        "14"
+      ],
+      "answer_index": 1,
+      "explanation": "144 split into 12 equal groups gives 12 in each."
+    },
+    {
+      "id": "tt-055",
+      "prompt": "96 ÷ 8 = ?",
+      "choices": [
+        "2",
+        "8",
+        "22",
+        "12"
+      ],
+      "answer_index": 3,
+      "explanation": "96 split into 8 equal groups gives 12 in each."
+    },
+    {
+      "id": "tt-056",
+      "prompt": "108 ÷ 9 = ?",
+      "choices": [
+        "8",
+        "11",
+        "22",
+        "12"
+      ],
+      "answer_index": 3,
+      "explanation": "108 split into 9 equal groups gives 12 in each."
+    },
+    {
+      "id": "tt-057",
+      "prompt": "84 ÷ 7 = ?",
+      "choices": [
+        "12",
+        "13",
+        "14",
+        "2"
+      ],
+      "answer_index": 0,
+      "explanation": "84 split into 7 equal groups gives 12 in each."
+    },
+    {
+      "id": "tt-058",
+      "prompt": "121 ÷ 11 = ?",
+      "choices": [
+        "11",
+        "10",
+        "12",
+        "13"
+      ],
+      "answer_index": 0,
+      "explanation": "121 split into 11 equal groups gives 11 in each."
+    },
+    {
+      "id": "tt-059",
+      "prompt": "90 ÷ 6 = ?",
+      "choices": [
+        "15",
+        "25",
+        "18",
+        "13"
+      ],
+      "answer_index": 0,
+      "explanation": "90 split into 6 equal groups gives 15 in each."
+    },
+    {
+      "id": "tt-060",
+      "prompt": "100 ÷ 4 = ?",
+      "choices": [
+        "25",
+        "23",
+        "24",
+        "26"
+      ],
+      "answer_index": 0,
+      "explanation": "100 split into 4 equal groups gives 25 in each."
+    }
+  ]
+}

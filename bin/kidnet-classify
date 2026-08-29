@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+# hearth:summary=Classify devices (personal / IoT / infrastructure) by hostname + MAC vendor.
+#
+# Runs after discovery. Guesses what each device IS so it can be treated right:
+# a security camera or smart lock must never be metered or cut with "kids off",
+# a phone should be assignable to a kid. Uses the device's announced hostname
+# first (most reliable), then the MAC's manufacturer prefix (OUI), then the
+# locally-administered bit (randomised MAC = almost always a personal phone).
+# Curated, extend freely: many homes have the same handful of vendors.
+set -uo pipefail
+psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+
+# Reclassify anything still on defaults (category personal + kind unknown), plus
+# any device the parent has not overridden. Never touches infra or assigned ones.
+rows=$(psqll "SELECT id||'|'||coalesce(lower(hostname),'')||'|'||lower(mac::text) FROM devices WHERE category<>'infra' AND kind IN ('unknown','')")
+[ -n "$rows" ] || { echo "kidnet-classify: no devices"; exit 0; }
+
+classify(){ # echoes: kind|category|vendor
+  local host="$1" mac="$2" oui="${2:0:8}"
+  # locally-administered bit set in first octet => randomised MAC (phones)
+  local firstoct=$((16#${mac:0:2})); local random=$(( (firstoct & 2) != 0 ))
+  local kind="" cat="personal" vendor=""
+  # 1) hostname keywords (most reliable signal)
+  case "$host" in
+    *echo*|*alexa*|*amazon*)                 kind=speaker;   cat=iot; vendor=Amazon;;
+    *sonos*)                                 kind=speaker;   cat=iot; vendor=Sonos;;
+    *homepod*)                               kind=speaker;   cat=iot; vendor=Apple;;
+    *roomba*|*irobot*|*braava*)              kind=vacuum;    cat=iot; vendor=iRobot;;
+    *ring*|*doorbell*)                       kind=doorbell;  cat=iot; vendor=Ring;;
+    *nest*|*wyze*|*reolink*|*hikvision*|*dahua*|*cam*|*camera*|*ipcam*|*frontdoor*|*backdoor*) kind=camera; cat=iot;;
+    *lock*|*august*|*yale*|*schlage*|*lockly*) kind=lock;    cat=iot;;
+    *hue*|*lifx*|*bulb*|*light*|*lamp*)      kind=light;     cat=iot;;
+    *plug*|*wemo*|*kasa*|*smartplug*)        kind=plug;      cat=iot;;
+    *thermostat*|*ecobee*|*honeywell*)       kind=thermostat;cat=iot;;
+    *fridge*|*washer*|*dryer*|*oven*|*dishwasher*|*appliance*) kind=appliance; cat=iot;;
+    *shelly*|*tasmota*|*tuya*|*sonoff*|*esp*|*esp32*|*esp8266*|*lwip*) kind=iot-generic; cat=iot;;
+    *chromecast*|*roku*|*firetv*|*fire-tv*|*appletv*|*apple-tv*|*shield*|*-tv*|*smarttv*) kind=tv; cat=personal;;
+    *ps5*|*ps4*|*playstation*|*xbox*|*nintendo*|*switch-*) kind=console; cat=personal;;
+    *iphone*|*ipad*|*macbook*|*-mbp*|*-mba*) kind=personal;  cat=personal; vendor=Apple;;
+    *galaxy*|*pixel*|*oneplus*|*android*|*-a12*|*-s2*|*-s23*|*redmi*|*xiaomi*) kind=phone; cat=personal;;
+    *chromebook*|*chromeos*)                 kind=laptop;    cat=personal;;
+    *macbook*|*laptop*|*-pc*|*desktop*|*thinkpad*) kind=laptop; cat=personal;;
+  esac
+  # 2) OUI vendor (fills vendor, and IoT category when hostname was silent)
+  if [ -z "$vendor" ] || [ -z "$kind" ]; then
+    case "$oui" in
+      3c:0b:59|28:ee:52|50:c7:bf|a4:2b:b0|1c:61:b4|c0:06:c3) vendor=${vendor:-TP-Link};;
+      fc:65:de|68:37:e9|44:65:0d|4c:ef:c0|ac:63:be|f0:81:73|68:54:fd) vendor=${vendor:-Amazon}; [ -z "$kind" ] && { kind=speaker; cat=iot; };;
+      18:b4:30|64:16:66|d8:eb:46) vendor=${vendor:-Google-Nest}; [ -z "$kind" ] && { kind=camera; cat=iot; };;
+      50:32:37|dc:a6:32|b8:27:eb|e4:5f:01) vendor=${vendor:-RaspberryPi};;
+      24:0a:c4|30:ae:a4|84:0d:8e|a0:20:a6|ec:fa:bc|c8:2b:96|f4:cf:a2) vendor=${vendor:-Espressif}; [ -z "$kind" ] && { kind=iot-generic; cat=iot; };;
+      00:0d:b9|9c:8e:cd) vendor=${vendor:-Ring}; [ -z "$kind" ] && { kind=doorbell; cat=iot; };;
+      2c:aa:8e|50:14:79|d0:73:d5|00:17:88) vendor=${vendor:-Philips-Hue}; [ -z "$kind" ] && { kind=light; cat=iot; };;
+      94:9f:3e|b8:e9:37|54:2a:1b) vendor=${vendor:-Sonos}; [ -z "$kind" ] && { kind=speaker; cat=iot; };;
+      50:14:79) vendor=${vendor:-iRobot}; [ -z "$kind" ] && { kind=vacuum; cat=iot; };;
+      dc:a6:32|e0:76:d0) vendor=${vendor:-WyzeLabs}; [ -z "$kind" ] && { kind=camera; cat=iot; };;
+    esac
+  fi
+  # 3) randomised MAC with no other signal => a personal phone hiding its MAC
+  if [ -z "$kind" ] && [ "$random" = 1 ]; then kind=phone; cat=personal; vendor=${vendor:-"(private MAC)"}; fi
+  [ -z "$kind" ] && kind=unknown
+  echo "$kind|$cat|$vendor"
+}
+
+# Read all rows into an array FIRST: docker exec -i inside the loop would
+# otherwise slurp the loop's stdin and stop it after one row.
+mapfile -t _devs <<< "$rows"
+n=0
+for line in "${_devs[@]}"; do
+  [ -n "$line" ] || continue
+  IFS='|' read -r id host mac <<< "$line"
+  [ -n "$id" ] || continue
+  res=$(classify "$host" "$mac"); k=${res%%|*}; rest=${res#*|}; c=${rest%%|*}; v=${rest#*|}
+  vset=""; [ -n "$v" ] && vset=", vendor='$v'"
+  psqll "UPDATE devices SET kind='$k', category='$c'$vset WHERE id=$id" >/dev/null
+  n=$((n+1))
+done
+echo "kidnet-classify: classified $n device(s)"

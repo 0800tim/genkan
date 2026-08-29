@@ -1,0 +1,22 @@
+[Unit]
+Description=Hearth Tor relay list refresh (public relays -> the nft tor_nodes set)
+Documentation=file:///srv/projects/internal/kids-network/docs/tor-and-safety.md
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+# Two steps, deliberately separate. kidnet-tor-sync only ever WRITES FILES: it
+# fetches the relay list and renders /var/lib/hearth/tor-nodes.nft. Loading is
+# done here, by handing that snippet to the gateway container on stdin, so the
+# change lands inside the island's own namespace the same way every other nft
+# change does. One writer, no surprises.
+ExecStart=/usr/local/bin/kidnet-tor-sync sync
+# The snippet flushes and refills @tor_nodes in a single nft transaction, so
+# the set is never momentarily empty. If the running gateway image predates the
+# tor_nodes set we skip the apply rather than fail: the fetch still succeeded,
+# and the next deploy picks it up.
+ExecStart=/bin/sh -c 'docker exec hearth-gw nft list set inet kids tor_nodes >/dev/null 2>&1 \
+  || { echo "kids-tor-sync: gateway has no tor_nodes set yet, skipping apply"; exit 0; }; \
+  docker exec -i hearth-gw nft -f - < /var/lib/hearth/tor-nodes.nft \
+  && echo "kids-tor-sync: applied $(wc -l < /var/lib/hearth/tor-nodes.txt) relay addresses to @tor_nodes"'
