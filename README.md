@@ -1,121 +1,218 @@
-# kids-network
+# Hearth
 
-Infrastructure-as-code for the kids' network island: a separate
-wired+wireless segment where clawdia is the sole gateway, so internet
-on/off (per kid, or all), DNS safety filtering, and per-device logging
-are things clawdia owns and the agent can drive from Tim's phone.
+**Your kids' internet, run from a box in your own house.**
 
-**Read PLAN.md first** for the full design, topology, and the honest
-limits of network-level monitoring.
+Filtering you control, time limits they can earn back by learning, and
+absolutely nothing sent to anyone else. Not to a cloud service, not to us.
 
-## Containerised: the island cannot touch the house
+---
 
-Everything island-facing runs in Docker (compose.yaml). The gateway
-container owns its own network namespace holding exactly two interfaces:
-eth0 (ordinary docker uplink) and kids0 (the physical USB NIC, handed in
-by the host warden). The firewall, DHCP+DNS (AdGuard) and the kid portal
-all live inside that namespace with NET_ADMIN+NET_RAW only: a bad rule can
-degrade the island, never the house. Postgres holds desired state; the
-gateway reconciles the firewall from it every 15 seconds.
+## The problem
 
-Two safety properties worth knowing:
-- Segment guard: on every NIC (re)appearance the gateway listens on the
-  wire first. Another DHCP server or foreign-subnet traffic means the
-  island refuses to start and raises an urgent alert. Fail closed: if it
-  cannot listen, it does not start.
-- Fail-closed worst case: if the box or container dies, the kids' island
-  goes down; the main house network is untouched either way.
+The screens are winning. Not dramatically, just the ordinary grind: the endless
+scroll, one more round, the argument at dinner every night.
 
-| Piece | Where it runs |
+So you go looking for help, and the options are grim. The polished parental
+control services want a monthly fee and, in exchange, a complete record of
+everywhere your children go on the internet. Your router's app is clumsy and
+treats an eleven year old and a sixteen year old exactly the same. And nearly
+all of it is built around watching your kids rather than helping them.
+
+Meanwhile the actual problem is not really "block bad websites". It is that a
+kid can lose four hours to a feed without noticing, and that the tools give you
+one blunt lever: internet on, or internet off.
+
+## The idea
+
+Put a small computer next to your router. Any old laptop or mini PC will do.
+Everything the kids' devices do goes through it, and it belongs to you.
+
+Because it is yours:
+
+- **Nothing leaves your house.** Their browsing is never uploaded anywhere,
+  which means nobody can leak it, sell it, or subpoena it. Not even us. That is
+  not a promise you have to trust, it is a consequence of where the software
+  runs.
+- **You can be surgical.** Turn off Fortnite while homework and Spotify keep
+  working. "Dinner" pauses the whole house with one word, then resumes it.
+- **Kids earn time instead of begging for it.** Run out of minutes and they get
+  a friendly page, not a dead connection: pass a quiz on times tables, world
+  flags, the road code or science, and the minutes land immediately.
+- **Each kid gets their own rules.** An eleven year old and a sixteen year old
+  should not have the same internet. Over-block a teenager and they will simply
+  move to mobile data, where you have no visibility at all.
+
+You talk to it in plain sentences from your phone, through whichever AI
+assistant you already pay for: *"turn off Toby's gaming"*, *"dinner"*,
+*"give Ada thirty more minutes, she did the dishes"*.
+
+## The bit people find surprising
+
+Your teenager will try to get around it. Of course they will.
+
+So there is a **household bug bounty** written into the project. If they beat
+the filter and come and show you how, they get paid in screen time and you fix
+the hole together. Every level teaches something real: DNS, encrypted DNS, IP
+addresses, MAC spoofing, VPNs. It turns the arms race into the most useful
+computing lesson they will get all year.
+
+See BUG-BOUNTY.md. It is written to be handed straight to a kid.
+
+## What it honestly cannot do
+
+Every parental control product should have this section and almost none do.
+
+- **It sees domains, not content.** HTTPS means we know a device talked to
+  `youtube.com`, never what was watched or typed. Reading inside would require
+  installing a certificate on every device and breaking app security. We will
+  not do that.
+- **It cannot see inside Snapchat, Instagram or Discord messages.** Those are
+  end to end encrypted. If bullying is your worry, this is not the tool.
+- **It cannot touch mobile data.** A phone on 4G never comes near your network.
+  That needs something on the device itself, like Family Link.
+- **A determined kid with a VPN can hide their destinations.** We block the
+  easy routes and alert you, and the bug bounty turns the attempt into a
+  conversation. There is no product on earth that truly stops a motivated
+  sixteen year old, and any that claims otherwise is selling something.
+
+## Getting started
+
+You need a computer with two network connections (built-in ethernet plus a USB
+ethernet adapter is the usual answer, about NZD 30), and a WiFi access point,
+which can be your old router in bridge mode.
+
+Then, roughly:
+
+```bash
+git clone https://github.com/0800tim/hearth && cd hearth
+./install/omarchy-setup.sh     # host prep, asks which adapter is the kids' side
+sudo ./deploy.sh               # validates, builds, starts the island
+```
+
+The honest version: this is a genuinely fiddly networking setup, and that is
+exactly why it is built agent-first. Clone the repo, point Claude Code (or
+Codex, or Gemini, or whatever you use) at `CLAUDE.md`, and say *"read this and
+set up my Hearth gateway"*. It will ask you what it needs. The entire control
+surface is one CLI plus plain-markdown runbooks, precisely so an agent can
+drive it.
+
+Platform guides live in `docs/setup/`: Omarchy, Debian/Ubuntu, Raspberry Pi
+(a Pi 4 or 5 makes a fine gateway) and generic Linux.
+
+**The Switcheroo.** Migrating a houseful of devices sounds miserable, so there
+is a trick that avoids it entirely: give the new filtered network the same name
+and password as your old one, and every device reconnects to it on its own,
+noticing nothing. `docs/playbooks/the-switcheroo.md`.
+
+---
+
+# For the technically minded
+
+Everything below is the detail. If you are evaluating whether this is sound
+rather than whether it is useful, start here.
+
+## Architecture
+
+The gateway runs in a Docker container with **its own network namespace**,
+holding exactly two interfaces: an ordinary bridge uplink, and the physical
+second NIC handed in by a small host-side warden. The firewall, DHCP, DNS and
+the kids' portal all live in that namespace with `NET_ADMIN` and `NET_RAW`
+only, never privileged, never host networking.
+
+That structure is the safety argument. A mistake in the firewall rules can take
+the kids' network down. It cannot touch the host's firewall, your main LAN or
+your VPN, because **those interfaces do not exist inside the container**. That
+is a stronger guarantee than careful rule review, and there is a packet-level
+test suite that proves it rather than asserting it.
+
+Postgres holds the desired state. The firewall is a projection of it,
+reconciled every fifteen seconds, so a container restart or a USB replug cannot
+silently forget that a child is switched off.
+
+```
+internet
+   |
+your router                     (untouched, your own devices stay here)
+   |
+Hearth box  eth0 --------------- uplink
+            kids0 -------------- the kids' island, 192.168.60.0/24
+                                   |
+                            access point (bridge mode)
+                                   |
+                            phones, tablets, consoles
+```
+
+## How the per-category control actually works
+
+This is the part people ask about, because blocking "gaming" without blocking
+homework sounds impossible when everything is encrypted.
+
+The gateway is the DNS server. So when a device resolves `googlevideo.com`, we
+learn that those addresses are video, for that device, right now. The firewall
+then counts and controls traffic **by destination address**, without decrypting
+anything. That is how Fortnite can stop while Spotify and Google Docs keep
+working, and how the dashboard can report real bytes per service rather than a
+guess.
+
+Honest caveats, also stated in the UI: services sharing a CDN blur together,
+YouTube Music counts as YouTube, Shorts cannot be separated from YouTube, and a
+VPN defeats the categorisation entirely.
+
+## The stack
+
+| Layer | What |
 |---|---|
-| firewall config/nftables/kids.nft | inside the gateway container |
-| DHCP + DNS + filtering (config/adguard/) | adguard container, same netns |
-| kid portal + learn-to-earn (dashboard/portal.mjs) | portal container, same netns, island :80 |
-| admin dashboard (dashboard/server.mjs) | HOST systemd --user, tailnet :8899 |
+| Firewall, NAT, isolation | nftables, inside the container namespace |
+| DHCP, DNS, filtering | AdGuard Home, per-child clients by age tier |
+| State, logs, ledger | Postgres |
+| Control surface | `bin/kidnet`, a single CLI any agent can drive |
+| Parent dashboard | Node, on your private network, charts in inline SVG |
+| Kids' portal | Node, the captive portal and quiz engine |
 
-The dashboard is tailnet-only by default. For an extra layer, set `DASH_TOKEN`
-in its unit's `Environment=`: every control call then requires that secret,
-injected via a same-origin cookie so the operator never types it.
-| bin/kidnet, bin/kidnet-meter | host CLI (drives nft via docker exec) |
-| host/kids-nic-warden.{sh,service} | host systemd, the only host-side piece |
+## Safety properties worth knowing
 
-`sudo ./deploy.sh` validates the ruleset, builds the image, installs the
-host pieces and starts the stack.
-
-## Layers (see PLAN.md for detail)
-
-1. `kids0` (USB ASIX AX88179) = 192.168.60.1/24, the kids' gateway.
-2. NAT: nftables masquerade 192.168.60.0/24 -> enp5s0.
-3. DHCP + DNS + filtering: AdGuard Home (per-device logs, category
-   blocklists, SafeSearch). DHCP hands out .60.1 as gw+DNS.
-4. On/off: `kidnet off|on Ben|Cleo|all`, backed by an nftables set.
-5. Schedules: systemd timers calling kidnet (bedtime off, morning on).
-6. Safety net: `kidnet allow-sync` resolves the `always_allow` domains with
-   `scope='safety'` into the nft set `@kids_allow`, so the NZ youth help lines
-   and schoolwork stay reachable through a cut, dinner, bedtime and running
-   out of time. Refreshed hourly, because those addresses move.
-
-## Learn-to-earn
-
-Kids earn minutes by learning. Quiz banks live in portal/quizzes/ (static
-JSON, PRs welcome; see FORMAT.md), graded server-side with cooldowns and a
-daily cap. Chores are claims a parent approves on the dashboard. See
-docs/runbooks/ for how other families' agents can generate curriculum
-banks for their own country, and docs/AGENT.md for the voice interface.
+- **Segment guard.** Before serving anything, the gateway listens on the wire.
+  If another DHCP server is already there, it refuses to start and tells you,
+  rather than fighting your real router. It fails closed.
+- **The safety net.** NZ youth help lines (1737, Youthline, Kidsline) and
+  schoolwork stay reachable *even when a child is fully cut off*, at bedtime,
+  and when they are out of time. Enforced in the firewall, not just intended.
+- **Smart home is separate.** Cameras, locks and speakers are classified apart
+  from personal devices and are never cut when you pause the kids. Nobody's
+  front door lock goes offline at bedtime.
+- **Self-harm is a care signal, never a punishment.** It alerts you and never
+  routes to a blocking page.
 
 ## Tests
 
-Two rigs, both required green before any commit that touches the network:
-- `sudo test/firewall-test.sh`: the ruleset alone, three throwaway netns,
-  20 packet-level checks.
-- `sudo test/container-test.sh`: the real image with the real capabilities,
-  25 checks: containment (nothing of ours on the host), island function,
-  USB replug resilience, and the segment guard refusing a poisoned wire.
+Five suites, all packet-level or database-level, no mocks:
 
-## Status
+```bash
+sudo test/firewall-test.sh      # the ruleset, in throwaway namespaces
+sudo test/container-test.sh     # the real image, containment proven
+sudo test/meter-test.sh         # time budgets and category enforcement
+sudo test/service-meter-test.sh # per-service byte accounting
+ADGUARD_PASS=... test/adguard-test.sh
+```
 
-Planning + scaffolding done (2026-08-27). NOT deployed. Waiting on the
-physical build: spare switch + cabling, and Deco X20 flipped to AP mode.
-Adapter detected: kids0 = ASIX AX88179 (mac <your-adapter-MAC>).
+The container suite asserts, among other things, that a static IP outside its
+reservation gets no internet, that the island cannot reach the main LAN or the
+VPN range, that hardcoding 8.8.8.8 still lands on our resolver, and that the
+help lines survive a cut.
 
-## Not solved here
+## Documentation map
 
-- Son's mobile data: cellular never touches this network. Google Family
-  Link only. See PLAN.md.
-- In-app bullying (Snapchat/Insta/Discord DMs): end-to-end encrypted,
-  invisible to the network. Needs a consenting app tool (e.g. Bark).
-
-## Admin dashboard
-
-`dashboard/` is a small Node service (systemd user unit
-`kids-dashboard.service`) on the tailnet at http://<your-box-ip>:8899.
-Mobile first, because it is driven from a phone. Three views:
-
-| View | What it is for |
+| Read this | For |
 |---|---|
-| Tonight (`/`) | State now and the controls: internet off/on per kid, kill gaming, media, study mode, Dinner/family pause, bonus minutes, chore approvals |
-| Trends (`/trends?days=7\|30`) | Per kid: where the time went day by day, losing time against gaining time, and which services, with a table twin under every chart |
-| Devices (`/devices`) | The roster by class (personal / smart home / infrastructure) and the naming queue for new devices |
-
-Buttons call `bin/kidnet`; state is in Postgres (`kids_network`). The charts
-are self-contained inline SVG with no library and no CDN, so the dashboard
-works with the house internet down. `dashboard/analytics.mjs` holds the
-read-only queries, `charts.mjs` the SVG, `views.mjs` the pages.
-
-**On honesty.** The Trends view labels what each number is. DNS lookups are
-lookups: a proxy for activity, never data volume and never minutes. Minutes
-come from the meter (`category_usage`), bytes only from the real nftables
-per-service counters (`service_usage`), and nothing is ever derived from a
-lookup count. Anything the gateway cannot attribute to a child is reported as
-unattributed rather than spread around. See METERING.md for the limits.
-
-## More docs
-
-- PLAN.md - full build design + topology + honest limits
-- RECOMMENDATIONS.md - age-tiered policy (11/14/16), tamper resistance,
-  guest isolation, safety net, and the things worth doing beyond on/off
-- PRIOR-ART.md - similar OSS + how this differs + unrot kinship
-- BUG-BOUNTY.md - household bug-bounty house rules (turn bypass attempts into learning)
+| `CLAUDE.md` | what to point your AI agent at first |
+| `docs/setup/` | platform guides: Omarchy, Debian, Raspberry Pi, generic |
+| `docs/AGENT.md` | the plain-sentence command surface |
+| `DECISIONS.md` | every design decision and why, including the mistakes |
+| `PLAN.md` | topology and the limits of network monitoring |
+| `METERING.md` | how per-category time measurement works |
+| `BUG-BOUNTY.md` | the household bug bounty, written for kids |
+| `docs/playbooks/` | the Switcheroo and other practical guides |
+| `RECOMMENDATIONS.md` | age-tiered policy and what to do beyond on/off |
 
 ## Who made this, and why
 
