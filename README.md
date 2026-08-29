@@ -60,8 +60,10 @@ Because it is yours:
 - **You can be surgical.** Turn off Fortnite while homework and Spotify keep
   working. "Dinner" pauses the whole house with one word, then resumes it.
 - **Kids earn time instead of begging for it.** Run out of minutes and they get
-  a friendly page, not a dead connection: pass a quiz on times tables, world
-  flags, the road code or science, and the minutes land immediately.
+  a friendly page, not a dead connection: pass a quiz and the minutes land
+  immediately. There are over 40 quiz banks in the box, from five year olds to
+  NCEA, and Wikipedia stays open while they are blocked so they can go and learn
+  something first.
 - **Each kid gets their own rules.** An eleven year old and a sixteen year old
   should not have the same internet. Over-block a teenager and they will simply
   move to mobile data, where you have no visibility at all.
@@ -69,6 +71,50 @@ Because it is yours:
 You talk to it in plain sentences from your phone, through whichever AI
 assistant you already pay for: *"turn off Ben's gaming"*, *"dinner"*,
 *"give Ada thirty more minutes, she did the dishes"*.
+
+## The part that turned out to matter most
+
+Learn-to-earn only works if there is something worth learning behind it, and
+that is where most of the effort has gone.
+
+**Over 40 quiz banks, more than 2,000 questions, and every single question
+comes with an explanation of the answer.** Not a right-or-wrong tick: a sentence
+written for the child who got it wrong.
+
+It runs from five year olds to school-leavers. New Zealand Years 1 to 3, 4 to 6,
+7 and 8, 9 and 10, and NCEA maths, biology, chemistry and physics, across every
+learning area: maths, science, English, the social sciences and Aotearoa New
+Zealand histories, te reo Māori, the arts, health and PE, and technology. Then
+banks for the UK, the United States, Australia, Canada and Ireland, and general
+ones like times tables, world flags, astronomy, chess and the road code.
+
+Three things make it more than a pile of trivia:
+
+- **Every bank ramps.** Each question is rated 1 to 5, so a round opens with
+  warm-ups and gets harder, and the mix adapts to how that child has been going
+  lately. A round is always passable and never opens with the hardest question
+  in it.
+- **Every bank has a "Read up" page** showing every question, its answer and its
+  explanation. A child who scored three out of ten has somewhere to go that is
+  not "guess again". Reading earns nothing, so there is nothing to farm.
+- **The reading list stays open when they are blocked.** Around forty reference
+  sites, Wikipedia and Te Ara and NASA and the National Library among them,
+  survive a total cut. Without that, learn-to-earn is a memory test: a child can
+  only cash in what they already knew. The list is deliberately dull, and
+  `docs/READING-LIST.md` names the well-known school sites that were rejected
+  for being video libraries wearing a school's uniform.
+
+A parent can write their own bank on the dashboard, a question at a time, and it
+is stored in the database so a software update cannot delete it. An agent can
+write one as a file in a few minutes.
+
+Honestly: it is not a validated curriculum and nobody has marked it against a
+syllabus document. Coverage is broad but uneven, because it grew out of what
+real children in one house were actually studying: maths has a bank per year
+band, te reo Māori has one beginners bank, and no country outside those five has
+anything. It is a large, carefully fact-checked set of questions meant to sit
+alongside school, not to replace any of it. `LEARN-TO-EARN.md` has the design,
+the economics and what is still missing.
 
 ## The bit people find surprising
 
@@ -233,6 +279,10 @@ unless client isolation is on.
 - **The safety net.** NZ youth help lines (1737, Youthline, Kidsline) and
   schoolwork stay reachable *even when a child is fully cut off*, at bedtime,
   and when they are out of time. Enforced in the firewall, not just intended.
+- **The reading list.** A second allowlist, kept deliberately separate from the
+  safety net because the two promises are different: safety must never be
+  narrowed, the reading list is a household's to choose. Around forty reference
+  sites survive the same total cut, so a child out of time can go and read.
 - **Smart home is separate.** Cameras, locks and speakers are classified apart
   from personal devices and are never cut when you pause the kids. Nobody's
   front door lock goes offline at bedtime.
@@ -246,23 +296,27 @@ unless client isolation is on.
 
 ## Tests
 
-Seven suites, a hundred and seventy checks, all packet-level or database-level,
+Eight suites, two hundred and ten checks, all packet-level or database-level,
 no mocks:
 
 ```bash
-sudo test/firewall-test.sh      # 31  the ruleset, in throwaway namespaces
+sudo test/firewall-test.sh      # 36  the ruleset, in throwaway namespaces
 sudo test/container-test.sh     # 26  the real image, containment proven
 sudo test/iot-policy-test.sh    # 39  the household IoT policy, real packets
 sudo test/meter-test.sh         #  8  time budgets and category enforcement
-sudo test/service-meter-test.sh #  5  per-service byte accounting
+sudo test/service-meter-test.sh #  6  per-service byte accounting
 sudo test/roles-test.sh         # 51  who each scoped control reaches, and who it does not
-ADGUARD_PASS=... test/adguard-test.sh   # 10  the DNS layer, against a live AdGuard
+test/schema-test.sh             # 35  a fresh install: the schema order, on an empty database
+ADGUARD_PASS=... test/adguard-test.sh   #  9  the DNS layer, against a live AdGuard
 ```
 
 The container suite asserts, among other things, that a static IP outside its
 reservation gets no internet, that the island cannot reach the main LAN or the
 VPN range, that hardcoding 8.8.8.8 still lands on our resolver, and that the
-help lines survive a cut.
+help lines survive a cut. The schema suite exists because the first thing a
+stranger does, a fresh install, was the one thing nothing tested: it loads every
+schema file into an empty throwaway database in the documented order and proves
+it works.
 
 ## Documentation map
 
@@ -274,6 +328,11 @@ help lines survive a cut.
 | `docs/CLI.md` | every command, its arguments and what it really does |
 | `docs/OPERATIONS.md` | health checks, timers, logs, troubleshooting, backups |
 | `DECISIONS.md` | every design decision and why, including the mistakes |
+| `LEARN-TO-EARN.md` | the quizzes, the reading list, the economics, and what is not built |
+| `portal/quizzes/FORMAT.md` | the quiz bank format, and how to write a good one |
+| `docs/READING-LIST.md` | what a blocked child can still read, and what was rejected |
+| `docs/GAMIFICATION.md` | badges, and why the house board is not a leaderboard |
+| `docs/DEVICE-IDENTITY.md` | device claiming: why a child's claim grants nothing until a parent agrees |
 | `PLAN.md` | topology and the limits of network monitoring |
 | `METERING.md` | how per-category time measurement works |
 | `docs/DATABASE.md` | the schema, the load order, the two connection strings |
@@ -289,7 +348,6 @@ help lines survive a cut.
 | `ROADMAP.md` | what is built, what is half built, and where to help |
 | `CONTRIBUTING.md` | what a change must not weaken |
 | `SECURITY.md` | reporting a bypass or a vulnerability |
-| `CONTRIBUTING.md`, `SECURITY.md` | how to help, and how to report a hole |
 
 ## Who made this, and why
 
@@ -330,15 +388,20 @@ Particularly welcome:
 - **Linux and distro people.** It is Docker and standard tooling underneath, so
   it should run anywhere. Packaging, hardening and making the setup less fiddly
   are all wide open.
-- **Teachers and tutors.** The quiz banks that kids earn time from are plain
-  JSON files, and each question can carry a difficulty from 1 to 5 so a round
-  opens with warm-ups and gets harder as the kid goes. Your own agent can write
-  one on any topic in a few minutes (docs/runbooks/quiz-on-demand.md), and
-  docs/runbooks/quiz-suggestions.md is the recurring version: it looks at what
-  one child has actually been doing and proposes the next bank for them. A
-  parent with no agent at all can write and edit a bank straight in the
-  dashboard. If you know how to teach a subject well, a good bank is worth more
-  than any feature I could write.
+- **Teachers and tutors.** This is the most useful thing anyone can do here and
+  it needs no networking knowledge at all. The quiz banks are plain JSON, one
+  file per bank, with a validator that checks your work. Every question carries
+  a difficulty from 1 to 5 so a round opens with warm-ups and gets harder, and
+  an explanation that a child reads on the Read up page. The gaps are real and
+  they are where the value is now: depth in te reo Māori, languages beyond it,
+  and any country that is not New Zealand, the UK, the US, Australia, Canada or
+  Ireland. Your own
+  agent can draft a bank on any topic in a few minutes
+  (docs/runbooks/quiz-on-demand.md), and docs/runbooks/quiz-suggestions.md is
+  the recurring version: it looks at what one child has actually been doing and
+  proposes the next bank for them. A parent with no agent at all can write and
+  edit a bank straight in the dashboard. If you know how to teach a subject
+  well, a good bank is worth more than any feature I could write.
 - **Anyone who can break it.** Especially the filter bypasses. Found one? Open
   an issue. That is the whole spirit of the household bug bounty, scaled up.
 

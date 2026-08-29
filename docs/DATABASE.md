@@ -38,7 +38,7 @@ create.
 | 1 | `schema.sql` | children, policies, devices, schedules, dhcp_leases, dns_log, alerts, block_events, always_allow |
 | 2 | `schema-categories.sql` | category_state, category_domains, category_ips, category_usage, category_budgets, and the seeded domain map (about 175 domains across gaming, video, download, social, audio, messaging and schoolwork) |
 | 3 | `schema-time.sql` | time_ledger, time_events, tasks, the time_remaining view |
-| 4 | `schema-safety.sql` | the always_allow scope split: safety versus category |
+| 4 | `schema-safety.sql` | the `always_allow` scope split: `safety` versus `category`, and later the `learn` scope uses the same column |
 | 5 | `schema-earn.sql` | earn_claims, for parent-approved chores |
 | 6 | `schema-people.sql` | children.kind, device hostnames, the people and device_roster views |
 | 7 | `schema-devices.sql` | devices.category and vendor, and device_roster rebuilt to carry them |
@@ -48,12 +48,16 @@ create.
 | 11 | `schema-goals.sql` | goals: one agreed weekly target per child, read by the dashboard's Week and kid pages |
 | 12 | `schema-policies.sql` | the household security layer: vendor clouds and their domains, per-class and per-device IoT policy, parent grants, and the `device_policy_effective` view |
 | 13 | `schema-tasks.sql` | per-child job offers and quiz bank settings: `task_offers`, `quiz_settings`, two more columns on `tasks`, and the `task_offer_effective` view the dashboard's Learn to earn screen and the portal both read |
-| 15 | `schema-quizbanks.sql` | `quiz_banks` and `quiz_bank_questions`, the quiz banks a parent writes on the dashboard rather than as a file in `portal/quizzes`, plus `earn_settings` and the `earn_settings_effective` view: the cooldown, the daily cap, the perfect-round bonus and the fallback price of a pass, per household and per child |
 | 14 | `schema-quizresults.sql` | `quiz_rounds` and `quiz_answers`, every graded quiz round including the failed ones, plus the `quiz_form` and `quiz_difficulty_form` views the portal's difficulty ramp reads |
-| 16 | `seed.sql` | the three policy tiers, placeholder children, and the always_allow rows |
-| 17 | `schema-presence.sql` | `devices.present_at`: "on the wire right now", as distinct from `last_seen`, which comes from the lease list and outlives the device |
-| 18 | `schema-appliance.sql` | a fourth device class, `appliance`: not a person's and not smart-home kit, so full internet, no owner, no time limits, never caught by a kids control |
-| 19 | `schema-roles.sql` | the four household roles (child, guest-child, guest-adult, adult), the `people` view with the role flags, the `people_in_scope()` and `ips_in_scope()` scope functions, and `household_roster` |
+| 15 | `schema-quizbanks.sql` | `quiz_banks` and `quiz_bank_questions`, the banks a parent writes on the dashboard rather than as a file in `portal/quizzes`, plus `earn_settings` and the `earn_settings_effective` view: the cooldown, the daily cap, the perfect-round bonus and the fallback price of a pass, per household and per child |
+| 16 | `schema-badges.sql` | `child_badges`, `quiz_study_visits` and `board_settings`: the badges a child has earned, the log of study-page visits some badges read, and the one switch for the household board. The board is **off by default** |
+| 17 | `seed.sql` | the three policy tiers, placeholder children, and the always_allow rows |
+| 18 | `schema-presence.sql` | `devices.present_at`: "on the wire right now", as distinct from `last_seen`, which comes from the lease list and outlives the device |
+| 19 | `schema-appliance.sql` | a fourth device class, `appliance`: not a person's and not smart-home kit, so full internet, no owner, no time limits, never caught by a kids control |
+| 20 | `schema-roles.sql` | the four household roles (child, guest-child, guest-adult, adult), the `people` view with the role flags, the `people_in_scope()` and `ips_in_scope()` scope functions, and `household_roster` |
+| 21 | `schema-claim.sql` | device claiming: `claim_settings`, `device_claims`, `children.claim_pin`, `devices.claim_pending` and the `unclaimed_devices` view the gateway reconciles `kids_unclaimed` from. **Off by default** (`mode='off'`) |
+| 22 | `schema-learn.sql` | the reading list, part one: fifteen `always_allow` rows with `scope='learn'`, reachable through a total cut so a child out of time can go and read |
+| 23 | `schema-learn-intl.sql` | the reading list, part two: the New Zealand, Australian, UK and US curriculum bodies, libraries, museums and science agencies. About forty `learn` domains between the two files |
 
 These ordering constraints are load-bearing:
 
@@ -81,26 +85,45 @@ These ordering constraints are load-bearing:
   `schema-devices.sql`, because both alter the `devices` table that file
   finishes shaping. Neither touches a view, so they sit safely between the seed
   and the roles file.
-- `schema-roles.sql` must come **last**. It rebuilds the `people` view that
-  `schema-people.sql` created, adds the `adult` filter level to the `policies`
-  table that `seed.sql` fills, and migrates any old `kind='guest'` row to
-  `guest-child`. See [HOUSEHOLD-ROLES.md](HOUSEHOLD-ROLES.md).
+- `schema-badges.sql` must come **after** `schema.sql`, because every row in it
+  hangs off `children`. Nothing depends on it in turn: `dashboard/badges.mjs`
+  treats every read and write here as best effort, so a box that has not loaded
+  it still runs quizzes and still pays out minutes, it just awards no badges and
+  shows no board.
+- `schema-roles.sql` must come **after** `schema-people.sql` and after
+  `seed.sql`. It rebuilds the `people` view that `schema-people.sql` created,
+  adds the `adult` filter level to the `policies` table that `seed.sql` fills,
+  and migrates any old `kind='guest'` row to `guest-child`. See
+  [HOUSEHOLD-ROLES.md](HOUSEHOLD-ROLES.md).
+- `schema-claim.sql` must come **after** `schema-devices.sql` and
+  `schema-people.sql`, because it adds a column to each of `devices` and
+  `children` and its `unclaimed_devices` view reads `devices.category`. It is
+  inert until somebody changes `claim_settings.mode`, so loading it on a
+  household that does not want claiming changes nothing at all. See
+  [DEVICE-IDENTITY.md](DEVICE-IDENTITY.md).
+- `schema-learn.sql` and `schema-learn-intl.sql` must come **after**
+  `schema-safety.sql`, because both insert `always_allow` rows carrying the
+  `scope` and `category` columns that file adds. They go last of all simply
+  because they are pure content and nothing reads them at load time. Their rows
+  reach the firewall through `kidnet allow-sync` and the gateway's hourly
+  refresh, not through the loader. See [READING-LIST.md](READING-LIST.md).
 
 Load them:
 
 ```sh
-for f in schema schema-categories schema-time schema-safety schema-earn \
-         schema-people schema-devices schema-flags schema-services \
-         schema-voice schema-goals schema-policies schema-tasks \
-         schema-quizresults schema-quizbanks seed schema-presence \
-         schema-appliance schema-roles; do
-  psql "$KIDS_DB_URL" -v ON_ERROR_STOP=1 -f config/db/$f.sql
-done
+config/db/load.sh kids_network            # or: config/db/load.sh <db> <postgres-container>
 ```
 
-`config/db/load.sh` is the list that actually runs, and `test/schema-test.sh`
-proves it against an empty database. If this table and that script ever
-disagree, the script is right and this table is the bug.
+`config/db/load.sh` holds that order as an array and is the copy that actually
+runs. It creates the `kids_app` role if it is missing, loads each file in turn,
+prints one line per file and fails loudly on the first error. `test/schema-test.sh`
+proves it against an empty database.
+
+**The table above is documentation, the script is the contract.** If they ever
+disagree, the script is right and the table is the bug. That is not a style
+preference: this table was wrong for months and a fresh install failed on the
+first two files with "relation children does not exist", which is why the order
+was moved into something that runs.
 
 `schema-voice.sql` is only needed if you run the optional voice module
 (`voice/`). It is harmless to load either way, and the table it creates is the

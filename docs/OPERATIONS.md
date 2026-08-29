@@ -14,9 +14,9 @@ Every command here is real and runs against this repo. Where a command needs
 
 Four checks, about thirty seconds.
 
-    docker ps --filter name=hearth                 # gateway, portal, adguard: all Up
+    docker ps --filter name=hearth                 # gateway, adguard, portal, speedtest: all Up
     docker logs --tail 20 hearth-gw                # the gateway's own account of itself
-    kidnet allow-status                            # the safety net has addresses in it
+    kidnet allow-status                            # the safety net and reading list have addresses in them
     systemctl list-timers 'kids-*'                 # six timers, all waiting, none failed
 
 Healthy gateway logs look like this:
@@ -37,8 +37,9 @@ just noisier than they should be. Tracked in DECISIONS.md.
 Then the deeper checks, when you have changed something or you want proof
 rather than reassurance:
 
-    sudo test/firewall-test.sh          # 31 checks, throwaway namespaces, no hardware
+    sudo test/firewall-test.sh          # 36 checks, throwaway namespaces, no hardware
     sudo test/container-test.sh         # 26 checks, the real image, containment proven
+    test/schema-test.sh                 # 35 checks, a fresh install into an empty database
     ADGUARD_PASS=... test/adguard-test.sh
 
 The container suite is the one to run after any change to the firewall, the
@@ -65,7 +66,7 @@ moves fastest. At the time of writing:
 | `/family` | add, edit and remove people; rename and reassign devices |
 | `/week` | the weekly digest, with a plain-text version to send |
 | `/trends` | per-child usage, services, and the earn versus spend balance |
-| `/earn` | the jobs on offer per child, the quiz banks and the earning history |
+| `/earn` | Learn to earn: the jobs on offer per child, every quiz bank with its pass rate and its worst questions, writing and editing your own banks, the rules of earning, badges, and the switch for the household board |
 | `/devices` | the roster and the naming queue |
 | `/system` | the health of the box itself |
 | `/speed` | the island speed test, proxied from the gateway |
@@ -95,8 +96,11 @@ the `hearth-speedtest` container is up. Note what it measures through the
 dashboard: this device to the box over whatever network you are on, which is
 **not** the family wifi. The bar on the page says so.
 
-The repo does not ship a systemd unit for the dashboard, because where it binds
-is household-specific. A minimal user unit:
+`config/systemd-user/hearth-dashboard.service` is an example unit, not an
+installed one: `deploy.sh` does not touch it, because where the dashboard binds
+is household-specific and getting that wrong publishes a panel that can switch a
+child's internet off. Copy it to `~/.config/systemd/user/` and edit the paths and
+the bind address, or write your own from this:
 
 ```ini
 [Unit]
@@ -289,6 +293,129 @@ count, so idle keepalive books nothing. `download` will appear here and is
 deliberately never enforced against a budget.
 
 ---
+
+## Turning device claiming on, and off again
+
+Off by default, and it stays off until you change one row. The full reasoning is
+in [DEVICE-IDENTITY.md](DEVICE-IDENTITY.md); this is the operational half.
+
+    kidnet claim-mode                    what mode it is in, and how many devices are unclaimed
+    kidnet claim-mode observe            watch first: nothing is restricted
+    kidnet unclaimed                     what enforcing would catch
+    kidnet claim-mode enforce            switch it on
+    kidnet claim-mode off                switch it back off
+
+**Always run `observe` for a few days first.** It restricts nothing and just
+tells you the truth: how many personal devices in your house belong to nobody.
+On a household that has been running a while that number is usually higher than
+expected, because every guest phone, every device from before you started naming
+things, and every console somebody plugged in counts. Enforcing without looking
+first is how a family wakes up to three broken devices and no idea why.
+
+In `enforce`, an unclaimed device gets DNS, the captive portal and the safety
+net, and nothing else. It is not off the network: it lands on the claim page.
+The enforcement is the `kids_unclaimed` nft set, reconciled from the
+`unclaimed_devices` view on the gateway's usual fifteen second tick, so switching
+the mode takes effect within a tick and needs no restart:
+
+    docker exec hearth-gw nft list set inet kids kids_unclaimed
+
+Smart home kit, appliances and infrastructure are never expected to announce
+themselves and never appear in that set. Only `category='personal'` devices do.
+
+A child claiming a device at the portal gains nothing on its own. The device is
+marked `claim_pending` and **stays restricted** until a parent agrees:
+
+    kidnet claims                        what is waiting
+    kidnet confirm <device|address>      say yes
+
+`confirm` clears the pending flag and re-runs `kidnet-adguard-clients`, so the
+device picks up its owner's filter tier and clock straight away. The same queue
+and the same button are on the dashboard.
+
+If it goes wrong, `kidnet claim-mode off` is the whole undo. Nothing is deleted
+and no device has to be re-claimed later, because the claims themselves are kept.
+
+---
+
+## Is the reading list reaching the firewall?
+
+The reading list is the `scope='learn'` rows in `always_allow`: around forty
+reference sites a child can still reach when they have run out of time. They go
+into the same `@kids_allow` nft set as the safety net, because the firewall
+matches addresses and does not care why an address is allowed.
+
+Three checks, in order:
+
+    # 1. Are the rows loaded at all? Expect roughly 40.
+    docker exec -i postgres psql -U postgres -d kids_network -c \
+      "SELECT category, count(*) FROM always_allow WHERE scope='learn' GROUP BY 1 ORDER BY 1"
+
+    # 2. Did they resolve? This prints the count it installed.
+    kidnet allow-sync
+
+    # 3. Are they in the firewall?
+    kidnet allow-status
+
+Zero rows in step 1 means `config/db/schema-learn.sql` and
+`config/db/schema-learn-intl.sql` have not been loaded. Both are idempotent, so
+load them again.
+
+The set is one flat list of addresses, so `allow-status` cannot tell you which
+address came from which scope. To check one site end to end, resolve it and look
+for the address:
+
+    getent ahostsv4 wikipedia.org | awk '{print $1}' | sort -u
+    kidnet allow-status | tr ',' '\n' | grep -F "$(getent ahostsv4 wikipedia.org | awk 'NR==1{print $1}')"
+
+**These are CDN-hosted and the addresses move.** That is why the gateway
+re-resolves the whole set hourly rather than at boot only. A site that "worked
+yesterday and not today" for a child who is out of time is almost always this,
+and `kidnet allow-sync` fixes it immediately. `allow-sync` refuses to install an
+empty result, so a resolver blip leaves yesterday's addresses in place rather
+than leaving a cut-off child with nothing.
+
+The honest limit: a site whose addresses change faster than an hour, or which
+answers with a different address per client, can drop out of the list between
+refreshes. Adding a domain is a database row and a re-sync:
+
+    docker exec -i postgres psql -U postgres -d kids_network -c \
+      "INSERT INTO always_allow (domain, scope, category, note)
+       VALUES ('example.org', 'learn', 'reference', 'why you added it')
+       ON CONFLICT (domain) DO NOTHING"
+    kidnet allow-sync
+
+Read the five tests in [READING-LIST.md](READING-LIST.md) before you add one.
+The list only works while it stays dull.
+
+---
+
+## The working-tree snapshot (development boxes only)
+
+`tools/worktree-snapshot.sh` commits the entire working tree, tracked and
+untracked, to `refs/hearth/snapshots` every couple of minutes. It exists because
+one `git checkout` discarded an agent's uncommitted work and there was nothing to
+recover from.
+
+**A family running Hearth does not need this.** It is for a box where somebody,
+or something, is editing the repo. Nothing in `deploy.sh` installs it and no
+household unit refers to it.
+
+    tools/worktree-snapshot.sh list
+    tools/worktree-snapshot.sh show <ref>
+    tools/worktree-snapshot.sh restore <ref> path/to/file
+
+The timer is not in the repo, for the same reason the dashboard's is not: how
+often you want it is not Hearth's business. On the reference box it is a user
+timer (`hearth-snapshot.timer`) firing every two minutes, with a `Type=oneshot`
+service running `tools/worktree-snapshot.sh save`. `docs/CLI.md` has the unit.
+
+    systemctl --user list-timers hearth-snapshot.timer
+    journalctl --user -u hearth-snapshot.service --since "1 hour ago"
+
+It uses its own git index file, so it never disturbs what you have staged, and it
+skips the commit entirely when nothing has changed. The ref is local and is never
+pushed.
 
 ## The public demos
 

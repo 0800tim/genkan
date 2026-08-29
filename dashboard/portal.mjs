@@ -573,10 +573,13 @@ const helpFoot = `<div class="foot">Need to talk to someone? Free, any time: cal
 const WARM_CATEGORIES = ["tor", "darknet", "drugs"];
 const FLAG_WINDOW_MIN = Number(process.env.PORTAL_FLAG_WINDOW_MIN || 20);
 
-// Both roads into this page end up in the alerts table, so the portal only has
-// to read one thing: the DNS road (kidnet-alerts matches a lookup against
-// flag_domains) and the IP road (the nft tor_dev counters, attributed to a
-// child by the metering pass). Nothing here touches the firewall.
+// This page reads one thing: the alerts table. Only ONE road currently writes
+// into it for these categories, the DNS road, where kidnet-alerts matches a
+// lookup against flag_domains. The IP road is not built: the firewall does
+// count Tor connection attempts in the nft tor_dev set, but nothing reads those
+// counters and nothing turns them into an alert, so a child who reaches a relay
+// by address alone never lands here. ROADMAP.md tracks it. Nothing here touches
+// the firewall.
 async function flaggedReason(childId) {
   const [row] = await q(`SELECT category, domain FROM alerts
      WHERE child_id=$1 AND category = ANY($2::text[])
@@ -666,7 +669,7 @@ function homePage(kid, st, kidQS) {
   const cap = st.set.quiz_daily_cap_min, bonus = st.set.mastery_bonus_min;
   const capLeft = Math.max(0, cap - st.quizEarnedToday);
   // Order by how well each bank suits this child's age, nearest first. The
-  // shelf went from nine banks to twenty-nine when the curriculum content
+  // shelf went from nine banks to more than forty when the curriculum content
   // landed, and alphabetical order meant a seven-year-old opened their page to
   // NCEA Biology above Reading and Writing. suggested_age_min is a hint rather
   // than a lock, so nothing is hidden: a bank aimed below them sorts before one
@@ -690,7 +693,7 @@ function homePage(kid, st, kidQS) {
       : `<div class="qrow"><a class="qcard" href="/quiz/${esc(b.id)}${kidQS}"><span class="e">${esc(b.emoji || "🎓")}</span><b>${esc(b.title)}</b><span class="m">${note}</span></a>`
         + `<a class="study-link" href="/study/${esc(b.id)}${kidQS}" title="The answers and why, before you have a go">Read up</a></div>`;
   };
-  // Twenty-nine banks is a wall on a phone. The list is already sorted by how
+  // Forty-odd banks is a wall on a phone. The list is already sorted by how
   // well each suits this child, so show the nearest handful and fold the rest.
   // Folded, not filtered: a curious eleven-year-old can still open Chemistry
   // in one tap, and a visibly deep shelf is part of the appeal. A <details>

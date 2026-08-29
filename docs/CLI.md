@@ -132,15 +132,29 @@ A child on the teen tier has no daily budget. That is stored as 999 in
 and guest child, in name order. It used to die with a raw bash parameter error,
 which reached the dashboard verbatim.
 
-### The safety net
+### The safety net, and the reading list
 
-    kidnet allow-sync      resolve scope='safety' domains into the nft kids_allow set
+    kidnet allow-sync      resolve scope='safety' and scope='learn' domains into @kids_allow
     kidnet allow-status    print what is currently in that set
 
-`allow-sync` resolves each `always_allow` row with `scope='safety'` (the NZ
-youth help lines and schoolwork) with `getent`, and loads the addresses into
-`@kids_allow`. It refuses to install an empty result: a resolver blip leaves the
-old list in place rather than leaving a child unable to reach 1737.
+`allow-sync` resolves every `always_allow` row with `scope='safety'` or
+`scope='learn'` with `getent`, and loads the addresses into `@kids_allow`. It
+refuses to install an empty result: a resolver blip leaves the old list in place
+rather than leaving a child unable to reach 1737.
+
+Two scopes, one nft set, because the firewall matches addresses and does not
+care why. The scopes are kept apart in the database because the two promises are
+different and a parent should be able to reason about them separately:
+
+- `safety` is the youth help lines and schoolwork. It must never be narrowed.
+- `learn` is the reading list: reference sites a child can still reach when
+  their time has run out, so learn-to-earn is not just a memory test. It is a
+  household's to choose. Around forty domains, seeded by
+  `config/db/schema-learn.sql` and `config/db/schema-learn-intl.sql`, with the
+  rule and the rejections in [READING-LIST.md](READING-LIST.md).
+
+`scope='category'` rows (Spotify) are deliberately not in here: audio outlives
+"media off" at the DNS layer, and does not outlive dinner.
 
 You rarely need to run this. The gateway container does the same sync at start
 and once an hour on its own.
@@ -163,7 +177,7 @@ camera, lock, speaker and vacuum is allowed to talk to. Read
 ### Devices and people
 
     kidnet devices                      the full roster, with owner and online state
-    kidnet unassigned                   devices nobody has claimed yet
+    kidnet unassigned                   devices with no owner set yet
     kidnet leases                       current DHCP leases
     kidnet assign <mac|ip> <person> <label> [reserved-ip]
     kidnet infra <mac>                  mark a device as infrastructure (an AP, a switch)
@@ -190,6 +204,38 @@ their devices go, clears their category blocks, and marks them inactive so they
 fall out of every group. Their row is kept, so `guest back` is one command.
 See [HOUSEHOLD-ROLES.md](HOUSEHOLD-ROLES.md).
 
+### Device claiming
+
+    kidnet claim-mode                    what mode claiming is in, and how many devices are unclaimed
+    kidnet claim-mode off|observe|enforce
+    kidnet unclaimed                     personal devices that belong to nobody
+    kidnet claims                        self-claims waiting for a parent to agree
+    kidnet confirm <device|address>      say yes to one of them
+
+**Off by default.** A household running happily today must not find devices in
+a restricted lane because it pulled an update, so `claim_settings.mode` ships
+as `off` and nothing here does anything until you change it. The three modes:
+
+| Mode | What happens to a device nobody owns |
+|---|---|
+| `off` | nothing. A DHCP lease is enough, exactly as before |
+| `observe` | nothing is restricted. `kidnet unclaimed` tells you what enforcing would catch |
+| `enforce` | it gets DNS, the portal and the safety net, and nothing else |
+
+Enforcing works through the `kids_unclaimed` nft set, which the gateway
+reconciles from the `unclaimed_devices` view on its usual fifteen second tick.
+The set sits **below** the `@kids_allow` safety net in the ruleset, so an
+unclaimed device can still reach the help lines and the reading list, and its
+port 80 is redirected to the portal so a child sees the claim page rather than
+a dead connection.
+
+A child claiming a device at that page gains nothing on its own: the device is
+marked `claim_pending` and stays in the restricted lane until a parent runs
+`kidnet confirm` or presses the button on the dashboard. That is the whole
+design, and the reasoning is in [DEVICE-IDENTITY.md](DEVICE-IDENTITY.md).
+Smart home kit, appliances and infrastructure are never expected to announce
+themselves and never appear in `kidnet unclaimed`.
+
 ### Looking around
 
     kidnet status              which categories are blocked, per child
@@ -209,6 +255,14 @@ attack it:
 - numbers: digits only, at most 4
 - free text (reasons, labels): letters, digits and `_ : + . , -` and spaces, at
   most 80 characters
+
+A row limit is not exempt from that, and used not to be gated. `kidnet recent`
+and `kidnet topsites` interpolated their `[n]` straight into SQL, both are on
+the dashboard's HTTP allowlist, and `psql -c` will happily run a second
+statement, as the Postgres superuser. It was proven end to end before it was
+fixed. Both now run their argument through `ck_int` like everything else.
+Adding a verb to this script means gating every argument it takes, including
+the ones that are obviously numbers.
 
 ### Environment
 
@@ -760,9 +814,62 @@ correct: there is nothing to go on until the kids have taken some rounds and
 
 ---
 
+## The tools directory
+
+Not in `bin/`, not installed by `deploy.sh`, and not part of the running
+system. These are run by hand from the repo.
+
+| Script | What it does |
+|---|---|
+| `tools/validate-quizzes.mjs` | checks every bank in `portal/quizzes` against the format: valid JSON, four choices, an in-range `answer_index`, ids unique, difficulty labelled on all questions or none, and the bank at least 4x `questions_per_round` |
+| `tools/worktree-snapshot.sh` | snapshots the working tree to a private git ref, so a bad git command cannot destroy uncommitted work |
+| `tools/publish.sh` | the pre-publish scan: looks for real MACs, addresses, names and secrets in tracked files before anything goes public |
+| `tools/enable-https.sh` | fetches a tailnet certificate and puts Caddy in front of the dashboard on :8443 |
+
+### tools/worktree-snapshot.sh
+
+    tools/worktree-snapshot.sh save               commit the whole tree to the snapshot ref
+    tools/worktree-snapshot.sh list [n]           what snapshots exist (default 20)
+    tools/worktree-snapshot.sh show <ref>         what changed in one
+    tools/worktree-snapshot.sh restore <ref> <path>   put one file back
+
+It exists because `git checkout dashboard/portal.mjs` discarded an agent's
+uncommitted work and there was nothing to recover from.
+
+Every `save` commits the entire working tree, tracked and untracked, to
+`refs/hearth/snapshots`. That ref never appears in the branch history, is never
+pushed, and never touches what you have staged: the script uses an index file
+of its own (`.git/hearth-snapshot-index`). If the tree has not changed since the
+last snapshot it exits without committing, so identical commits do not pile up.
+Recovery is then an ordinary git operation, which is the point: the snapshots
+are readable by any git tool, not by a bespoke one.
+
+`SNAPSHOT_KEEP` (default 200) is read but nothing prunes yet: git already
+deduplicates blobs, so an unchanged tree costs almost nothing to snapshot.
+
+The script is in the repo. **The timer is not**, because how often you want it
+and whether you want it at all is not a household concern of Hearth's. On the
+reference box it is a user timer running every two minutes:
+
+```ini
+# ~/.config/systemd/user/hearth-snapshot.timer
+[Unit]
+Description=Snapshot Hearth's working tree every two minutes
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=2min
+AccuracySec=30s
+[Install]
+WantedBy=timers.target
+```
+
+with a matching `hearth-snapshot.service` of `Type=oneshot` running
+`tools/worktree-snapshot.sh save`. This is a developer safety net, not part of
+what a family runs.
+
 ## The test suites
 
-Not in `bin/`, but part of the same surface. All seven need the stack or at
+Not in `bin/`, but part of the same surface. All eight need the stack or at
 least Postgres, and five of them need root because they build throwaway
 network namespaces.
 
@@ -775,20 +882,29 @@ as a hard failure. That combination matters more than it sounds: a negative
 assertion whose probe never ran reports PASS, and eleven isolation guarantees
 were doing exactly that on any machine without netcat. See DECISIONS.md.
 
-    sudo test/firewall-test.sh        31 checks: the shipped ruleset, real packets, three namespaces
+    sudo test/firewall-test.sh        36 checks: the shipped ruleset, real packets, three namespaces
     sudo test/container-test.sh       26 checks: the real image, containment, replug, segment guard
     sudo test/iot-policy-test.sh      39 checks: the household IoT policy, real packets, six namespaces
     sudo test/meter-test.sh            8 checks: category minutes, budget enforcement, grant
-    sudo test/service-meter-test.sh    5 checks: per-service bytes, active minutes, idle ignored
+    sudo test/service-meter-test.sh    6 checks: per-service bytes, active minutes, idle ignored
     sudo test/roles-test.sh           51 checks: the household roles, who each scope reaches, and the 11pm scenario
-    ADGUARD_PASS=... test/adguard-test.sh   10 checks: the DNS layer, via AdGuard's own check_host API
+    test/schema-test.sh               35 checks: a fresh install, every schema file into an empty database
+    ADGUARD_PASS=... test/adguard-test.sh    9 checks: the DNS layer, via AdGuard's own check_host API
 
 `container-test.sh` skips one containment check when the interim
 `hearth-share-gateway` service is running, because that service adds host NAT
 for the island subnet on purpose.
 
-`adguard-test.sh` is the only one that does not need root, and the only one that
-needs the island profile up.
+`schema-test.sh` and `adguard-test.sh` are the two that do not need root.
+`adguard-test.sh` is the only one that needs the island profile up.
+
+`schema-test.sh` creates a throwaway database, loads every file through
+`config/db/load.sh` in order, asserts the tables, views and defaults a fresh
+install must have, and drops it again. It touches nothing that is running. It
+exists because every other suite runs against this box's database, which was
+built up over months, so none of them would ever catch a documented load order
+that no longer works. That had already happened: a stranger's first install
+failed on the first two files.
 
 `roles-test.sh` needs root only for a network namespace: it builds its own copy
 of the `kids_block` set in there rather than writing to the live gateway, so it
@@ -797,4 +913,5 @@ devices, asserts, then deletes them and puts the category blocks it touched back
 exactly as it found them.
 
 After any change to `config/nftables/kids.nft`, `gateway/` or `bin/kidnet`, run
-the firewall and container suites. Both must pass fully.
+the firewall and container suites. Both must pass fully. After any change to
+`config/db/`, run the schema suite.

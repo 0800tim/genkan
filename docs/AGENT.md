@@ -26,6 +26,8 @@ in the house.
 | "that new tablet is Ada's" | `kidnet assign <mac> Ada "Ada's tablet"` |
 | "what has Ben been looking at?" | `kidnet recent Ben` |
 | "what's busy tonight?" | `kidnet topsites` |
+| "whose phone is that new one?" | `kidnet unclaimed`, then `kidnet claims` |
+| "yes, that one is Ada's" | `kidnet confirm <device>` |
 | "how was this week?" | `bin/kidnet-report all last` |
 | "what's been going on?" | reads alerts, block_events, time_events |
 
@@ -43,6 +45,16 @@ Chore claims (the kid tapped "I did the dishes") appear on the dashboard
 and can also be handled conversationally: the agent reads pending rows from
 earn_claims and on the parent's say-so approves via the same path as the
 dashboard (kidnet earn <kid> "<task>"), keeping one audit trail.
+
+Device claims are the other queue, and they are off in most houses. If
+`kidnet claim-mode` says `off`, there is nothing to approve and the agent should
+not offer to switch it on unprompted: it is a change to how the whole house gets
+online. When it is on, `kidnet claims` lists devices a child says are theirs and
+`kidnet confirm` agrees. **A child's claim grants nothing until a parent
+confirms**, so there is no hurry and no harm in leaving one waiting. The agent
+must never confirm a claim on its own initiative: naming a device is the parent's
+call, and the whole point of the design is that saying "this is mine" is not
+enough on its own.
 
 ## Alerts
 
@@ -63,6 +75,11 @@ internet. It is written so an agent can work the list top to bottom.
 
 - Help lines (1737, Youthline, Kidsline) stay reachable through every cut;
   the agent cannot and must not try to remove them.
+- The reading list (Wikipedia and around forty other reference sites) also
+  survives every cut, on purpose: a child out of time can still go and learn
+  something. If a parent asks why a blocked child is still online, that is the
+  answer, and `kidnet allow-status` shows it. Narrowing it is a household's call
+  to make deliberately, never a fix for "they are still using the internet".
 - The agent has no way to read message content: the network sees domains,
   never inside encrypted apps. Don't imply otherwise to parents or kids.
 - Smart-home devices are never cut. `off all`, `dinner` and the rest only

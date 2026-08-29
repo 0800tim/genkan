@@ -10,20 +10,82 @@ screen time by studying". This one is the network side.
 
 ## What is most useful
 
+**Write a quiz bank.** This is the easiest way in and the most useful thing
+anybody can do here. It needs no networking knowledge, no hardware, and no
+running Hearth: a bank is one JSON file.
+
+- The format is `portal/quizzes/FORMAT.md`. Read it once, all of it.
+- `node tools/validate-quizzes.mjs` checks your work: valid JSON, four choices
+  per question, an in-range answer, unique ids, difficulty labelled on every
+  question or none, and the bank at least four rounds' worth of questions.
+- Copy an existing bank in `portal/quizzes/` and work from its shape.
+
+There are over 40 banks now, so the gaps are what matter rather than the count.
+Every New Zealand learning area has at least one bank, but depth varies a lot:
+maths has one per year band, te reo Māori has a single beginners bank. Languages
+beyond te reo have nothing, and no country outside New Zealand, the UK, the US,
+Australia, Canada and Ireland is covered at all.
+`docs/runbooks/curriculum-generation.md` is written to be handed to
+your own AI agent for a country's curriculum, and
+`docs/runbooks/quiz-suggestions.md` is the recurring version: an agent reads what
+one child has actually been doing and proposes the next bank for them. Whatever
+writes the draft, **a human has to check every answer.**
+
+### What makes a good bank
+
+The mechanics are in FORMAT.md. These are the judgement calls it cannot enforce.
+
+**Every question needs an explanation, and the explanation is the bank.** It is
+what a child reads on the Read up page after getting it wrong, and it is the
+only part of a quiz that actually teaches. A bank of correct questions with no
+explanations is a test, and a test teaches nobody anything. Every question in
+this repo has one and any new bank without them will be sent back.
+
+A good explanation:
+
+- **Is written for the child who got it wrong**, not for the one confirming they
+  were right. "Correct: Africa" tells that child nothing. "Madagascar sits in
+  the Indian Ocean off the south-east coast of Africa" tells them where to put
+  it next time.
+- **Gives the reason, not the restatement.** "7 groups of 8 make 56" beats "The
+  answer is 56". If the question is a fact with no reason behind it, give the
+  hook that makes it stick.
+- **Is one or two sentences.** It appears under a question a child just got
+  wrong. A paragraph gets skipped.
+- **Never scolds, and never says "obviously" or "simply".** A child reading this
+  has just failed at it.
+- **Stands on its own.** It is read on the study page away from the round, so it
+  cannot refer to "the other options" or "option B".
+
+Then the rest:
+
+- **Wrong answers must be plausible.** Three obviously silly options turn a
+  question into a reading test. Use the mistake a child actually makes.
+- **Label every question with a difficulty**, 1 to 5, relative to
+  `suggested_age_min` and not to an adult. Half-labelled banks are rejected.
+  Difficulty is a harder idea, never a more obscure fact: a question with three
+  invented species names in it is not level 5, it is a bad question.
+- **Enough questions that a round is not the whole bank.** Forty or more for
+  ten-question rounds.
+- **Fact-check every single answer**, and prefer nothing that dates fast.
+- **NZ English**, and correct macrons on Māori words (Taupō, Whangārei).
+
+Open a pull request with the JSON and a note on who it is aimed at. A parent can
+also write a bank in the dashboard, in which case it is stored in the database
+rather than here, so a repo update cannot delete it: that is for one household's
+own content, and a pull request is for content worth sharing.
+
+### The rest
+
 - **Try it and tell us where it hurt.** The setup is genuinely fiddly. Every
   place a guide assumed something is a real bug.
 - **Break it.** Filter bypasses especially. Open an issue, or use the bypass
   template. That is the household bug bounty scaled up. Anything that escapes
   the island or defeats the safety net goes to SECURITY.md instead, privately.
-- **Quiz banks.** They are plain JSON in `portal/quizzes/`, validated by
-  `tools/validate-quizzes.mjs`, and the format is documented in
-  `portal/quizzes/FORMAT.md`. A good bank from someone who knows how to teach a
-  subject is worth more than most features. `docs/runbooks/curriculum-generation.md`
-  is written so an agent can produce one for another country's curriculum, and
-  `docs/runbooks/quiz-suggestions.md` is the recurring version: an agent reads
-  what one child has actually been doing and proposes the next bank for them.
-  A parent can also write a bank in the dashboard, in which case it is stored
-  in the database rather than here, so a repo update cannot delete it.
+- **Add to the reading list.** `docs/READING-LIST.md` has the five tests a site
+  has to pass and the well-known ones that failed them. Adding a domain is a row
+  in `config/db/schema-learn-intl.sql`, but read the rejections first: the list
+  only works while it stays dull.
 - **Packaging and other distros.** It is Docker plus standard Linux tooling, so
   it should run anywhere. `docs/setup/generic-linux.md` is the contract.
 
@@ -36,6 +98,8 @@ screen time by studying". This one is the network side.
 | `docs/CLI.md` | every command and its arguments |
 | `docs/OPERATIONS.md` | running it, and what breaks |
 | `docs/DATABASE.md` | the schema and its load order |
+| `LEARN-TO-EARN.md` | the quizzes and the reading list: the design, and what is not built |
+| `portal/quizzes/FORMAT.md` | the quiz bank format, in full |
 
 ## Ground rules
 
@@ -47,15 +111,20 @@ youth help lines reachable even when a child is fully cut off).
 **Run the tests.** After any change to `config/nftables/kids.nft`, `gateway/` or
 `bin/kidnet`:
 
-    sudo test/firewall-test.sh      # 31 checks, throwaway namespaces
+    sudo test/firewall-test.sh      # 36 checks, throwaway namespaces
     sudo test/container-test.sh     # 26 checks, the real image
 
 Both must pass fully. They need root because they build network namespaces; they
-need no hardware. There are seven suites in total: the other five are
-`iot-policy-test.sh` (39 checks, the household IoT layer), `roles-test.sh` (51
-checks, who each scoped control reaches), `meter-test.sh`,
-`service-meter-test.sh` and `adguard-test.sh` (the last needs a running AdGuard
-and `ADGUARD_PASS`).
+need no hardware. There are eight suites in total, 210 checks between them: the
+other six are `iot-policy-test.sh` (39 checks, the household IoT layer),
+`roles-test.sh` (51 checks, who each scoped control reaches), `schema-test.sh`
+(35 checks, a fresh install into an empty database, and the only one that needs
+no root), `meter-test.sh` (8), `service-meter-test.sh` (6) and `adguard-test.sh`
+(9, and it needs a running AdGuard and `ADGUARD_PASS`).
+
+If you touch anything in `config/db/`, run `test/schema-test.sh`. Every other
+suite runs against a database that was built up over months, so none of them
+would notice that a fresh install no longer loads.
 
 **If you add an assertion, probe with bash, not an external binary.** A negative
 assertion whose probe never runs reports PASS, so a missing tool turns a safety

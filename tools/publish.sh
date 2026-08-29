@@ -9,10 +9,21 @@
 # real child's name reintroduced by a README rewrite. Do not publish by hand.
 set -uo pipefail
 SRC="$(cd "$(dirname "$0")/.." && pwd)"
+# --check scans and stops. Added because an agent ran this to verify its edits
+# introduced no leak, not realising the scanner and the push are the same
+# script, and published work it had been told not to push. Nothing leaked, the
+# scan passed, but a tool whose only safe use is the one you meant is a badly
+# designed tool. Checking must never publish.
+DRY=0
+case "${1:-}" in --check|-n|--dry-run) DRY=1; shift;; esac
+
 PUB="${HEARTH_PUBLIC_DIR:?set HEARTH_PUBLIC_DIR to the public repo clone}"
 [ -d "$PUB/.git" ] || { echo "no git repo at $PUB"; exit 1; }
 . "$SRC/config.env" 2>/dev/null || true
 
+if [ "$DRY" = 1 ]; then echo "CHECK ONLY: this will scan and stop, and publish nothing."
+else echo "PUBLISHING: a clean scan will commit and PUSH to the public repo."
+     echo "            Use --check to scan without publishing."; fi
 echo "Exporting the tracked tree..."
 find "$PUB" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
 git -C "$SRC" archive --format=tar HEAD | tar x -C "$PUB"
@@ -93,6 +104,12 @@ if [ -n "$BIN" ]; then
   echo "        Binaries are never scanned for private data. Remove them or add an exception here."
   fail=1
 else printf '  ok    %-22s\n' "no unscannable binaries"; fi
+
+if [ "$DRY" = 1 ]; then
+  echo; echo "Clean. Nothing was published: this was --check."
+  echo "Run without --check to publish."
+  exit 0
+fi
 
 echo; echo "Clean. Publishing..."
 cd "$PUB"

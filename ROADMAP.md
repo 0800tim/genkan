@@ -24,7 +24,24 @@ the holes are.
   domains, so a fresh install meters something on day one
 - Per-service byte accounting (YouTube, Netflix, Roblox and friends), measured
   from real firewall counters rather than guessed from lookups
-- Learn to earn: eight quiz banks, server-side grading, cooldowns and daily caps
+- Learn to earn: over 40 quiz banks and more than 2,000 questions, NZ Years 1
+  to 3 through NCEA across every learning area, plus the UK, the US, Australia,
+  Canada and Ireland, every question carrying an explanation and a difficulty.
+  Server-side grading, cooldowns, daily caps and a perfect-round
+  bonus, all of them settings rather than constants, per household and per child
+- A difficulty ramp: every question rated 1 to 5, every round built easy to hard
+  and adapted to that child's recent form, always opening on warm-ups and always
+  passable
+- A study page per bank ("Read up"): every question, its answer and its
+  explanation, with no cooldown and no cap because reading earns nothing
+- A reading list that survives a total cut: around 40 reference sites a child
+  can still reach when they are out of time, kept in a scope of its own so
+  trimming it can never trim the safety net
+- A parent can write and edit their own quiz banks in the dashboard, stored in
+  the database so a software update cannot delete them, and see each bank's pass
+  rate and its worst questions
+- Badges: personal milestones, and a house board that is deliberately not a
+  leaderboard. Off by default
 - Chore claims with parent approval
 - Captive portal that explains, and a warm "come and talk to me" page for the
   serious categories
@@ -33,6 +50,9 @@ the holes are.
   lock or the media server. Presence is read from the gateway's neighbour table,
   so "online" means on the wire rather than holding a lease
 - Tor and darknet blocking with a daily relay refresh
+- Device claiming: a device nobody owns gets DNS, the portal and the safety net
+  and nothing else, and a child's own claim grants nothing until a parent
+  confirms it. Off by default, with an observe mode
 - Safety net: NZ youth help lines stay reachable through any block
 - Analytics dashboard: tonight, live traffic, family, week, trends, learn to
   earn, devices, per kid, and the health of the box itself
@@ -40,6 +60,8 @@ the holes are.
   separately, proxied into the dashboard at `/speed`
 - Two public demos running the real code against an invented household:
   `hearth-demo.appspurt.dev` and `hearth-portal.appspurt.dev`
+- Eight test suites, 210 checks, including one that loads every schema file into
+  an empty database because a fresh install was the thing nothing tested
 - Household bug bounty
 
 ## Half built, and honest about it
@@ -53,6 +75,10 @@ the holes are.
 | Social metering | `METERING.md` says social is not metered; the dashboard counts it. Needs a deliberate decision either way. |
 | Household IoT policy | The model, the generator and 39 packet-level tests are real, and it is installed with its timer left disabled on purpose. It was also, until 2026-08-29, storing none of the vendor addresses it resolved, so every restricted device had an empty allowlist and was not restricted at all. Fixed, but nobody has yet run it enforcing for long enough to say what it breaks in an ordinary house. |
 | Vendor cloud lists | `vendor_clouds` covers a handful of brands. A device whose brand Hearth cannot identify is not restricted, and now says so on the dashboard. Adding a brand is a database row. |
+| Paying for learning rather than recall | The reading list and the study pages mean a child can now genuinely go and learn before a round. Hearth still pays them exactly the same as a child who guessed well. The signals exist (`dns_log`, `quiz_study_visits`, `quiz_answers`, and the difficulty of every question served) and nothing prices any of them. `LEARN-TO-EARN.md` holds the open question. |
+| Curriculum coverage | Over 40 banks is a real curriculum and it is not an even one. Every New Zealand learning area has at least one bank now, but depth varies: maths has one per year band and te reo Māori has a single beginners bank. Languages beyond te reo have nothing, and no country outside NZ, the UK, the US, Australia, Canada and Ireland is covered. It is also not validated against any syllabus document, and nobody should say otherwise. |
+| Getting a bank into the dashboard | A parent types a database bank in one question at a time. There is no bulk import, so a whole bank written as JSON has to go in as a file through `kidnet-quiz install`. |
+| Device claiming in a real house | Off by default, with observe mode, 5 packet-level checks and the reasoning written up. Nobody has yet run it enforcing for a month in a house full of guests, so what it costs in day-to-day annoyance is genuinely unknown. |
 
 ---
 
@@ -62,14 +88,21 @@ These are real gaps, sized roughly, and each is genuinely useful.
 
 ### Small, self contained
 
-- **Quiz banks.** The highest value contribution in the project and it needs no
-  networking knowledge at all. Plain JSON, see `portal/quizzes/FORMAT.md`. A
-  teacher who writes a good fractions bank has done more for this project than
-  most code changes.
-- **Curriculum for your country.** `docs/runbooks/curriculum-generation.md` is
-  written to be handed to your own AI agent. UK, Australia, Canada, the US,
-  Ireland, India, South Africa, anywhere. The runbook does the research; you
-  check the answers.
+- **Quiz banks.** Still the highest value contribution in the project and it
+  needs no networking knowledge at all. Plain JSON, see
+  `portal/quizzes/FORMAT.md` and the explanation-writing guidance in
+  `CONTRIBUTING.md`. The gaps are the point now that there are over 40 banks:
+  depth in te reo Māori, languages beyond it, and anything outside the six
+  countries covered.
+- **Curriculum for your country.** New Zealand, the UK, the United States,
+  Australia, Canada and Ireland have banks. India, South Africa, Singapore and
+  everywhere else do not. `docs/runbooks/curriculum-generation.md` is written to
+  be handed to your own AI agent: the runbook does the research, you check every
+  answer.
+- **Add to the reading list.** Around 40 sites, and the rule that keeps it
+  useful is that it stays dull. `docs/READING-LIST.md` has the five tests and
+  the well-known school sites that failed them, which is the part worth reading
+  before you propose one.
 - **Translations.** The kid-facing portal is the part that matters most.
 - **Vendor detection.** `bin/kidnet-classify` guesses what a device is from its
   hostname and MAC. Add the devices your house has.
@@ -86,6 +119,11 @@ These are real gaps, sized roughly, and each is genuinely useful.
   reset. The category meter does exactly this pattern already, so copy it.
 - **A kid-facing view of their own goals.** Right now goals are visible to
   parents only, which cuts against the transparency the project claims.
+- **Price learning, not just answers.** The first pass of a bank worth more than
+  the tenth, a round worth more when the child was reading about it first, a
+  question they used to get wrong worth a premium. Each is a small change and
+  each one is a rule a clever kid will try to optimise, so read the risk section
+  in `LEARN-TO-EARN.md` before building one.
 - **More platform guides.** OpenWrt, Proxmox, NixOS, TrueNAS, a Synology.
 
 ### Larger

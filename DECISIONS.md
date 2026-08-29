@@ -747,3 +747,230 @@ Still not built, and said plainly in the runbook: nothing runs on a schedule,
 nothing measures whether a suggestion worked, and a whole bank written as JSON
 cannot be pasted into the dashboard. It goes in as a file through
 `kidnet-quiz install`, or it is typed a question at a time.
+
+## Learn to earn was a memory test (2026-08-30)
+
+A child out of time could reach the portal and the quizzes and nothing else. So
+the only questions they could answer were ones they already knew the answer to.
+The feature's whole claim is that effort earns time, and it was paying for
+recall, which is a stock of knowledge a child already had rather than anything
+they did that afternoon.
+
+**A reading list that survives a total cut.** `scope='learn'` rows in
+`always_allow`, resolved into the same `@kids_allow` nft set as the safety net,
+because the firewall matches addresses and does not care why. Around forty
+sites, seeded by `config/db/schema-learn.sql` and `schema-learn-intl.sql`.
+
+**Two scopes, not one.** `safety` and `learn` sit in separate scopes even though
+they land in the same firewall set, because the two promises are different and a
+parent must be able to reason about them separately. Safety is the youth help
+lines and it must never be narrowed. Learn is a reading list and it is a
+household's to choose. Merging them would mean a parent trimming the reading
+list could quietly trim 1737.
+
+**The list rejects video sites, and that is the rule people argue with.** Five
+tests: no social feed or messaging, not video-first, not aggressively monetised
+at children, no account needed to read, and no route to general web content. The
+second one did the most work. BBC Bitesize, ABC Education and PBS LearningMedia
+all describe themselves, in their own marketing, as video libraries first. They
+are good sites. They are also, to a child who has just been cut off for spending
+too long watching things, a way back to watching things with a school's logo on
+it. A list that lets in one video site has no principle left to refuse the next.
+The same test rules out anything that is really a search engine wearing a
+library's name, Trove included, because a search box is a route to the whole web.
+
+**Deliberately dull, and deliberately short.** A short list that actually passes
+those tests is worth more than a long one that quietly fails a couple. Every
+rejection in `docs/READING-LIST.md` is a real one: a site that looked like an
+obvious yes until it was checked.
+
+The honest gap this opened: Hearth still cannot see that a child spent forty
+minutes reading before the round, so it pays them exactly the same as a child
+who guessed well. The signal exists (`dns_log`, and now `quiz_study_visits`) and
+nothing prices it. `LEARN-TO-EARN.md` keeps that open.
+
+## A curriculum, not a demo (2026-08-30)
+
+Eight quiz banks was enough to prove the mechanism and not enough for a real
+child to live on. A ten year old exhausts the interesting half of eight banks in
+a fortnight, and then learn-to-earn is a chore with a cooldown on it.
+
+Over 40 banks now, more than 2,000 questions, NZ Years 1 to 3 through NCEA
+across every learning area including Aotearoa New Zealand histories, te reo
+Māori, the arts and health and PE, plus the UK, the US, Australia, Canada and
+Ireland and a set of general-interest banks. Three rules held while writing
+them.
+
+**Every question carries an explanation.** Not a right-or-wrong tick: a sentence
+written for the child who got it wrong. This is the single most load-bearing
+rule in the format, because the explanation is the study material. A bank
+without them is a test, and a test does not teach anybody anything.
+
+**Every question carries a difficulty, including the original eight.** The ramp
+shipped before the banks did, and the eight banks written before it had no
+`difficulty` fields, so they were sampled flat while every new bank ramped. Two
+classes of bank behaving differently is the kind of inconsistency nobody
+remembers six months later, so the eight were backfilled rather than left as a
+documented exception.
+
+**A study page per bank.** `/study/<bank>` in the portal lists every question,
+its answer and its explanation. No cooldown, no cap and no round token, because
+reading earns nothing and there is therefore nothing to farm. It is the answer
+to "I got three out of ten and I do not know why".
+
+What this is not, said plainly here and in the README: a validated curriculum.
+Nobody has marked it against a syllabus document. Coverage is broad but uneven
+because it grew out of what real children in one house were actually studying:
+maths has a bank per year band and te reo Māori has one beginners bank. It is a
+large, carefully
+fact-checked set of questions meant to sit alongside school rather than replace
+any of it. Claiming more than that would be the easiest lie in the project to
+tell and the fastest one to be caught in by a teacher.
+
+## Badges, and why the house board is not a leaderboard (2026-08-30)
+
+The ask was blunt: badges, and get the siblings battling each other on an
+achievement board. Badges got built. The battle did not.
+
+**A raw leaderboard punishes the youngest by construction.** Rank children on
+total minutes earned or total rounds passed and the seven year old loses to the
+fifteen year old every single day, forever, and no amount of effort changes it.
+A feature meant to make learning feel good would be a daily reminder of a race
+they were entered into and cannot win. Public failure motivates the child who is
+already winning.
+
+**The mechanics that were refused, and why.** A streak that breaks is a
+punishment dressed as a reward, and "don't break the chain" is a tool of the
+attention economy this project exists to push back against: importing it into
+the one part of Hearth that is meant to feel unlike a phone would be copying the
+enemy's toolkit. A handicap multiplier for the younger child is still a formula
+standing between a child and an honest answer to "how am I doing", and a clever
+kid will treat it as a puzzle while a parent has to defend it.
+
+**So badges are personal.** Every one is a milestone against a child's own
+history: first pass, first perfect round, ten passes, a bank mastered, tried
+something new. Awarded with `ON CONFLICT DO NOTHING` on a unique index, so a
+retried request can never hand out a second row to gloat over.
+
+**And the one comparison that ships is chosen so age does not win it.** The
+house board deals only in improvement lately, how many different banks somebody
+has tried, how often they came back after a flop, and how much they read up.
+Every one of those is available to a seven year old on the same terms as a
+fifteen year old.
+
+**It is off by default** (`board_settings.enabled`). A household should not pull
+an update and find a new social feature between their children. A child's own
+badges and their own earnings are always visible to that child, whatever the
+switch says. Full reasoning in `docs/GAMIFICATION.md`.
+
+## A device nobody has claimed should not get the whole internet (2026-08-30)
+
+The island was default-deny by source address, and a DHCP lease was what got you
+into `@kids_known`. Which meant a lease was the whole identity check: plug in a
+new phone, get a lease, get unfiltered internet, because no child owned it and
+so no child's rules applied. Every control in Hearth hangs off "whose device is
+this", and the answer was "whoever asked for an address".
+
+**Claiming, not logging in.** A login needs a credential per child, which means
+a password a child can share, forget, or find written down. Instead an
+unrecognised device is restricted until somebody says whose it is, and the
+device is told so on a page rather than left looking broken.
+
+**A child's claim grants nothing on its own.** This is the decision that matters.
+A self-claim marks the device `claim_pending` and it **stays** in the restricted
+lane until a parent confirms it. An earlier draft let a pending device run at
+the house's tightest filter level instead, on the reasoning that some access is
+better than none. That does not work, because a time budget belongs to a child
+and not to a device: a younger child claiming the eldest's name would inherit
+her clock, and in this household the eldest has no daily limit at all. Unlimited
+time was exactly the prize worth lying for. With confirmation required, lying at
+the claim page gains a child precisely nothing, so there is no reason to try it
+and no arms race to run.
+
+**Below the safety net, never below it in importance.** The `kids_unclaimed`
+drop rule sits underneath `@kids_allow` in the ruleset, so an unclaimed device
+still reaches the help lines and the reading list, and its port 80 is redirected
+to the portal. A device nobody has named is still a person, and possibly a
+person in trouble.
+
+**Off by default**, with an observe mode. `claim_settings.mode` ships as `off`,
+so a household that pulls this update sees no change at all. Observe restricts
+nothing and reports what enforcing would catch, because on a house that has been
+running a while that number is always higher than expected. The same call
+`schema-badges.sql` made, for the same reason.
+
+## Attacking our own box, and four things it found (2026-08-30)
+
+A security review and an adversarial pen test of the surface, filed as
+`research/security-review-2026-08-30.md` and `research/pentest-2026-08-30.md`.
+Four findings, and each one changed a rule rather than just a line.
+
+**SQL injection reachable from the dashboard API.** `kidnet recent` and `kidnet
+topsites` interpolated their row limit straight into SQL. Both are on the
+dashboard's HTTP allowlist, and `psql -c` will happily run a second statement,
+as the Postgres superuser. Proven end to end before it was fixed. Every argument
+now goes through one of the three gates, and the rule written next to them is
+that a limit is not exempt: it was the argument that was obviously a number that
+nobody thought to gate.
+
+**One DNS lookup could switch off every safety alert.** A DNS label may
+legitimately contain a dot, and AdGuard stores that as a literal backslash-dot.
+`kidnet-dnslog` fed the stored name into `COPY ... FORMAT text`, whose backslash
+grammar aborts on it. The transaction rolled back, and because the next run keys
+off `max(ts)` in `dns_log`, the same poison was fetched and failed again, for
+good. `kidnet-alerts` reads `dns_log`, so while that was stalled no Tor,
+darknet, drugs, VPN or self-harm alert could fire and nothing on the dashboard
+said so. It also gave per-lookup evasion: send one poison query and the batch
+carrying the lookup you did not want seen goes with it. One `dig` from a laptop
+was the whole attack. CSV has no backslash grammar, so that is what it uses now,
+and a failed ingest raises an urgent alert and exits non-zero. **The silence was
+the real damage, not the parse error.**
+
+**The portal's `?kid=` override trusted the URL.** It was meant as a parent's
+preview from the dashboard. Any device on the island could name any child and
+read their minutes, tasks and history. No writes, but a sibling on a new phone
+could see exactly how much time you had left, which is precisely the sort of
+thing siblings do. It now needs `PORTAL_PREVIEW_TOKEN`, which only the dashboard
+holds and which is absent from the household's own portal container, so a device
+on the island cannot use the override at all.
+
+**The publish scanner printed a clean board when its checks had not run.** Two
+checks, real children's names and author placement, printed nothing when the
+database did not answer or `HEARTH_AUTHOR` was unset. Not a warning: nothing.
+The two most valuable checks in the file were the two that failed open. They now
+report a check that could not run as a leak, because that is the safe reading.
+It was also blind to binaries, since `grep -I` skips them, and a screenshot of
+the dashboard is the single most likely way a child's name, a MAC and a private
+address leave a house at once. Binaries are refused outright rather than
+scanned.
+
+The pattern in three of the four is the same one the test suites taught us on
+2026-08-29: **a check that cannot run must fail loudly, never quietly.** Silence
+reads as success to everybody who looks at it.
+
+## A bad git command destroyed uncommitted work (2026-08-30)
+
+`git checkout dashboard/portal.mjs` discarded an agent's uncommitted work and
+there was nothing to recover from. Good intentions and a careful rule about
+which git commands to run are not a safeguard, because the whole failure mode is
+somebody running the command anyway.
+
+`tools/worktree-snapshot.sh save` commits the entire working tree, tracked and
+untracked, to `refs/hearth/snapshots` every couple of minutes. Three properties
+make it safe to leave running:
+
+- **A separate ref.** It never appears in branch history and is never pushed, so
+  it cannot pollute a commit or a pull request.
+- **Its own index file.** It never disturbs what is staged for a real commit. A
+  safeguard that surprises the person it is protecting gets turned off.
+- **Ordinary git underneath.** Recovery is `git show <ref>:<path>`, readable by
+  any git tool. A bespoke backup format would be one more thing to be broken at
+  exactly the moment it is needed.
+
+It skips the commit when nothing has changed, and git deduplicates blobs, so
+snapshotting an unchanged tree costs almost nothing.
+
+**The script is in the repo, the timer is not.** How often a box snapshots, or
+whether it does at all, is not a household concern, and a family running Hearth
+does not need this at all. It is a development safeguard and `docs/CLI.md` says
+so.

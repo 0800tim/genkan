@@ -16,11 +16,21 @@ MIT, no telemetry, all data stays in the house. Sibling project: unrot.
 - RECOMMENDATIONS.md, METERING.md, BUG-BOUNTY.md: policy, metering design,
   the household bug bounty.
 - docs/DATABASE.md: schema files and the order they must load in.
+  config/db/load.sh is the executable copy of that order and wins any argument.
+- LEARN-TO-EARN.md: the quizzes, the reading list, the economics, and the
+  table of what is built and what is not. portal/quizzes/FORMAT.md is the
+  bank format; CONTRIBUTING.md is what makes a good explanation.
+- docs/READING-LIST.md: what a blocked child can still read, the five tests a
+  site must pass, and the well-known school sites that were rejected.
+- docs/GAMIFICATION.md: badges, and why the house board is not a leaderboard.
+  Off by default.
+- docs/DEVICE-IDENTITY.md: device claiming, and why a child's claim grants
+  nothing until a parent confirms it. Off by default.
 - docs/tor-and-safety.md: the Tor layer, and what it cannot do.
 - docs/HOUSEHOLD-SECURITY.md: the IoT and household layer. What a camera,
   lock or vacuum may talk to, why cloud backup still works, and the limits.
 - research/: agent research (Omarchy, naming, AdGuard, curriculum, the
-  2026-08-29 security review).
+  2026-08-29 security review, and the 2026-08-30 review and pen test).
 - docs/runbooks/: runbooks other parents hand to their own AI agents.
 
 ## Architecture in one breath
@@ -45,6 +55,22 @@ IoT policy is switched on deliberately (docs/HOUSEHOLD-SECURITY.md).
 kidnet-report, kidnet-quiz and kidnet-quiz-suggest are run from the repo.
 docs/CLI.md is the reference.
 
+tools/ is not part of the running system and deploy.sh installs none of it:
+validate-quizzes.mjs (the bank checker), worktree-snapshot.sh (commits the
+whole tree to refs/hearth/snapshots so a bad git command cannot destroy
+uncommitted work; the timer lives on the box, not the repo), publish.sh (the
+pre-publish leak scan) and enable-https.sh.
+
+The learn-to-earn content is the largest part of the repo by volume: over 40
+quiz banks and more than 2,000 questions in portal/quizzes/ (every question
+carries a difficulty and an explanation, and every bank has a study page at
+/study/<bank> in the portal; count them, do not trust this number),
+the reading list in config/db/schema-learn*.sql (scope='learn' rows in
+always_allow, reachable through a total cut), and badges in dashboard/badges.mjs
+plus config/db/schema-badges.sql. Badges' house board and device claiming
+(config/db/schema-claim.sql, kidnet claim-mode / claims / confirm / unclaimed,
+the kids_unclaimed nft set) are both OFF BY DEFAULT and must stay that way.
+
 ## Iron rules
 
 - NEVER weaken: segment isolation, DNS forcing, the fail-closed segment
@@ -56,8 +82,9 @@ docs/CLI.md is the reference.
   read by strangers.
 - Never commit anything commercial; that lives outside this repo.
 - After ANY change to kids.nft, gateway/ or kidnet: run
-  sudo test/firewall-test.sh (31 checks) and sudo test/container-test.sh
-  (26 checks). Both must pass 100% before commit.
+  sudo test/firewall-test.sh (36 checks) and sudo test/container-test.sh
+  (26 checks). Both must pass 100% before commit. After ANY change to
+  config/db/: test/schema-test.sh (35 checks, no root needed).
 - Never oversell. If a feature is half built, say which half. The project's
   credibility rests on the limits being stated as plainly as the wins.
 - Style: NZ English, plain language, no em or en dashes as punctuation.
@@ -66,16 +93,23 @@ docs/CLI.md is the reference.
 ## Live state on this box
 
 Deployed and running. Containers hearth-gw, hearth-adguard, hearth-portal
-and hearth-speedtest are up; kids-nic-warden plus six timers (meter, metering,
-services, devicescan, dnslog, tor-sync). The seventh, kids-iot-policy.timer,
-is installed but left disabled on purpose. Dashboard: systemd --user
-kids-dashboard.service (private network :8899, unit lives on the box, not in
-the repo), with hearth-dashboard-tls.service fronting it on :8443. Its pages
+and hearth-speedtest are up; kids-nic-warden.service plus FIVE timers (meter,
+metering, services, devicescan, dnslog). deploy.sh enables six: this box has
+no kids-tor-sync.timer installed, so the daily relay refresh is not running
+here even though the repo ships it. kids-iot-policy.timer is installed by
+deploy.sh and left disabled on purpose. Dashboard: systemd --user
+kids-dashboard.service (private network :8899, unit lives on the box; the repo
+ships an EXAMPLE at config/systemd-user/hearth-dashboard.service that nothing
+installs), with hearth-dashboard-tls.service fronting it on :8443. Its pages
 are Home, Right now, Week, Trends, Learn to earn, Devices, Family, System and
 Speed; /speed proxies the gateway's speed test, which can only run inside the
 island. Portal: kids-portal.service (:8890) is the pre-deploy host copy;
 production is the container on island :80. DB: kids_network on the shared
 postgres container (creds in secrets.env).
+
+hearth-snapshot.timer (systemd --user, every two minutes) runs
+tools/worktree-snapshot.sh save. Development safeguard, not a household one:
+the unit is on the box, not in the repo.
 
 Two PUBLIC demos run the same code read-only against a seeded fictional
 household, so they improve whenever the product does: hearth-demo.appspurt.dev
