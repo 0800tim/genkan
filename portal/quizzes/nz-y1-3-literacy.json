@@ -1,0 +1,332 @@
+{
+  "id": "nz-y1-3-literacy",
+  "title": "Reading and Writing, Years 1 to 3",
+  "emoji": "📖",
+  "suggested_age_min": 5,
+  "minutes_per_pass": 10,
+  "pass_mark": 6,
+  "questions_per_round": 8,
+  "source_note": "Written for the New Zealand Curriculum, Years 1 to 3 (Levels 1 to 2), ages 5 to 8. Covers letter sounds, blends and digraphs, rhyming, sight words, simple punctuation, singular and plural, opposites and alphabetical order. Checked 2026-08-30.",
+  "questions": [
+    {
+      "id": "lit-001",
+      "prompt": "Which letter makes the first sound in 'sun'?",
+      "choices": ["S", "T", "F", "M"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The word 'sun' starts with the S sound, like 'sss'."
+    },
+    {
+      "id": "lit-002",
+      "prompt": "Which word rhymes with 'cat'?",
+      "choices": ["dog", "hat", "sun", "cup"],
+      "answer_index": 1,
+      "difficulty": 1,
+      "explanation": "'Cat' and 'hat' both end in the 'at' sound, so they rhyme."
+    },
+    {
+      "id": "lit-003",
+      "prompt": "What is the opposite of 'big'?",
+      "choices": ["red", "fast", "small", "wet"],
+      "answer_index": 2,
+      "difficulty": 1,
+      "explanation": "'Small' means the opposite of 'big': not much size at all."
+    },
+    {
+      "id": "lit-004",
+      "prompt": "What is the opposite of 'hot'?",
+      "choices": ["loud", "soft", "tall", "cold"],
+      "answer_index": 3,
+      "difficulty": 1,
+      "explanation": "'Cold' is the opposite of 'hot'. Think of ice instead of fire."
+    },
+    {
+      "id": "lit-005",
+      "prompt": "One dog, two ___?",
+      "choices": ["dogs", "dog", "doges", "dogies"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Most words just add 's' to show more than one, so two dogs, not one dog."
+    },
+    {
+      "id": "lit-006",
+      "prompt": "Which letter makes the first sound in 'moon'?",
+      "choices": ["N", "M", "B", "W"],
+      "answer_index": 1,
+      "difficulty": 1,
+      "explanation": "'Moon' starts with the M sound, like 'mmm'."
+    },
+    {
+      "id": "lit-007",
+      "prompt": "What is the opposite of 'up'?",
+      "choices": ["near", "slow", "down", "left"],
+      "answer_index": 2,
+      "difficulty": 1,
+      "explanation": "'Down' is the opposite of 'up': one goes higher, the other goes lower."
+    },
+    {
+      "id": "lit-008",
+      "prompt": "Which word rhymes with 'dog'?",
+      "choices": ["cat", "pig", "sun", "frog"],
+      "answer_index": 3,
+      "difficulty": 1,
+      "explanation": "'Dog' and 'frog' both end in the 'og' sound, so they rhyme."
+    },
+    {
+      "id": "lit-009",
+      "prompt": "Which word starts with the 'sh' sound?",
+      "choices": ["ship", "tip", "sip", "chip"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "'Ship' starts with 'sh', like a quiet 'shhh'."
+    },
+    {
+      "id": "lit-010",
+      "prompt": "Which word starts with the 'ch' sound?",
+      "choices": ["thin", "chin", "shin", "tin"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "'Chin' starts with 'ch', like the sound at the start of 'chip'."
+    },
+    {
+      "id": "lit-011",
+      "prompt": "Which word starts with the 'th' sound?",
+      "choices": ["sum", "chum", "thumb", "dumb"],
+      "answer_index": 2,
+      "difficulty": 2,
+      "explanation": "'Thumb' starts with 'th', made by putting your tongue near your teeth."
+    },
+    {
+      "id": "lit-012",
+      "prompt": "Which word is spelled the right way?",
+      "choices": ["sed", "sayd", "saide", "said"],
+      "answer_index": 3,
+      "difficulty": 2,
+      "explanation": "'Said' is the correct spelling, even though it does not sound the way it looks."
+    },
+    {
+      "id": "lit-013",
+      "prompt": "One box, two ___?",
+      "choices": ["boxes", "box", "boxs", "boxies"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Words ending in 'x' add 'es' to show more than one, so two boxes."
+    },
+    {
+      "id": "lit-014",
+      "prompt": "Which mark ends a question?",
+      "choices": [".", "?", "!", ","],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "A question mark shows a sentence is asking something, like 'Are you ready?'"
+    },
+    {
+      "id": "lit-015",
+      "prompt": "Which mark ends most sentences?",
+      "choices": ["?", "!", ".", ";"],
+      "answer_index": 2,
+      "difficulty": 2,
+      "explanation": "A full stop shows a sentence has finished telling you something."
+    },
+    {
+      "id": "lit-016",
+      "prompt": "Which word should start with a capital letter?",
+      "choices": ["table", "apple", "shoe", "Monday"],
+      "answer_index": 3,
+      "difficulty": 2,
+      "explanation": "Days of the week, like Monday, always start with a capital letter."
+    },
+    {
+      "id": "lit-017",
+      "prompt": "Which letter comes first in the alphabet?",
+      "choices": ["A", "B", "D", "C"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A is the very first letter of the alphabet, before B, C and D."
+    },
+    {
+      "id": "lit-018",
+      "prompt": "What is the opposite of 'day'?",
+      "choices": ["sun", "night", "cloud", "star"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "'Night' is the opposite of 'day': one is light, the other is dark."
+    },
+    {
+      "id": "lit-019",
+      "prompt": "Which word ends with the 'sh' sound?",
+      "choices": ["fist", "fib", "fish", "fin"],
+      "answer_index": 2,
+      "difficulty": 3,
+      "explanation": "'Fish' ends with 'sh', like the sound for 'be quiet'."
+    },
+    {
+      "id": "lit-020",
+      "prompt": "Which word ends with the 'ch' sound?",
+      "choices": ["lump", "lung", "lull", "lunch"],
+      "answer_index": 3,
+      "difficulty": 3,
+      "explanation": "'Lunch' ends with 'ch', the same sound as the start of 'chip'."
+    },
+    {
+      "id": "lit-021",
+      "prompt": "Which word ends with the 'th' sound?",
+      "choices": ["bath", "bat", "ban", "bad"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "'Bath' ends with 'th', made with your tongue between your teeth."
+    },
+    {
+      "id": "lit-022",
+      "prompt": "One mouse, two ___?",
+      "choices": ["mouses", "mice", "mouse", "mices"],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "'Mouse' changes to 'mice' for more than one, it does not just add 's'."
+    },
+    {
+      "id": "lit-023",
+      "prompt": "One child, two ___?",
+      "choices": ["childs", "childrens", "children", "childes"],
+      "answer_index": 2,
+      "difficulty": 3,
+      "explanation": "'Child' changes to 'children' for more than one, an unusual plural to remember."
+    },
+    {
+      "id": "lit-024",
+      "prompt": "What is the opposite of 'empty'?",
+      "choices": ["heavy", "clean", "open", "full"],
+      "answer_index": 3,
+      "difficulty": 3,
+      "explanation": "'Full' is the opposite of 'empty': one has nothing in it, the other has everything it can hold."
+    },
+    {
+      "id": "lit-025",
+      "prompt": "What is the opposite of 'wet'?",
+      "choices": ["dry", "cold", "soft", "hard"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "'Dry' is the opposite of 'wet': no water on it at all."
+    },
+    {
+      "id": "lit-026",
+      "prompt": "Which word is spelled correctly?",
+      "choices": ["becos", "because", "becaus", "beacause"],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "'Because' has an 'au' in the middle, easy to forget when you sound it out."
+    },
+    {
+      "id": "lit-027",
+      "prompt": "Which word comes first in alphabetical order?",
+      "choices": ["cherry", "banana", "apple", "date"],
+      "answer_index": 2,
+      "difficulty": 3,
+      "explanation": "'Apple' starts with A, the earliest letter here in the alphabet."
+    },
+    {
+      "id": "lit-028",
+      "prompt": "A sentence that asks something ends with a ___?",
+      "choices": ["full stop", "capital letter", "comma", "question mark"],
+      "answer_index": 3,
+      "difficulty": 3,
+      "explanation": "Asking sentences end with a question mark, not a full stop."
+    },
+    {
+      "id": "lit-029",
+      "prompt": "One foot, two ___?",
+      "choices": ["feet", "footes", "foots", "feets"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "'Foot' changes to 'feet' for more than one, it does not add 's'."
+    },
+    {
+      "id": "lit-030",
+      "prompt": "One tooth, two ___?",
+      "choices": ["tooths", "teeth", "toothes", "teeths"],
+      "answer_index": 1,
+      "difficulty": 4,
+      "explanation": "'Tooth' changes to 'teeth' for more than one, just like foot changes to feet."
+    },
+    {
+      "id": "lit-031",
+      "prompt": "One man, two ___?",
+      "choices": ["mans", "manes", "men", "men's"],
+      "answer_index": 2,
+      "difficulty": 4,
+      "explanation": "'Man' changes to 'men' for more than one, an unusual plural worth remembering."
+    },
+    {
+      "id": "lit-032",
+      "prompt": "Which comes first in alphabetical order: monkey, moon, mouse?",
+      "choices": ["mouse", "moon", "mud", "monkey"],
+      "answer_index": 3,
+      "difficulty": 4,
+      "explanation": "All three start with 'mo', so look at the next letter: 'monkey' has 'n', which comes before 'o' and 'u'."
+    },
+    {
+      "id": "lit-033",
+      "prompt": "Which word always starts with a capital letter?",
+      "choices": ["I", "and", "the", "dog"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The word 'I', meaning yourself, is always written with a capital letter."
+    },
+    {
+      "id": "lit-034",
+      "prompt": "Which word already means more than one, without adding 's'?",
+      "choices": ["cats", "children", "dogs", "boxes"],
+      "answer_index": 1,
+      "difficulty": 4,
+      "explanation": "'Children' already means more than one child, unlike 'cats' which just adds 's'."
+    },
+    {
+      "id": "lit-035",
+      "prompt": "'Sam ran to the shop.' Which mark ends this sentence?",
+      "choices": ["?", "!", ".", ","],
+      "answer_index": 2,
+      "difficulty": 4,
+      "explanation": "This sentence just tells you something happened, so it ends with a full stop, not an exclamation mark."
+    },
+    {
+      "id": "lit-036",
+      "prompt": "Which comes first in alphabetical order: cat, car, cap?",
+      "choices": ["cat", "cup", "car", "cap"],
+      "answer_index": 3,
+      "difficulty": 4,
+      "explanation": "All three start with 'ca', so look at the next letter: 'cap' has 'p', which comes before 'r' and 't'."
+    },
+    {
+      "id": "lit-037",
+      "prompt": "Which comes first in alphabetical order: plum, plan, place, plate?",
+      "choices": ["place", "plum", "plan", "plate"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "All start with 'pl', so compare further: 'place' has 'c' next, which comes before 'n' in 'plan' and 't' in 'plate'."
+    },
+    {
+      "id": "lit-038",
+      "prompt": "One person, two ___?",
+      "choices": ["persons", "people", "peoples", "person's"],
+      "answer_index": 1,
+      "difficulty": 5,
+      "explanation": "'Person' changes to 'people' for more than one, a tricky plural that does not follow the usual rule."
+    },
+    {
+      "id": "lit-039",
+      "prompt": "Which word rhymes with 'chair', even though it looks different?",
+      "choices": ["chin", "car", "bear", "cheer"],
+      "answer_index": 2,
+      "difficulty": 5,
+      "explanation": "'Chair' and 'bear' sound the same at the end, even though they are spelled differently."
+    },
+    {
+      "id": "lit-040",
+      "prompt": "Which sentence needs a question mark at the end?",
+      "choices": ["The cat is black", "I like cats", "Run to the cat", "Where is the cat"],
+      "answer_index": 3,
+      "difficulty": 5,
+      "explanation": "'Where is the cat' is asking something, so it needs a question mark, not a full stop."
+    }
+  ]
+}

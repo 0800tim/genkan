@@ -35,7 +35,7 @@ for rel in children devices people household_roster device_roster time_remaining
            category_state time_ledger earn_claims task_offer_effective \
            device_policy_effective quiz_settings alerts category_ips \
            quiz_banks quiz_bank_questions quiz_bank_summary earn_settings \
-           earn_settings_effective; do
+           earn_settings_effective child_badges quiz_study_visits board_settings; do
   [ "$(psql "SELECT to_regclass('public.$rel') IS NOT NULL")" = t ] \
     && ok "$rel exists" || bad "$rel is missing after a fresh load"
 done
@@ -58,11 +58,28 @@ done
 n=$(psql "SELECT count(*) FROM always_allow WHERE scope='learn'")
 [ "${n:-0}" -gt 5 ] && ok "the reading list is seeded ($n reference sites a blocked child can read)" \
   || bad "always_allow has ${n:-0} learn rows, so learn-to-earn is a memory test"
+# The international reading list (schema-learn-intl.sql): NZ, AU, UK and US
+# study and reference sites, on top of the core fifteen in schema-learn.sql.
+n=$(psql "SELECT count(*) FROM always_allow WHERE scope='learn' AND domain IN (
+  'www2.nzqa.govt.nz','tahurangi.education.govt.nz','nzhistory.govt.nz',
+  'aotearoahistories.education.govt.nz','tepapa.govt.nz','collections.tepapa.govt.nz',
+  'australiancurriculum.edu.au','educationstandards.nsw.edu.au','csiro.au','ga.gov.au',
+  'bom.gov.au','library.gov.au','australian.museum','naa.gov.au',
+  'nationalarchives.gov.uk','bl.uk','rmg.co.uk','nrich.maths.org','nationalgallery.org.uk','stem.org.uk',
+  'loc.gov','learninglab.si.edu','noaa.gov','www.usgs.gov','archives.gov','merriam-webster.com')")
+[ "${n:-0}" -gt 20 ] && ok "the international reading list is seeded ($n NZ/AU/UK/US sites beyond the core fifteen)" \
+  || bad "the international reading list has only ${n:-0} rows; schema-learn-intl.sql may not have loaded"
 n=$(psql "SELECT count(*) FROM always_allow WHERE scope='safety'")
 [ "${n:-0}" -gt 0 ] && ok "the safety net is seeded ($n domains a blocked child can still reach)" \
   || bad "always_allow has no safety rows, so a cut-off child could not reach a help line"
 n=$(psql "SELECT count(*) FROM vendor_clouds")
 [ "${n:-0}" -gt 10 ] && ok "smart-home vendor clouds are seeded ($n)" || bad "vendor_clouds has ${n:-0} rows"
+# The comparison board is off until a parent turns it on: see the note at the
+# top of schema-badges.sql for why. A fresh install must not wake a sibling
+# rivalry nobody asked for.
+n=$(psql "SELECT count(*) FROM board_settings WHERE enabled")
+[ "${n:-0}" = 0 ] && ok "the achievement board is off by default" \
+  || bad "the achievement board is ON on a fresh install, and that was meant to need a parent's yes"
 
 echo
 echo "passed $pass, failed $fail"

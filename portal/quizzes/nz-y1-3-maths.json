@@ -1,0 +1,332 @@
+{
+  "id": "nz-y1-3-maths",
+  "title": "Numbers and Shapes, Years 1 to 3",
+  "emoji": "🔢",
+  "suggested_age_min": 5,
+  "minutes_per_pass": 10,
+  "pass_mark": 6,
+  "questions_per_round": 8,
+  "source_note": "Written for the New Zealand Curriculum, Years 1 to 3 (Levels 1 to 2), ages 5 to 8. Covers counting, numbers to 100, place value, adding and subtracting to 20, doubles and halves, simple fractions, shapes, measurement words, telling the time and New Zealand coins and notes. Checked 2026-08-30.",
+  "questions": [
+    {
+      "id": "num-001",
+      "prompt": "What number comes after 5?",
+      "choices": ["6", "4", "7", "10"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Counting on from 5, the very next number is 6."
+    },
+    {
+      "id": "num-002",
+      "prompt": "What number comes before 10?",
+      "choices": ["11", "9", "8", "7"],
+      "answer_index": 1,
+      "difficulty": 1,
+      "explanation": "Counting back from 10, the number just before it is 9."
+    },
+    {
+      "id": "num-003",
+      "prompt": "Count on: 2, 3, 4, ___?",
+      "choices": ["6", "3", "5", "7"],
+      "answer_index": 2,
+      "difficulty": 1,
+      "explanation": "Each number is one more than the last, so after 4 comes 5."
+    },
+    {
+      "id": "num-004",
+      "prompt": "How many sides does a triangle have?",
+      "choices": ["4", "2", "5", "3"],
+      "answer_index": 3,
+      "difficulty": 1,
+      "explanation": "A triangle has 3 straight sides, that is where its name comes from."
+    },
+    {
+      "id": "num-005",
+      "prompt": "How many sides does a square have?",
+      "choices": ["4", "3", "5", "6"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "A square has 4 equal sides, all the same length."
+    },
+    {
+      "id": "num-006",
+      "prompt": "Which is heavier, a brick or a feather?",
+      "choices": ["a feather", "a brick", "they are the same", "a leaf"],
+      "answer_index": 1,
+      "difficulty": 1,
+      "explanation": "A brick weighs much more than a light feather."
+    },
+    {
+      "id": "num-007",
+      "prompt": "What number comes after 9?",
+      "choices": ["8", "11", "10", "20"],
+      "answer_index": 2,
+      "difficulty": 1,
+      "explanation": "Counting on from 9, the very next number is 10."
+    },
+    {
+      "id": "num-008",
+      "prompt": "Count back: 5, 4, 3, ___?",
+      "choices": ["1", "6", "3", "2"],
+      "answer_index": 3,
+      "difficulty": 1,
+      "explanation": "Each number is one less than the last, so after 3 comes 2."
+    },
+    {
+      "id": "num-009",
+      "prompt": "What number comes after 19?",
+      "choices": ["20", "21", "18", "10"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Counting on from 19 takes you to 20, the start of a new set of ten."
+    },
+    {
+      "id": "num-010",
+      "prompt": "What number is one less than 30?",
+      "choices": ["31", "29", "19", "28"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "Counting back one from 30 gives you 29."
+    },
+    {
+      "id": "num-011",
+      "prompt": "Double 3 is?",
+      "choices": ["5", "9", "6", "3"],
+      "answer_index": 2,
+      "difficulty": 2,
+      "explanation": "Doubling means adding a number to itself: 3 plus 3 makes 6."
+    },
+    {
+      "id": "num-012",
+      "prompt": "Half of 8 is?",
+      "choices": ["2", "8", "6", "4"],
+      "answer_index": 3,
+      "difficulty": 2,
+      "explanation": "Half means splitting into two equal groups: 8 split in two gives 4 and 4."
+    },
+    {
+      "id": "num-013",
+      "prompt": "5 + 3 = ?",
+      "choices": ["7", "9", "6", "8"],
+      "answer_index": 3,
+      "difficulty": 2,
+      "explanation": "Counting on 3 from 5 gives 6, 7, 8."
+    },
+    {
+      "id": "num-014",
+      "prompt": "9 - 4 = ?",
+      "choices": ["4", "5", "6", "3"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "Counting back 4 from 9 gives 8, 7, 6, 5."
+    },
+    {
+      "id": "num-015",
+      "prompt": "Which shape has no corners?",
+      "choices": ["square", "triangle", "circle", "rectangle"],
+      "answer_index": 2,
+      "difficulty": 2,
+      "explanation": "A circle is round all the way, with no straight edges or corners."
+    },
+    {
+      "id": "num-016",
+      "prompt": "How many faces does a cube have?",
+      "choices": ["4", "8", "5", "6"],
+      "answer_index": 3,
+      "difficulty": 2,
+      "explanation": "A cube has 6 flat faces, like a dice."
+    },
+    {
+      "id": "num-017",
+      "prompt": "Which is worth more, a 10 cent coin or a 50 cent coin?",
+      "choices": ["a 50 cent coin", "a 10 cent coin", "they are the same", "a 20 cent coin"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "50 cents is worth more than 10 cents, even though the 50 cent coin is not the biggest coin."
+    },
+    {
+      "id": "num-018",
+      "prompt": "Which glass has more water, a full glass or an empty glass?",
+      "choices": ["an empty glass", "a full glass", "they are the same", "cannot tell"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "A full glass holds water right to the top. An empty glass holds none."
+    },
+    {
+      "id": "num-019",
+      "prompt": "In the number 34, how many tens are there?",
+      "choices": ["4", "34", "3", "7"],
+      "answer_index": 2,
+      "difficulty": 3,
+      "explanation": "34 is made of 3 tens and 4 ones: 30 plus 4."
+    },
+    {
+      "id": "num-020",
+      "prompt": "In the number 52, how many ones are there?",
+      "choices": ["5", "52", "7", "2"],
+      "answer_index": 3,
+      "difficulty": 3,
+      "explanation": "52 is made of 5 tens and 2 ones: 50 plus 2."
+    },
+    {
+      "id": "num-021",
+      "prompt": "7 + 6 = ?",
+      "choices": ["13", "12", "14", "11"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "7 plus 6 is the same as 7 plus 3 plus 3, which makes 13."
+    },
+    {
+      "id": "num-022",
+      "prompt": "15 - 8 = ?",
+      "choices": ["8", "7", "6", "9"],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "Counting back 8 from 15 lands on 7."
+    },
+    {
+      "id": "num-023",
+      "prompt": "Double 6 is?",
+      "choices": ["10", "14", "12", "16"],
+      "answer_index": 2,
+      "difficulty": 3,
+      "explanation": "Doubling 6 means 6 plus 6, which makes 12."
+    },
+    {
+      "id": "num-024",
+      "prompt": "Half of 10 is?",
+      "choices": ["4", "6", "10", "5"],
+      "answer_index": 3,
+      "difficulty": 3,
+      "explanation": "Half of 10 means splitting it into two equal groups of 5."
+    },
+    {
+      "id": "num-025",
+      "prompt": "Cut a cake into 2 equal pieces. Each piece is a ___?",
+      "choices": ["half", "quarter", "third", "whole"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Two equal pieces of the same cake are each called a half."
+    },
+    {
+      "id": "num-026",
+      "prompt": "Cut a pizza into 4 equal pieces. Each piece is a ___?",
+      "choices": ["half", "quarter", "third", "whole"],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "Four equal pieces of the same pizza are each called a quarter."
+    },
+    {
+      "id": "num-027",
+      "prompt": "At 3 o'clock, where does the hour hand point?",
+      "choices": ["12", "6", "3", "9"],
+      "answer_index": 2,
+      "difficulty": 3,
+      "explanation": "At an exact hour, the hour hand points straight at that hour's number."
+    },
+    {
+      "id": "num-028",
+      "prompt": "Which is the smallest New Zealand note?",
+      "choices": ["$10", "$20", "$50", "$5"],
+      "answer_index": 3,
+      "difficulty": 3,
+      "explanation": "The $5 note is worth the least of New Zealand's paper notes."
+    },
+    {
+      "id": "num-029",
+      "prompt": "18 - 9 = ?",
+      "choices": ["9", "8", "10", "7"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "18 take away 9 leaves 9, since 9 plus 9 makes 18."
+    },
+    {
+      "id": "num-030",
+      "prompt": "6 + 8 = ?",
+      "choices": ["13", "14", "15", "12"],
+      "answer_index": 1,
+      "difficulty": 4,
+      "explanation": "6 plus 8 is the same as 6 plus 6 plus 2, which makes 14."
+    },
+    {
+      "id": "num-031",
+      "prompt": "What number has 5 tens and 3 ones?",
+      "choices": ["35", "58", "53", "50"],
+      "answer_index": 2,
+      "difficulty": 4,
+      "explanation": "5 tens make 50, plus 3 ones makes 53."
+    },
+    {
+      "id": "num-032",
+      "prompt": "How many edges does a cube have?",
+      "choices": ["8", "6", "10", "12"],
+      "answer_index": 3,
+      "difficulty": 4,
+      "explanation": "A cube has 12 straight edges where its faces meet."
+    },
+    {
+      "id": "num-033",
+      "prompt": "Which New Zealand coin shows a kiwi bird?",
+      "choices": ["the $1 coin", "the 10 cent coin", "the 50 cent coin", "the $2 coin"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "New Zealand's $1 coin has a kiwi bird on it."
+    },
+    {
+      "id": "num-034",
+      "prompt": "The clock shows half past 6. Where does the minute hand point?",
+      "choices": ["12", "6", "3", "9"],
+      "answer_index": 1,
+      "difficulty": 4,
+      "explanation": "At half past the hour, the minute hand points straight down to the 6."
+    },
+    {
+      "id": "num-035",
+      "prompt": "Which is heavier, a bag of sand or a bag of feathers the same size?",
+      "choices": ["the bag of feathers", "they are the same", "the bag of sand", "cannot tell"],
+      "answer_index": 2,
+      "difficulty": 4,
+      "explanation": "Sand is much denser than feathers, so the same size bag of sand weighs more."
+    },
+    {
+      "id": "num-036",
+      "prompt": "What number is ten more than 47?",
+      "choices": ["48", "37", "58", "57"],
+      "answer_index": 3,
+      "difficulty": 4,
+      "explanation": "Adding ten to 47 only changes the tens digit, giving 57."
+    },
+    {
+      "id": "num-037",
+      "prompt": "What number has 7 tens and 0 ones?",
+      "choices": ["70", "7", "17", "700"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "7 tens make 70, and 0 ones adds nothing extra."
+    },
+    {
+      "id": "num-038",
+      "prompt": "You have a $2 coin and a $1 coin. How much money do you have?",
+      "choices": ["$2", "$3", "$1", "$4"],
+      "answer_index": 1,
+      "difficulty": 5,
+      "explanation": "$2 plus $1 makes $3 altogether."
+    },
+    {
+      "id": "num-039",
+      "prompt": "Which is bigger, one half or one quarter of the same cake?",
+      "choices": ["one quarter", "they are the same", "one half", "cannot tell"],
+      "answer_index": 2,
+      "difficulty": 5,
+      "explanation": "Cutting a cake into 2 pieces gives bigger pieces than cutting it into 4."
+    },
+    {
+      "id": "num-040",
+      "prompt": "What number is halfway between 40 and 50?",
+      "choices": ["44", "46", "48", "45"],
+      "answer_index": 3,
+      "difficulty": 5,
+      "explanation": "40 and 50 are 10 apart, so halfway between them is 45."
+    }
+  ]
+}

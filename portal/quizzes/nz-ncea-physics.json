@@ -1,0 +1,662 @@
+{
+  "id": "nz-ncea-physics",
+  "title": "Physics, NCEA",
+  "emoji": "⚛️",
+  "suggested_age_min": 15,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Senior secondary physics spanning NCEA Levels 1 to 3: kinematics equations, Newton's laws, momentum and impulse, work, energy and power, circular motion, waves including interference and standing waves, sound and the Doppler effect, light and refraction, electricity including circuits, capacitors and electromagnetic induction, and atomic and nuclear physics including half life.",
+  "questions": [
+    {
+      "id": "phy-001",
+      "prompt": "Which quantity describes how fast an object's velocity is changing?",
+      "choices": [
+        "Acceleration",
+        "Displacement",
+        "Speed",
+        "Mass"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Acceleration is defined as the rate of change of velocity, so it measures how quickly an object speeds up, slows down, or changes direction."
+    },
+    {
+      "id": "phy-002",
+      "prompt": "An object starts at rest and accelerates at 2 m/s squared for 5 seconds. What is its final velocity?",
+      "choices": [
+        "10 m/s",
+        "5 m/s",
+        "2 m/s",
+        "7 m/s"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Using v = u + at, with starting velocity u = 0, acceleration a = 2 m/s squared and time t = 5 s: v = 0 + (2 x 5) = 10 m/s."
+    },
+    {
+      "id": "phy-003",
+      "prompt": "A car accelerates from 4 m/s to 12 m/s in 4 seconds. What is its acceleration?",
+      "choices": [
+        "2 m/s squared",
+        "4 m/s squared",
+        "8 m/s squared",
+        "0.5 m/s squared"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Acceleration is the change in velocity divided by the time taken: (12 - 4) divided by 4 gives 8 divided by 4, which is 2 m/s squared."
+    },
+    {
+      "id": "phy-004",
+      "prompt": "An object starts at rest and accelerates uniformly at 3 m/s squared for 4 seconds. Using s = ut + half at squared, what distance does it travel?",
+      "choices": [
+        "24 m",
+        "12 m",
+        "48 m",
+        "6 m"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "With u = 0, the ut term disappears entirely, leaving s = half x a x t squared = 0.5 x 3 x (4 squared) = 0.5 x 3 x 16 = 24 m."
+    },
+    {
+      "id": "phy-005",
+      "prompt": "A ball is thrown upward at 20 m/s. Using v squared = u squared - 2gs with g = 10 m/s squared, how high does it rise before its velocity reaches zero?",
+      "choices": [
+        "20 m",
+        "40 m",
+        "10 m",
+        "2 m"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "At the top of its flight the ball's velocity v is momentarily 0, so the equation becomes 0 = 20 squared - 2 x 10 x s, which is 0 = 400 - 20s. Rearranging gives 20s = 400, so s = 20 m."
+    },
+    {
+      "id": "phy-006",
+      "prompt": "Newton's first law states that an object will remain at rest or move at constant velocity unless",
+      "choices": [
+        "acted on by an unbalanced (net) force",
+        "it runs out of energy",
+        "it is touched by another object",
+        "gravity stops acting on it"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Newton's first law describes inertia: an object keeps doing whatever it was already doing, whether that is staying still or moving in a straight line at constant speed, unless a net force acts to change that."
+    },
+    {
+      "id": "phy-007",
+      "prompt": "Newton's second law is summarised by the equation",
+      "choices": [
+        "Force = mass times acceleration",
+        "Force = mass divided by acceleration",
+        "Force = mass plus acceleration",
+        "Force = mass times velocity"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Newton's second law states that the net force on an object equals its mass multiplied by its acceleration, written as F = ma."
+    },
+    {
+      "id": "phy-008",
+      "prompt": "A resultant force of 20 N acts on a mass of 4 kg. What acceleration does it produce?",
+      "choices": [
+        "5 m/s squared",
+        "80 m/s squared",
+        "4 m/s squared",
+        "0.2 m/s squared"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Rearranging F = ma for acceleration gives a = F divided by m: 20 N divided by 4 kg gives 5 m/s squared."
+    },
+    {
+      "id": "phy-009",
+      "prompt": "Newton's third law states that for every action force there is",
+      "choices": [
+        "an equal and opposite reaction force, acting on a different object",
+        "a smaller reaction force on the same object",
+        "no reaction at all",
+        "an equal force acting in the same direction"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Newton's third law pairs forces between two different objects: whenever object A pushes on object B, object B pushes back on object A with equal size but in the opposite direction. The two forces never act on the same object."
+    },
+    {
+      "id": "phy-010",
+      "prompt": "A rocket expels exhaust gas downward and accelerates upward as a result. This is best explained by",
+      "choices": [
+        "Newton's third law: the rocket pushes the gas down, and the gas pushes the rocket up with an equal and opposite force",
+        "Newton's first law, since the rocket was already at rest",
+        "gravity pulling the rocket upward",
+        "the gas being lighter than the rocket"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The rocket engine forces exhaust gas downward and out. By Newton's third law, the gas exerts an equal and opposite force back on the rocket, pushing it upward. This is why rockets work even in the vacuum of space, where there is no air to push against."
+    },
+    {
+      "id": "phy-011",
+      "prompt": "The distance between two successive wave crests is called the",
+      "choices": [
+        "wavelength",
+        "frequency",
+        "amplitude",
+        "period"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Wavelength is the distance from one point on a wave to the same point on the next repeat of the wave, such as crest to crest."
+    },
+    {
+      "id": "phy-012",
+      "prompt": "The wave equation relates wave speed, frequency and wavelength as",
+      "choices": [
+        "speed = frequency times wavelength",
+        "speed = frequency divided by wavelength",
+        "speed = frequency plus wavelength",
+        "speed = frequency minus wavelength"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The wave equation is v = f times lambda: wave speed equals frequency multiplied by wavelength."
+    },
+    {
+      "id": "phy-013",
+      "prompt": "A wave has a frequency of 5 Hz and a wavelength of 2 m. What is its speed?",
+      "choices": [
+        "10 m/s",
+        "2.5 m/s",
+        "7 m/s",
+        "3 m/s"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Using v = f times lambda: 5 Hz times 2 m gives a wave speed of 10 m/s."
+    },
+    {
+      "id": "phy-014",
+      "prompt": "When two waves meet in phase (crest meets crest), the resulting effect is called",
+      "choices": [
+        "constructive interference, producing a larger amplitude",
+        "destructive interference, cancelling out",
+        "refraction",
+        "diffraction"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "When crests line up with crests (and troughs with troughs), the displacements add together, producing a wave with greater amplitude than either wave alone. This is constructive interference. When a crest meets a trough instead, the waves partly or fully cancel out, which is destructive interference."
+    },
+    {
+      "id": "phy-015",
+      "prompt": "A standing (stationary) wave is formed on a string fixed at both ends. This wave forms because",
+      "choices": [
+        "two identical waves travelling in opposite directions interfere, with fixed points forming nodes where there is no displacement",
+        "the string vibrates at only one single point",
+        "energy is being transferred continuously along the string in one direction",
+        "the wave's frequency keeps changing randomly"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "A wave travelling along the string reflects off the fixed end and travels back, interfering with the wave still arriving. The two waves combine to form a pattern that appears to stand still, with nodes (no movement) at fixed points and antinodes (maximum movement) between them, and unlike a travelling wave, no net energy moves along the string."
+    },
+    {
+      "id": "phy-016",
+      "prompt": "Refraction is the",
+      "choices": [
+        "bending of light as it passes from one medium into another",
+        "bouncing of light off a surface",
+        "splitting of light into colours only",
+        "absorption of light by a black surface"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Refraction happens when light crosses a boundary between two different materials (such as air and glass) and changes direction because its speed changes."
+    },
+    {
+      "id": "phy-017",
+      "prompt": "Light bends towards the normal when it travels from",
+      "choices": [
+        "a less dense medium (like air) into a more dense medium (like glass)",
+        "a more dense medium into a less dense medium",
+        "glass into more glass",
+        "vacuum into vacuum"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Light slows down when it enters a denser medium, and that slowing causes it to bend towards the normal (the line perpendicular to the boundary). Going the other way, from dense into less dense, light speeds up and bends away from the normal instead."
+    },
+    {
+      "id": "phy-018",
+      "prompt": "The reason light refracts when it crosses a boundary is that",
+      "choices": [
+        "its speed changes in the new medium",
+        "its frequency changes",
+        "its colour changes",
+        "it gains energy"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Light travels at different speeds in different materials. Crossing into a medium where it travels slower or faster causes the wave to bend, which is refraction; the light's frequency and colour stay the same throughout."
+    },
+    {
+      "id": "phy-019",
+      "prompt": "Total internal reflection can occur when light travels from a denser medium into a less dense one at an angle greater than the",
+      "choices": [
+        "critical angle",
+        "angle of incidence",
+        "normal angle",
+        "reflection angle"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The critical angle is the specific angle of incidence beyond which light no longer refracts out of the denser medium at all, and instead reflects entirely back inside it."
+    },
+    {
+      "id": "phy-020",
+      "prompt": "A ray of light travels from water into air and hits the boundary at an angle greater than the critical angle. What happens to the ray?",
+      "choices": [
+        "It undergoes total internal reflection back into the water, with no light refracting out into the air",
+        "It refracts as normal into the air",
+        "It stops completely and is absorbed",
+        "It travels in a straight line unaffected"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Once the angle of incidence exceeds the critical angle, refraction can no longer happen at all, so every bit of the light reflects back into the water instead of escaping into the air. This total internal reflection is the principle that fibre optic cables rely on to carry light signals over long distances."
+    },
+    {
+      "id": "phy-021",
+      "prompt": "The nucleus of an atom contains",
+      "choices": [
+        "protons and neutrons",
+        "only electrons",
+        "only protons",
+        "protons and electrons"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The nucleus is the dense core of the atom, made up of protons and neutrons, while electrons occupy the space around it."
+    },
+    {
+      "id": "phy-022",
+      "prompt": "Isotopes of an element have the same number of protons but a different number of",
+      "choices": [
+        "neutrons",
+        "electrons",
+        "protons",
+        "atomic number"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Isotopes share the same atomic number, meaning the same number of protons, which is what makes them the same element. They differ only in the number of neutrons, which changes their mass but not their chemical identity."
+    },
+    {
+      "id": "phy-023",
+      "prompt": "Radioactive decay is a",
+      "choices": [
+        "random process for any individual nucleus, but predictable in large numbers",
+        "perfectly predictable process for each individual atom",
+        "process that can be sped up by heating the sample",
+        "process that never actually happens in nature"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "It is impossible to know exactly when any single unstable nucleus will decay, but with a huge number of nuclei in a real sample, the overall proportion decaying in a given time is highly predictable, which is what makes half-life a reliable measurement. Heat, pressure and chemical state have no effect on the decay rate."
+    },
+    {
+      "id": "phy-024",
+      "prompt": "The half-life of a radioactive isotope is 10 years. Starting with 80 g of the isotope, how much remains after 20 years?",
+      "choices": [
+        "20 g",
+        "40 g",
+        "0 g",
+        "60 g"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "20 years is exactly two half-lives (10 years each). After the first half-life, 80 g halves to 40 g. After the second half-life, 40 g halves again to 20 g."
+    },
+    {
+      "id": "phy-025",
+      "prompt": "A radioactive sample has a half-life of 5 years. After 15 years, what fraction of the original sample remains?",
+      "choices": [
+        "1/8",
+        "1/3",
+        "1/5",
+        "1/16"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "15 years divided by the 5 year half-life is exactly 3 half-lives. Each half-life halves what is left, so the fraction remaining is half x half x half = 1/8."
+    },
+    {
+      "id": "phy-026",
+      "prompt": "Momentum is calculated as",
+      "choices": [
+        "mass times velocity",
+        "mass times acceleration",
+        "force times time",
+        "mass divided by velocity"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Momentum is defined as an object's mass multiplied by its velocity, written p = mv."
+    },
+    {
+      "id": "phy-027",
+      "prompt": "A 2 kg object moves at 5 m/s. What is its momentum?",
+      "choices": [
+        "10 kg m/s",
+        "5 kg m/s",
+        "2.5 kg m/s",
+        "7 kg m/s"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Momentum is mass times velocity: 2 kg times 5 m/s gives 10 kg m/s."
+    },
+    {
+      "id": "phy-028",
+      "prompt": "In a closed system with no external forces, total momentum before a collision is",
+      "choices": [
+        "equal to total momentum after the collision (momentum is conserved)",
+        "always doubled after the collision",
+        "always zero after the collision",
+        "unrelated to momentum after the collision"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The law of conservation of momentum says that, as long as no outside force acts on the system, the total momentum of all the objects involved stays exactly the same before and after a collision."
+    },
+    {
+      "id": "phy-029",
+      "prompt": "A 3 kg trolley moving at 4 m/s collides and sticks to a stationary 1 kg trolley. Using conservation of momentum, what is their combined velocity after the collision?",
+      "choices": [
+        "3 m/s",
+        "4 m/s",
+        "12 m/s",
+        "1 m/s"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Total momentum before the collision is 3 kg times 4 m/s, which is 12 kg m/s (the stationary trolley contributes zero). After sticking together, the combined mass is 3 + 1 = 4 kg, and since momentum is conserved, the combined velocity is 12 kg m/s divided by 4 kg, which gives 3 m/s."
+    },
+    {
+      "id": "phy-030",
+      "prompt": "A 0.5 kg ball moving at 6 m/s hits a wall and bounces straight back at 4 m/s. What is the magnitude of the change in momentum (the impulse delivered by the wall)?",
+      "choices": [
+        "5 kg m/s",
+        "1 kg m/s",
+        "2 kg m/s",
+        "10 kg m/s"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Taking the ball's initial direction as positive, its momentum before hitting the wall is 0.5 x 6 = 3 kg m/s. After bouncing back, it is travelling the opposite way, so its momentum is 0.5 x (-4) = -2 kg m/s. The change in momentum is the final value minus the initial value: -2 - 3 = -5, so the magnitude of the change is 5 kg m/s."
+    },
+    {
+      "id": "phy-031",
+      "prompt": "Work done is calculated as",
+      "choices": [
+        "force times distance moved in the direction of the force",
+        "force times time",
+        "force divided by distance",
+        "mass times velocity"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Work done is defined as the force applied multiplied by the distance the object moves in the direction of that force: W = Fd."
+    },
+    {
+      "id": "phy-032",
+      "prompt": "A force of 10 N moves an object 5 m in the direction of the force. How much work is done?",
+      "choices": [
+        "50 J",
+        "15 J",
+        "2 J",
+        "500 J"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Work done is force times distance: 10 N times 5 m gives 50 J."
+    },
+    {
+      "id": "phy-033",
+      "prompt": "Power is defined as",
+      "choices": [
+        "the rate at which work is done (work done per second)",
+        "the total work done over the whole journey",
+        "force multiplied by distance",
+        "mass multiplied by gravity"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Power measures how quickly work is being done, calculated as the work done divided by the time taken, so it is measured in joules per second, or watts."
+    },
+    {
+      "id": "phy-034",
+      "prompt": "A motor does 600 J of work in 4 seconds. What is its power output?",
+      "choices": [
+        "150 W",
+        "2400 W",
+        "604 W",
+        "596 W"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Power is work done divided by time taken: 600 J divided by 4 s gives 150 W."
+    },
+    {
+      "id": "phy-035",
+      "prompt": "A 2 kg object is lifted at constant speed to a height of 5 m, using g = 10 m/s squared. Using conservation of energy, how much kinetic energy would it have if it were then dropped and allowed to fall back to its original height (ignoring air resistance)?",
+      "choices": [
+        "100 J",
+        "50 J",
+        "10 J",
+        "20 J"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Lifting the object gives it gravitational potential energy equal to mgh: 2 kg times 10 m/s squared times 5 m gives 100 J. As it falls back to its starting height, conservation of energy means all of that potential energy converts into kinetic energy, so it arrives back with 100 J of kinetic energy."
+    },
+    {
+      "id": "phy-036",
+      "prompt": "An object moving in a circle at constant speed is still accelerating because",
+      "choices": [
+        "its direction (velocity) is constantly changing, even though its speed is not",
+        "its speed is always increasing",
+        "there is no force acting on it",
+        "acceleration only depends on speed, not direction"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Velocity includes both speed and direction, so even if speed stays constant, a continuously changing direction still counts as a changing velocity, which means the object is accelerating."
+    },
+    {
+      "id": "phy-037",
+      "prompt": "The force that keeps an object moving in a circular path is called",
+      "choices": [
+        "centripetal force, directed towards the centre of the circle",
+        "centrifugal force, directed away from the centre",
+        "gravity only",
+        "friction only, in every case"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Centripetal force always points towards the centre of the circular path, and it is this inward force, whatever provides it (tension, gravity, friction, and so on), that keeps the object turning instead of flying off in a straight line."
+    },
+    {
+      "id": "phy-038",
+      "prompt": "For an object moving in a circle, the centripetal acceleration points",
+      "choices": [
+        "towards the centre of the circle",
+        "away from the centre of the circle",
+        "in the direction of travel",
+        "opposite to the direction of travel"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Centripetal acceleration always points towards the centre of the circle, matching the direction of the centripetal force that causes it, which is what continuously turns the object's velocity towards the centre."
+    },
+    {
+      "id": "phy-039",
+      "prompt": "A car travels around a circular bend at constant speed. Increasing the car's speed while keeping the same radius means the centripetal force required",
+      "choices": [
+        "increases, since centripetal force increases with the square of speed",
+        "decreases, since faster objects need less force to turn",
+        "stays exactly the same regardless of speed",
+        "becomes zero at high speed"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Centripetal force is given by F = mv squared over r. Since speed is squared in this formula, doubling the speed around the same bend would need four times the centripetal force, so faster speeds need noticeably more force to stay on the same circular path."
+    },
+    {
+      "id": "phy-040",
+      "prompt": "Two identical cars travel at the same speed around two different bends: Bend A has a small radius, Bend B has a large radius. Which car needs a greater centripetal force to stay on its path?",
+      "choices": [
+        "The car on Bend A (small radius), since centripetal force increases as radius decreases",
+        "The car on Bend B (large radius), since force increases with radius",
+        "Both need exactly the same force",
+        "Neither needs any centripetal force"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Centripetal force is F = mv squared over r, so for the same mass and speed, a smaller radius r in the denominator gives a larger force. The tighter bend, Bend A, needs the greater centripetal force to keep the car turning on its sharper curve."
+    },
+    {
+      "id": "phy-041",
+      "prompt": "Sound waves are",
+      "choices": [
+        "longitudinal waves, where particles vibrate parallel to the direction of travel",
+        "transverse waves, where particles vibrate perpendicular to the direction of travel",
+        "not waves at all",
+        "only able to travel through a vacuum"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Sound travels as a longitudinal wave: the particles of the medium vibrate back and forth along the same direction the wave is travelling, creating compressions and rarefactions."
+    },
+    {
+      "id": "phy-042",
+      "prompt": "The pitch of a sound is determined mainly by its",
+      "choices": [
+        "frequency (higher frequency gives higher pitch)",
+        "amplitude (higher amplitude gives higher pitch)",
+        "speed of travel",
+        "wavelength alone, regardless of frequency"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Pitch corresponds to frequency: a higher frequency sound wave is heard as a higher pitch. Amplitude instead determines loudness, not pitch."
+    },
+    {
+      "id": "phy-043",
+      "prompt": "Sound cannot travel through",
+      "choices": [
+        "a vacuum, since sound needs particles of a medium to travel through",
+        "water",
+        "solids",
+        "air only, but works fine in liquids and solids"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Sound is a mechanical wave, which means it needs a medium of particles, such as air, water or a solid, to pass its vibrations along. With no particles present, as in a vacuum, there is nothing for sound to travel through."
+    },
+    {
+      "id": "phy-044",
+      "prompt": "The Doppler effect explains why an ambulance siren sounds higher pitched as it approaches you and lower pitched as it moves away. This happens because",
+      "choices": [
+        "the sound waves are compressed (shorter wavelength, higher frequency) as the source approaches, and stretched out as it moves away",
+        "the ambulance driver changes the siren's setting",
+        "sound travels faster when approaching you",
+        "your ears become more sensitive as the ambulance gets closer"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "As the ambulance moves towards you, each new wave crest is emitted slightly closer to you than the last, squashing the waves together into a shorter wavelength and higher frequency, so you hear a higher pitch. Moving away has the opposite effect, stretching the waves out and lowering the pitch you hear."
+    },
+    {
+      "id": "phy-045",
+      "prompt": "A source of sound is moving away from a stationary observer. Compared to the sound's actual frequency at the source, the observer hears a frequency that is",
+      "choices": [
+        "lower than the actual frequency, because the wavelength reaching the observer is stretched out",
+        "higher than the actual frequency",
+        "exactly the same as the actual frequency",
+        "impossible to determine without knowing the distance"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A receding source stretches out the sound waves reaching the observer, increasing the wavelength. Since wave speed stays the same, a longer wavelength means a lower frequency, so the observer hears a pitch lower than the source's actual frequency."
+    },
+    {
+      "id": "phy-046",
+      "prompt": "In a series circuit, the current at every point in the circuit is",
+      "choices": [
+        "the same throughout",
+        "different at each component",
+        "highest near the battery only",
+        "zero unless a switch is closed at both ends"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A series circuit has only one path for current to flow, so exactly the same current passes through every component one after another, with none lost or gained along the way."
+    },
+    {
+      "id": "phy-047",
+      "prompt": "In a series circuit with a 12 V battery and two identical resistors, the voltage across each resistor is",
+      "choices": [
+        "6 V each, since the total voltage splits between components in series",
+        "12 V each, since voltage is the same throughout a series circuit",
+        "24 V each, since resistors add up",
+        "0 V each, since no current flows"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "In series, the supply voltage is shared out across the components rather than repeated at each one. With two identical resistors sharing the load equally, the 12 V splits evenly, giving 6 V across each."
+    },
+    {
+      "id": "phy-048",
+      "prompt": "In a parallel circuit, the voltage across each branch is",
+      "choices": [
+        "the same as the supply voltage, across every branch",
+        "shared out between the branches",
+        "zero in every branch except one",
+        "always double the supply voltage"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Each branch of a parallel circuit connects directly across the same two points of the supply, so every branch experiences the full supply voltage, unlike a series circuit where the voltage is shared out."
+    },
+    {
+      "id": "phy-049",
+      "prompt": "A capacitor stores energy by",
+      "choices": [
+        "storing separated electric charge on two conductive plates separated by an insulator",
+        "storing chemical energy like a battery",
+        "converting electrical energy directly into heat",
+        "storing a magnetic field only"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A capacitor consists of two conductive plates with an insulating layer between them. Connecting it to a supply builds up positive charge on one plate and negative charge on the other, and the energy is stored in the electric field between them."
+    },
+    {
+      "id": "phy-050",
+      "prompt": "A magnet is pushed into a coil of wire connected to a sensitive meter. According to the principle of electromagnetic induction, a current is induced in the coil because",
+      "choices": [
+        "the magnetic field through the coil is changing, which induces an electromotive force (voltage) that drives a current",
+        "the coil's wire becomes magnetised permanently",
+        "the magnet loses its magnetism as it enters",
+        "current only flows if the magnet touches the wire directly"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Electromagnetic induction (Faraday's law) says that a changing magnetic field through a coil induces an electromotive force in that coil. Moving the magnet in or out changes the amount of magnetic field passing through the coil, and that change is what drives the induced current, no physical contact between magnet and wire is needed."
+    }
+  ]
+}

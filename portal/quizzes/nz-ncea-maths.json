@@ -1,0 +1,662 @@
+{
+  "id": "nz-ncea-maths",
+  "title": "Maths, NCEA Levels 1 to 3",
+  "emoji": "📐",
+  "suggested_age_min": 15,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Senior secondary maths spanning NCEA Levels 1 to 3: quadratics, functions and graphs, simultaneous equations, the sine and cosine rules, sequences and series, logarithms and exponentials, an introduction to differentiation and integration, and probability including conditional probability and the normal distribution.",
+  "questions": [
+    {
+      "id": "ma-001",
+      "prompt": "What are the solutions to x squared = 25?",
+      "choices": [
+        "x = 5 only",
+        "x = -5 only",
+        "x = 5 or x = -5",
+        "x = 0"
+      ],
+      "answer_index": 2,
+      "difficulty": 2,
+      "explanation": "Square rooting both sides undoes the square, but a square root can be positive or negative, since (-5) squared is also 25. So both x = 5 and x = -5 satisfy the equation."
+    },
+    {
+      "id": "ma-002",
+      "prompt": "Factorise: x squared + 5x + 6",
+      "choices": [
+        "(x + 2)(x + 3)",
+        "(x + 1)(x + 6)",
+        "(x - 2)(x - 3)",
+        "(x + 6)(x - 1)"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "You need two numbers that multiply to give 6 (the constant) and add to give 5 (the middle coefficient). Two and three do both: 2 x 3 = 6 and 2 + 3 = 5, so it factorises to (x + 2)(x + 3)."
+    },
+    {
+      "id": "ma-003",
+      "prompt": "Use the quadratic formula to solve 2x squared - 5x - 3 = 0",
+      "choices": [
+        "x = 3 or x = -0.5",
+        "x = 0.5 or x = -3",
+        "x = 6 or x = -1",
+        "x = 1.5 or x = 1"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Here a = 2, b = -5, c = -3, so the formula gives x = (5 plus or minus the square root of (25 + 24)) over 4 = (5 plus or minus 7) over 4. That gives x = 12/4 = 3 or x = -2/4 = -0.5. If you forget to divide by 2a properly you get the 6 or -1 option instead, so always divide the whole numerator by 2a."
+    },
+    {
+      "id": "ma-004",
+      "prompt": "The quadratic x squared - 4x + 5 = 0 has b squared - 4ac = -4. What does this tell you about the roots?",
+      "choices": [
+        "Two different real roots",
+        "One repeated real root",
+        "No real roots, the graph does not cross the x-axis",
+        "Two rational roots"
+      ],
+      "answer_index": 2,
+      "difficulty": 4,
+      "explanation": "The discriminant b squared - 4ac works out to 16 - 20 = -4, which is negative. A negative discriminant means you would need the square root of a negative number, which is not a real number, so the parabola never touches or crosses the x-axis."
+    },
+    {
+      "id": "ma-005",
+      "prompt": "A quadratic has roots 3 and -2. Which equation could it be?",
+      "choices": [
+        "x squared - x - 6 = 0",
+        "x squared + x - 6 = 0",
+        "x squared - x + 6 = 0",
+        "x squared - 5x + 6 = 0"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "For roots p and q, the quadratic is x squared minus (sum of roots) x plus (product of roots). The sum here is 3 + (-2) = 1 and the product is 3 x (-2) = -6, so the equation is x squared - x - 6 = 0. Getting the sum's sign wrong gives the second option, and getting the product's sign wrong gives the third."
+    },
+    {
+      "id": "ma-006",
+      "prompt": "If f(x) = 2x + 1, what is f(3)?",
+      "choices": [
+        "7",
+        "6",
+        "5",
+        "9"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Replace x with 3: 2 times 3 is 6, then add the 1 on the end, giving 7. The wrong answer of 6 comes from forgetting to add the 1 after multiplying."
+    },
+    {
+      "id": "ma-007",
+      "prompt": "Which type of graph does y = x squared produce?",
+      "choices": [
+        "A straight line",
+        "A parabola",
+        "A hyperbola",
+        "A circle"
+      ],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "Any equation where x is squared and there is no y squared term draws a parabola, a symmetric U-shape. A straight line comes from y = mx + c, with no squared term at all."
+    },
+    {
+      "id": "ma-008",
+      "prompt": "The graph of y = (x - 2) squared + 3 is the graph of y = x squared moved",
+      "choices": [
+        "2 right and 3 up",
+        "2 left and 3 up",
+        "2 right and 3 down",
+        "2 left and 3 down"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "In the form y = (x - h) squared + k, the graph shifts h units to the right and k units up. Here h = 2 and k = 3, so the shift is 2 right and 3 up. The minus sign inside the brackets is what flips the horizontal direction, which is why (x - 2) means right, not left."
+    },
+    {
+      "id": "ma-009",
+      "prompt": "A function is defined as f(x) = 1 over (x - 4). For which value of x is f(x) undefined?",
+      "choices": [
+        "4",
+        "-4",
+        "0",
+        "1"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "You can never divide by zero, so f(x) is undefined wherever the denominator equals zero. Setting x - 4 = 0 gives x = 4, so that is the one value that breaks the function."
+    },
+    {
+      "id": "ma-010",
+      "prompt": "Given f(x) = x squared - 4 and g(x) = x + 2, what is f(g(1))?",
+      "choices": [
+        "5",
+        "9",
+        "-3",
+        "1"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Work from the inside out. First find g(1) = 1 + 2 = 3, then substitute that into f: f(3) = 3 squared - 4 = 9 - 4 = 5. Forgetting the final minus 4 gives the 9 option, and doing f(1) first instead of g(1) gives the -3 option."
+    },
+    {
+      "id": "ma-011",
+      "prompt": "Solve simultaneously: x + y = 10 and x - y = 4. What is x?",
+      "choices": [
+        "7",
+        "3",
+        "6",
+        "4"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Adding the two equations makes the y terms cancel: (x + y) + (x - y) = 10 + 4, which gives 2x = 14, so x = 7. You can then check with y = 10 - 7 = 3, and 7 - 3 = 4 does match the second equation."
+    },
+    {
+      "id": "ma-012",
+      "prompt": "Solve simultaneously: 2x + y = 11 and x - y = 1. What is x?",
+      "choices": [
+        "4",
+        "3",
+        "5",
+        "7"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "From the second equation, x = y + 1. Substitute that into the first: 2(y + 1) + y = 11, which gives 3y + 2 = 11, so 3y = 9 and y = 3. Then x = y + 1 = 4."
+    },
+    {
+      "id": "ma-013",
+      "prompt": "Solve simultaneously: 3x + 2y = 16 and x = y + 2. What is y?",
+      "choices": [
+        "2",
+        "4",
+        "6",
+        "1"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Substitute x = y + 2 into the first equation: 3(y + 2) + 2y = 16, which expands to 5y + 6 = 16. Subtracting 6 gives 5y = 10, so y = 2, and then x = y + 2 = 4."
+    },
+    {
+      "id": "ma-014",
+      "prompt": "Solving y = 3x + 2 and y = 3x - 5 simultaneously gives",
+      "choices": [
+        "No solution, because the lines are parallel",
+        "One solution at x = 7",
+        "Infinite solutions",
+        "One solution at x = -1"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Setting the two equal gives 3x + 2 = 3x - 5. Subtracting 3x from both sides leaves 2 = -5, which is never true, so there is no value of x that works. Both lines have gradient 3, so they run in the same direction and never meet."
+    },
+    {
+      "id": "ma-015",
+      "prompt": "Two numbers have a sum of 20 and a difference of 6. What is the larger number?",
+      "choices": [
+        "13",
+        "7",
+        "14",
+        "10"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Let the numbers be x and y with x + y = 20 and x - y = 6. Adding the two equations cancels y: 2x = 26, so x = 13, and then y = 20 - 13 = 7. Check: 13 - 7 = 6, which matches."
+    },
+    {
+      "id": "ma-016",
+      "prompt": "In any triangle, the three interior angles add up to",
+      "choices": [
+        "90 degrees",
+        "180 degrees",
+        "270 degrees",
+        "360 degrees"
+      ],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "This is true for every triangle, not just right-angled ones: the three interior angles always sum to 180 degrees. It is the fact you use to find a missing angle once you know the other two."
+    },
+    {
+      "id": "ma-017",
+      "prompt": "The sine rule states that in any triangle, a over sin A = b over sin B =",
+      "choices": [
+        "c over sin C",
+        "c over cos C",
+        "sin C over c",
+        "c times sin C"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The sine rule keeps the same pattern for every side and its opposite angle: side over the sine of its opposite angle. So the third ratio must be c over sin C, matching side c with its opposite angle C."
+    },
+    {
+      "id": "ma-018",
+      "prompt": "A triangle has angle A = 30 degrees, angle C = 90 degrees, and side a (opposite A) = 8. Using the sine rule, what is side c (opposite C)?",
+      "choices": [
+        "16",
+        "8",
+        "4",
+        "24"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The sine rule gives c over sin C = a over sin A, so c = a times sin C over sin A. Sin 90 is 1 and sin 30 is 0.5, so c = 8 times 1 over 0.5 = 16."
+    },
+    {
+      "id": "ma-019",
+      "prompt": "A triangle has sides b = 7 and c = 8 with a 60 degree angle A between them. Using a squared = b squared + c squared - 2bc cos A, what is a squared?",
+      "choices": [
+        "57",
+        "169",
+        "85",
+        "113"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "b squared + c squared is 49 + 64 = 113. Cos 60 is exactly 0.5, so 2bc cos A is 2 x 7 x 8 x 0.5 = 56. Subtracting gives 113 - 56 = 57, so a squared = 57 (meaning a is a little under 7.6). Adding instead of subtracting gives the 169 option, and forgetting the factor of 2 gives the 85 option."
+    },
+    {
+      "id": "ma-020",
+      "prompt": "A triangle has a = 7, b = 10 and angle A = 30 degrees, with A opposite the shorter given side. How many different triangles fit these measurements?",
+      "choices": [
+        "Two, this is the ambiguous case",
+        "Exactly one",
+        "None, no such triangle exists",
+        "Infinitely many"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "This is the SSA setup where the ambiguous case can arise. The height from the triangle's third vertex works out to b times sin A = 10 x 0.5 = 5. Because 5 is less than a (7), and a is less than b (10), side a is long enough to reach the base in two different places, so two distinct triangles both fit the given measurements."
+    },
+    {
+      "id": "ma-021",
+      "prompt": "What is the next term in the arithmetic sequence 2, 5, 8, 11, ...?",
+      "choices": [
+        "14",
+        "13",
+        "15",
+        "12"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Each term is 3 more than the one before it (5 - 2 = 3, 8 - 5 = 3, and so on), so this is an arithmetic sequence with common difference 3. Adding 3 to 11 gives 14."
+    },
+    {
+      "id": "ma-022",
+      "prompt": "What is the common ratio of the geometric sequence 3, 6, 12, 24?",
+      "choices": [
+        "2",
+        "3",
+        "4",
+        "1.5"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "In a geometric sequence, you find the common ratio by dividing any term by the one before it: 6 divided by 3 is 2, and 12 divided by 6 is also 2, so the ratio stays constant at 2."
+    },
+    {
+      "id": "ma-023",
+      "prompt": "The nth term of an arithmetic sequence is given by Tn = 3n + 2. What is the 10th term?",
+      "choices": [
+        "32",
+        "30",
+        "35",
+        "29"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Substitute n = 10 into the formula: T10 = 3 x 10 + 2 = 30 + 2 = 32. The wrong answer of 30 comes from forgetting to add the 2 at the end."
+    },
+    {
+      "id": "ma-024",
+      "prompt": "Find the sum of the first 5 terms of the geometric series 2, 6, 18, 54, ... (common ratio 3)",
+      "choices": [
+        "242",
+        "240",
+        "244",
+        "121"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Use Sn = a(r to the power n minus 1) over (r minus 1), with a = 2, r = 3, n = 5: Sn = 2 x (243 - 1) over (3 - 1) = 2 x 242 over 2 = 242. The powers of 3 you need are 3, 9, 27, 81, 243, so r to the 5th power is 243."
+    },
+    {
+      "id": "ma-025",
+      "prompt": "An arithmetic series has first term 3 and common difference 2. The sum of the first n terms is 120. What is n?",
+      "choices": [
+        "10",
+        "12",
+        "8",
+        "15"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Sn = n over 2 times (2a + (n - 1)d) becomes n over 2 times (6 + 2(n - 1)) = n over 2 times (2n + 4) = n(n + 2). Setting n(n + 2) = 120 gives n squared + 2n - 120 = 0, which factorises to (n - 10)(n + 12) = 0. Since n must be a positive whole number, n = 10."
+    },
+    {
+      "id": "ma-026",
+      "prompt": "What is log base 10 of 100?",
+      "choices": [
+        "2",
+        "10",
+        "100",
+        "1"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A logarithm asks what power you need. Log base 10 of 100 asks: 10 to what power gives 100? Since 10 squared is 100, the answer is 2."
+    },
+    {
+      "id": "ma-027",
+      "prompt": "Simplify: log(a) + log(b) =",
+      "choices": [
+        "log(ab)",
+        "log(a + b)",
+        "log(a) times log(b)",
+        "log(a/b)"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The log addition law says that adding two logs is the same as taking the log of the product of the two numbers, so log(a) + log(b) = log(ab). It is easy to mix this up with log(a + b), but that is not a valid simplification."
+    },
+    {
+      "id": "ma-028",
+      "prompt": "Solve for x: 2 to the power x = 32",
+      "choices": [
+        "5",
+        "4",
+        "6",
+        "16"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Write 32 as a power of 2: 2, 4, 8, 16, 32 are 2 to the powers 1, 2, 3, 4, 5. Since 2 to the power 5 is 32, x = 5."
+    },
+    {
+      "id": "ma-029",
+      "prompt": "Solve for x: 3 to the power (x + 1) = 27",
+      "choices": [
+        "2",
+        "3",
+        "8",
+        "9"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Write 27 as a power of 3: 27 = 3 cubed, so 3 to the power (x + 1) = 3 to the power 3. Since the bases match, the exponents must be equal: x + 1 = 3, so x = 2."
+    },
+    {
+      "id": "ma-030",
+      "prompt": "Simplify: log(x squared) - log(x), for x > 0",
+      "choices": [
+        "log(x)",
+        "log(x) squared",
+        "log(2x)",
+        "1"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "By the power law, log(x squared) = 2 log(x). Subtracting log(x) once leaves 2 log(x) - log(x) = log(x). Alternatively, using the subtraction law directly, log(x squared) - log(x) = log(x squared over x) = log(x)."
+    },
+    {
+      "id": "ma-031",
+      "prompt": "What does the derivative of a function represent?",
+      "choices": [
+        "The gradient of the function at a point",
+        "The area under the curve",
+        "The y-intercept",
+        "The maximum value of the function"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Differentiation gives you a new function that tells you the gradient, or steepness, of the original curve at any x-value you put in. The area under a curve is what integration finds, not differentiation."
+    },
+    {
+      "id": "ma-032",
+      "prompt": "Differentiate: y = x cubed",
+      "choices": [
+        "3x squared",
+        "x squared",
+        "3x cubed",
+        "x to the 4th over 4"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The power rule says: bring the power down to multiply, then reduce the power by one. For x cubed, that gives 3 x x to the power (3 - 1), which is 3x squared."
+    },
+    {
+      "id": "ma-033",
+      "prompt": "Differentiate: y = 4x squared + 3x - 5",
+      "choices": [
+        "8x + 3",
+        "8x - 5",
+        "4x + 3",
+        "8x + 3 - 5"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Differentiate each term on its own. 4x squared becomes 2 x 4x, which is 8x. 3x becomes just 3, since the power rule brings down the 1 and reduces the power to zero. A constant like -5 has zero gradient, so it disappears entirely, leaving 8x + 3."
+    },
+    {
+      "id": "ma-034",
+      "prompt": "Find the gradient of the curve y = x squared - 6x + 5 at x = 4",
+      "choices": [
+        "2",
+        "4",
+        "-2",
+        "14"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "First differentiate: dy/dx = 2x - 6. Then substitute x = 4 into that derivative, not into the original equation: 2 x 4 - 6 = 8 - 6 = 2. The 14 option comes from substituting into the original y equation instead, which finds the height of the curve, not its gradient."
+    },
+    {
+      "id": "ma-035",
+      "prompt": "A curve has equation y = x cubed - 3x squared. At what x-value(s) is the gradient zero?",
+      "choices": [
+        "x = 0 or x = 2",
+        "x = 0 or x = 3",
+        "x = 2 only",
+        "x = 0 only"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Differentiate first: dy/dx = 3x squared - 6x. Set this equal to zero and factorise: 3x(x - 2) = 0, so either 3x = 0, giving x = 0, or x - 2 = 0, giving x = 2. Both are turning points where the gradient is momentarily flat."
+    },
+    {
+      "id": "ma-036",
+      "prompt": "Integration is the reverse process of",
+      "choices": [
+        "Differentiation",
+        "Multiplication",
+        "Simplifying",
+        "Factorising"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Integrating a function undoes differentiation: if differentiating f gives you g, then integrating g brings you back to f (plus a constant, since any constant differentiates to zero)."
+    },
+    {
+      "id": "ma-037",
+      "prompt": "Integrate: the integral of x squared dx",
+      "choices": [
+        "x cubed over 3, plus c",
+        "x cubed, plus c",
+        "3x, plus c",
+        "2x, plus c"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The power rule for integration does the reverse of differentiation: raise the power by one, then divide by the new power. For x squared, that gives x to the power 3, divided by 3, plus the constant of integration c."
+    },
+    {
+      "id": "ma-038",
+      "prompt": "Integrate: the integral of (2x + 3) dx",
+      "choices": [
+        "x squared + 3x + c",
+        "2x squared + 3x + c",
+        "x squared + 3 + c",
+        "x squared + 3x"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Integrate each term separately. 2x becomes x squared (raise the power to 2, divide by 2, and the 2s cancel). The constant 3 becomes 3x (raise its power from 0 to 1, divide by 1). Do not forget the plus c on the end, since any constant could have been there before differentiating."
+    },
+    {
+      "id": "ma-039",
+      "prompt": "Find the definite integral of 3x squared dx from 0 to 2",
+      "choices": [
+        "8",
+        "6",
+        "4",
+        "12"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Integrating 3x squared gives x cubed. Evaluate this at the top limit and subtract its value at the bottom limit: 2 cubed - 0 cubed = 8 - 0 = 8."
+    },
+    {
+      "id": "ma-040",
+      "prompt": "A particle's velocity is v(t) = 2t + 1 (metres per second). What distance does it travel between t = 0 and t = 3 seconds?",
+      "choices": [
+        "12",
+        "10",
+        "9",
+        "15"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Distance travelled is the integral of velocity. Integrating 2t + 1 gives t squared + t. Evaluate at t = 3: 9 + 3 = 12, and at t = 0 this is 0, so the distance travelled is 12 - 0 = 12 metres."
+    },
+    {
+      "id": "ma-041",
+      "prompt": "A fair six-sided die is rolled. What is the probability of rolling a 4?",
+      "choices": [
+        "1/6",
+        "1/4",
+        "4/6",
+        "1/2"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "There are six equally likely outcomes on a fair die, and only one of them is a 4, so the probability is 1 out of 6."
+    },
+    {
+      "id": "ma-042",
+      "prompt": "Two fair coins are tossed. What is the probability of getting two heads?",
+      "choices": [
+        "1/4",
+        "1/2",
+        "1/3",
+        "3/4"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Listing every equally likely outcome gives HH, HT, TH, TT, so there are four outcomes in total. Only one of them, HH, is two heads, so the probability is 1/4."
+    },
+    {
+      "id": "ma-043",
+      "prompt": "A bag has 3 red and 5 blue marbles. One marble is drawn at random. What is the probability it is red?",
+      "choices": [
+        "3/8",
+        "5/8",
+        "3/5",
+        "1/3"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "There are 3 + 5 = 8 marbles in total, and 3 of them are red, so the probability of drawing red is 3 out of 8."
+    },
+    {
+      "id": "ma-044",
+      "prompt": "In a class, 60% of students play sport, and 40% of those who play sport also play music. What is the probability a randomly chosen student plays both sport and music?",
+      "choices": [
+        "0.24",
+        "0.4",
+        "0.6",
+        "0.16"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "For two events happening together, multiply the probability of the first by the conditional probability of the second given the first: P(sport) x P(music given sport) = 0.6 x 0.4 = 0.24."
+    },
+    {
+      "id": "ma-045",
+      "prompt": "A test for a rare condition correctly flags 9 out of 10 people who genuinely have it, and wrongly flags 99 out of 990 people who do not have it. Of everyone who tests positive, what fraction actually has the condition?",
+      "choices": [
+        "About 1 in 12",
+        "About 9 in 10",
+        "About 1 in 2",
+        "About 1 in 100"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Total positive results are the true positives plus the false positives: 9 + 99 = 108. Only 9 of those 108 positive results are genuine, so the chance a positive result is real is 9 out of 108, which simplifies to about 1 in 12. This is why a rare condition needs a very accurate test before a positive result can be trusted."
+    },
+    {
+      "id": "ma-046",
+      "prompt": "The normal distribution curve is",
+      "choices": [
+        "Symmetric and bell-shaped",
+        "Skewed to the right",
+        "Flat and uniform",
+        "Made of straight lines"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The normal distribution is the classic bell curve: it is perfectly symmetric about the mean, with values tapering off evenly on both sides."
+    },
+    {
+      "id": "ma-047",
+      "prompt": "In a normal distribution, the mean, median and mode are",
+      "choices": [
+        "All equal",
+        "Always different",
+        "The mean is always largest",
+        "Unrelated to each other"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Because the normal distribution is perfectly symmetric, its centre of balance (the mean), its middle value (the median) and its most common value (the mode) all fall at exactly the same point."
+    },
+    {
+      "id": "ma-048",
+      "prompt": "Approximately what percentage of data in a normal distribution falls within one standard deviation of the mean?",
+      "choices": [
+        "68%",
+        "95%",
+        "99.7%",
+        "50%"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "This is the first part of the empirical rule: about 68% of values sit within one standard deviation either side of the mean, about 95% within two standard deviations, and about 99.7% within three."
+    },
+    {
+      "id": "ma-049",
+      "prompt": "A set of test scores is normally distributed with mean 60 and standard deviation 10. Approximately what percentage of students scored between 50 and 70?",
+      "choices": [
+        "68%",
+        "95%",
+        "34%",
+        "50%"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "50 is one standard deviation below the mean (60 - 10) and 70 is one standard deviation above it (60 + 10), so this range covers the mean plus or minus one standard deviation. The empirical rule says about 68% of scores fall in that band."
+    },
+    {
+      "id": "ma-050",
+      "prompt": "Test scores are normally distributed with mean 100 and standard deviation 15. Using the rule that about 95% of scores fall within two standard deviations of the mean, between which two scores do about 95% of students fall?",
+      "choices": [
+        "70 and 130",
+        "85 and 115",
+        "55 and 145",
+        "100 and 130"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Two standard deviations is 2 x 15 = 30. Subtracting from the mean gives the lower bound, 100 - 30 = 70, and adding gives the upper bound, 100 + 30 = 130, so about 95% of scores fall between 70 and 130."
+    }
+  ]
+}

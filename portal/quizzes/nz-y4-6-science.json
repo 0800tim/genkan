@@ -1,0 +1,542 @@
+{
+  "id": "nz-y4-6-science",
+  "title": "Science, Years 4 to 6",
+  "emoji": "🔬",
+  "suggested_age_min": 8,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Written for the New Zealand Curriculum, Years 4 to 6 (Levels 2 to 3), ages 8 to 11. Covers matter, forces, magnets, electricity, light, sound, the solar system, living things, and New Zealand's volcanoes and earthquakes. Checked 2026-08-30.",
+  "questions": [
+    {
+      "id": "nzs-001",
+      "prompt": "What are the three main states of matter?",
+      "choices": ["Solid, liquid and gas", "Solid, liquid and light", "Hot, cold and warm", "Rock, water and air"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Everything around us is usually a solid, a liquid or a gas."
+    },
+    {
+      "id": "nzs-002",
+      "prompt": "Which of these is a solid?",
+      "choices": ["Ice", "Steam", "Juice", "Air"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Ice is water in its solid form, which is why it holds its shape."
+    },
+    {
+      "id": "nzs-003",
+      "prompt": "What pulls objects down towards the Earth?",
+      "choices": ["Gravity", "Magnetism", "Friction", "Electricity"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Gravity is the invisible pull that pulls everything towards the ground."
+    },
+    {
+      "id": "nzs-004",
+      "prompt": "Which of these will a magnet stick to?",
+      "choices": ["An iron nail", "A wooden spoon", "A plastic cup", "A rubber ball"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Magnets pull on iron and a few other metals, but not on wood, plastic or rubber."
+    },
+    {
+      "id": "nzs-005",
+      "prompt": "What do we call the dark shape made when an object blocks light?",
+      "choices": ["A shadow", "A reflection", "A rainbow", "An echo"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "When something blocks light, it creates a dark shape called a shadow."
+    },
+    {
+      "id": "nzs-006",
+      "prompt": "What causes day and night?",
+      "choices": [
+        "The Earth spinning on its axis",
+        "The sun moving around the Earth",
+        "The moon blocking the sun",
+        "The seasons changing"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Earth spins all the way round once a day, so different sides face the sun."
+    },
+    {
+      "id": "nzs-007",
+      "prompt": "Which part of a plant takes in water from the soil?",
+      "choices": ["The roots", "The leaves", "The petals", "The stem"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Roots grow down into the soil and soak up water for the whole plant."
+    },
+    {
+      "id": "nzs-008",
+      "prompt": "Roughly how many bones does an adult human skeleton have?",
+      "choices": ["About 206", "About 50", "About 500", "About 1,000"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "An adult skeleton has about 206 bones, though babies are born with more that fuse together as they grow."
+    },
+    {
+      "id": "nzs-009",
+      "prompt": "What is the name for a shaking of the ground caused by movement deep underground?",
+      "choices": ["An earthquake", "A volcano", "A landslide", "A flood"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "An earthquake happens when huge slabs of rock deep underground suddenly move."
+    },
+    {
+      "id": "nzs-010",
+      "prompt": "Which of these is part of a simple electric circuit?",
+      "choices": ["A battery", "A magnet", "A shadow", "A cloud"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "A battery provides the push of electricity that makes a simple circuit work."
+    },
+    {
+      "id": "nzs-011",
+      "prompt": "What is it called when a liquid turns into a gas?",
+      "choices": ["Evaporation", "Condensation", "Freezing", "Melting"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Evaporation happens when heat turns a liquid, like water, into a gas."
+    },
+    {
+      "id": "nzs-012",
+      "prompt": "What is it called when a gas cools and turns back into a liquid?",
+      "choices": ["Condensation", "Evaporation", "Melting", "Boiling"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Condensation happens when a gas cools down and turns back into a liquid, such as dew forming on grass."
+    },
+    {
+      "id": "nzs-013",
+      "prompt": "In the water cycle, what is rain, hail and snow falling from clouds called?",
+      "choices": ["Precipitation", "Evaporation", "Collection", "Condensation"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Precipitation is the name for water falling from clouds as rain, hail or snow."
+    },
+    {
+      "id": "nzs-014",
+      "prompt": "What force slows down a bike when the brakes are pressed?",
+      "choices": ["Friction", "Gravity", "Magnetism", "Momentum"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Friction is a force that acts against movement, and brake pads use it to slow the wheel."
+    },
+    {
+      "id": "nzs-015",
+      "prompt": "What are the two ends of a magnet called?",
+      "choices": ["Poles", "Points", "Ends", "Tips"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The two ends of a magnet are called poles, usually marked north and south."
+    },
+    {
+      "id": "nzs-016",
+      "prompt": "In a simple circuit, what happens if there is a gap, such as an open switch?",
+      "choices": [
+        "The electricity cannot flow",
+        "The electricity flows faster",
+        "The battery charges up",
+        "Nothing changes"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Electricity needs a complete loop to flow, so any gap stops the circuit working."
+    },
+    {
+      "id": "nzs-017",
+      "prompt": "What mostly decides the shape of a shadow?",
+      "choices": [
+        "The shape of the object blocking the light",
+        "The colour of the object",
+        "The time of year",
+        "The colour of the light"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A shadow is a dark outline in the shape of whatever is blocking the light."
+    },
+    {
+      "id": "nzs-018",
+      "prompt": "Sound travels to our ears as what?",
+      "choices": [
+        "Vibrations through the air",
+        "Light waves",
+        "A pulling force",
+        "A kind of gas"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Sound is made of vibrations that travel through air, or other materials, to reach our ears."
+    },
+    {
+      "id": "nzs-019",
+      "prompt": "Which planet is closest to the sun?",
+      "choices": ["Mercury", "Venus", "Earth", "Mars"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Mercury is the smallest planet and the one closest to the sun."
+    },
+    {
+      "id": "nzs-020",
+      "prompt": "Why do we have seasons on Earth?",
+      "choices": [
+        "Earth is tilted as it orbits the sun",
+        "The sun gets bigger and smaller",
+        "The Earth speeds up and slows down",
+        "Clouds block the sun in winter"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Earth's tilt means different parts get more or less direct sunlight as it travels around the sun each year."
+    },
+    {
+      "id": "nzs-021",
+      "prompt": "What do we call a chain that shows what eats what, usually starting with a plant?",
+      "choices": ["A food chain", "A life cycle", "A water cycle", "A food web only"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A food chain shows the order in which living things get their energy, usually starting with a plant."
+    },
+    {
+      "id": "nzs-022",
+      "prompt": "Which is the correct order for a frog's life cycle?",
+      "choices": [
+        "Egg, tadpole, froglet, adult frog",
+        "Tadpole, egg, frog, froglet",
+        "Egg, frog, tadpole, froglet",
+        "Froglet, egg, tadpole, frog"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A frog starts as an egg, hatches into a tadpole, grows legs as a froglet, then becomes an adult frog."
+    },
+    {
+      "id": "nzs-023",
+      "prompt": "Which organ pumps blood around the body?",
+      "choices": ["The heart", "The lungs", "The stomach", "The liver"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The heart is a muscle that pumps blood carrying oxygen and nutrients around the body."
+    },
+    {
+      "id": "nzs-024",
+      "prompt": "What are the three main steps of the water cycle, in order, starting with the sun heating water?",
+      "choices": [
+        "Evaporation, condensation, precipitation",
+        "Condensation, evaporation, precipitation",
+        "Precipitation, evaporation, condensation",
+        "Evaporation, precipitation, condensation"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Heat evaporates water into vapour, the vapour condenses into clouds, and then it falls again as precipitation."
+    },
+    {
+      "id": "nzs-025",
+      "prompt": "Which state of matter has a fixed shape and a fixed volume?",
+      "choices": ["Solid", "Liquid", "Gas", "All three"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A solid keeps both its shape and its volume unless something is done to it."
+    },
+    {
+      "id": "nzs-026",
+      "prompt": "A ball rolling across a flat floor eventually stops. What force causes this?",
+      "choices": ["Friction", "Gravity pulling sideways", "Magnetism", "Air pressure only"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Friction between the ball and the floor slowly takes away its energy of movement until it stops."
+    },
+    {
+      "id": "nzs-027",
+      "prompt": "Two magnets are pushed together and they push apart instead of joining. What does this tell you?",
+      "choices": [
+        "The same poles are facing each other",
+        "Opposite poles are facing each other",
+        "One magnet is broken",
+        "The magnets are too far apart"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Like poles, north facing north or south facing south, push each other away."
+    },
+    {
+      "id": "nzs-028",
+      "prompt": "What does a switch do in an electric circuit?",
+      "choices": [
+        "Opens or closes the loop to stop or start the flow",
+        "Makes the battery stronger",
+        "Changes electricity into light directly",
+        "Stores extra electricity"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A switch simply breaks or completes the circuit, so flicking it stops or starts the flow of electricity."
+    },
+    {
+      "id": "nzs-029",
+      "prompt": "Why does a shadow get longer in the late afternoon?",
+      "choices": [
+        "The sun is lower in the sky",
+        "Objects grow in the afternoon",
+        "The air gets darker",
+        "Shadows are always the same length"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "When the sun sits low near the horizon, it casts longer shadows than when it is high overhead."
+    },
+    {
+      "id": "nzs-030",
+      "prompt": "Why can sound not travel through empty space?",
+      "choices": [
+        "Sound needs a material, like air, to travel through",
+        "Space is too cold for sound",
+        "Sound only travels through water",
+        "There is too much light in space"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Sound is a vibration that needs particles to pass through, and space is a vacuum with hardly any particles."
+    },
+    {
+      "id": "nzs-031",
+      "prompt": "Put these in order from closest to the sun: Earth, Venus, Mars, Mercury.",
+      "choices": [
+        "Mercury, Venus, Earth, Mars",
+        "Venus, Mercury, Mars, Earth",
+        "Earth, Venus, Mercury, Mars",
+        "Mercury, Earth, Venus, Mars"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Going outward from the sun it runs Mercury, Venus, Earth, then Mars."
+    },
+    {
+      "id": "nzs-032",
+      "prompt": "What is photosynthesis?",
+      "choices": [
+        "The way plants use sunlight, water and carbon dioxide to make their own food",
+        "The way plants breathe out water",
+        "The way plants take in food through their roots only",
+        "The way plants make seeds"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Photosynthesis happens in the leaves, where sunlight powers a reaction that turns water and carbon dioxide into food, releasing oxygen."
+    },
+    {
+      "id": "nzs-033",
+      "prompt": "Which part of a plant is most likely to attract insects for pollination?",
+      "choices": ["The petals", "The roots", "The stem", "The bark"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Bright, often scented petals help attract insects that carry pollen between flowers."
+    },
+    {
+      "id": "nzs-034",
+      "prompt": "What is the name for the huge slabs of rock that make up Earth's surface, which slowly move and can cause earthquakes?",
+      "choices": ["Tectonic plates", "Magma layers", "Core plates", "Crust waves"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Earth's surface is broken into huge tectonic plates that slowly shift, and their movement can cause earthquakes."
+    },
+    {
+      "id": "nzs-035",
+      "prompt": "New Zealand often has earthquakes and volcanoes because it sits where...?",
+      "choices": [
+        "Two of Earth's tectonic plates meet",
+        "It is close to the equator",
+        "It has a very cold climate",
+        "It is surrounded by deep ocean trenches only"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "New Zealand lies on the boundary between the Australian and Pacific plates, which is why it has so many earthquakes and volcanoes."
+    },
+    {
+      "id": "nzs-036",
+      "prompt": "Ice, water and steam are all the same substance in different states. What happens to the water particles as ice melts into water?",
+      "choices": [
+        "They gain energy and move around more freely",
+        "They stop moving completely",
+        "They turn into a different substance",
+        "They lose mass"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Heating a solid gives its particles more energy, so they break free of their fixed positions and can flow as a liquid."
+    },
+    {
+      "id": "nzs-037",
+      "prompt": "A skateboarder glides further on a smooth concrete path than on rough grass. Why?",
+      "choices": [
+        "There is less friction on the smooth surface",
+        "Gravity is weaker on concrete",
+        "The grass pushes the skateboard back",
+        "Concrete is magnetic"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Rough surfaces create more friction, which slows things down faster than a smooth surface does."
+    },
+    {
+      "id": "nzs-038",
+      "prompt": "Two circuits each have one battery and one bulb. One has a complete loop of wire and the other has a break in the wire. What happens in the broken circuit?",
+      "choices": [
+        "The bulb does not light because the current cannot complete the loop",
+        "The bulb glows brighter",
+        "The battery runs out immediately",
+        "Nothing is different"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Electric current has to travel in a complete loop, so any break stops it flowing anywhere in the circuit."
+    },
+    {
+      "id": "nzs-039",
+      "prompt": "Why does the moon seem to change shape through the month, from a thin crescent to a full circle and back?",
+      "choices": [
+        "We see different amounts of its sunlit side as it orbits Earth",
+        "The moon actually changes size",
+        "Clouds cover part of the moon",
+        "The moon spins very fast"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The moon does not make its own light. As it orbits Earth, we see more or less of the half that the sun is lighting up."
+    },
+    {
+      "id": "nzs-040",
+      "prompt": "A plant kept in a dark cupboard for two weeks turns pale and grows weakly. Which process has been stopped?",
+      "choices": [
+        "Photosynthesis, because it needs light",
+        "Its roots stopped taking up water",
+        "It stopped needing carbon dioxide",
+        "Its life cycle finished"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Without light, a plant cannot photosynthesise properly, so it cannot make the food it needs to stay healthy."
+    },
+    {
+      "id": "nzs-041",
+      "prompt": "In a food chain of grass, rabbit and fox, which living thing gets its energy directly from the sun?",
+      "choices": ["The grass", "The rabbit", "The fox", "None of them"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Only the grass makes its own food from sunlight. The rabbit and fox both get their energy by eating something else."
+    },
+    {
+      "id": "nzs-042",
+      "prompt": "What is molten rock called once it flows out of a volcano onto the surface?",
+      "choices": ["Lava", "Ash", "Pumice", "Granite"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Magma is the molten rock underground. Once it erupts and reaches the surface, we call it lava."
+    },
+    {
+      "id": "nzs-043",
+      "prompt": "A hot air balloon rises into the sky mainly because...?",
+      "choices": [
+        "Hot air is less dense than the cooler air around it",
+        "The balloon is magnetic",
+        "There is no gravity that high up",
+        "The wind pushes it upward only"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Heating the air inside the balloon makes it lighter than the air outside, so the balloon floats upward."
+    },
+    {
+      "id": "nzs-044",
+      "prompt": "What is the name for the point on Earth's surface directly above where an earthquake starts underground?",
+      "choices": ["The epicentre", "The fault line", "The core", "The ridge"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The epicentre is the place on the surface right above where the earthquake actually begins underground."
+    },
+    {
+      "id": "nzs-045",
+      "prompt": "Why does New Zealand have active volcanoes in places like the central North Island?",
+      "choices": [
+        "It sits above a boundary where one tectonic plate is sliding under another",
+        "It is right on the equator",
+        "The whole country is one giant volcano",
+        "It never had any plate movement"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Where the Pacific Plate slides under the Australian Plate, melted rock rises, and it can erupt through volcanoes."
+    },
+    {
+      "id": "nzs-046",
+      "prompt": "Water expands when it freezes, unlike most substances, which shrink. Why does this matter for a sealed glass bottle left in a freezer?",
+      "choices": [
+        "The expanding ice can crack or burst the bottle",
+        "The bottle will float away",
+        "The glass will melt",
+        "Nothing happens differently"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "As water turns to ice it takes up more space than it did as a liquid, and that extra push can crack a sealed container."
+    },
+    {
+      "id": "nzs-047",
+      "prompt": "A spacecraft in orbit around Earth is constantly falling, yet it never hits the ground. Why?",
+      "choices": [
+        "It is moving forward fast enough that it keeps missing the Earth as it falls",
+        "There is no gravity in orbit",
+        "Its engines are constantly firing to hold it up",
+        "It is too light for gravity to pull it"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Gravity is still pulling the spacecraft down, but its huge sideways speed means the curve of its fall matches the curve of the Earth, so it keeps circling instead of landing."
+    },
+    {
+      "id": "nzs-048",
+      "prompt": "Why do we only ever see one side of the moon from Earth?",
+      "choices": [
+        "The moon takes the same time to spin once as it does to orbit Earth once",
+        "The moon does not spin at all",
+        "The far side of the moon has no sunlight ever",
+        "Earth blocks our view of the other side"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The moon's spin and its orbit are matched, which scientists call tidal locking, so the same face always points towards us."
+    },
+    {
+      "id": "nzs-049",
+      "prompt": "Two identical circuits each have one battery. One has a single bulb, the other has two bulbs connected one after another in the same loop. Compared with the single bulb, how bright is each bulb in the two-bulb circuit?",
+      "choices": [
+        "Dimmer, because the same current is shared between two bulbs",
+        "Brighter, because there are two bulbs working together",
+        "Exactly the same brightness",
+        "The bulbs will not light at all"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Adding a second bulb in the same loop shares the same push from the battery across both bulbs, so each one glows more dimly than a single bulb alone."
+    },
+    {
+      "id": "nzs-050",
+      "prompt": "Why do earthquakes happen far more often in New Zealand than in a country sitting in the middle of a tectonic plate?",
+      "choices": [
+        "New Zealand sits on the edge of two plates that are grinding past and under each other",
+        "New Zealand has more rain",
+        "New Zealand is closer to the sun",
+        "There is no rock underground in the middle of a plate"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The middle of a tectonic plate is fairly stable, but New Zealand sits right on the boundary between the Pacific and Australian plates, where the grinding movement causes frequent earthquakes."
+    }
+  ]
+}

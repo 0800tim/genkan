@@ -17,6 +17,7 @@
         "Samoa"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "New Zealand's flag has the Union Jack and four red stars of the Southern Cross."
     },
     {
@@ -29,6 +30,7 @@
         "United Kingdom"
       ],
       "answer_index": 0,
+      "difficulty": 1,
       "explanation": "Australia's flag has six white stars, including the big Commonwealth Star."
     },
     {
@@ -41,6 +43,7 @@
         "Samoa"
       ],
       "answer_index": 3,
+      "difficulty": 2,
       "explanation": "Samoa's flag is red with a blue corner holding the Southern Cross."
     },
     {
@@ -53,6 +56,7 @@
         "Switzerland"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "Tonga's flag is red with a red cross in the white corner."
     },
     {
@@ -65,6 +69,7 @@
         "Samoa"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "Fiji's flag is light blue with its shield from the coat of arms."
     },
     {
@@ -77,6 +82,7 @@
         "New Zealand"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "The Cook Islands flag has a ring of 15 stars, one for each island."
     },
     {
@@ -89,6 +95,7 @@
         "Papua New Guinea"
       ],
       "answer_index": 3,
+      "difficulty": 3,
       "explanation": "Papua New Guinea's flag shows a bird of paradise and the Southern Cross."
     },
     {
@@ -101,6 +108,7 @@
         "Solomon Islands"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "Vanuatu's flag has a yellow Y shape and a boar's tusk."
     },
     {
@@ -113,6 +121,7 @@
         "China"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "Japan's flag is a red sun on a white background."
     },
     {
@@ -125,6 +134,7 @@
         "Japan"
       ],
       "answer_index": 0,
+      "difficulty": 1,
       "explanation": "China's flag is red with five yellow stars."
     },
     {
@@ -137,6 +147,7 @@
         "Sri Lanka"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "India's flag has saffron, white and green bands with a blue wheel."
     },
     {
@@ -149,6 +160,7 @@
         "Japan"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "South Korea's flag has a red and blue circle with black bars around it."
     },
     {
@@ -161,6 +173,7 @@
         "Netherlands"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Thailand's flag has red, white and blue stripes with a wide blue middle."
     },
     {
@@ -173,6 +186,7 @@
         "China"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "Vietnam's flag is red with one big yellow star."
     },
     {
@@ -185,6 +199,7 @@
         "Poland"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Indonesia's flag is red over white, very like Monaco's."
     },
     {
@@ -197,6 +212,7 @@
         "Thailand"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "The Philippine flag has a golden sun inside a white triangle."
     },
     {
@@ -209,6 +225,7 @@
         "Malaysia"
       ],
       "answer_index": 3,
+      "difficulty": 4,
       "explanation": "Malaysia's flag has red and white stripes with a crescent and star."
     },
     {
@@ -221,6 +238,7 @@
         "Singapore"
       ],
       "answer_index": 3,
+      "difficulty": 4,
       "explanation": "Singapore's flag is red and white with a crescent and five small stars."
     },
     {
@@ -233,6 +251,7 @@
         "Nepal"
       ],
       "answer_index": 3,
+      "difficulty": 3,
       "explanation": "Nepal has the world's only non-rectangular national flag, made of two triangles."
     },
     {
@@ -245,6 +264,7 @@
         "Turkey"
       ],
       "answer_index": 3,
+      "difficulty": 2,
       "explanation": "Turkey's flag is red with a white crescent moon and star."
     },
     {
@@ -257,6 +277,7 @@
         "United Arab Emirates"
       ],
       "answer_index": 2,
+      "difficulty": 5,
       "explanation": "Saudi Arabia's flag is green with white Arabic writing and a sword."
     },
     {
@@ -269,6 +290,7 @@
         "Kuwait"
       ],
       "answer_index": 0,
+      "difficulty": 5,
       "explanation": "The UAE flag has green, white and black stripes with a red bar at the pole."
     },
     {
@@ -281,6 +303,7 @@
         "Turkey"
       ],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "Pakistan's flag is dark green with a white crescent, star and stripe."
     },
     {
@@ -293,6 +316,7 @@
         "New Zealand"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "The Union Jack combines the crosses of England, Scotland and Ireland."
     },
     {
@@ -305,6 +329,7 @@
         "Russia"
       ],
       "answer_index": 0,
+      "difficulty": 1,
       "explanation": "France's flag is blue, white and red in vertical stripes."
     },
     {
@@ -317,6 +342,7 @@
         "Austria"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "Germany's flag is black, red and gold in horizontal bands."
     },
     {
@@ -329,6 +355,7 @@
         "Ireland"
       ],
       "answer_index": 0,
+      "difficulty": 1,
       "explanation": "Italy's flag is green, white and red in vertical stripes."
     },
     {
@@ -341,6 +368,7 @@
         "Portugal"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "Spain's flag is red and yellow with the coat of arms near the pole."
     },
     {
@@ -353,6 +381,7 @@
         "Brazil"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "Portugal's flag is green and red with a globe and shield."
     },
     {
@@ -365,6 +394,7 @@
         "Finland"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "Greece's flag has blue and white stripes with a white cross in the corner."
     },
     {
@@ -377,6 +407,7 @@
         "Netherlands"
       ],
       "answer_index": 3,
+      "difficulty": 3,
       "explanation": "The Dutch flag is red, white and blue in horizontal bands."
     },
     {
@@ -389,6 +420,7 @@
         "Germany"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Belgium's flag is black, yellow and red in vertical stripes."
     },
     {
@@ -401,6 +433,7 @@
         "Tonga"
       ],
       "answer_index": 0,
+      "difficulty": 1,
       "explanation": "Switzerland's flag is a square red flag with a white cross."
     },
     {
@@ -413,6 +446,7 @@
         "Denmark"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "Sweden's flag is blue with a yellow Nordic cross."
     },
     {
@@ -425,6 +459,7 @@
         "Norway"
       ],
       "answer_index": 3,
+      "difficulty": 3,
       "explanation": "Norway's flag is red with a blue cross outlined in white."
     },
     {
@@ -437,6 +472,7 @@
         "Norway"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "Denmark's flag, the Dannebrog, is red with a plain white cross."
     },
     {
@@ -449,6 +485,7 @@
         "Norway"
       ],
       "answer_index": 1,
+      "difficulty": 4,
       "explanation": "Finland's flag is white with a blue Nordic cross."
     },
     {
@@ -461,6 +498,7 @@
         "Finland"
       ],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "Iceland's flag is blue with a red cross outlined in white."
     },
     {
@@ -473,6 +511,7 @@
         "Ireland"
       ],
       "answer_index": 3,
+      "difficulty": 2,
       "explanation": "Ireland's flag is green, white and orange in vertical stripes."
     },
     {
@@ -485,6 +524,7 @@
         "Indonesia"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Poland's flag is white over red."
     },
     {
@@ -497,6 +537,7 @@
         "Sweden"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "Ukraine's flag is blue sky over a golden field of wheat."
     },
     {
@@ -509,6 +550,7 @@
         "Austria"
       ],
       "answer_index": 3,
+      "difficulty": 3,
       "explanation": "Austria's flag is red, white, red in horizontal bands."
     },
     {
@@ -521,6 +563,7 @@
         "United Kingdom"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "The US flag has 50 stars and 13 stripes."
     },
     {
@@ -533,6 +576,7 @@
         "Austria"
       ],
       "answer_index": 0,
+      "difficulty": 1,
       "explanation": "Canada's flag has a red maple leaf between two red bars."
     },
     {
@@ -545,6 +589,7 @@
         "Mexico"
       ],
       "answer_index": 3,
+      "difficulty": 2,
       "explanation": "Mexico's flag is like Italy's but with an eagle and snake emblem in the middle."
     },
     {
@@ -557,6 +602,7 @@
         "Portugal"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "Brazil's flag is green with a yellow diamond and a starry blue globe."
     },
     {
@@ -569,6 +615,7 @@
         "Uruguay"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "Argentina's flag is light blue and white with a golden sun."
     },
     {
@@ -581,6 +628,7 @@
         "Chile"
       ],
       "answer_index": 3,
+      "difficulty": 4,
       "explanation": "Chile's flag has a single white star on a blue square."
     },
     {
@@ -593,6 +641,7 @@
         "Chile"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "Peru's flag is red, white, red in vertical bands."
     },
     {
@@ -605,6 +654,7 @@
         "Spain"
       ],
       "answer_index": 0,
+      "difficulty": 5,
       "explanation": "Colombia's flag is yellow, blue and red, with a big yellow band on top."
     },
     {
@@ -617,6 +667,7 @@
         "Brazil"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "Jamaica's flag is the only national flag with no red, white or blue."
     },
     {
@@ -629,6 +680,7 @@
         "Chile"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "Cuba's flag has blue and white stripes and a red triangle with a star."
     },
     {
@@ -641,6 +693,7 @@
         "Zimbabwe"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "South Africa's flag has six colours in a sideways Y design."
     },
     {
@@ -653,6 +706,7 @@
         "Iraq"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "Egypt's flag is red, white and black with a golden eagle."
     },
     {
@@ -665,6 +719,7 @@
         "Kenya"
       ],
       "answer_index": 3,
+      "difficulty": 4,
       "explanation": "Kenya's flag has a Maasai shield and spears in the middle."
     },
     {
@@ -677,6 +732,7 @@
         "Pakistan"
       ],
       "answer_index": 0,
+      "difficulty": 5,
       "explanation": "Nigeria's flag is green, white, green in vertical bands."
     },
     {
@@ -689,6 +745,7 @@
         "Senegal"
       ],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "Ghana's flag has red, gold and green stripes with a black star."
     },
     {
@@ -701,6 +758,7 @@
         "Morocco"
       ],
       "answer_index": 3,
+      "difficulty": 4,
       "explanation": "Morocco's flag is red with a green five-pointed star."
     },
     {
@@ -713,6 +771,7 @@
         "Senegal"
       ],
       "answer_index": 1,
+      "difficulty": 5,
       "explanation": "Ethiopia's flag is green, yellow and red with a blue circle and star."
     },
     {
@@ -725,6 +784,7 @@
         "Kenya"
       ],
       "answer_index": 0,
+      "difficulty": 5,
       "explanation": "Tanzania's flag has a black diagonal band edged in yellow."
     }
   ]

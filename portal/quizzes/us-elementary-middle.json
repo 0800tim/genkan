@@ -1,0 +1,661 @@
+{
+  "id": "us-elementary-middle",
+  "title": "United States, Elementary and Middle School",
+  "emoji": "🇺🇸",
+  "suggested_age_min": 7,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "questions": [
+    {
+      "id": "us-001",
+      "prompt": "Which US state is famous as home to the Grand Canyon?",
+      "choices": [
+        "Arizona",
+        "Nevada",
+        "Utah",
+        "New Mexico"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Grand Canyon, carved by the Colorado River, lies mostly within the state of Arizona."
+    },
+    {
+      "id": "us-002",
+      "prompt": "Which city is the capital of the United States?",
+      "choices": [
+        "Washington, D.C.",
+        "New York City",
+        "Los Angeles",
+        "Chicago"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Washington, D.C. is the nation's capital and is not part of any state."
+    },
+    {
+      "id": "us-003",
+      "prompt": "Which US state is the largest by area?",
+      "choices": [
+        "Alaska",
+        "Texas",
+        "California",
+        "Montana"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Alaska is by far the largest US state by area, even though it has a small population."
+    },
+    {
+      "id": "us-004",
+      "prompt": "Which river forms much of the border between the United States and Mexico?",
+      "choices": [
+        "Rio Grande",
+        "Mississippi River",
+        "Colorado River",
+        "Ohio River"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Rio Grande flows along much of the border between the US and Mexico before reaching the Gulf of Mexico."
+    },
+    {
+      "id": "us-005",
+      "prompt": "Which mountain range runs down the western United States, through states like Colorado and Montana?",
+      "choices": [
+        "The Rocky Mountains",
+        "The Appalachian Mountains",
+        "The Sierra Nevada",
+        "The Cascades"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Rocky Mountains stretch from New Mexico up through Canada, forming a spine down the western US."
+    },
+    {
+      "id": "us-006",
+      "prompt": "Which mountain range runs through the eastern United States, from Georgia up to Maine?",
+      "choices": [
+        "The Appalachian Mountains",
+        "The Rocky Mountains",
+        "The Sierra Nevada",
+        "The Cascade Range"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Appalachian Mountains are an old, worn down range running along the eastern side of the country."
+    },
+    {
+      "id": "us-007",
+      "prompt": "How many Great Lakes sit on the US-Canada border?",
+      "choices": [
+        "Five",
+        "Three",
+        "Seven",
+        "Four"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The five Great Lakes are Superior, Michigan, Huron, Erie and Ontario, often remembered with the word HOMES."
+    },
+    {
+      "id": "us-008",
+      "prompt": "Which of the Great Lakes lies entirely within the United States, rather than being shared with Canada?",
+      "choices": [
+        "Lake Michigan",
+        "Lake Erie",
+        "Lake Ontario",
+        "Lake Superior"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Lake Michigan is the only one of the five Great Lakes located entirely inside the United States."
+    },
+    {
+      "id": "us-009",
+      "prompt": "What is the capital of New York State?",
+      "choices": [
+        "Albany",
+        "New York City",
+        "Buffalo",
+        "Rochester"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Albany is the capital of New York State, even though New York City is much bigger and more famous."
+    },
+    {
+      "id": "us-010",
+      "prompt": "What is the capital of California?",
+      "choices": [
+        "Sacramento",
+        "Los Angeles",
+        "San Francisco",
+        "San Diego"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Sacramento is the capital of California, even though Los Angeles and San Francisco are better known cities."
+    },
+    {
+      "id": "us-011",
+      "prompt": "Which desert covers much of the south western United States, including parts of California, Arizona and Nevada?",
+      "choices": [
+        "The Mojave Desert",
+        "The Sahara",
+        "The Gobi Desert",
+        "The Kalahari"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Mojave Desert is a hot, dry desert in the south western United States, known for Joshua trees and Death Valley."
+    },
+    {
+      "id": "us-012",
+      "prompt": "Which is the only US state made up entirely of islands?",
+      "choices": [
+        "Hawaii",
+        "Alaska",
+        "Florida",
+        "Rhode Island"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Hawaii is a chain of islands in the Pacific Ocean and the only US state that is entirely islands."
+    },
+    {
+      "id": "us-013",
+      "prompt": "The Continental Divide, running along the Rocky Mountains, separates rivers that flow toward which two things?",
+      "choices": [
+        "The Pacific Ocean and the Atlantic Ocean",
+        "Canada and Mexico",
+        "Lakes and deserts",
+        "Mountains and plains"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Water falling on one side of the Continental Divide eventually reaches the Pacific Ocean, and on the other side it flows toward the Atlantic Ocean or Gulf of Mexico."
+    },
+    {
+      "id": "us-014",
+      "prompt": "Which river, the second longest in the US, joins the Mississippi River near St. Louis after crossing the Great Plains?",
+      "choices": [
+        "The Missouri River",
+        "The Ohio River",
+        "The Arkansas River",
+        "The Snake River"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The Missouri River flows for about 2,341 miles across the Great Plains before joining the Mississippi River near St. Louis."
+    },
+    {
+      "id": "us-015",
+      "prompt": "On which date is US independence celebrated each year?",
+      "choices": [
+        "July 4th",
+        "July 14th",
+        "January 1st",
+        "November 11th"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Declaration of Independence was adopted on July 4, 1776, which is why Independence Day falls on that date."
+    },
+    {
+      "id": "us-016",
+      "prompt": "Which document, adopted in 1776, declared that the thirteen colonies were breaking away from Great Britain?",
+      "choices": [
+        "The Declaration of Independence",
+        "The Constitution",
+        "The Bill of Rights",
+        "The Emancipation Proclamation"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Declaration of Independence, adopted in 1776, announced that the thirteen colonies considered themselves a free, independent country."
+    },
+    {
+      "id": "us-017",
+      "prompt": "Which war was fought between the northern and southern United States from 1861 to 1865?",
+      "choices": [
+        "The Civil War",
+        "The Revolutionary War",
+        "World War One",
+        "The War of 1812"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The American Civil War was fought mainly over slavery and whether southern states could leave the Union."
+    },
+    {
+      "id": "us-018",
+      "prompt": "Which ship carried the Pilgrims from England to what is now Massachusetts in 1620?",
+      "choices": [
+        "The Mayflower",
+        "The Santa Maria",
+        "The Golden Hind",
+        "The Titanic"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Mayflower carried English settlers, known as Pilgrims, across the Atlantic to found Plymouth Colony in 1620."
+    },
+    {
+      "id": "us-019",
+      "prompt": "Which document, written in 1787, set out the structure and rules of the US federal government and is still used today?",
+      "choices": [
+        "The Constitution",
+        "The Declaration of Independence",
+        "The Magna Carta",
+        "The Federalist Papers"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The US Constitution, written in 1787, set up the three branches of government and remains the country's founding legal document."
+    },
+    {
+      "id": "us-020",
+      "prompt": "Who was President of the United States during the Civil War?",
+      "choices": [
+        "Abraham Lincoln",
+        "George Washington",
+        "Thomas Jefferson",
+        "Ulysses S. Grant"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Abraham Lincoln led the Union through the Civil War and signed the Emancipation Proclamation, aimed at ending slavery."
+    },
+    {
+      "id": "us-021",
+      "prompt": "In which year did the United States declare its independence from Great Britain?",
+      "choices": [
+        "1776",
+        "1789",
+        "1620",
+        "1812"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The thirteen colonies declared their independence from Great Britain in 1776."
+    },
+    {
+      "id": "us-022",
+      "prompt": "Which 1963 speech, given by Martin Luther King Jr. in Washington, D.C., is remembered for its vision of racial equality?",
+      "choices": [
+        "\"I Have a Dream\"",
+        "\"Ask Not What Your Country\"",
+        "\"Four Score and Seven Years Ago\"",
+        "\"We Shall Fight on the Beaches\""
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Martin Luther King Jr. delivered his famous \"I Have a Dream\" speech during the 1963 March on Washington."
+    },
+    {
+      "id": "us-023",
+      "prompt": "Rosa Parks became famous in 1955 for refusing to do what?",
+      "choices": [
+        "Give up her seat on a bus to a white passenger",
+        "Pay a bus fare",
+        "Leave a segregated school",
+        "Vote in an election"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Rosa Parks' refusal to give up her bus seat in Montgomery, Alabama, helped spark the wider Civil Rights Movement."
+    },
+    {
+      "id": "us-024",
+      "prompt": "Which 1969 mission landed the first humans on the Moon?",
+      "choices": [
+        "Apollo 11",
+        "Apollo 13",
+        "Sputnik 1",
+        "Gemini 4"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Apollo 11 landed Neil Armstrong and Buzz Aldrin on the Moon in July 1969, while Michael Collins orbited above."
+    },
+    {
+      "id": "us-025",
+      "prompt": "Which US space agency, founded in 1958, runs the country's space missions?",
+      "choices": [
+        "NASA",
+        "FEMA",
+        "the FAA",
+        "the CIA"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "NASA, the National Aeronautics and Space Administration, was founded in 1958 and has run US space exploration ever since."
+    },
+    {
+      "id": "us-026",
+      "prompt": "Before the United States existed, the land along the east coast was divided into how many British colonies?",
+      "choices": [
+        "Thirteen",
+        "Ten",
+        "Twenty",
+        "Six"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Thirteen British colonies along the Atlantic coast joined together to declare independence and later formed the United States."
+    },
+    {
+      "id": "us-027",
+      "prompt": "Which 1954 Supreme Court case ruled that racially segregated public schools were unconstitutional?",
+      "choices": [
+        "Brown v. Board of Education",
+        "Roe v. Wade",
+        "Marbury v. Madison",
+        "Plessy v. Ferguson"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "In Brown v. Board of Education in 1954, the Supreme Court ruled that separate schools for Black and white students were unconstitutional."
+    },
+    {
+      "id": "us-028",
+      "prompt": "Which proclamation, issued by Abraham Lincoln in 1863, declared enslaved people in Confederate states to be free?",
+      "choices": [
+        "The Emancipation Proclamation",
+        "The Bill of Rights",
+        "The Gettysburg Address",
+        "The Monroe Doctrine"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Emancipation Proclamation declared enslaved people in the rebelling Confederate states free, though slavery was not abolished nationwide until the 13th Amendment."
+    },
+    {
+      "id": "us-029",
+      "prompt": "Which English colony in Virginia, founded in 1607, was the first permanent English settlement in America?",
+      "choices": [
+        "Jamestown",
+        "Plymouth",
+        "Roanoke",
+        "Boston"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Jamestown, founded in 1607 in Virginia, was the first permanent English settlement in what became the United States."
+    },
+    {
+      "id": "us-030",
+      "prompt": "Who was the first American to travel into space, in 1961?",
+      "choices": [
+        "Alan Shepard",
+        "Neil Armstrong",
+        "John Glenn",
+        "Buzz Aldrin"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Alan Shepard made a brief flight in 1961, becoming the first American in space, shortly after the Soviet Union sent the first human into orbit."
+    },
+    {
+      "id": "us-031",
+      "prompt": "The US government is split into three branches. Which branch makes the laws?",
+      "choices": [
+        "The legislative branch",
+        "The executive branch",
+        "The judicial branch",
+        "The military branch"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The legislative branch, which is Congress, is responsible for writing and passing laws."
+    },
+    {
+      "id": "us-032",
+      "prompt": "Which branch of government is led by the President?",
+      "choices": [
+        "The executive branch",
+        "The legislative branch",
+        "The judicial branch",
+        "The local branch"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The executive branch, headed by the President, is responsible for carrying out and enforcing the laws."
+    },
+    {
+      "id": "us-033",
+      "prompt": "Which branch of government includes the courts and decides whether laws follow the Constitution?",
+      "choices": [
+        "The judicial branch",
+        "The executive branch",
+        "The legislative branch",
+        "The advisory branch"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The judicial branch, topped by the Supreme Court, decides whether laws and actions follow the Constitution."
+    },
+    {
+      "id": "us-034",
+      "prompt": "What are the two chambers of the US Congress called?",
+      "choices": [
+        "The Senate and the House of Representatives",
+        "The Senate and the Cabinet",
+        "The House and the Supreme Court",
+        "The Assembly and the Council"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Congress is made up of two chambers, the Senate and the House of Representatives."
+    },
+    {
+      "id": "us-035",
+      "prompt": "How many senators does each US state get, no matter its population?",
+      "choices": [
+        "Two",
+        "One",
+        "Four",
+        "It depends on population"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Every state gets exactly two senators, giving smaller states equal footing with larger ones in the Senate."
+    },
+    {
+      "id": "us-036",
+      "prompt": "Unlike the Senate, how many representatives a state gets in the House depends mostly on what?",
+      "choices": [
+        "The state's population",
+        "The state's area",
+        "How old the state is",
+        "The state's wealth"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "States with more people get more seats in the House of Representatives, while every state gets the same two senators."
+    },
+    {
+      "id": "us-037",
+      "prompt": "What is the name for the system where each branch of government can limit the power of the others?",
+      "choices": [
+        "Checks and balances",
+        "The Bill of Rights",
+        "Federalism",
+        "The electoral process"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Checks and balances mean no single branch, the legislative, executive or judicial, can become too powerful on its own."
+    },
+    {
+      "id": "us-038",
+      "prompt": "Which court sits at the top of the US judicial branch and has the final say on whether a law is constitutional?",
+      "choices": [
+        "The Supreme Court",
+        "The Senate",
+        "The Cabinet",
+        "The Federal Bureau"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Supreme Court is the highest court in the country and its rulings on the Constitution cannot be appealed."
+    },
+    {
+      "id": "us-039",
+      "prompt": "Before a bill passed by Congress becomes law, who must normally sign it?",
+      "choices": [
+        "The President",
+        "The Chief Justice",
+        "The Speaker of the House",
+        "The Vice President"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A bill passed by both the House and Senate is normally sent to the President to sign into law, though Congress can override a veto."
+    },
+    {
+      "id": "us-040",
+      "prompt": "What is it called when the President refuses to sign a bill and sends it back to Congress?",
+      "choices": [
+        "A veto",
+        "A recall",
+        "An impeachment",
+        "A filibuster"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "A veto lets the President block a bill, though Congress can still make it law by passing it again with a two thirds majority in both chambers."
+    },
+    {
+      "id": "us-041",
+      "prompt": "Which unit do Americans commonly use to measure short lengths, like the height of a book?",
+      "choices": [
+        "Inches",
+        "Kilometers",
+        "Liters",
+        "Grams"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Inches are a common US customary unit for short lengths, with 12 inches making one foot."
+    },
+    {
+      "id": "us-042",
+      "prompt": "Which temperature scale is used for everyday weather reports in the United States?",
+      "choices": [
+        "Fahrenheit",
+        "Celsius",
+        "Kelvin",
+        "Rankine"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The US uses the Fahrenheit scale for everyday temperatures, unlike most other countries, which use Celsius."
+    },
+    {
+      "id": "us-043",
+      "prompt": "How many inches make up one foot?",
+      "choices": [
+        "12",
+        "10",
+        "16",
+        "100"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "There are 12 inches in a foot, and 3 feet make one yard."
+    },
+    {
+      "id": "us-044",
+      "prompt": "Which unit do Americans typically use to measure body weight?",
+      "choices": [
+        "Pounds",
+        "Kilograms",
+        "Stones",
+        "Grams"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "In the US, weight is usually measured and reported in pounds rather than kilograms."
+    },
+    {
+      "id": "us-045",
+      "prompt": "About how many miles is 1 kilometer?",
+      "choices": [
+        "About 0.6 miles",
+        "About 1.6 miles",
+        "About 2 miles",
+        "About 0.1 miles"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A kilometer is shorter than a mile. One kilometer is roughly 0.6 of a mile, and one mile is roughly 1.6 kilometers."
+    },
+    {
+      "id": "us-046",
+      "prompt": "At what Fahrenheit temperature does water freeze?",
+      "choices": [
+        "32°F",
+        "0°F",
+        "100°F",
+        "212°F"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Water freezes at 32 degrees Fahrenheit, which is the same as 0 degrees Celsius."
+    },
+    {
+      "id": "us-047",
+      "prompt": "At what Fahrenheit temperature does water boil at sea level?",
+      "choices": [
+        "212°F",
+        "100°F",
+        "180°F",
+        "300°F"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Water boils at 212 degrees Fahrenheit at sea level, the same point as 100 degrees Celsius."
+    },
+    {
+      "id": "us-048",
+      "prompt": "About how many pounds is one kilogram?",
+      "choices": [
+        "About 2.2 pounds",
+        "About 1 pound",
+        "About 3.3 pounds",
+        "About 0.5 pounds"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A kilogram is heavier than a pound. One kilogram is roughly 2.2 pounds."
+    },
+    {
+      "id": "us-049",
+      "prompt": "How many feet make up one yard, a unit often used to measure a football field?",
+      "choices": [
+        "3",
+        "12",
+        "100",
+        "36"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "One yard equals 3 feet, and a football field is 100 yards long between the goal lines."
+    },
+    {
+      "id": "us-050",
+      "prompt": "How many pounds are in one US ton, sometimes called a short ton?",
+      "choices": [
+        "2,000 pounds",
+        "1,000 pounds",
+        "2,240 pounds",
+        "5,000 pounds"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "A US short ton is 2,000 pounds. This is different from the UK's long ton, which is 2,240 pounds."
+    }
+  ]
+}

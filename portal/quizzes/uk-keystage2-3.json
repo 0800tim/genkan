@@ -1,0 +1,661 @@
+{
+  "id": "uk-keystage2-3",
+  "title": "United Kingdom, Key Stages 2 and 3",
+  "emoji": "🇬🇧",
+  "suggested_age_min": 7,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "questions": [
+    {
+      "id": "uk-001",
+      "prompt": "How many nations make up the United Kingdom?",
+      "choices": [
+        "Four",
+        "Three",
+        "Five",
+        "Two"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The United Kingdom is made up of four nations: England, Scotland, Wales and Northern Ireland."
+    },
+    {
+      "id": "uk-002",
+      "prompt": "What is the capital city of England?",
+      "choices": [
+        "London",
+        "Manchester",
+        "Birmingham",
+        "Liverpool"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "London is the capital of both England and the whole United Kingdom."
+    },
+    {
+      "id": "uk-003",
+      "prompt": "What is the capital city of Scotland?",
+      "choices": [
+        "Glasgow",
+        "Edinburgh",
+        "Aberdeen",
+        "Dundee"
+      ],
+      "answer_index": 1,
+      "difficulty": 1,
+      "explanation": "Edinburgh is Scotland's capital, though Glasgow is Scotland's biggest city."
+    },
+    {
+      "id": "uk-004",
+      "prompt": "What is the capital city of Wales?",
+      "choices": [
+        "Swansea",
+        "Newport",
+        "Cardiff",
+        "Bangor"
+      ],
+      "answer_index": 2,
+      "difficulty": 2,
+      "explanation": "Cardiff, on the south coast of Wales, has been the Welsh capital since 1955."
+    },
+    {
+      "id": "uk-005",
+      "prompt": "What is the capital city of Northern Ireland?",
+      "choices": [
+        "Derry",
+        "Belfast",
+        "Armagh",
+        "Lisburn"
+      ],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "Belfast, on the east coast, is the capital and largest city of Northern Ireland."
+    },
+    {
+      "id": "uk-006",
+      "prompt": "Which is the longest river in the United Kingdom?",
+      "choices": [
+        "Thames",
+        "Severn",
+        "Trent",
+        "Mersey"
+      ],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "The River Severn, which flows through Wales and England, is the UK's longest river, just ahead of the Thames."
+    },
+    {
+      "id": "uk-007",
+      "prompt": "Which river flows through London?",
+      "choices": [
+        "Severn",
+        "Thames",
+        "Mersey",
+        "Clyde"
+      ],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "The Thames flows through the middle of London on its way to the North Sea."
+    },
+    {
+      "id": "uk-008",
+      "prompt": "Which mountain is the highest in the United Kingdom?",
+      "choices": [
+        "Ben Nevis",
+        "Snowdon",
+        "Scafell Pike",
+        "Helvellyn"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Ben Nevis in Scotland is the highest mountain in the UK, standing 1,345 metres tall."
+    },
+    {
+      "id": "uk-009",
+      "prompt": "Which sea lies between Great Britain and Ireland?",
+      "choices": [
+        "North Sea",
+        "Irish Sea",
+        "Celtic Sea",
+        "Bristol Channel"
+      ],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "The Irish Sea separates the island of Great Britain from the island of Ireland."
+    },
+    {
+      "id": "uk-010",
+      "prompt": "Which narrow stretch of water separates England from France?",
+      "choices": [
+        "Irish Sea",
+        "English Channel",
+        "North Sea",
+        "Bristol Channel"
+      ],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "The English Channel is the narrow sea between southern England and northern France."
+    },
+    {
+      "id": "uk-011",
+      "prompt": "Which of these is a historic county in the south west of England, known for cream teas and a rugged coastline?",
+      "choices": [
+        "Cornwall",
+        "Kent",
+        "Essex",
+        "Yorkshire"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Cornwall is England's most south westerly county, with a long coastline and its own Celtic history."
+    },
+    {
+      "id": "uk-012",
+      "prompt": "Which English county is known as 'the Garden of England' because of its orchards and hop fields?",
+      "choices": [
+        "Kent",
+        "Devon",
+        "Norfolk",
+        "Sussex"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Kent, in the south east, has long been called the Garden of England for its fruit orchards and hop farms."
+    },
+    {
+      "id": "uk-013",
+      "prompt": "Which city grew rich as a port on the River Mersey and was once a major departure point for ships crossing the Atlantic?",
+      "choices": [
+        "Liverpool",
+        "Bristol",
+        "Newcastle",
+        "Hull"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Liverpool sits on the River Mersey and was once one of the world's busiest ports for transatlantic voyages."
+    },
+    {
+      "id": "uk-014",
+      "prompt": "Which city, in the north east of England, takes its name from the river it sits beside?",
+      "choices": [
+        "Newcastle",
+        "Sunderland",
+        "Leeds",
+        "Sheffield"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Newcastle upon Tyne is named after the River Tyne, which runs through it."
+    },
+    {
+      "id": "uk-015",
+      "prompt": "Which people built long, straight roads across Britain and founded the settlement that became London?",
+      "choices": [
+        "Romans",
+        "Vikings",
+        "Normans",
+        "Saxons"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Romans occupied much of Britain from AD 43, building roads, walls and towns including Londinium."
+    },
+    {
+      "id": "uk-016",
+      "prompt": "In 1066, which battle saw William of Normandy defeat King Harold and become King of England?",
+      "choices": [
+        "Battle of Hastings",
+        "Battle of Bosworth",
+        "Battle of Agincourt",
+        "Battle of Trafalgar"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "William, Duke of Normandy, defeated King Harold at the Battle of Hastings in 1066, beginning Norman rule of England."
+    },
+    {
+      "id": "uk-017",
+      "prompt": "Which document, signed by King John in 1215, said that even the king had to obey the law?",
+      "choices": [
+        "Magna Carta",
+        "the Bill of Rights",
+        "the Domesday Book",
+        "the Treaty of Union"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Magna Carta, meaning 'Great Charter' in Latin, was signed in 1215 and is seen as an early step towards the rule of law."
+    },
+    {
+      "id": "uk-018",
+      "prompt": "Which Tudor king had six wives and broke from the Catholic Church to found the Church of England?",
+      "choices": [
+        "Henry VII",
+        "Henry VIII",
+        "Edward VI",
+        "Richard III"
+      ],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "Henry VIII married six times and split from Rome in the 1530s, becoming head of the new Church of England."
+    },
+    {
+      "id": "uk-019",
+      "prompt": "Which Tudor queen ruled England for 45 years and gave her name to an era of exploration and theatre?",
+      "choices": [
+        "Mary I",
+        "Elizabeth I",
+        "Anne Boleyn",
+        "Victoria"
+      ],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "Elizabeth I reigned from 1558 to 1603, a period known as the Elizabethan age, famous for explorers and playwrights like Shakespeare."
+    },
+    {
+      "id": "uk-020",
+      "prompt": "The Domesday Book, an enormous survey of land and property in England, was ordered by which king?",
+      "choices": [
+        "William the Conqueror",
+        "Henry VIII",
+        "King John",
+        "Alfred the Great"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "William the Conqueror ordered the Domesday Book in 1086 to record who owned what land across England."
+    },
+    {
+      "id": "uk-021",
+      "prompt": "The Industrial Revolution, which began in Britain in the 1700s, saw a huge shift towards making goods how?",
+      "choices": [
+        "By machine in factories",
+        "By trading with other countries only",
+        "By growing more food",
+        "By using more horses"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "New machines and factories, often powered by steam, changed how goods were made and where people worked."
+    },
+    {
+      "id": "uk-022",
+      "prompt": "Which fuel powered the steam engines that drove Britain's Industrial Revolution?",
+      "choices": [
+        "Coal",
+        "Oil",
+        "Wood",
+        "Wind"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Coal, mined in huge quantities, fuelled the steam engines that powered Britain's factories, trains and ships."
+    },
+    {
+      "id": "uk-023",
+      "prompt": "The First World War began in 1914. In which year did it end?",
+      "choices": [
+        "1916",
+        "1918",
+        "1919",
+        "1920"
+      ],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "The First World War ran from 1914 to 1918, ending with an armistice on 11 November."
+    },
+    {
+      "id": "uk-024",
+      "prompt": "During the Second World War, thousands of British children were sent from cities to the countryside for safety. What was this called?",
+      "choices": [
+        "Evacuation",
+        "Rationing",
+        "Conscription",
+        "Immigration"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Evacuation moved children out of cities that were likely to be bombed and into safer homes in the countryside."
+    },
+    {
+      "id": "uk-025",
+      "prompt": "The Battle of Britain in 1940 was fought mainly by which part of the armed forces?",
+      "choices": [
+        "The Royal Air Force",
+        "The Royal Navy",
+        "The army",
+        "The merchant navy"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "RAF pilots fought off German bombers and fighters in the skies over southern England in 1940."
+    },
+    {
+      "id": "uk-026",
+      "prompt": "Which Roman structure, built across the north of England, marked the edge of the Roman Empire?",
+      "choices": [
+        "Hadrian's Wall",
+        "Offa's Dyke",
+        "the Antonine Wall",
+        "the Great Wall"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Hadrian's Wall was built by the Romans in the AD 120s to mark and defend the northern edge of their province of Britannia."
+    },
+    {
+      "id": "uk-027",
+      "prompt": "During and after the Second World War, what did British families need to buy scarce foods like sugar, meat and butter?",
+      "choices": [
+        "Ration books",
+        "A passport",
+        "A doctor's note",
+        "A library card"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Ration books gave each person a fair share of scarce food and other goods during and after the war."
+    },
+    {
+      "id": "uk-028",
+      "prompt": "In 2022, after the death of Queen Elizabeth II, who became King?",
+      "choices": [
+        "Charles III",
+        "William V",
+        "Edward IX",
+        "Andrew"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Charles III became King in September 2022, after his mother Elizabeth II had reigned for 70 years."
+    },
+    {
+      "id": "uk-029",
+      "prompt": "Which 1381 uprising saw peasants march on London to protest against an unfair tax?",
+      "choices": [
+        "The Peasants' Revolt",
+        "The Pilgrimage of Grace",
+        "The Gunpowder Plot",
+        "The Jarrow March"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The Peasants' Revolt of 1381 was led by Wat Tyler and was one of the biggest uprisings in medieval English history."
+    },
+    {
+      "id": "uk-030",
+      "prompt": "The Glorious Revolution of 1688 replaced King James II with which joint monarchs?",
+      "choices": [
+        "William and Mary",
+        "Victoria and Albert",
+        "George and Charlotte",
+        "Henry and Anne"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "In 1688, Parliament invited William of Orange and his wife Mary to become joint monarchs instead of James II, strengthening Parliament's power."
+    },
+    {
+      "id": "uk-031",
+      "prompt": "What is the name of the UK Parliament's elected house?",
+      "choices": [
+        "House of Commons",
+        "House of Lords",
+        "The Senate",
+        "The Assembly"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The House of Commons is made up of MPs elected by voters across the UK."
+    },
+    {
+      "id": "uk-032",
+      "prompt": "What does MP stand for?",
+      "choices": [
+        "Member of Parliament",
+        "Minister of Police",
+        "Mayor of the People",
+        "Master of Parliament"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "MPs are Members of Parliament, each elected to represent one local area, called a constituency."
+    },
+    {
+      "id": "uk-033",
+      "prompt": "Who usually becomes Prime Minister?",
+      "choices": [
+        "The leader of the party with the most MPs",
+        "The King",
+        "The oldest MP",
+        "The Speaker of the House"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Prime Minister is normally the leader of whichever party can command the most support in the House of Commons."
+    },
+    {
+      "id": "uk-034",
+      "prompt": "What is the name of the UK Parliament's other house, whose members are not elected by the public?",
+      "choices": [
+        "House of Lords",
+        "House of Commons",
+        "The Cabinet",
+        "The Privy Council"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Members of the House of Lords are appointed or, in a few cases, inherit their seat, rather than being elected."
+    },
+    {
+      "id": "uk-035",
+      "prompt": "At which London address does the Prime Minister live and work?",
+      "choices": [
+        "10 Downing Street",
+        "Buckingham Palace",
+        "Westminster Abbey",
+        "221B Baker Street"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "10 Downing Street has been the Prime Minister's official home and office for centuries."
+    },
+    {
+      "id": "uk-036",
+      "prompt": "At least how often must a general election be held in the UK, by law?",
+      "choices": [
+        "Every 5 years",
+        "Every 10 years",
+        "Every 2 years",
+        "Whenever the King chooses"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "UK law requires a general election at least every five years, though one can be called earlier."
+    },
+    {
+      "id": "uk-037",
+      "prompt": "Before a new law can take effect, who must give final approval once both Houses of Parliament agree it?",
+      "choices": [
+        "The monarch, giving royal assent",
+        "The public, in a vote",
+        "The Prime Minister alone",
+        "The Supreme Court"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Once both Houses agree a bill, it becomes law only after the monarch gives royal assent, a formality that has not been refused in centuries."
+    },
+    {
+      "id": "uk-038",
+      "prompt": "What is the building where the UK Parliament meets commonly called?",
+      "choices": [
+        "The Palace of Westminster",
+        "Buckingham Palace",
+        "The Tower of London",
+        "St Paul's Cathedral"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Parliament meets in the Palace of Westminster, beside the River Thames, whose clock tower holds the bell known as Big Ben."
+    },
+    {
+      "id": "uk-039",
+      "prompt": "Which MP is chosen to keep order in the House of Commons and decide who gets to speak?",
+      "choices": [
+        "The Speaker",
+        "The Chancellor",
+        "The Whip",
+        "The Chief Justice"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Speaker of the House of Commons runs debates, decides who speaks and stays neutral between parties."
+    },
+    {
+      "id": "uk-040",
+      "prompt": "What is the name for an MP whose job includes making sure their party's MPs turn up and vote as the party wants?",
+      "choices": [
+        "A whip",
+        "A speaker",
+        "A peer",
+        "A clerk"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Whips organise MPs and try to make sure they turn up and vote with their party."
+    },
+    {
+      "id": "uk-041",
+      "prompt": "Roald Dahl, who wrote Charlie and the Chocolate Factory and Matilda, wrote mostly for which audience?",
+      "choices": [
+        "Children",
+        "Scientists",
+        "Judges",
+        "Sailors"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Roald Dahl was one of Britain's best loved children's authors, known for imaginative and often mischievous stories."
+    },
+    {
+      "id": "uk-042",
+      "prompt": "William Shakespeare, one of the most famous writers in English, mainly wrote what?",
+      "choices": [
+        "Plays and poems",
+        "Cookbooks",
+        "Science textbooks",
+        "Newspaper articles"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Shakespeare wrote plays such as Romeo and Juliet and Macbeth, plus many poems called sonnets."
+    },
+    {
+      "id": "uk-043",
+      "prompt": "In which English town was William Shakespeare born?",
+      "choices": [
+        "Stratford-upon-Avon",
+        "Oxford",
+        "Cambridge",
+        "Bath"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Shakespeare was born in Stratford-upon-Avon in 1564, and the town still celebrates his life and work."
+    },
+    {
+      "id": "uk-044",
+      "prompt": "Charles Dickens often wrote about poverty and hardship during which era of British history?",
+      "choices": [
+        "Victorian",
+        "Tudor",
+        "Roman",
+        "Anglo-Saxon"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Dickens wrote during the 1800s, the Victorian era, and often described the harsh lives of poor children in cities."
+    },
+    {
+      "id": "uk-045",
+      "prompt": "In Charles Dickens' story A Christmas Carol, which character is visited by three ghosts?",
+      "choices": [
+        "Ebenezer Scrooge",
+        "Oliver Twist",
+        "Pip",
+        "David Copperfield"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Scrooge, a miserly old man, is visited by the ghosts of Christmas Past, Present and Yet to Come, and changes his ways."
+    },
+    {
+      "id": "uk-046",
+      "prompt": "The theatre where many of Shakespeare's plays were first performed, on the south bank of the River Thames, was called what?",
+      "choices": [
+        "The Globe",
+        "The Old Vic",
+        "The Royal Opera House",
+        "Sadler's Wells"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The Globe Theatre, built in 1599, staged many of Shakespeare's plays. A replica now stands near the original site in London."
+    },
+    {
+      "id": "uk-047",
+      "prompt": "In the metric system used across science and most of the world, what is the standard unit of length?",
+      "choices": [
+        "The metre",
+        "The mile",
+        "The pound",
+        "The gallon"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The metre is the base unit of length in the metric system, used in science and in most countries' everyday measurements."
+    },
+    {
+      "id": "uk-048",
+      "prompt": "What is the standard SI unit of mass?",
+      "choices": [
+        "The kilogram",
+        "The pound",
+        "The stone",
+        "The ounce"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The kilogram is the base SI unit of mass, used for everything from a bag of sugar to a person's weight."
+    },
+    {
+      "id": "uk-049",
+      "prompt": "In the SI system, at what temperature does water freeze, in degrees Celsius?",
+      "choices": [
+        "0",
+        "32",
+        "100",
+        "-1"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Water freezes at 0 degrees Celsius and boils at 100 degrees Celsius under normal pressure."
+    },
+    {
+      "id": "uk-050",
+      "prompt": "Even though the UK uses metric units for most things, which units does it still commonly use for road distances and speed?",
+      "choices": [
+        "Miles and miles per hour",
+        "Kilometres and metres per second",
+        "Furlongs and knots",
+        "Leagues and fathoms"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The UK measures most things in metric units, but road signs still show distances in miles and speeds in miles per hour."
+    }
+  ]
+}

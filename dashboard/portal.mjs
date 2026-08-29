@@ -18,6 +18,9 @@ import { readFileSync, readdirSync } from "node:fs";
 import { randomBytes, createHash } from "node:crypto";
 import path from "node:path";
 import pg from "pg";
+// Badges and the house board. All the logic lives there because the parent
+// dashboard shows the same rows; this file only wires it to the kid's side.
+import { BADGES, awardBadges, childBadges, boardEnabled, boardData, recordStudyVisit } from "./badges.mjs";
 
 const DEMO = process.env.HEARTH_DEMO === "1";
 // The ?kid= override lets a parent see what a child sees. At home it is
@@ -386,6 +389,28 @@ const STUDY_CSS = `
   background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.20);
   color:#fff;text-decoration:none;font-weight:600;font-size:14px;white-space:nowrap}
 .study-link:hover{background:rgba(255,255,255,.18)}
+.more-q{margin-top:8px}
+.more-q>summary{list-style:none;cursor:pointer;padding:10px 12px;border-radius:13px;
+  background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.28);
+  font-weight:600;text-align:center}
+.more-q>summary::-webkit-details-marker{display:none}
+.more-q[open]>summary{margin-bottom:8px}
+.badge-teaser{display:inline-block;margin-top:10px;padding:7px 13px;border-radius:11px;
+  background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.24);
+  color:#fff;text-decoration:none;font-weight:600;font-size:14px}
+.badges{display:flex;flex-direction:column;gap:9px;margin-top:8px}
+.badge{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:13px;
+  background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.16)}
+.badge.todo{opacity:.55}
+.badge .b-e{font-size:24px;flex:none}
+.badge .b-t{display:flex;flex-direction:column}
+.badge .b-t small{opacity:.8;font-size:13px;line-height:1.35}
+.b-cat{padding:10px 0;border-bottom:1px solid rgba(255,255,255,.14)}
+.b-cat:last-of-type{border-bottom:0}
+.b-cat-t{font-size:12.5px;letter-spacing:.1em;text-transform:uppercase;opacity:.75}
+.b-lead{font-weight:700;margin-top:3px}
+.b-lead small{display:block;font-weight:400;opacity:.8;font-size:13px}
+.b-rest{opacity:.7;font-size:13.5px;margin-top:4px}
 .study{margin-top:6px}
 .s-q{padding:13px 0;border-bottom:1px solid rgba(255,255,255,.14)}
 .s-q:last-child{border-bottom:0}
@@ -590,6 +615,45 @@ function warmPage(kid, flag, kidQS) {
     <div class="card"><p style="margin:0"><a class="back" href="/hub${kidQS}">\u2190 Back to Hearth (time, quizzes, jobs)</a></p></div>`);
 }
 
+// A child's own badges, then the house board if a parent switched it on.
+// Deliberately not a ranking: the board spotlights whoever leads each
+// category, so different children can lead different ones, and everybody
+// else's own number sits alongside without a position next to it.
+function badgesPage(kid, got, board, kidQS) {
+  // `got` is only the badges this child has actually earned, so the ones still
+  // to get are BADGES minus those. Showing both matters: a child with two
+  // badges should be able to see there are eight more waiting, all of which
+  // they can get, rather than wonder whether they have finished.
+  const has = new Set(got.map(b => b.id));
+  const todo = BADGES.filter(b => !has.has(b.id));
+  const chip = (b, earned) => `<div class="badge ${earned ? "got" : "todo"}">
+      <span class="b-e">${b.emoji || "🏅"}</span>
+      <span class="b-t"><b>${esc(b.title)}</b><small>${esc(b.blurb || "")}</small></span>
+    </div>`;
+  const cats = board?.categories || [];
+  const boardHtml = !cats.length ? "" : `<div class="card"><h2>🏠 The house</h2>
+    ${cats.map(c => `<div class="b-cat">
+        <div class="b-cat-t">${esc(c.emoji || "")} ${esc(c.title)}</div>
+        <div class="b-lead">${c.leaders.map(l => esc(l.name)).join(" and ") || "nobody yet"}
+          ${c.leaders.length ? `<small>${esc(c.leaders[0].display || "")}</small>` : ""}</div>
+        <div class="b-rest">${(c.everyone || []).map(o => `${esc(o.name)} ${esc(o.display || "")}`).join(" · ")}</div>
+      </div>`).join("")}
+    <div class="small">Different people lead different things, and it moves every
+      week. There is no overall winner, on purpose.</div></div>`;
+  return page(`<div class="card">
+      <h1>🏅 ${esc(kid.name)}'s badges</h1>
+      <div class="who">${got.length} of ${BADGES.length} so far. Every one of them is
+        yours to get whenever you get there, and nobody can take one first.</div>
+      <div class="badges">${got.map(b => chip(b, true)).join("")
+        || '<div class="small">None yet. Pass a quiz and the first one is yours.</div>'}</div>
+    </div>
+    ${todo.length ? `<div class="card"><h2>Still to get</h2>
+      <div class="badges">${todo.map(b => chip(b, false)).join("")}</div></div>` : ""}
+    ${boardHtml}
+    <p><a class="back" href="/${kidQS}">← back</a></p>
+    ${helpFoot}`);
+}
+
 function homePage(kid, st, kidQS) {
   const rem = st.rem?.remaining_min ?? 0;
   const unlimited = (st.rem?.budget_min || 0) >= 999;
@@ -601,8 +665,21 @@ function homePage(kid, st, kidQS) {
     : `<h1>👋 Kia ora ${esc(kid.name)}</h1><div class="who">Your time, your call. Earn more below whenever you like.</div>`;
   const cap = st.set.quiz_daily_cap_min, bonus = st.set.mastery_bonus_min;
   const capLeft = Math.max(0, cap - st.quizEarnedToday);
-  const myBanks = [...banks.values()].filter(b => quizOn(st, b));
-  const quizCards = myBanks.map(b => {
+  // Order by how well each bank suits this child's age, nearest first. The
+  // shelf went from nine banks to twenty-nine when the curriculum content
+  // landed, and alphabetical order meant a seven-year-old opened their page to
+  // NCEA Biology above Reading and Writing. suggested_age_min is a hint rather
+  // than a lock, so nothing is hidden: a bank aimed below them sorts before one
+  // aimed above, because revisiting something easy is a reasonable choice and
+  // being handed something four years early is not.
+  const fit = b => {
+    const want = Number(b.suggested_age_min || 0), age = Number(kid?.age || 0);
+    if (!want || !age) return 500;
+    return want <= age ? age - want : (want - age) * 3;
+  };
+  const myBanks = [...banks.values()].filter(b => quizOn(st, b))
+    .sort((a, b) => fit(a) - fit(b) || String(a.title).localeCompare(String(b.title)));
+  const quizCard = b => {
     const last = st.lastPassAt[b.id] || 0;
     const coolUntil = last + st.set.quiz_cooldown_min * 60_000;
     const cooling = Date.now() < coolUntil;
@@ -612,7 +689,17 @@ function homePage(kid, st, kidQS) {
       ? `<div class="qcard dim"><span class="e">${esc(b.emoji || "🎓")}</span><b>${esc(b.title)}</b><span class="m">${note}</span></div>`
       : `<div class="qrow"><a class="qcard" href="/quiz/${esc(b.id)}${kidQS}"><span class="e">${esc(b.emoji || "🎓")}</span><b>${esc(b.title)}</b><span class="m">${note}</span></a>`
         + `<a class="study-link" href="/study/${esc(b.id)}${kidQS}" title="The answers and why, before you have a go">Read up</a></div>`;
-  }).join("");
+  };
+  // Twenty-nine banks is a wall on a phone. The list is already sorted by how
+  // well each suits this child, so show the nearest handful and fold the rest.
+  // Folded, not filtered: a curious eleven-year-old can still open Chemistry
+  // in one tap, and a visibly deep shelf is part of the appeal. A <details>
+  // does this with no JavaScript at all.
+  const SHOW_FIRST = 6;
+  const rest = myBanks.slice(SHOW_FIRST);
+  const quizCards = myBanks.slice(0, SHOW_FIRST).map(quizCard).join("")
+    + (rest.length ? `<details class="more-q"><summary>${rest.length} more subject${
+        rest.length > 1 ? "s" : ""} to try</summary>${rest.map(quizCard).join("")}</details>` : "");
   // One claim per job per day, so the answer to "I did this" is always about
   // today. A job Dad has to say yes to waits; a job he has already trusted you
   // with lands on your clock the moment you tap it.
@@ -630,7 +717,8 @@ function homePage(kid, st, kidQS) {
   const anyTrusted = st.tasks.some(t => !t.needs_approval);
   return page(`
     <div class="card">${head}
-      <div class="rem">${unlimited ? "∞" : Math.max(0, rem)}<small> ${unlimited ? "no daily limit" : "min left today"}</small></div></div>
+      <div class="rem">${unlimited ? "∞" : Math.max(0, rem)}<small> ${unlimited ? "no daily limit" : "min left today"}</small></div>
+      <a class="badge-teaser" href="/badges${kidQS}">🏅 My badges</a></div>
     <div class="card"><h2>🎓 Earn time: quizzes (instant)</h2>${quizCards
       || '<div class="small">No quizzes on your list right now. Ask Dad to switch one back on.</div>'}
       <div class="small">Pass a round to get minutes straight away.${bonus > 0 ? ` Perfect round = +${bonus} bonus.` : ""} Up to ${cap} min a day from quizzes; you've earned ${st.quizEarnedToday} today.</div></div>
@@ -686,7 +774,17 @@ async function gradeRound(kid, form, kidQS) {
     }
   }
   await logRound(round, right, credited, passed);
-  return page(`<div class="card"><div class="score">${right} / ${total}</div>
+  // Once per graded round, never a sweep over the whole history. Badges are
+  // a nice-to-have, so a failure here must not swallow a round the child has
+  // genuinely earned.
+  let earned = [];
+  try { earned = await awardBadges(q, kid.id, round.bankId); }
+  catch (e) { console.error("badges:", e.message); }
+  const won = earned.length
+    ? `<div class="msg">${earned.length === 1 ? "New badge" : "New badges"}: ${
+        earned.map(b => `${b.emoji || "🏅"} ${esc(b.title)}`).join(", ")}</div>`
+    : "";
+  return page(`<div class="card"><div class="score">${right} / ${total}</div>${won}
     <div class="msg">${passed ? "🎉 Passed. " + esc(creditedMsg) : `Not this time, you need ${bank.pass_mark}. Have another go, the questions change.`}</div>
     <p style="text-align:center"><a class="back" href="/${kidQS}">← back to Hearth</a></p></div>`);
 }
@@ -753,8 +851,26 @@ const server = createServer(async (req, res) => {
     }
     // Read up before you answer. No cooldown, no cap, no round token: reading
     // is not a thing to ration.
+    // The badges page: a child's own first, the house board only if a parent
+    // has switched it on. Never a ranking, see docs/GAMIFICATION.md.
+    if (url.pathname === "/badges") {
+      const mine = await childBadges(q, kid.id);
+      const on = await boardEnabled(q);
+      // boardData needs the household's children: it compares them to each
+      // other, so it cannot go and guess who "everybody" is.
+      const kids = on ? await q(
+        `SELECT id, name FROM children WHERE kind IN ('child','guest-child') AND active ORDER BY name`) : [];
+      const board = on ? await boardData(q, kids) : null;
+      return send(badgesPage(kid, mine, board, kidQS));
+    }
+
     const sm = url.pathname.match(/^\/study\/([a-z0-9-]+)$/);
-    if (sm && banks.has(sm[1])) return send(studyPage(banks.get(sm[1]), kidQS));
+    if (sm && banks.has(sm[1])) {
+      // Noting that they read up is what makes the "read it, then passed it"
+      // badge mean something. It is never used to police anybody.
+      recordStudyVisit(q, kid.id, sm[1]).catch(() => {});
+      return send(studyPage(banks.get(sm[1]), kidQS));
+    }
 
     const m = url.pathname.match(/^\/quiz\/([a-z0-9-]+)$/);
     if (m && banks.has(m[1])) {

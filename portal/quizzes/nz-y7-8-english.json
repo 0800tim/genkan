@@ -1,0 +1,412 @@
+{
+  "id": "nz-y7-8-english",
+  "title": "English, Years 7 and 8",
+  "emoji": "📝",
+  "suggested_age_min": 11,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Written for NZ Curriculum Level 4, Years 7 and 8, ages 11 to 13. NZ English spelling throughout, including practise as the verb and practice as the noun.",
+  "questions": [
+    {
+      "id": "eng78-001",
+      "prompt": "Which word in this sentence is a noun: 'The dog ran quickly.'?",
+      "choices": ["Dog", "Ran", "Quickly", "The"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "A noun names a person, place, thing or animal. 'Dog' names the animal, so it is the noun. 'Ran' is the verb, the action, and 'quickly' is the adverb, describing how it ran."
+    },
+    {
+      "id": "eng78-002",
+      "prompt": "Which word is the verb in this sentence: 'She sings beautifully.'?",
+      "choices": ["Sings", "She", "Beautifully", "Loud"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "A verb shows the action or state of being. 'Sings' is the action she is doing. 'She' is a pronoun, and 'beautifully' describes how she sings, an adverb."
+    },
+    {
+      "id": "eng78-003",
+      "prompt": "Which word is the adjective in this sentence: 'The tall boy waved.'?",
+      "choices": ["Tall", "Boy", "Waved", "The"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "An adjective describes a noun. 'Tall' describes the boy, telling us more about him."
+    },
+    {
+      "id": "eng78-004",
+      "prompt": "What kind of sentence is this: 'Please close the door.'?",
+      "choices": ["A command", "A question", "An exclamation", "A statement"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "A command tells someone to do something. It often starts with a verb, like 'close', and does not need a question mark or exclamation mark."
+    },
+    {
+      "id": "eng78-005",
+      "prompt": "Which sentence uses an apostrophe correctly to show something belongs to Sam?",
+      "choices": ["Sam's bike is red.", "Sams' bike is red.", "Sams bike is red.", "Sam,s bike is red."],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "To show something belongs to one person, add an apostrophe then s: Sam's. The apostrophe goes right before the s, not after it and not left out altogether."
+    },
+    {
+      "id": "eng78-006",
+      "prompt": "Which word correctly completes this sentence: 'I saw ___ new house yesterday.'?",
+      "choices": ["Their", "There", "They're", "Thier"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "'Their' shows something belongs to them. Here the house belongs to them, so it is 'their new house'. 'There' points to a place, and 'they're' is short for 'they are'."
+    },
+    {
+      "id": "eng78-007",
+      "prompt": "Which word is a synonym for 'happy'?",
+      "choices": ["Joyful", "Angry", "Tired", "Confused"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "A synonym is a word that means almost the same thing. 'Joyful' means much the same as 'happy'."
+    },
+    {
+      "id": "eng78-008",
+      "prompt": "Which word is an antonym for 'hot'?",
+      "choices": ["Cold", "Warm", "Boiling", "Mild"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "An antonym is a word that means the opposite. 'Cold' is the opposite of 'hot'."
+    },
+    {
+      "id": "eng78-009",
+      "prompt": "Which sentence contains a simile?",
+      "choices": ["He ran like the wind.", "He ran quickly.", "The wind was strong.", "He ran to school."],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "A simile compares two things using 'like' or 'as'. 'He ran like the wind' compares his running to the wind, to show how fast he was."
+    },
+    {
+      "id": "eng78-010",
+      "prompt": "Which of these is a fact, not an opinion?",
+      "choices": ["Water boils at 100 degrees Celsius at sea level.", "Summer is the best season.", "Chocolate ice cream tastes better than vanilla.", "Dogs make the best pets."],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "A fact can be checked and proven true. The boiling point of water can be measured and is always the same at sea level. The other sentences are opinions: they depend on what someone likes."
+    },
+    {
+      "id": "eng78-011",
+      "prompt": "Which word is the adverb in this sentence: 'The cat moved silently across the room.'?",
+      "choices": ["Silently", "Cat", "Moved", "Room"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "An adverb often describes how, when or where something happens, and many end in -ly. 'Silently' tells us how the cat moved."
+    },
+    {
+      "id": "eng78-012",
+      "prompt": "Which word is a pronoun in this sentence: 'She gave the book to him.'?",
+      "choices": ["She", "Gave", "Book", "To"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A pronoun stands in for a noun so we do not have to repeat a name. 'She' and 'him' both stand in for people already known, instead of naming them again."
+    },
+    {
+      "id": "eng78-013",
+      "prompt": "What do we call a sentence made of two complete ideas joined by a word like 'and', 'but' or 'or'?",
+      "choices": ["A compound sentence", "A simple sentence", "A complex sentence", "A fragment"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A compound sentence joins two ideas that could each stand alone as their own sentence, using a joining word such as 'and', 'but' or 'or'. For example: 'I like tea, but I prefer coffee.'"
+    },
+    {
+      "id": "eng78-014",
+      "prompt": "Which sentence uses commas correctly in a list?",
+      "choices": ["I packed a jacket, a hat, and some gloves.", "I packed a jacket a hat and some gloves.", "I packed, a jacket a hat and some gloves.", "I, packed a jacket a hat, and some gloves."],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Commas separate items in a list so the reader can tell where one item ends and the next begins: jacket, hat, gloves."
+    },
+    {
+      "id": "eng78-015",
+      "prompt": "Which sentence correctly shows that the bowl belongs to more than one dog?",
+      "choices": ["The dogs' bowl was empty.", "The dog's bowl was empty.", "The dogs bowl was empty.", "The dog,s bowl was empty."],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "When the owner is a plural noun that already ends in s, like 'dogs', the apostrophe goes after the s: dogs'. 'The dog's bowl' would mean only one dog owns it."
+    },
+    {
+      "id": "eng78-016",
+      "prompt": "Which word correctly completes this sentence: '___ going to love this book.'?",
+      "choices": ["You're", "Your", "Yore", "Yours"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "'You're' is short for 'you are'. Try replacing it with 'you are' in the sentence: 'You are going to love this book' makes sense, so 'you're' is correct. 'Your' shows something belongs to you."
+    },
+    {
+      "id": "eng78-017",
+      "prompt": "Which sentence uses 'it's' or 'its' correctly?",
+      "choices": ["The dog wagged its tail.", "The dog wagged it's tail.", "The dog wagged its' tail.", "The dog wagged it,s tail."],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "'Its' with no apostrophe shows belonging: here the tail belongs to the dog. 'It's' is always short for 'it is' or 'it has', and neither of those fits here, so it does not get an apostrophe."
+    },
+    {
+      "id": "eng78-018",
+      "prompt": "What does adding the prefix 'un' to the word 'happy' do to its meaning?",
+      "choices": ["It reverses the meaning, to 'not happy'", "It makes the word past tense", "It makes the word a noun", "It makes the word plural"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The prefix 'un' means 'not', so 'unhappy' means not happy. Prefixes are added to the front of a word and change its meaning."
+    },
+    {
+      "id": "eng78-019",
+      "prompt": "What does adding the suffix '-ful' to the word 'help' create?",
+      "choices": ["'Helpful', an adjective meaning full of help", "'Helping', a verb form", "'Helpless', meaning without help", "'Helper', a person who helps"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The suffix '-ful' means 'full of', so 'helpful' means full of help. Suffixes are added to the end of a word and often change what type of word it is."
+    },
+    {
+      "id": "eng78-020",
+      "prompt": "Which word is the closest synonym for 'enormous'?",
+      "choices": ["Huge", "Tiny", "Narrow", "Ordinary"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "'Huge' and 'enormous' both describe something very big in size."
+    },
+    {
+      "id": "eng78-021",
+      "prompt": "Which sentence contains a metaphor?",
+      "choices": ["Her smile was sunshine.", "Her smile was like sunshine.", "Her smile was bright.", "Her smile appeared suddenly."],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A metaphor says one thing IS another, without using 'like' or 'as', to make a comparison. Saying her smile 'was sunshine' means it made people feel warm and happy, not that it literally was the sun."
+    },
+    {
+      "id": "eng78-022",
+      "prompt": "A poster telling shoppers about a weekend sale is mainly written to do what?",
+      "choices": ["Persuade people to come and buy", "Entertain people with a story", "Instruct people how to build something", "Describe a historical event"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A sale poster's main purpose is to persuade. It wants to convince the reader to visit the shop and spend money, so it uses eye-catching words and offers."
+    },
+    {
+      "id": "eng78-023",
+      "prompt": "In the sentence 'The cat hid under the table because it was scared', which word is a preposition?",
+      "choices": ["Under", "Because", "Was", "Scared"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A preposition shows where something is or how things relate, often about place or time. 'Under' tells us where the cat hid. 'Because' is a conjunction, joining two ideas together."
+    },
+    {
+      "id": "eng78-024",
+      "prompt": "What makes a sentence a complex sentence?",
+      "choices": ["It joins a main idea with a clause that cannot stand alone by itself", "It only has one idea and no joining words", "It is always longer than ten words", "It always starts with 'because'"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A complex sentence has a main clause, which could be its own sentence, plus a subordinate clause, which depends on the main clause and cannot stand alone. For example: 'I stayed inside because it was raining.' 'Because it was raining' cannot stand alone as a sentence."
+    },
+    {
+      "id": "eng78-025",
+      "prompt": "Which sentence uses a colon correctly?",
+      "choices": ["She packed three things: a towel, sunscreen and a book.", "She packed: three things a towel, sunscreen and a book.", "She packed three things, a towel: sunscreen and a book.", "She packed three: things a towel, sunscreen and a book."],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A colon introduces a list, an explanation or an example, after a complete idea. 'She packed three things' is a complete idea, and the colon shows a list is about to follow."
+    },
+    {
+      "id": "eng78-026",
+      "prompt": "Which sentence uses a semicolon correctly?",
+      "choices": ["I wanted to go for a walk; it started raining.", "I wanted to go for a walk; and it started raining.", "I wanted; to go for a walk it started raining.", "I wanted to go for a walk it started; raining."],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A semicolon can join two complete sentences that are closely related, without needing a joining word like 'and'. Both 'I wanted to go for a walk' and 'it started raining' could stand alone as sentences, so the semicolon links them."
+    },
+    {
+      "id": "eng78-027",
+      "prompt": "Which word correctly completes this sentence: 'The storm will ___ our plans for the picnic.'?",
+      "choices": ["Affect", "Effect", "Effected", "Affection"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "'Affect' is usually a verb meaning to change or influence something. Here, the storm will do something to the plans, it will affect them. 'Effect' is usually the noun, the result of something, as in 'the effect of the storm'."
+    },
+    {
+      "id": "eng78-028",
+      "prompt": "Which sentence uses 'effect' correctly?",
+      "choices": ["The new rule had a big effect on the team.", "The new rule will effect the team badly.", "The rule affect the team.", "The rule's effect the team."],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "'Effect' is the result or outcome of something, a noun, as in 'a big effect'. 'Affect' is usually the verb form, describing the action of changing something, for example 'the rule will affect the team'."
+    },
+    {
+      "id": "eng78-029",
+      "prompt": "Which sentence uses 'practise' correctly, in NZ English?",
+      "choices": ["I need to practise my spelling every night.", "I need to practice my spelling every night.", "I went to piano practise.", "My practise starts at four."],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "In NZ English, 'practise' with an s is the verb, the doing word, as in 'to practise'. 'Practice' with a c is the noun, the thing itself, as in 'piano practice'. A trick to remember it: advice is the noun and advise is the verb, and practice and practise follow the same pattern."
+    },
+    {
+      "id": "eng78-030",
+      "prompt": "Which sentence uses 'practice' correctly, in NZ English?",
+      "choices": ["Football practice starts at 5 pm.", "Football practise starts at 5 pm.", "I need to practice more often.", "She practices practise daily."],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "'Practice' with a c is the noun, the name for the thing itself, here the football training session. If it were the verb, the doing word, such as 'to practise the piano', it would need an s."
+    },
+    {
+      "id": "eng78-031",
+      "prompt": "What does the prefix 're-' usually mean, as in 'rewrite' or 'replay'?",
+      "choices": ["Again", "Not", "Before", "Under"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "'Re-' usually means 'again'. To rewrite something is to write it again, and to replay something is to play it again."
+    },
+    {
+      "id": "eng78-032",
+      "prompt": "Which suffix turns 'quick' into a word that compares two things, as in 'she is quicker than him'?",
+      "choices": ["-er", "-est", "-ly", "-ful"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The suffix '-er' compares two things, as in 'quicker'. Comparing three or more things uses '-est', as in 'the quickest'."
+    },
+    {
+      "id": "eng78-033",
+      "prompt": "Which word is the best antonym for 'generous'?",
+      "choices": ["Stingy", "Kind", "Wealthy", "Friendly"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "'Stingy' means unwilling to give or share, the opposite of 'generous', which means giving freely."
+    },
+    {
+      "id": "eng78-034",
+      "prompt": "Which sentence is the best example of alliteration?",
+      "choices": ["Slippery snakes slithered silently.", "The snake was very slippery.", "The snake slid across the ground.", "Snakes can be dangerous."],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Alliteration repeats the same starting sound in words close together. 'Slippery snakes slithered silently' repeats the 's' sound four times in a row."
+    },
+    {
+      "id": "eng78-035",
+      "prompt": "Which sentence uses personification?",
+      "choices": ["The wind whispered through the trees.", "The wind was very strong.", "The wind blew the leaves away.", "The wind came from the north."],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Personification gives human qualities to something that is not human. Wind cannot literally whisper, whispering is something people do, so describing it that way makes the writing more vivid."
+    },
+    {
+      "id": "eng78-036",
+      "prompt": "Which sentence correctly uses an apostrophe for a contraction?",
+      "choices": ["They're coming to the party.", "Their coming to the party.", "There coming to the party.", "Theyre coming to the party."],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "'They're' is short for 'they are', and the apostrophe replaces the missing letter a. If you can replace the word with 'they are' and it still makes sense, 'they're' is correct."
+    },
+    {
+      "id": "eng78-037",
+      "prompt": "Which sentence uses 'there', 'their' and 'they're' all correctly?",
+      "choices": ["They're taking their bags over there.", "There taking they're bags over their.", "Their taking there bags over they're.", "They're taking there bags over their."],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Check each word by what it does: 'they're' replaces 'they are', so 'they're taking'. 'Their' shows belonging, so 'their bags'. 'There' points to a place, so 'over there'. Only the first sentence uses all three correctly."
+    },
+    {
+      "id": "eng78-038",
+      "prompt": "Why is 'Running down the street in the rain' not a complete sentence?",
+      "choices": ["It has no subject and finite verb making a complete thought", "It is too short", "It does not end in a full stop", "It does not use any adjectives"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A complete sentence needs a subject and a verb that together express a complete thought. 'Running down the street in the rain' describes an action but never says who is doing it, so it is a sentence fragment, not a full sentence."
+    },
+    {
+      "id": "eng78-039",
+      "prompt": "What is wrong with this sentence: 'I was tired, I went to bed early.'?",
+      "choices": ["It joins two complete sentences with only a comma, called a comma splice", "It has too few commas", "It uses the wrong homophone", "It is missing an apostrophe"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "'I was tired' and 'I went to bed early' are both complete sentences on their own. Joining them with just a comma is called a comma splice. Fixing it needs a full stop, a semicolon, or a joining word like 'so': 'I was tired, so I went to bed early.'"
+    },
+    {
+      "id": "eng78-040",
+      "prompt": "What usually happens to a word ending in a silent 'e' when you add a suffix that starts with a vowel, such as '-ing'?",
+      "choices": ["The silent e is usually dropped, for example make becomes making", "The silent e is always kept, for example makeing", "The final consonant is always doubled", "The whole word changes completely"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "When a suffix starting with a vowel is added to a word ending in a silent e, the e is usually dropped: make becomes making, hope becomes hoping. The e is only there to make the vowel before it say its name, and the suffix's own vowel does that job instead."
+    },
+    {
+      "id": "eng78-041",
+      "prompt": "Which spelling rule explains why 'believe' has ie but 'receive' has ei?",
+      "choices": ["I before e, except after c", "E always comes before i", "Both spellings are always interchangeable", "There is no rule, they must be memorised individually"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The rule is 'i before e, except after c', for this ee sound. 'Believe' has no c before the vowel sound, so it is ie. 'Receive' has a c right before it, so it flips to ei. Like many spelling rules it has exceptions, but it covers most common cases."
+    },
+    {
+      "id": "eng78-042",
+      "prompt": "A recipe written for young children learning to cook would most likely use what kind of language?",
+      "choices": ["Simple, step-by-step instructions with short sentences", "Long, technical, professional cooking terms", "Poetic, descriptive language about the smell of food", "Persuasive language trying to sell the recipe"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A writer chooses language to suit their audience. Young children learning to cook need simple, clear steps in short sentences, not technical terms a professional chef might use."
+    },
+    {
+      "id": "eng78-043",
+      "prompt": "Which sentence mixes a fact with an opinion?",
+      "choices": ["The bridge is 200 metres long, and it is the most beautiful bridge in the country.", "The bridge is 200 metres long.", "The bridge was built in 1932.", "The bridge crosses the river."],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "'The bridge is 200 metres long' can be measured and checked, so that part is a fact. 'The most beautiful bridge in the country' depends on personal taste, and different people would disagree, so that part is an opinion."
+    },
+    {
+      "id": "eng78-044",
+      "prompt": "Which word is the closest synonym for 'reluctant', as in 'she was reluctant to leave'?",
+      "choices": ["Unwilling", "Excited", "Determined", "Confident"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "'Reluctant' means hesitant or not wanting to do something. 'Unwilling' carries that same sense of holding back."
+    },
+    {
+      "id": "eng78-045",
+      "prompt": "What is the key difference between a simile and a metaphor?",
+      "choices": ["A simile uses 'like' or 'as'; a metaphor says one thing simply is another", "A simile is always about animals; a metaphor is always about people", "A metaphor uses 'like' or 'as'; a simile does not", "There is no real difference"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Both compare two things to create a picture, but a simile signals the comparison with 'like' or 'as', such as 'brave as a lion', while a metaphor drops those words and states it directly, such as 'he was a lion in battle'."
+    },
+    {
+      "id": "eng78-046",
+      "prompt": "Which sentence correctly uses both a colon and commas?",
+      "choices": ["For the trip, we need three things: a map, water and sturdy shoes.", "For the trip we need three things, a map: water and sturdy shoes.", "For the trip, we need three things a map, water, and: sturdy shoes.", "For the trip: we need three things, a map water and sturdy shoes."],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The comma after 'trip' separates an introductory phrase from the main sentence. The colon comes after the complete idea 'we need three things' to introduce the list, and commas then separate each item in that list."
+    },
+    {
+      "id": "eng78-047",
+      "prompt": "Which sentence has no homophone errors?",
+      "choices": ["It's important that you're careful with their things over there.", "Its important that your careful with there things over their.", "Its important that your careful with they're things over there.", "It's important that you're careful with there things over their."],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Check each word: 'it's' should be short for 'it is', so it's important. 'You're' should be short for 'you are', so you're careful. 'Their' shows belonging, so their things. 'There' points to a place, so over there. Only the first sentence gets all four right."
+    },
+    {
+      "id": "eng78-048",
+      "prompt": "In the sentence 'Although it was raining, the match went ahead', which part is the subordinate clause?",
+      "choices": ["Although it was raining", "The match went ahead", "It was raining", "Ahead"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "A subordinate clause cannot stand alone as a complete sentence and depends on the main clause. 'Although it was raining' cannot exist on its own, try saying it and stopping, it feels unfinished, while 'the match went ahead' can stand alone, making it the main clause."
+    },
+    {
+      "id": "eng78-049",
+      "prompt": "The word 'irregular' uses the prefix 'ir-' instead of 'in-' before 'regular'. Why?",
+      "choices": ["'In-' changes to match the first letter of the word it attaches to, here becoming 'ir-' before r", "'Ir-' and 'in-' mean completely different things", "It is simply a spelling mistake that became accepted", "'Ir-' is only used for describing regularity"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The negative prefix 'in-' often changes its final letter to match the start of the word it joins, for easier pronunciation: 'ir-' before r, as in irregular, 'il-' before l, as in illegal, and 'im-' before m or p, as in immature or impossible. The meaning, 'not', stays the same throughout."
+    },
+    {
+      "id": "eng78-050",
+      "prompt": "A newspaper opinion column arguing that a new law is unfair is written mainly to do what, and how might you tell it is not a straight news report?",
+      "choices": ["To persuade the reader, shown by opinion words and one-sided arguments rather than balanced facts", "To inform only, shown by having no opinions at all", "To entertain, shown by jokes throughout", "To instruct, shown by step-by-step directions"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "An opinion column exists to persuade readers towards the writer's view, unlike a news report, which aims to inform by presenting facts from multiple sides. Clues that a piece is persuasive include emotional language, words like 'clearly' or 'obviously', and arguments that only support one side."
+    }
+  ]
+}

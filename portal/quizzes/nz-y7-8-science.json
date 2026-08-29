@@ -1,0 +1,412 @@
+{
+  "id": "nz-y7-8-science",
+  "title": "Science, Years 7 and 8",
+  "emoji": "🔬",
+  "suggested_age_min": 11,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Written for NZ Curriculum Level 4, Years 7 and 8, ages 11 to 13. Facts checked against general reference sources on physics, chemistry, biology and earth science, 2026-08-30.",
+  "questions": [
+    {
+      "id": "sci78-001",
+      "prompt": "In a solid, how are the particles arranged?",
+      "choices": ["Tightly packed and vibrating in place", "Spread far apart and moving fast", "Loosely packed and sliding past each other", "Not moving at all"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "In a solid, particles are packed closely in a fixed arrangement. They still vibrate on the spot, they just cannot move around each other, which is why solids keep their shape."
+    },
+    {
+      "id": "sci78-002",
+      "prompt": "What is the smallest part of an element that still has the properties of that element?",
+      "choices": ["An atom", "A molecule", "A cell", "A compound"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "An atom is the smallest unit of an element. Join atoms together and you get a molecule, but a single atom is already a complete example of that element."
+    },
+    {
+      "id": "sci78-003",
+      "prompt": "What does the periodic table organise?",
+      "choices": ["Elements", "Compounds", "Cells", "Planets"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The periodic table lists all the known elements, arranged so that ones with similar properties sit near each other."
+    },
+    {
+      "id": "sci78-004",
+      "prompt": "Melting an ice cube into water is what kind of change?",
+      "choices": ["A physical change", "A chemical change", "A nuclear change", "Neither, nothing has changed"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Melting only changes the state of water from solid to liquid. It is still the same substance, so it is a physical change, not a chemical one."
+    },
+    {
+      "id": "sci78-005",
+      "prompt": "On the pH scale, what does a pH below 7 mean?",
+      "choices": ["The substance is acidic", "The substance is a base", "The substance is neutral", "The substance is pure water"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The pH scale runs from 0 to 14. Below 7 is acidic, 7 is neutral, like pure water, and above 7 is basic, also called alkaline."
+    },
+    {
+      "id": "sci78-006",
+      "prompt": "Which of these is a renewable energy source?",
+      "choices": ["Sunlight", "Coal", "Natural gas", "Oil"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Sunlight keeps arriving every day no matter how much we use, which makes it renewable. Coal, gas and oil took millions of years to form and cannot be replaced on any useful timescale."
+    },
+    {
+      "id": "sci78-007",
+      "prompt": "What force pulls objects towards the Earth?",
+      "choices": ["Gravity", "Friction", "Magnetism", "Air resistance"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Gravity is the force that pulls objects towards the centre of the Earth, which is why anything you drop falls down rather than sideways."
+    },
+    {
+      "id": "sci78-008",
+      "prompt": "What part of a cell controls its activities and holds its genetic material?",
+      "choices": ["The nucleus", "The cell membrane", "The cytoplasm", "The cell wall"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The nucleus acts like the cell's control centre. It holds the genetic material, which carries the instructions for everything the cell does."
+    },
+    {
+      "id": "sci78-009",
+      "prompt": "Which organ pumps blood around the body?",
+      "choices": ["The heart", "The lungs", "The liver", "The stomach"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The heart is a muscle that squeezes to push blood through the blood vessels, delivering oxygen and nutrients around the body."
+    },
+    {
+      "id": "sci78-010",
+      "prompt": "Which group includes only animals that produce milk for their young?",
+      "choices": ["Mammals", "Reptiles", "Amphibians", "Fish"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Producing milk for young is a defining feature of mammals, from mice to whales to humans."
+    },
+    {
+      "id": "sci78-011",
+      "prompt": "Why can gases be squeezed into a smaller space much more easily than liquids or solids?",
+      "choices": ["Gas particles are far apart with lots of empty space between them", "Gas particles are stuck together tightly", "Gas has no particles at all", "Gas particles are heavier than liquid particles"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Particles in a gas are spread far apart with a lot of empty space between them. Pushing them closer together just uses up that empty space, whereas liquid and solid particles are already packed close."
+    },
+    {
+      "id": "sci78-012",
+      "prompt": "What is a substance made of two or more different elements chemically joined together called?",
+      "choices": ["A compound", "A mixture", "An atom", "A molecule of one element"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "When atoms of different elements bond together, they form a compound, such as water, made of hydrogen and oxygen, or salt, made of sodium and chlorine."
+    },
+    {
+      "id": "sci78-013",
+      "prompt": "Metals are generally found on which side of the periodic table?",
+      "choices": ["The left", "The right", "Only in the middle row", "Scattered randomly"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Most elements are metals, and they sit on the left and middle of the periodic table. Non-metals cluster on the right-hand side."
+    },
+    {
+      "id": "sci78-014",
+      "prompt": "Which of these is a sign that a chemical change has probably happened?",
+      "choices": ["Bubbling or fizzing as a new gas is given off", "The substance changes shape", "The substance gets colder without anything being added", "The substance is cut into smaller pieces"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Fizzing usually means a new gas is being made, which is a sign a new substance has formed, and that is a chemical change. Cutting or changing shape only rearranges the same substance, a physical change."
+    },
+    {
+      "id": "sci78-015",
+      "prompt": "What colour does universal indicator paper typically turn in a strong acid?",
+      "choices": ["Red", "Purple", "Green", "Blue"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Universal indicator turns red at the acidic end of the scale, green at neutral, and blue or purple at the basic, alkaline, end."
+    },
+    {
+      "id": "sci78-016",
+      "prompt": "A moving car has energy because it is moving. What is this type of energy called?",
+      "choices": ["Kinetic energy", "Potential energy", "Chemical energy", "Nuclear energy"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Kinetic energy is the energy of movement. The faster or heavier something moving is, the more kinetic energy it has."
+    },
+    {
+      "id": "sci78-017",
+      "prompt": "What force acts between two touching surfaces to slow down or stop movement?",
+      "choices": ["Friction", "Gravity", "Tension", "Magnetism"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Friction is the force that resists movement between two surfaces that are touching, such as a shoe sole against the ground."
+    },
+    {
+      "id": "sci78-018",
+      "prompt": "What structure allows only certain things in and out of a cell?",
+      "choices": ["The cell membrane", "The nucleus", "The cell wall", "The cytoplasm"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The cell membrane is like a gatekeeper. It controls what substances can enter or leave the cell. Plant cells also have a rigid cell wall outside the membrane for extra support."
+    },
+    {
+      "id": "sci78-019",
+      "prompt": "Which system in the body is mainly responsible for breaking down food so it can be absorbed?",
+      "choices": ["The digestive system", "The respiratory system", "The circulatory system", "The nervous system"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The digestive system, running from the mouth to the intestines, breaks food down into smaller pieces the body can absorb and use."
+    },
+    {
+      "id": "sci78-020",
+      "prompt": "What do we call a feature that helps a living thing survive in its environment?",
+      "choices": ["An adaptation", "A habitat", "An ecosystem", "A population"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "An adaptation is a feature or behaviour that helps a living thing survive and reproduce in the place it lives, such as a polar bear's thick fur for cold conditions."
+    },
+    {
+      "id": "sci78-021",
+      "prompt": "Which of these is an amphibian?",
+      "choices": ["A frog", "A snake", "A trout", "A sparrow"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Frogs are amphibians: they typically start life in water breathing through gills, then develop lungs and can live on land as adults. Snakes are reptiles, trout are fish and sparrows are birds."
+    },
+    {
+      "id": "sci78-022",
+      "prompt": "Which type of rock forms when magma or lava cools and hardens?",
+      "choices": ["Igneous rock", "Sedimentary rock", "Metamorphic rock", "Fossil rock"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Igneous rock forms directly from cooling and hardening magma underground, or lava above ground. Granite and basalt are common examples."
+    },
+    {
+      "id": "sci78-023",
+      "prompt": "As a substance is heated, what generally happens to the movement of its particles?",
+      "choices": ["They move faster and spread out more", "They move slower and pack tighter", "They stop moving completely", "They disappear"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Heating gives particles more energy, so they move or vibrate faster. This is why substances often expand and can change state, like ice melting or water boiling, as they heat up."
+    },
+    {
+      "id": "sci78-024",
+      "prompt": "What are atoms of the same element with different numbers of neutrons called?",
+      "choices": ["Isotopes", "Ions", "Compounds", "Molecules"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Isotopes are versions of the same element with the same number of protons but a different number of neutrons, which gives them a different mass."
+    },
+    {
+      "id": "sci78-025",
+      "prompt": "Elements in the same column, or group, of the periodic table tend to have what in common?",
+      "choices": ["Similar chemical properties", "The same colour", "The exact same mass", "No relationship at all"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Elements are arranged in columns, called groups, because elements in the same group react in similar ways. For example, all the elements in group 1 react vigorously with water."
+    },
+    {
+      "id": "sci78-026",
+      "prompt": "Burning wood produces ash, smoke and heat. Why is this a chemical change rather than a physical one?",
+      "choices": ["New substances form that cannot easily be changed back into wood", "The wood only changes shape", "No new substance is formed", "The wood just gets hotter"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Burning creates new substances, ash and gases, with different properties from wood, and the process cannot be reversed by cooling. Forming new substances that cannot easily be undone is the mark of a chemical change."
+    },
+    {
+      "id": "sci78-027",
+      "prompt": "What is produced when you mix an acid with a base in the right amounts?",
+      "choices": ["A neutral solution of salt and water", "Only more acid", "A gas that smells like rotten eggs, always", "Pure oxygen"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "This reaction is called neutralisation. The acid and base cancel out each other's properties, producing a salt and water, and the resulting solution is close to pH 7."
+    },
+    {
+      "id": "sci78-028",
+      "prompt": "A ball held up high has stored energy due to its position. What is this energy called?",
+      "choices": ["Gravitational potential energy", "Kinetic energy", "Sound energy", "Electrical energy"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Potential energy is stored energy. Because gravity could pull the ball down, it has gravitational potential energy, which converts to kinetic energy as it falls."
+    },
+    {
+      "id": "sci78-029",
+      "prompt": "Two forces act on a stationary box: gravity pulling it down and the floor pushing it up. Why does the box not move?",
+      "choices": ["The two forces are balanced, so they cancel out", "There are no forces acting on the box", "Friction removes both forces", "The box has no mass"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "When forces on an object are balanced, equal in size and opposite in direction, they cancel out and the object stays still or keeps moving at a steady speed."
+    },
+    {
+      "id": "sci78-030",
+      "prompt": "Which structure in a plant cell captures sunlight to make food?",
+      "choices": ["The chloroplast", "The nucleus", "The mitochondria", "The vacuole"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Chloroplasts contain a green pigment called chlorophyll, which captures light energy for photosynthesis, the process plants use to make their own food."
+    },
+    {
+      "id": "sci78-031",
+      "prompt": "What is the main job of the respiratory system?",
+      "choices": ["Taking in oxygen and removing carbon dioxide", "Pumping blood around the body", "Breaking down food", "Sending electrical signals around the body"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The respiratory system, the lungs and airways, brings oxygen into the blood and removes carbon dioxide, a waste gas, from it."
+    },
+    {
+      "id": "sci78-032",
+      "prompt": "In a food chain, what do we call an organism that makes its own food using sunlight?",
+      "choices": ["A producer", "A consumer", "A decomposer", "A predator"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Producers, mostly green plants and algae, make their own food from sunlight through photosynthesis. Everything else in the food chain, the consumers, relies on eating producers or other consumers."
+    },
+    {
+      "id": "sci78-033",
+      "prompt": "What do scientists call the two-part naming system that gives every species a unique Latin-style name?",
+      "choices": ["Binomial nomenclature", "The periodic system", "The food web", "Natural selection"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Binomial nomenclature gives each species a two-part name, genus then species, such as Homo sapiens for humans, so scientists worldwide agree on exactly which organism is meant."
+    },
+    {
+      "id": "sci78-034",
+      "prompt": "Sedimentary rock is formed mainly by what process?",
+      "choices": ["Layers of sediment being squeezed and cemented together over time", "Magma cooling underground", "Existing rock being melted", "Rock being frozen suddenly"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Sedimentary rock forms as layers of sand, mud or shell fragments settle, and over long periods of time, pressure squeezes and cements them into solid rock, such as sandstone or limestone."
+    },
+    {
+      "id": "sci78-035",
+      "prompt": "What is the name for the huge, slow-moving slabs that make up the Earth's outer shell?",
+      "choices": ["Tectonic plates", "Continents", "Volcanoes", "Fault lines"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Earth's outer shell is broken into huge tectonic plates that float on the softer layer beneath and drift very slowly, a few centimetres a year."
+    },
+    {
+      "id": "sci78-036",
+      "prompt": "Why does a balloon get bigger and eventually pop if you leave it in hot sunshine?",
+      "choices": ["The gas particles inside move faster and push outward harder", "The rubber shrinks in the heat", "The gas particles turn into liquid", "The air outside pushes the balloon smaller"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Heat gives the gas particles inside the balloon more energy, so they move faster and hit the inside of the balloon harder and more often. That extra push, pressure, makes the balloon expand, and enough of it can pop the balloon."
+    },
+    {
+      "id": "sci78-037",
+      "prompt": "An atom is described as having 6 protons. Which element must it be?",
+      "choices": ["Carbon", "Oxygen", "Nitrogen", "Helium"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The number of protons in an atom is called its atomic number, and it is unique to each element. Carbon always has 6 protons, that is what makes it carbon rather than any other element."
+    },
+    {
+      "id": "sci78-038",
+      "prompt": "Which group of the periodic table contains elements that barely react with anything else?",
+      "choices": ["The noble gases", "Group 1, the alkali metals", "The halogens", "The transition metals"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The noble gases, such as helium and neon, have a full outer shell of electrons, which makes them very stable and mostly unreactive. Alkali metals, by contrast, react vigorously."
+    },
+    {
+      "id": "sci78-039",
+      "prompt": "Dissolving sugar in warm water and then boiling the water away leaves the sugar behind unchanged. What does this show?",
+      "choices": ["Dissolving is a physical change, because the sugar was not permanently altered", "Dissolving is a chemical change, because a new substance formed", "Sugar stops being sugar once it dissolves", "Boiling water always creates a chemical reaction"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Because the exact same sugar can be recovered afterwards, nothing new was made and nothing was permanently changed. That is the test for a physical change, unlike a chemical change, which cannot simply be undone by evaporating water."
+    },
+    {
+      "id": "sci78-040",
+      "prompt": "A gardener tests soil and finds it has a pH of 5. What should they add to make the soil less acidic?",
+      "choices": ["Lime, a base that raises the pH", "More acid, to balance it out", "Pure water only", "Salt"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A base can neutralise an acid and raise the pH towards 7 or above. Garden lime is a common base used to make acidic soil less acidic."
+    },
+    {
+      "id": "sci78-041",
+      "prompt": "A torch runs on a battery. Which energy transfer is happening as the torch shines?",
+      "choices": ["Chemical energy to electrical energy to light energy", "Light energy to chemical energy", "Kinetic energy to sound energy", "Heat energy to chemical energy"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The battery stores chemical energy. This converts to electrical energy in the circuit, which the bulb then converts into light, and a little heat, which is why a torch can feel warm after a while."
+    },
+    {
+      "id": "sci78-042",
+      "prompt": "A skydiver falls and eventually reaches a steady speed, called terminal velocity, instead of speeding up forever. Why?",
+      "choices": ["Air resistance grows until it balances the pull of gravity", "Gravity switches off after a while", "The skydiver runs out of energy", "The air below gets thicker and stops them"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "As the skydiver falls faster, air resistance pushing up against them grows. Eventually it becomes equal to the force of gravity pulling them down, the forces balance, and they fall at a steady speed instead of continuing to speed up."
+    },
+    {
+      "id": "sci78-043",
+      "prompt": "Why do muscle cells contain an unusually large number of mitochondria?",
+      "choices": ["Mitochondria release the energy muscle cells need to contract", "Mitochondria store extra genetic material for muscle growth", "Mitochondria are where muscle cells keep their food", "Mitochondria protect the cell from damage"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Mitochondria are often called the powerhouse of the cell because they release energy from food. Muscle cells work hard and need a lot of energy, so they are packed with extra mitochondria."
+    },
+    {
+      "id": "sci78-044",
+      "prompt": "Why do your muscles need a good supply of oxygen when you exercise?",
+      "choices": ["Cells use oxygen to release energy from food faster", "Oxygen cools the muscles down", "Oxygen replaces water lost as sweat", "Oxygen is stored directly as muscle tissue"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Cells release energy from food through a process called respiration, and it works much faster with oxygen. Exercising muscles need energy quickly, so your heart and lungs work harder to deliver more oxygen."
+    },
+    {
+      "id": "sci78-045",
+      "prompt": "Why does Earth experience seasons?",
+      "choices": ["Earth's axis is tilted, so different parts get more direct sunlight through the year", "Earth moves closer to and further from the Sun each year", "The Sun changes how brightly it shines", "The Moon blocks the Sun's light in winter"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Earth's axis is tilted at an angle. As Earth orbits the Sun over a year, this tilt means the northern and southern hemispheres take turns leaning towards the Sun, getting more direct sunlight and longer days, which we feel as summer."
+    },
+    {
+      "id": "sci78-046",
+      "prompt": "Earthquakes are common along the edges of tectonic plates. Why?",
+      "choices": ["Stress builds up as plates grind, collide or pull apart, and is suddenly released", "Earthquakes are caused by the Moon's gravity alone", "Plate edges are always perfectly still, so earthquakes come from elsewhere", "Volcanoes cause every earthquake directly"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Plates move very slowly, but their edges often catch on each other rather than sliding smoothly. Stress builds up until it is suddenly released as an earthquake, which is why most earthquakes happen near plate boundaries."
+    },
+    {
+      "id": "sci78-047",
+      "prompt": "A piece of limestone, a sedimentary rock, is buried deep underground where heat and pressure are intense, but it does not melt. What type of rock could it become?",
+      "choices": ["A metamorphic rock, such as marble", "An igneous rock, such as granite", "It stays exactly the same, unchanged", "A new element"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Heat and pressure that are not quite strong enough to melt rock can still change its structure, forming a metamorphic rock. Limestone changed this way becomes marble."
+    },
+    {
+      "id": "sci78-048",
+      "prompt": "A star that is much further away than another can still appear bright in the night sky. What does this tell you about that star?",
+      "choices": ["It must be giving off an enormous amount of light to still appear bright from so far away", "It must be closer to Earth than it looks", "Distant stars always look brighter than near ones", "Its light travels faster than light from nearby stars"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Light spreads out and fades with distance, the same way a torch looks dimmer the further away it is. If a very distant star still looks bright, it must be producing an enormous amount of light in the first place, far more than a dim, similarly distant star."
+    },
+    {
+      "id": "sci78-049",
+      "prompt": "Why does adding acid to a reactive metal like magnesium produce bubbles of gas?",
+      "choices": ["The reaction between the acid and the metal produces hydrogen gas", "The acid boils on contact with metal", "The metal releases the air trapped inside it", "The bubbles are the acid evaporating"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Acids react with many metals in a chemical reaction that produces a metal salt and hydrogen gas. The bubbles you see are that hydrogen gas escaping, not the acid itself boiling or evaporating."
+    },
+    {
+      "id": "sci78-050",
+      "prompt": "A population of moths in a polluted, sooty area is mostly dark-coloured, while the same species in a clean area is mostly pale. What is the best scientific explanation?",
+      "choices": ["Dark moths are better camouflaged in the sooty area, so more of them survive and reproduce", "The soot dyes the moths' wings dark permanently", "Pale moths refuse to live in polluted areas", "Moths choose their own colour to match their surroundings"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "This is natural selection. In a sooty area, dark moths are harder for predators to spot, so more of them survive and pass the dark colouring on to their offspring. Individual moths cannot choose or change their own colour: it is which moths survive and breed that shifts the population over generations."
+    }
+  ]
+}

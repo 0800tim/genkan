@@ -37,6 +37,7 @@ import { readFileSync, readdirSync, statSync } from "node:fs";
 import path from "node:path";
 import { esc } from "./charts.mjs";
 import { fmt } from "./analytics.mjs";
+import { BADGES, allBadges, boardEnabled, setBoardEnabled } from "./badges.mjs";
 
 const QUIZ_DIR = process.env.QUIZ_DIR || path.join(import.meta.dirname, "..", "portal", "quizzes");
 const MIN_MAX = 480;          // eight hours is already an absurd reward for one job
@@ -198,8 +199,17 @@ export async function earnData(q) {
   const allBanks = [...mine, ...banks];
   bankTitles.clear();
   for (const b of allBanks) bankTitles.set(b.id, b.title);
+  // Gamification: who has earned what, and whether the house board (the one
+  // place siblings are compared) is switched on. See dashboard/badges.mjs and
+  // docs/GAMIFICATION.md. Best effort: an older install without
+  // schema-badges.sql loaded just shows nobody has any badges yet, rather
+  // than losing the rest of this screen.
+  const [badges, boardOn] = await Promise.all([
+    allBadges(q, children.map(c => c.id)),
+    boardEnabled(q),
+  ]);
   return { children, tasks, eff, quizPrefs, quizStats, claims, recent, totals,
-           banks: allBanks, dbQuestions, bankPerf, questionPerf, settings };
+           banks: allBanks, dbQuestions, bankPerf, questionPerf, settings, badges, boardOn };
 }
 
 // ---------------------------------------------------------------------------
@@ -534,6 +544,16 @@ export async function earnSettingsApi(q, body, res) {
   return okJson(res, `Saved. ${who}: up to ${eff.quiz_daily_cap_min} minutes a day from quizzes.`);
 }
 
+// /api/board: the one switch for the household comparison board. A child's
+// own badges are never gated by this; only the sibling comparison is.
+export async function boardApi(q, body, res) {
+  const enabled = body.enabled === true || body.enabled === "true";
+  await setBoardEnabled(q, enabled, "dashboard");
+  return okJson(res, enabled
+    ? "The house board is on. It compares improvement and effort, never raw totals, and it will say so on the portal."
+    : "The house board is off. Kids still see their own badges, just no comparison with each other.");
+}
+
 // ---------------------------------------------------------------------------
 // Deciding a claim.
 // ---------------------------------------------------------------------------
@@ -713,6 +733,8 @@ function qAdd(bank){var o=qvals(bank,'new');o.action='qadd';ePost('/api/bank',o)
 function setRules(cid){var p=cid===null?'house':('k'+cid);
   ePost('/api/earnsettings',{child_id:cid,quiz_cooldown_min:v('sc_'+p),quiz_daily_cap_min:v('sd_'+p),
     mastery_bonus_min:v('sb_'+p),default_minutes_per_pass:v('sp_'+p)});}
+/* ---- badges and the house board --------------------------------------- */
+function boardToggle(on){ePost('/api/board',{enabled:on});}
 `;
 
 // The three the owner used to describe the idea. They set the range on
@@ -1056,5 +1078,42 @@ export function earnPage(d) {
     <p class="sub">Quiz passes, jobs you approved and time you gave, newest first.</p>
     ${kids.length ? perKid : '<div class="empty">No children on the network yet.</div>'}</div>`;
 
-  return `<style>${STYLE}</style>${hero}${claims}${jobs}${quizzes}${rulesCard}${history}<script>${SCRIPT}</script>`;
+  // ---- badges and the house board -----------------------------------------
+  // Badges are earned against a child's OWN history, so this card is really
+  // just "what has each of them found so far", never a ranking. The board
+  // (dashboard/badges.mjs: boardData) is the one place siblings are actually
+  // compared, and it is off until a parent turns it on: docs/GAMIFICATION.md
+  // has the reasoning, including what a raw leaderboard would do to the
+  // youngest child in the house.
+  const badgesByChild = new Map();
+  for (const b of d.badges) { if (!badgesByChild.has(b.child_id)) badgesByChild.set(b.child_id, []); badgesByChild.get(b.child_id).push(b); }
+  const badgeRows = kids.map(k => {
+    const mine = badgesByChild.get(k.id) || [];
+    const byId = new Map();
+    for (const b of mine) { if (!byId.has(b.id)) byId.set(b.id, []); byId.get(b.id).push(b); }
+    const chips = [...byId.values()].map(rows => {
+      const [def] = rows;
+      return `<span class="pill" title="${esc(def.blurb)}">${def.emoji} ${esc(def.title)}${rows.length > 1 ? ` ×${rows.length}` : ""}</span>`;
+    }).join(" ");
+    return `<div class="kearn"><h3>${esc(k.name)}</h3>
+      <div class="sub">${byId.size} of ${BADGES.length} badges started.</div>
+      ${chips || '<div class="empty">Nothing yet. Their first pass unlocks the first one.</div>'}</div>`;
+  }).join("");
+
+  const badgesCard = `<div class="card"><h2>🏅 Badges &amp; the house board</h2>
+    <p class="sub">Every badge below is earned against a child's own history, never a sibling's, so the
+      youngest in the house can hold just as many as the oldest. ${d.boardOn
+        ? "The house board is <b>on</b>: siblings can see it on their own portal."
+        : "The house board is <b>off</b>. Kids still see their own badges; nobody sees a comparison."}</p>
+    <div class="jform">
+      <button class="tog${d.boardOn ? " yes" : ""}" onclick="boardToggle(${d.boardOn ? "false" : "true"})">${
+        d.boardOn ? "House board: ON, tap to turn off" : "House board: OFF, tap to turn on"}</button>
+    </div>
+    ${kids.length ? badgeRows : '<div class="empty">No children on the network yet.</div>'}
+    <p class="hint">The board never ranks anybody by total minutes or total passes. It spotlights whoever
+      improved most lately, tried the widest range of subjects, bounced back best after a flop, or read up
+      the most, and it changes often, so it is not the same child every week. See <code>docs/GAMIFICATION.md</code>
+      for the full reasoning, including the leaderboard designs that were tried and rejected.</p></div>`;
+
+  return `<style>${STYLE}</style>${hero}${claims}${jobs}${quizzes}${rulesCard}${badgesCard}${history}<script>${SCRIPT}</script>`;
 }

@@ -1,0 +1,662 @@
+{
+  "id": "nz-ncea-biology",
+  "title": "Biology, NCEA",
+  "emoji": "🧬",
+  "suggested_age_min": 15,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Senior secondary biology spanning NCEA Levels 1 to 3: cell structure, membrane transport, enzymes, photosynthesis and respiration, DNA replication, transcription and translation, mitosis versus meiosis, genetics including dihybrid crosses and sex linkage, evolution and speciation, ecology and succession, and human homeostasis.",
+  "questions": [
+    {
+      "id": "bio-001",
+      "prompt": "Which organelle is known as the powerhouse of the cell, producing most of its ATP?",
+      "choices": [
+        "Mitochondria",
+        "Nucleus",
+        "Ribosome",
+        "Golgi apparatus"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Mitochondria are where aerobic respiration happens, breaking down glucose to release energy stored as ATP, which is why they are called the powerhouse of the cell."
+    },
+    {
+      "id": "bio-002",
+      "prompt": "Which organelle contains the cell's genetic material (DNA)?",
+      "choices": [
+        "Nucleus",
+        "Mitochondria",
+        "Chloroplast",
+        "Vacuole"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The nucleus holds the cell's DNA, organised into chromosomes, and controls the cell's activities by controlling which genes are switched on."
+    },
+    {
+      "id": "bio-003",
+      "prompt": "Which structure is found in plant cells but not in animal cells?",
+      "choices": [
+        "Cell wall",
+        "Nucleus",
+        "Mitochondria",
+        "Cell membrane"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Plant cells have a rigid cell wall made of cellulose surrounding the cell membrane, which gives the cell a fixed shape and support. Animal cells have a cell membrane but no cell wall, so they can change shape."
+    },
+    {
+      "id": "bio-004",
+      "prompt": "Ribosomes are the site of which process?",
+      "choices": [
+        "Protein synthesis (translation)",
+        "DNA replication",
+        "Photosynthesis",
+        "Cellular respiration"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Ribosomes read the sequence of codons on mRNA and assemble the matching amino acids into a protein chain. This process is called translation, and it happens on ribosomes whether they float free in the cytoplasm or are attached to the rough endoplasmic reticulum."
+    },
+    {
+      "id": "bio-005",
+      "prompt": "A cell's rough endoplasmic reticulum looks 'rough' under a microscope because it is studded with which organelle?",
+      "choices": [
+        "Ribosomes",
+        "Mitochondria",
+        "Lysosomes",
+        "Centrioles"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Rough ER has ribosomes attached across its surface, which is what gives it a bumpy, rough appearance. Those ribosomes make proteins and feed them directly into the ER for processing, while smooth ER has no ribosomes and instead builds lipids."
+    },
+    {
+      "id": "bio-006",
+      "prompt": "Photosynthesis mainly takes place in which organelle?",
+      "choices": [
+        "Chloroplast",
+        "Mitochondrion",
+        "Nucleus",
+        "Ribosome"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Chloroplasts contain chlorophyll, the pigment that captures light energy, which is why photosynthesis happens there rather than in any other organelle."
+    },
+    {
+      "id": "bio-007",
+      "prompt": "The overall word equation for photosynthesis is",
+      "choices": [
+        "carbon dioxide + water, using light energy, produce glucose + oxygen",
+        "glucose + oxygen produce carbon dioxide + water, releasing energy",
+        "glucose produces alcohol + carbon dioxide",
+        "oxygen + water produce glucose"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Photosynthesis captures light energy to build glucose from carbon dioxide and water, releasing oxygen as a by-product. The second option is actually the equation for respiration, running in the opposite direction, so it is worth checking which way the arrow points."
+    },
+    {
+      "id": "bio-008",
+      "prompt": "Aerobic respiration is best summarised as",
+      "choices": [
+        "glucose + oxygen produce carbon dioxide + water, releasing energy",
+        "carbon dioxide + water produce glucose + oxygen, releasing energy",
+        "glucose produces lactic acid, with no oxygen used",
+        "water produces hydrogen + oxygen, using electricity"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Aerobic respiration breaks glucose down using oxygen, releasing carbon dioxide and water as waste products and releasing usable energy as ATP for the cell. The third option describes anaerobic respiration in muscles, which happens only when oxygen is in short supply."
+    },
+    {
+      "id": "bio-009",
+      "prompt": "Photosynthesis and aerobic respiration are often described as opposite processes because",
+      "choices": [
+        "the products of one (glucose and oxygen) are the reactants of the other",
+        "they both happen only in animal cells",
+        "they both release energy as their main purpose",
+        "neither process involves gas exchange"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Photosynthesis takes in carbon dioxide and water and produces glucose and oxygen. Respiration takes in glucose and oxygen and produces carbon dioxide and water, which is exactly the reverse, so the two equations mirror each other."
+    },
+    {
+      "id": "bio-010",
+      "prompt": "A plant is kept in complete darkness for several days. What would you expect for the net exchange of gases through its leaves, and why?",
+      "choices": [
+        "The plant would take in oxygen and release carbon dioxide, since only respiration occurs without light to drive photosynthesis",
+        "The plant would release oxygen and take in carbon dioxide, as normal",
+        "The plant would stop respiring entirely",
+        "Gas exchange would stop completely since no photosynthesis occurs"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Respiration happens all the time in every living cell, with or without light, but photosynthesis needs light energy to run. In the dark, photosynthesis stops while respiration carries on, so the leaf's net gas exchange becomes oxygen in and carbon dioxide out, the reverse of what happens in daylight."
+    },
+    {
+      "id": "bio-011",
+      "prompt": "Diffusion is the movement of particles from an area of",
+      "choices": [
+        "high concentration to low concentration",
+        "low concentration to high concentration",
+        "high concentration to high concentration",
+        "low pressure to low pressure"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Diffusion is a passive process: particles naturally spread out from where they are crowded together to where they are more spread out, moving down their concentration gradient with no energy input needed."
+    },
+    {
+      "id": "bio-012",
+      "prompt": "Osmosis is specifically the movement of",
+      "choices": [
+        "water across a partially permeable membrane, from high to low water concentration",
+        "any solute across a membrane",
+        "water against its concentration gradient using energy",
+        "glucose into cells using carrier proteins"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Osmosis is diffusion of water in particular, through a partially permeable membrane, moving from a region where water is more concentrated (a dilute solution) to where it is less concentrated (a more concentrated solution). It needs no energy, since it is water moving down its own concentration gradient."
+    },
+    {
+      "id": "bio-013",
+      "prompt": "A red blood cell placed in a very salty (hypertonic) solution will",
+      "choices": [
+        "shrink, as water leaves the cell by osmosis",
+        "swell and burst, as water enters the cell",
+        "stay the same size",
+        "immediately divide"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The salty solution outside has a lower water concentration than the inside of the cell, so water moves out of the cell by osmosis, down the water concentration gradient, causing the cell to shrink."
+    },
+    {
+      "id": "bio-014",
+      "prompt": "Active transport differs from diffusion because active transport",
+      "choices": [
+        "moves particles against their concentration gradient and requires energy (ATP)",
+        "only moves water",
+        "always moves particles down their concentration gradient",
+        "does not involve membrane proteins"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Diffusion is passive and only moves particles from high to low concentration. Active transport uses energy from ATP to push particles the other way, from low concentration to high concentration, using carrier proteins in the membrane."
+    },
+    {
+      "id": "bio-015",
+      "prompt": "Root hair cells absorbing mineral ions from soil, even when the soil has a lower ion concentration than the root cell, is an example of",
+      "choices": [
+        "active transport, since it moves ions against their concentration gradient using energy",
+        "diffusion, since ions move naturally",
+        "osmosis, since it involves water",
+        "facilitated diffusion, since no energy is needed"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Because the ions are moving from a lower concentration (the soil) to a higher concentration (inside the root hair cell), this is movement against the concentration gradient, which only active transport can achieve, using ATP energy released by respiration in the root cell's many mitochondria."
+    },
+    {
+      "id": "bio-016",
+      "prompt": "Enzymes are best described as",
+      "choices": [
+        "biological catalysts that speed up reactions without being used up",
+        "proteins that are used up in every reaction",
+        "a type of carbohydrate",
+        "molecules that only work outside cells"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Enzymes are catalysts made of protein: they speed up chemical reactions in the body but come out of the reaction unchanged, so the same enzyme molecule can be used again and again."
+    },
+    {
+      "id": "bio-017",
+      "prompt": "The 'lock and key' model describes how",
+      "choices": [
+        "an enzyme's active site fits a specific substrate shape",
+        "enzymes are stored in the cell",
+        "DNA is copied",
+        "hormones travel in the blood"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "In the lock and key model, an enzyme's active site has a shape that only fits one particular substrate, in the same way a key only fits its matching lock. This is why each enzyme usually only speeds up one specific reaction."
+    },
+    {
+      "id": "bio-018",
+      "prompt": "As temperature rises above an enzyme's optimum, its rate of reaction",
+      "choices": [
+        "decreases, because the enzyme begins to denature",
+        "keeps increasing without limit",
+        "stays exactly the same",
+        "increases only for digestive enzymes"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Heat beyond the optimum temperature breaks the bonds holding the enzyme's shape together, changing the shape of the active site. Once the active site no longer fits the substrate, the enzyme has denatured and the reaction rate falls away."
+    },
+    {
+      "id": "bio-019",
+      "prompt": "A student adds the same amount of enzyme to test tubes with increasing substrate concentration. The rate of reaction increases at first but eventually levels off. What explains the levelling off?",
+      "choices": [
+        "The enzyme's active sites are all occupied at once (saturation)",
+        "The substrate has run out completely",
+        "The temperature has changed",
+        "The enzyme has been used up"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Once every enzyme molecule's active site is busy processing a substrate molecule at the same time, adding more substrate cannot speed the reaction up any further. At that point, the amount of enzyme, not the amount of substrate, is what limits the rate."
+    },
+    {
+      "id": "bio-020",
+      "prompt": "Extreme pH (for example, strongly acidic conditions) affects enzyme activity because",
+      "choices": [
+        "it changes the shape of the enzyme's active site, so the substrate can no longer bind well",
+        "it destroys the substrate only, leaving the enzyme unaffected",
+        "it increases the speed of every reaction",
+        "enzymes are not affected by pH at all"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "An enzyme's active site shape depends on bonds that are sensitive to pH. A pH far from the enzyme's optimum disrupts those bonds and distorts the active site, so the substrate no longer fits, in much the same way extreme heat denatures an enzyme."
+    },
+    {
+      "id": "bio-021",
+      "prompt": "In DNA, adenine always pairs with",
+      "choices": [
+        "Thymine",
+        "Guanine",
+        "Cytosine",
+        "Uracil"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "DNA base pairing follows a fixed rule: adenine (A) always pairs with thymine (T), and cytosine (C) always pairs with guanine (G)."
+    },
+    {
+      "id": "bio-022",
+      "prompt": "DNA replication is described as 'semi-conservative' because each new DNA molecule contains",
+      "choices": [
+        "one original (old) strand and one newly made strand",
+        "two completely new strands",
+        "two original strands",
+        "half of one gene and half of another"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "When DNA unzips, each old strand acts as a template for building a brand new complementary strand. The result is that every new DNA molecule keeps one old strand and gains one new one, which is why the process is called semi-conservative."
+    },
+    {
+      "id": "bio-023",
+      "prompt": "During transcription, which molecule is produced from a DNA template?",
+      "choices": [
+        "mRNA",
+        "tRNA",
+        "A protein",
+        "A new DNA strand"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Transcription is the process where RNA polymerase reads one strand of DNA and builds a complementary messenger RNA (mRNA) strand, which then carries the genetic message out of the nucleus."
+    },
+    {
+      "id": "bio-024",
+      "prompt": "In translation, a ribosome reads mRNA in groups of three bases called",
+      "choices": [
+        "codons",
+        "anticodons",
+        "genes",
+        "alleles"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Each group of three mRNA bases is a codon, and each codon codes for one specific amino acid. Transfer RNA molecules carry matching anticodons that pair with the mRNA codons, delivering the correct amino acid to build the protein chain."
+    },
+    {
+      "id": "bio-025",
+      "prompt": "Transcription pairs each DNA base with its mRNA complement: A with U, T with A, C with G, and G with C. Applying that rule, what mRNA codon is transcribed from the DNA triplet C-G-T?",
+      "choices": [
+        "GCA",
+        "CGT",
+        "GCU",
+        "CGA"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Working through the pairing rule base by base: DNA C pairs with mRNA G, DNA G pairs with mRNA C, and DNA T pairs with mRNA A. Put those three mRNA bases in order and the codon is G-C-A."
+    },
+    {
+      "id": "bio-026",
+      "prompt": "Mitosis produces",
+      "choices": [
+        "two genetically identical diploid cells",
+        "four genetically different haploid cells",
+        "one large cell",
+        "two cells with double the chromosome number"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Mitosis copies a cell's chromosomes exactly once and then splits the cell in two, so both resulting cells are genetically identical to each other and to the parent cell, and keep the full (diploid) chromosome number. This is how the body grows and repairs tissue."
+    },
+    {
+      "id": "bio-027",
+      "prompt": "Meiosis produces",
+      "choices": [
+        "four genetically different haploid cells (gametes)",
+        "two identical diploid cells",
+        "two genetically different diploid cells",
+        "one diploid cell"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Meiosis involves two rounds of division, producing four cells, each with half the normal chromosome number (haploid). Crossing over and the random way chromosomes are shared out make all four cells genetically different from one another."
+    },
+    {
+      "id": "bio-028",
+      "prompt": "Which process is responsible for producing sperm and egg cells in humans?",
+      "choices": [
+        "Meiosis",
+        "Mitosis",
+        "Binary fission",
+        "Transcription"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Sperm and egg cells (gametes) need to be haploid, carrying half the usual chromosome number, so that when two of them fuse at fertilisation the full diploid number is restored. Only meiosis halves the chromosome number this way."
+    },
+    {
+      "id": "bio-029",
+      "prompt": "Crossing over, which increases genetic variation, occurs during",
+      "choices": [
+        "meiosis, when homologous chromosomes exchange sections of DNA",
+        "mitosis, when chromosomes line up singly",
+        "transcription, when mRNA is made",
+        "fertilisation, when gametes fuse"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "During the first division of meiosis, matching (homologous) chromosome pairs line up next to each other and swap sections of DNA between them. This shuffles the alleles onto new chromosome combinations, adding genetic variation on top of what independent assortment already provides."
+    },
+    {
+      "id": "bio-030",
+      "prompt": "Why must gametes be haploid (half the normal chromosome number)?",
+      "choices": [
+        "so that fertilisation restores the full diploid chromosome number in the offspring",
+        "so gametes can divide by mitosis afterwards",
+        "so that offspring have double the normal chromosome number",
+        "because haploid cells cannot mutate"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "If gametes kept the full diploid chromosome number, fertilisation would double the chromosome number every generation. Because each gamete only carries half, one set from each parent, fusing them at fertilisation gives the offspring back the correct full number."
+    },
+    {
+      "id": "bio-031",
+      "prompt": "In genetics, an allele that is expressed even when only one copy is present is called",
+      "choices": [
+        "dominant",
+        "recessive",
+        "homozygous",
+        "co-dominant"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A dominant allele only needs one copy to be expressed in the phenotype, masking a recessive allele on the other chromosome. A recessive allele, by contrast, is only expressed when both copies present are recessive."
+    },
+    {
+      "id": "bio-032",
+      "prompt": "A cross between two heterozygous parents (Aa x Aa) for a single gene gives what phenotype ratio in the offspring?",
+      "choices": [
+        "3 dominant : 1 recessive",
+        "1 dominant : 1 recessive",
+        "9:3:3:1",
+        "1:2:1"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A Punnett square for Aa x Aa gives genotypes AA, Aa, Aa and aa, in a 1:2:1 ratio. Since AA and Aa both show the dominant phenotype, three out of four offspring show the dominant trait and one shows the recessive trait, a 3:1 phenotype ratio."
+    },
+    {
+      "id": "bio-033",
+      "prompt": "In a dihybrid cross between two individuals heterozygous for two genes (AaBb x AaBb), the classic phenotype ratio in the offspring is",
+      "choices": [
+        "9:3:3:1",
+        "3:1",
+        "1:1:1:1",
+        "1:2:1"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A dihybrid cross combines two independent 3:1 ratios, one for each gene. Multiplying the possibilities out across a full Punnett square gives 9 showing both dominant traits, 3 showing the first dominant trait only, 3 showing the second dominant trait only, and 1 showing both recessive traits, the 9:3:3:1 ratio."
+    },
+    {
+      "id": "bio-034",
+      "prompt": "Colour blindness is a sex-linked recessive condition carried on the X chromosome. Why are males much more likely than females to be colour blind?",
+      "choices": [
+        "males have only one X chromosome, so a single recessive allele is enough to show the condition",
+        "males have two X chromosomes, doubling their risk",
+        "the colour blindness gene is on the Y chromosome",
+        "females cannot carry the allele at all"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Males are XY, so they only have one X chromosome and therefore only one copy of the gene, meaning a single recessive allele is enough for the condition to show. Females are XX and need both copies to be recessive to be colour blind, since one dominant allele on either X is enough to mask it."
+    },
+    {
+      "id": "bio-035",
+      "prompt": "A colour-blind man (his genotype is X carrying the recessive allele, paired with Y) has children with a woman who is a carrier but not colour blind herself. What fraction of their sons is expected to be colour blind?",
+      "choices": [
+        "1/2",
+        "1/4",
+        "All sons",
+        "None of the sons"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Sons always inherit their Y chromosome from their father and their single X chromosome from their mother. Since the carrier mother has one normal X and one recessive X, she passes the recessive X to half her children on average, so about half of her sons (who have only that one X to rely on) are expected to be colour blind."
+    },
+    {
+      "id": "bio-036",
+      "prompt": "Natural selection is best described as",
+      "choices": [
+        "individuals with advantageous traits are more likely to survive and reproduce",
+        "all individuals in a population change during their lifetime",
+        "species always evolve towards perfection",
+        "mutations are planned to help a species"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Natural selection works on differences that already exist between individuals: those with traits suited to their environment tend to survive and reproduce more, passing those traits on, while individuals do not change their own traits during their lifetime."
+    },
+    {
+      "id": "bio-037",
+      "prompt": "Variation within a population, which natural selection acts on, is originally caused by",
+      "choices": [
+        "mutations and sexual reproduction (shuffling of alleles)",
+        "environmental changes alone",
+        "identical copying of DNA",
+        "the age of individuals"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "New alleles arise through mutation, and sexual reproduction shuffles existing alleles into new combinations. Together these are the source of the variation that natural selection then acts on."
+    },
+    {
+      "id": "bio-038",
+      "prompt": "'Survival of the fittest' in evolution means the fittest individuals are those that",
+      "choices": [
+        "leave the most surviving offspring",
+        "are physically the strongest",
+        "live the longest",
+        "grow the largest"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "In biology, fitness is measured by reproductive success, not strength, size or lifespan. An individual that survives a long time but leaves no offspring has zero evolutionary fitness, while one that reproduces successfully passes its alleles on to the next generation."
+    },
+    {
+      "id": "bio-039",
+      "prompt": "Two populations of the same species become separated by a mountain range and, over many generations, evolve into two separate species that can no longer interbreed. This is an example of",
+      "choices": [
+        "allopatric speciation, caused by geographic isolation",
+        "sympatric speciation, occurring in the same area",
+        "genetic drift with no isolation",
+        "artificial selection by humans"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Allopatric speciation happens when a geographic barrier, such as a mountain range, physically separates two populations. Cut off from interbreeding, the two populations accumulate different mutations and face different selection pressures until they become too different to interbreed even if reunited."
+    },
+    {
+      "id": "bio-040",
+      "prompt": "A population of moths has two colour forms, pale and dark. After industrial soot darkens the tree trunks they rest on, dark moths become far more common within a few generations, while pale moths become rare. What best explains this shift?",
+      "choices": [
+        "Birds preferentially ate the more visible pale moths, so dark moths survived and reproduced more, passing on the dark allele",
+        "The moths deliberately changed colour to match the trees",
+        "Soot pollution directly turned pale moths dark",
+        "Dark moths bred with soot to gain their colour"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Both colour forms already existed in the population before the soot appeared. Once dark trunks made pale moths stand out to predators, birds ate more pale moths than dark ones, so more dark moths survived to reproduce and pass on the dark allele, shifting the population's colour over generations. Individual moths never changed colour themselves; the proportion of each colour in the population changed."
+    },
+    {
+      "id": "bio-041",
+      "prompt": "An ecosystem is best described as",
+      "choices": [
+        "a community of living things interacting with each other and their physical environment",
+        "a single species living alone",
+        "only the non-living parts of an environment",
+        "a zoo or nature reserve"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "An ecosystem includes both the living organisms (the community) and the non-living physical environment they interact with, such as soil, water and climate, all considered together."
+    },
+    {
+      "id": "bio-042",
+      "prompt": "A species' 'niche' refers to",
+      "choices": [
+        "the role it plays and resources it uses within its habitat",
+        "the exact geographic location it lives in",
+        "its position in a food chain only",
+        "the number of individuals in a population"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A niche is broader than just where a species lives (that is its habitat). It describes the whole role a species plays, including what it eats, what eats it, and how it uses the resources available to it."
+    },
+    {
+      "id": "bio-043",
+      "prompt": "Primary succession begins on",
+      "choices": [
+        "bare rock or newly formed land with no soil, such as after a volcanic eruption",
+        "an existing field cleared of vegetation",
+        "a forest after a small fire",
+        "farmland taken out of use"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Primary succession starts from bare ground where no soil or living things exist yet, such as fresh volcanic rock. Secondary succession, by contrast, starts on ground that already has soil, such as a cleared field or a burnt forest, so it happens much faster."
+    },
+    {
+      "id": "bio-044",
+      "prompt": "During ecological succession, pioneer species such as lichen are eventually replaced by other species because",
+      "choices": [
+        "pioneer species change the environment (for example, by building up soil), making conditions suitable for new species to outcompete them",
+        "pioneer species always die out after one generation",
+        "later species arrive first but hide",
+        "succession is random and follows no pattern"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Pioneer species like lichen can survive harsh, bare conditions, and as they grow and die they help break down rock and build up a thin layer of soil. That improved soil then lets other plants establish, and those plants often outcompete the pioneers for light and space, so the community changes over time."
+    },
+    {
+      "id": "bio-045",
+      "prompt": "A climax community in ecological succession is best described as",
+      "choices": [
+        "a relatively stable, long-lasting community that stops changing significantly unless disturbed",
+        "the very first species to colonise bare ground",
+        "a community with only one species",
+        "an ecosystem in the middle of a fire"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Succession is a sequence of communities replacing one another over time, and it ends at the climax community: a stable, mature stage that stays much the same for as long as conditions remain undisturbed, such as an old-growth forest."
+    },
+    {
+      "id": "bio-046",
+      "prompt": "Homeostasis is best described as",
+      "choices": [
+        "the maintenance of a stable internal environment despite external changes",
+        "the process of growth from birth to adulthood",
+        "the breakdown of food in digestion",
+        "the exchange of gases in the lungs"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Homeostasis is the body's ongoing job of keeping internal conditions, such as temperature and blood glucose, steady, even when the outside environment or the body's activity is changing."
+    },
+    {
+      "id": "bio-047",
+      "prompt": "Homeostasis in the body typically works through",
+      "choices": [
+        "negative feedback loops that correct changes back towards a set point",
+        "positive feedback loops that amplify every change",
+        "random, uncontrolled processes",
+        "the immune system only"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Negative feedback detects a change away from the normal set point and triggers a response that pushes conditions back towards normal, which is how the body corrects both rises and falls in things like temperature and blood glucose."
+    },
+    {
+      "id": "bio-048",
+      "prompt": "When blood glucose rises after a meal, the pancreas releases",
+      "choices": [
+        "insulin, which causes cells to take up glucose and lowers blood glucose",
+        "glucagon, which raises blood glucose further",
+        "adrenaline, which has no effect on glucose",
+        "bile, which digests fat"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Insulin signals cells, especially in the liver and muscles, to take up glucose from the blood and store it as glycogen, which brings blood glucose back down towards its normal level."
+    },
+    {
+      "id": "bio-049",
+      "prompt": "If blood glucose falls too low, the pancreas releases glucagon, which",
+      "choices": [
+        "causes the liver to break down stored glycogen into glucose, raising blood glucose",
+        "causes cells to absorb even more glucose, lowering it further",
+        "stops the pancreas from producing insulin permanently",
+        "has no effect on blood glucose levels"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Glucagon has the opposite effect to insulin: it signals the liver to break down its stored glycogen back into glucose and release it into the blood, raising blood glucose back up towards normal. Insulin and glucagon working against each other is what keeps blood glucose stable."
+    },
+    {
+      "id": "bio-050",
+      "prompt": "On a hot day, the body cools itself partly through vasodilation, which is",
+      "choices": [
+        "widening of blood vessels near the skin, increasing blood flow so more heat can radiate away",
+        "narrowing of blood vessels near the skin, trapping heat inside",
+        "an increase in shivering to generate heat",
+        "a decrease in sweat gland activity"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Vasodilation widens the blood vessels close to the skin's surface, bringing more warm blood near the surface where heat can radiate away into the surrounding air. This works alongside increased sweating, since evaporating sweat also removes heat, to bring body temperature back down."
+    }
+  ]
+}

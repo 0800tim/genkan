@@ -1,0 +1,661 @@
+{
+  "id": "au-primary-secondary",
+  "title": "Australia, Primary and Secondary",
+  "emoji": "🇦🇺",
+  "suggested_age_min": 7,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "questions": [
+    {
+      "id": "au-001",
+      "prompt": "What is the capital city of Australia?",
+      "choices": [
+        "Canberra",
+        "Sydney",
+        "Melbourne",
+        "Brisbane"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Canberra, not Sydney or Melbourne, was purpose built to be Australia's capital city."
+    },
+    {
+      "id": "au-002",
+      "prompt": "Which Australian city is famous for its Opera House and Harbour Bridge?",
+      "choices": [
+        "Sydney",
+        "Melbourne",
+        "Perth",
+        "Adelaide"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Sydney's Opera House and Harbour Bridge are two of Australia's most recognisable landmarks."
+    },
+    {
+      "id": "au-003",
+      "prompt": "What is the capital city of Victoria?",
+      "choices": [
+        "Melbourne",
+        "Sydney",
+        "Geelong",
+        "Ballarat"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Melbourne, on the south east coast, is the capital of Victoria."
+    },
+    {
+      "id": "au-004",
+      "prompt": "What is the capital city of Queensland?",
+      "choices": [
+        "Brisbane",
+        "Cairns",
+        "Gold Coast",
+        "Townsville"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Brisbane, on the Brisbane River, is the capital of Queensland."
+    },
+    {
+      "id": "au-005",
+      "prompt": "What is the capital city of Western Australia?",
+      "choices": [
+        "Perth",
+        "Fremantle",
+        "Broome",
+        "Albany"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Perth, on Australia's west coast, is the capital of Western Australia."
+    },
+    {
+      "id": "au-006",
+      "prompt": "What is the capital city of South Australia?",
+      "choices": [
+        "Adelaide",
+        "Darwin",
+        "Alice Springs",
+        "Whyalla"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Adelaide is the capital of South Australia, set between hills and the coast."
+    },
+    {
+      "id": "au-007",
+      "prompt": "What is the capital city of Tasmania, an island state south of the mainland?",
+      "choices": [
+        "Hobart",
+        "Launceston",
+        "Devonport",
+        "Burnie"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Hobart, on the Derwent River, is the capital of Tasmania."
+    },
+    {
+      "id": "au-008",
+      "prompt": "What is the capital city of the Northern Territory?",
+      "choices": [
+        "Darwin",
+        "Alice Springs",
+        "Katherine",
+        "Palmerston"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Darwin, on Australia's tropical north coast, is the capital of the Northern Territory."
+    },
+    {
+      "id": "au-009",
+      "prompt": "The world's largest coral reef system lies off the coast of which Australian state?",
+      "choices": [
+        "Queensland",
+        "New South Wales",
+        "Western Australia",
+        "Tasmania"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Great Barrier Reef stretches along the Queensland coast and is the largest coral reef system in the world."
+    },
+    {
+      "id": "au-010",
+      "prompt": "Which two rivers make up Australia's largest river system, flowing through several south eastern states?",
+      "choices": [
+        "The Murray and the Darling",
+        "The Yarra and the Torrens",
+        "The Swan and the Brisbane",
+        "The Snowy and the Murrumbidgee"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Murray-Darling river system drains a huge area of south eastern Australia and is vital for farming."
+    },
+    {
+      "id": "au-011",
+      "prompt": "Much of central Australia is covered by dry, sparsely populated land often called what?",
+      "choices": [
+        "The outback",
+        "The highlands",
+        "The tropics",
+        "The fjords"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The outback is the vast, dry interior of Australia, home to deserts, red earth and small remote towns."
+    },
+    {
+      "id": "au-012",
+      "prompt": "Which large desert covers part of central Australia, near the border of South Australia, Queensland and the Northern Territory?",
+      "choices": [
+        "The Simpson Desert",
+        "The Sahara",
+        "The Atacama",
+        "The Gobi"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Simpson Desert is one of several deserts covering much of central Australia, known for its long red sand dunes."
+    },
+    {
+      "id": "au-013",
+      "prompt": "Which territory, though small, is entirely surrounded by New South Wales?",
+      "choices": [
+        "Australian Capital Territory",
+        "Northern Territory",
+        "Tasmania",
+        "Victoria"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Australian Capital Territory, home to Canberra, is a small territory carved out of, and surrounded by, New South Wales."
+    },
+    {
+      "id": "au-014",
+      "prompt": "Which mountain range runs along Australia's east coast, from Queensland down through New South Wales to Victoria?",
+      "choices": [
+        "The Great Dividing Range",
+        "The Snowy Mountains",
+        "The Blue Mountains",
+        "The MacDonnell Ranges"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The Great Dividing Range runs the length of Australia's eastern side and is the country's most extensive mountain range."
+    },
+    {
+      "id": "au-015",
+      "prompt": "Aboriginal and Torres Strait Islander peoples are recognised as having lived in Australia for how long, making theirs the oldest continuous culture in the world?",
+      "choices": [
+        "Tens of thousands of years",
+        "A few hundred years",
+        "About one thousand years",
+        "Since the 1700s"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Aboriginal and Torres Strait Islander peoples have lived on this land for at least 65,000 years, making theirs the oldest continuous culture on Earth."
+    },
+    {
+      "id": "au-016",
+      "prompt": "In 1788, a fleet of British ships arrived at what is now Sydney to set up a colony. What was this fleet called?",
+      "choices": [
+        "The First Fleet",
+        "The Second Fleet",
+        "The Royal Fleet",
+        "The Sydney Fleet"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The First Fleet, carrying convicts and officials from Britain, arrived in 1788 and founded the colony that became Sydney."
+    },
+    {
+      "id": "au-017",
+      "prompt": "Which day is a national day of remembrance in Australia, honouring those who served in war, especially at Gallipoli?",
+      "choices": [
+        "Anzac Day",
+        "Australia Day",
+        "Federation Day",
+        "Remembrance Sunday"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Anzac Day, on 25 April, remembers Australian and New Zealand soldiers, first marking the landing at Gallipoli in 1915."
+    },
+    {
+      "id": "au-018",
+      "prompt": "In which year did six separate British colonies join together to form the single nation of Australia?",
+      "choices": [
+        "1901",
+        "1788",
+        "1850",
+        "1915"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Australia became a single federated nation on 1 January 1901, when the six colonies agreed to join together."
+    },
+    {
+      "id": "au-019",
+      "prompt": "What is the word for the six colonies joining together in 1901 to form one country?",
+      "choices": [
+        "Federation",
+        "Independence",
+        "Confederation",
+        "Colonisation"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Federation is the name for the process by which Australia's separate colonies united under one national government in 1901."
+    },
+    {
+      "id": "au-020",
+      "prompt": "ANZAC is short for which group of soldiers who landed at Gallipoli in 1915?",
+      "choices": [
+        "Australian and New Zealand Army Corps",
+        "Allied Naval Zone Attack Command",
+        "Australian National Zone Army Command",
+        "Allied New Zealand Air Corps"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "ANZAC stands for the Australian and New Zealand Army Corps, whose soldiers fought together at Gallipoli in 1915."
+    },
+    {
+      "id": "au-021",
+      "prompt": "The First Fleet in 1788 carried many people to Australia who had been sentenced to what?",
+      "choices": [
+        "Transportation as convicts",
+        "Military service",
+        "Missionary work",
+        "Gold mining"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Many people on the First Fleet were convicts transported from Britain, sent to serve their sentences in the new colony."
+    },
+    {
+      "id": "au-022",
+      "prompt": "The Eureka Stockade of 1854 was a rebellion by workers in which industry, angry about licence fees?",
+      "choices": [
+        "Gold miners",
+        "Sheep farmers",
+        "Wharf workers",
+        "Railway workers"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Eureka Stockade saw gold miners in Victoria rebel against the government over unfair licence fees and a lack of political rights."
+    },
+    {
+      "id": "au-023",
+      "prompt": "In which Australian colony did the Eureka Stockade rebellion of 1854 take place?",
+      "choices": [
+        "Victoria",
+        "New South Wales",
+        "Queensland",
+        "South Australia"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Eureka Stockade happened near Ballarat, in the colony of Victoria, during the gold rush years."
+    },
+    {
+      "id": "au-024",
+      "prompt": "The Gallipoli campaign of 1915, where Anzac troops landed, took place during which war?",
+      "choices": [
+        "The First World War",
+        "The Second World War",
+        "The Boer War",
+        "The Korean War"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Gallipoli campaign was part of the First World War, as Allied forces tried and failed to take control of the Gallipoli peninsula."
+    },
+    {
+      "id": "au-025",
+      "prompt": "Before Federation in 1901, Australia was made up of how many separate British colonies?",
+      "choices": [
+        "Six",
+        "Three",
+        "Ten",
+        "Two"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "New South Wales, Victoria, Queensland, South Australia, Western Australia and Tasmania were six separate colonies before Federation."
+    },
+    {
+      "id": "au-026",
+      "prompt": "Gallipoli is a peninsula located in which present day country?",
+      "choices": [
+        "Turkey",
+        "Greece",
+        "Egypt",
+        "France"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Gallipoli is a peninsula in what is now Turkey, on the western side of the Dardanelles strait."
+    },
+    {
+      "id": "au-027",
+      "prompt": "Captain James Cook charted Australia's east coast in 1770, sailing on behalf of which country?",
+      "choices": [
+        "Great Britain",
+        "the Netherlands",
+        "Portugal",
+        "Spain"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "James Cook charted the eastern coast of Australia in 1770 while sailing on behalf of Great Britain, ahead of the First Fleet's arrival in 1788."
+    },
+    {
+      "id": "au-028",
+      "prompt": "Which day, held on 26 January, marks the anniversary of the First Fleet's arrival and is a public holiday, though it is seen very differently by many Aboriginal and Torres Strait Islander people?",
+      "choices": [
+        "Australia Day",
+        "Anzac Day",
+        "Federation Day",
+        "Waitangi Day"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Australia Day falls on 26 January, the anniversary of the First Fleet's 1788 arrival, and its meaning is understood very differently across the community."
+    },
+    {
+      "id": "au-029",
+      "prompt": "The Eureka Stockade is sometimes described by historians as an early step toward what, because of its calls for the vote and fairer representation?",
+      "choices": [
+        "Australian democracy",
+        "Federation",
+        "Self government for all colonies immediately",
+        "The abolition of the monarchy"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Although the rebellion was crushed, many of the miners' demands for fairer representation were later adopted, and Eureka is often remembered as an early moment in Australian democracy."
+    },
+    {
+      "id": "au-030",
+      "prompt": "Aboriginal stone fish traps found at Brewarrina in New South Wales are considered among the world's oldest surviving examples of what?",
+      "choices": [
+        "Human made structures",
+        "Farming terraces",
+        "Irrigation canals",
+        "Stone bridges"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The stone fish traps at Brewarrina are thought to be among the oldest surviving human made structures anywhere in the world."
+    },
+    {
+      "id": "au-031",
+      "prompt": "Which large Australian animal hops on powerful back legs and carries its young in a pouch?",
+      "choices": [
+        "Kangaroo",
+        "Koala",
+        "Wombat",
+        "Platypus"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Kangaroos use their strong back legs to hop and carry their young, called joeys, in a front pouch."
+    },
+    {
+      "id": "au-032",
+      "prompt": "Which slow moving Australian animal spends much of its day sleeping in eucalyptus trees and eating their leaves?",
+      "choices": [
+        "Koala",
+        "Kangaroo",
+        "Emu",
+        "Dingo"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Koalas sleep for many hours a day and eat mostly eucalyptus leaves, which are tough and low in nutrition."
+    },
+    {
+      "id": "au-033",
+      "prompt": "What is the name for the group of mammals, including kangaroos and koalas, that carry their young in a pouch?",
+      "choices": [
+        "Marsupials",
+        "Monotremes",
+        "Reptiles",
+        "Rodents"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Marsupials are mammals whose young are born tiny and undeveloped, then finish growing in their mother's pouch."
+    },
+    {
+      "id": "au-034",
+      "prompt": "The platypus is unusual among mammals because it does what?",
+      "choices": [
+        "Lays eggs",
+        "Breathes underwater",
+        "Has no fur",
+        "Cannot see"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The platypus is one of the very few mammals that lays eggs instead of giving birth to live young."
+    },
+    {
+      "id": "au-035",
+      "prompt": "Which spiky, egg laying Australian mammal is covered in sharp quills and eats ants and termites?",
+      "choices": [
+        "Echidna",
+        "Wombat",
+        "Possum",
+        "Bandicoot"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The echidna, like the platypus, is a monotreme, one of the small group of mammals that lay eggs."
+    },
+    {
+      "id": "au-036",
+      "prompt": "What is the name for the small group of mammals, including the platypus and echidna, that lay eggs instead of giving birth to live young?",
+      "choices": [
+        "Monotremes",
+        "Marsupials",
+        "Amphibians",
+        "Reptiles"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Monotremes are a rare group of egg laying mammals, found only in Australia and New Guinea."
+    },
+    {
+      "id": "au-037",
+      "prompt": "Wombats are known for producing what unusually shaped droppings, thought to help stop them rolling away?",
+      "choices": [
+        "Cube shaped",
+        "Round",
+        "Star shaped",
+        "Triangular"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Wombats produce roughly cube shaped droppings, which scientists think helps stop them rolling off logs and rocks used to mark territory."
+    },
+    {
+      "id": "au-038",
+      "prompt": "Kangaroos are well suited to Australia's dry conditions partly because they can do what with their water needs?",
+      "choices": [
+        "Go long periods with very little water",
+        "Drink only salt water",
+        "Get all their water from the air",
+        "Store water in their pouch"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Kangaroos are adapted to survive in dry, arid parts of Australia, needing far less water than many other large animals."
+    },
+    {
+      "id": "au-039",
+      "prompt": "Which flightless Australian bird, the second tallest bird in the world, has strong legs built for fast running across open country?",
+      "choices": [
+        "Emu",
+        "Kiwi",
+        "Cassowary",
+        "Kookaburra"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The emu cannot fly, but its long, powerful legs let it run fast across the open plains it lives on."
+    },
+    {
+      "id": "au-040",
+      "prompt": "Many Australian eucalyptus trees are adapted to survive, and even benefit from, what natural event that regularly sweeps through dry Australian bush?",
+      "choices": [
+        "Bushfires",
+        "Floods",
+        "Cyclones",
+        "Frost"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Many eucalypts have thick bark, buried seed pods or roots that survive fire, and some species need the heat of a bushfire to release their seeds."
+    },
+    {
+      "id": "au-041",
+      "prompt": "What is the name of Australia's system of government, in which the country is led by a Prime Minister?",
+      "choices": [
+        "A parliamentary democracy",
+        "A monarchy with no elections",
+        "A one party state",
+        "A direct democracy with no parliament"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Australia is a parliamentary democracy, where the public elects members of parliament and the Prime Minister leads the government."
+    },
+    {
+      "id": "au-042",
+      "prompt": "In which city does Australia's federal Parliament meet?",
+      "choices": [
+        "Canberra",
+        "Sydney",
+        "Melbourne",
+        "Perth"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Australia's federal Parliament meets in Canberra, the city purpose built to be the national capital."
+    },
+    {
+      "id": "au-043",
+      "prompt": "Besides the federal government, Australia is divided into states and territories, each with their own what?",
+      "choices": [
+        "State or territory parliament",
+        "Separate currency",
+        "Separate army",
+        "Separate king"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Each Australian state and territory has its own parliament and government, alongside the federal government in Canberra."
+    },
+    {
+      "id": "au-044",
+      "prompt": "Unlike in many countries, voting in Australian federal elections is what for enrolled adult citizens?",
+      "choices": [
+        "Compulsory",
+        "Optional but rewarded",
+        "Only for landowners",
+        "Only for people over 30"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Australia requires enrolled adult citizens to vote in federal elections, one of a relatively small number of countries that does this."
+    },
+    {
+      "id": "au-045",
+      "prompt": "How many states make up Australia?",
+      "choices": [
+        "Six",
+        "Eight",
+        "Four",
+        "Ten"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Australia has six states, New South Wales, Victoria, Queensland, Western Australia, South Australia and Tasmania, plus two mainland territories."
+    },
+    {
+      "id": "au-046",
+      "prompt": "What are the two houses of Australia's federal Parliament called?",
+      "choices": [
+        "The House of Representatives and the Senate",
+        "The Assembly and the Council",
+        "The Commons and the Lords",
+        "The Congress and the Cabinet"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Australia's federal Parliament has two chambers, the House of Representatives and the Senate."
+    },
+    {
+      "id": "au-047",
+      "prompt": "Who represents the King as Australia's head of state within the country, carrying out mostly ceremonial duties?",
+      "choices": [
+        "The Governor-General",
+        "The Prime Minister",
+        "The Chief Justice",
+        "The Speaker"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Governor-General represents the monarch in Australia and carries out mostly formal and ceremonial duties."
+    },
+    {
+      "id": "au-048",
+      "prompt": "In Australia's Senate, how many senators does each state get, regardless of the state's population?",
+      "choices": [
+        "Twelve",
+        "Two",
+        "Six",
+        "It depends on population"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Each Australian state elects twelve senators, giving smaller states a stronger voice than their population alone would give them, while the two mainland territories elect fewer."
+    },
+    {
+      "id": "au-049",
+      "prompt": "Who usually becomes Australia's Prime Minister?",
+      "choices": [
+        "The leader of the party or coalition with the most support in the House of Representatives",
+        "The Governor-General's personal choice",
+        "The oldest member of parliament",
+        "The leader of the Senate"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Prime Minister is normally the leader of whichever party or coalition can command a majority in the House of Representatives."
+    },
+    {
+      "id": "au-050",
+      "prompt": "Australia's system of voting for the House of Representatives asks voters to do what with the candidates, rather than just choosing one?",
+      "choices": [
+        "Number every candidate in order of preference",
+        "Choose exactly two candidates",
+        "Vote only for a party, not a person",
+        "Vote twice on two separate days"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Australia uses preferential voting, where voters number candidates in order of preference rather than picking just one."
+    }
+  ]
+}

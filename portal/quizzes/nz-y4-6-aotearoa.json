@@ -1,0 +1,487 @@
+{
+  "id": "nz-y4-6-aotearoa",
+  "title": "Aotearoa New Zealand, Years 4 to 6",
+  "emoji": "🥝",
+  "suggested_age_min": 8,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Written for the New Zealand Curriculum, Years 4 to 6 (Levels 2 to 3), ages 8 to 11. Covers geography, native wildlife, Polynesian voyaging and settlement, early Māori life, European contact, the Treaty of Waitangi and Matariki. Treaty questions stick to uncontested facts: the date, the place, who signed, and that the English and Māori texts differ in meaning. Checked 2026-08-30.",
+  "questions": [
+    {
+      "id": "nza-001",
+      "prompt": "What is the Māori name for New Zealand?",
+      "choices": ["Aotearoa", "Waitangi", "Matariki", "Rotorua"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Aotearoa is the Māori name for New Zealand, often translated as 'the land of the long white cloud'."
+    },
+    {
+      "id": "nza-002",
+      "prompt": "New Zealand is made up mainly of how many main islands?",
+      "choices": ["Two", "One", "Three", "Four"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "New Zealand's two main islands are the North Island and the South Island, along with many smaller ones."
+    },
+    {
+      "id": "nza-003",
+      "prompt": "Which city is the capital of New Zealand?",
+      "choices": ["Wellington", "Auckland", "Christchurch", "Hamilton"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Wellington, at the bottom of the North Island, is New Zealand's capital city."
+    },
+    {
+      "id": "nza-004",
+      "prompt": "Which New Zealand city is nicknamed the 'City of Sails'?",
+      "choices": ["Auckland", "Wellington", "Nelson", "Tauranga"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Auckland is nicknamed the City of Sails because of its harbours and its long history of sailing."
+    },
+    {
+      "id": "nza-005",
+      "prompt": "The kiwi is a type of what?",
+      "choices": ["A flightless bird", "A fruit", "A type of fish", "A native tree"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The kiwi is a flightless bird found only in New Zealand, and it gave its name to the fruit and to the nickname 'Kiwi'."
+    },
+    {
+      "id": "nza-006",
+      "prompt": "The kauri is a kind of what?",
+      "choices": ["A native tree", "A native bird", "A shellfish", "A mountain"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The kauri is a giant native tree that can live for well over a thousand years."
+    },
+    {
+      "id": "nza-007",
+      "prompt": "What is Matariki?",
+      "choices": [
+        "A cluster of stars that marks the Māori new year",
+        "A famous New Zealand mountain",
+        "A type of native bird",
+        "A South Island lake"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Matariki is a cluster of stars that appears in the winter sky and marks the Māori new year."
+    },
+    {
+      "id": "nza-008",
+      "prompt": "What is a waka?",
+      "choices": ["A canoe", "A type of house", "A meeting ground", "A weapon"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "A waka is a canoe. Some waka were huge ocean-going canoes used for long voyages."
+    },
+    {
+      "id": "nza-009",
+      "prompt": "The Treaty of Waitangi was an agreement between the British Crown and who?",
+      "choices": ["Māori chiefs", "Australian settlers", "French explorers", "Dutch traders"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Treaty of Waitangi was an agreement between representatives of the British Crown and a number of Māori chiefs."
+    },
+    {
+      "id": "nza-010",
+      "prompt": "Which native New Zealand tree is known for its bright red flowers in summer?",
+      "choices": ["Pōhutukawa", "Kauri", "Rimu", "Tōtara"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The pōhutukawa bursts into bright red flowers each summer, which is why it is sometimes called the New Zealand Christmas tree."
+    },
+    {
+      "id": "nza-011",
+      "prompt": "Which island has a bigger land area, the North Island or the South Island?",
+      "choices": [
+        "The South Island",
+        "The North Island",
+        "They are exactly the same size",
+        "Neither, New Zealand has no islands"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The South Island is larger in land area, though the North Island has more people living on it."
+    },
+    {
+      "id": "nza-012",
+      "prompt": "What is New Zealand's tallest mountain?",
+      "choices": ["Aoraki, Mount Cook", "Mount Ruapehu", "Mount Tongariro", "Mount Taranaki"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Aoraki, also known as Mount Cook, is New Zealand's tallest mountain, in the Southern Alps."
+    },
+    {
+      "id": "nza-013",
+      "prompt": "What is New Zealand's longest river?",
+      "choices": ["The Waikato River", "The Whanganui River", "The Clutha River", "The Manawatū River"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Waikato River, flowing from Lake Taupō to the sea north of Hamilton, is New Zealand's longest river."
+    },
+    {
+      "id": "nza-014",
+      "prompt": "New Zealand's biggest lake, Lake Taupō, formed inside what kind of feature?",
+      "choices": ["A volcanic crater", "A glacier valley", "A river delta", "A coral reef"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Lake Taupō, New Zealand's largest lake, sits inside the crater of a huge volcano."
+    },
+    {
+      "id": "nza-015",
+      "prompt": "Why are so many New Zealand birds flightless?",
+      "choices": [
+        "For millions of years there were no land mammals to hunt them",
+        "They evolved from fish instead of other birds",
+        "New Zealand has no trees to fly to",
+        "Flying uses too much water to drink"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Without land predators such as foxes or stoats, many birds lost the need to fly, long before people and introduced animals arrived."
+    },
+    {
+      "id": "nza-016",
+      "prompt": "Which of these is a large, critically endangered, flightless native parrot?",
+      "choices": ["Kākāpō", "Kererū", "Tūī", "Pūkeko"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The kākāpō is the world's only flightless parrot, and it is critically endangered."
+    },
+    {
+      "id": "nza-017",
+      "prompt": "Who is credited in tradition as one of the great early Polynesian navigators to reach Aotearoa?",
+      "choices": ["Kupe", "Tasman", "Cook", "Hobson"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Māori tradition tells of the navigator Kupe, remembered as one of the first to discover Aotearoa."
+    },
+    {
+      "id": "nza-018",
+      "prompt": "How did the earliest Polynesian settlers most likely reach Aotearoa?",
+      "choices": [
+        "By sailing ocean-going waka, navigating by stars, wind and waves",
+        "By walking across a land bridge",
+        "By drifting on rafts with no navigation at all",
+        "They had always lived there"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Polynesian voyagers were skilled navigators who deliberately sailed waka across huge distances of open ocean, guided by the stars, wind and swells."
+    },
+    {
+      "id": "nza-019",
+      "prompt": "Which European explorer was the first to sight New Zealand, in 1642?",
+      "choices": ["Abel Tasman", "James Cook", "Christopher Columbus", "Ferdinand Magellan"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Dutch explorer Abel Tasman sighted New Zealand in 1642, over a century before James Cook arrived."
+    },
+    {
+      "id": "nza-020",
+      "prompt": "Which explorer charted New Zealand's coastline in detail, arriving in 1769?",
+      "choices": ["James Cook", "Abel Tasman", "Kupe", "William Hobson"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The British explorer James Cook charted New Zealand's coastline closely on his voyages, starting in 1769."
+    },
+    {
+      "id": "nza-021",
+      "prompt": "In which year was the Treaty of Waitangi first signed?",
+      "choices": ["1840", "1770", "1900", "1907"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Treaty of Waitangi was first signed on 6 February 1840, at Waitangi in the Bay of Islands."
+    },
+    {
+      "id": "nza-022",
+      "prompt": "The Treaty of Waitangi exists as two texts. Which languages are they written in?",
+      "choices": ["English and Māori", "English and French", "Māori and Dutch", "English only"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "There is an English version of the Treaty and a Māori version, translated at the time, and the two do not say exactly the same thing."
+    },
+    {
+      "id": "nza-023",
+      "prompt": "What did early Māori communities build as a central meeting place, centred on a carved meeting house?",
+      "choices": ["A marae", "A pā", "A waka", "A hapū"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A marae is a community's meeting ground, centred on a carved meeting house, used for gatherings, ceremonies and important occasions."
+    },
+    {
+      "id": "nza-024",
+      "prompt": "Which New Zealand town is famous for geothermal activity such as geysers and hot mud pools?",
+      "choices": ["Rotorua", "Nelson", "Invercargill", "New Plymouth"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Rotorua sits on an active volcanic zone, which is why it has geysers, hot springs and bubbling mud pools."
+    },
+    {
+      "id": "nza-025",
+      "prompt": "Which South Island city is nicknamed the 'Garden City'?",
+      "choices": ["Christchurch", "Dunedin", "Invercargill", "Nelson"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Christchurch has long been nicknamed the Garden City for its parks and gardens."
+    },
+    {
+      "id": "nza-026",
+      "prompt": "What is a pā?",
+      "choices": [
+        "A fortified Māori village, often built on a hill",
+        "A type of native fish",
+        "A carved walking stick",
+        "A traditional song"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A pā was a defended settlement, often built on a hill or headland, with earthworks and fences for protection."
+    },
+    {
+      "id": "nza-027",
+      "prompt": "What food did early Māori bring from tropical Polynesia and learn to grow in New Zealand's cooler climate?",
+      "choices": ["Kūmara", "Potato", "Wheat", "Rice"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Kūmara, a kind of sweet potato, was brought from tropical Polynesia and had to be carefully stored to survive New Zealand's cooler winters."
+    },
+    {
+      "id": "nza-028",
+      "prompt": "Which large flightless bird, now extinct, was hunted by early Māori for food?",
+      "choices": ["The moa", "The kākāpō", "The kiwi", "The takahē"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Moa were giant flightless birds, some taller than a person, and they died out after early Māori hunted them."
+    },
+    {
+      "id": "nza-029",
+      "prompt": "Why does New Zealand have so many native plants and animals found nowhere else?",
+      "choices": [
+        "It separated from other land masses millions of years ago and evolved in isolation",
+        "It was always joined to Australia",
+        "People brought every native species here on purpose",
+        "Its climate is exactly like everywhere else"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "New Zealand broke away from other land long before most mammals evolved, so its plants and animals developed in isolation."
+    },
+    {
+      "id": "nza-030",
+      "prompt": "The name 'Waitangi' is often translated to mean roughly what?",
+      "choices": ["Weeping waters", "Long white cloud", "Great harbour", "Meeting of two rivers"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Waitangi combines wai, meaning water, with tangi, meaning to cry or make a sound, and it is often translated as weeping waters."
+    },
+    {
+      "id": "nza-031",
+      "prompt": "Roughly how many Māori chiefs added their names to copies of the Treaty of Waitangi during 1840?",
+      "choices": ["Several hundred, across many hapū and iwi", "Only two", "Every Māori person in the country", "None, it was signed only by the Governor"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Over the course of 1840, more than 500 Māori chiefs from around the country added their names or moko to copies of the Treaty."
+    },
+    {
+      "id": "nza-032",
+      "prompt": "Which pair correctly matches a key Treaty of Waitangi word in the Māori text with how the English text describes the same idea?",
+      "choices": [
+        "Kāwanatanga (governance) in the Māori text, described as 'sovereignty' in the English text",
+        "Rangatiratanga (chieftainship) in the Māori text, described as 'taxation' in the English text",
+        "Kāwanatanga (governance) in the Māori text, described as 'friendship' in the English text",
+        "Rangatiratanga (chieftainship) in the Māori text, described as 'religion' in the English text"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Māori text promised the Crown kāwanatanga, meaning governance, while the English text used the stronger word 'sovereignty' for the same article. That gap in meaning still matters today."
+    },
+    {
+      "id": "nza-033",
+      "prompt": "What date is Waitangi Day, marking the anniversary of the Treaty's first signing?",
+      "choices": ["6 February", "1 January", "25 April", "1 April"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Waitangi Day is held every year on 6 February, the date of the first signing in 1840."
+    },
+    {
+      "id": "nza-034",
+      "prompt": "Matariki became an official public holiday in New Zealand in which recent year?",
+      "choices": ["2022", "1990", "1840", "2000"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Matariki became New Zealand's newest public holiday in 2022, the first to be based on Te Ao Māori, the Māori world view."
+    },
+    {
+      "id": "nza-035",
+      "prompt": "The Māori name for the North Island, Te Ika-a-Māui, translates to what?",
+      "choices": ["The fish of Māui", "The canoe of Māui", "The land of Māui", "The mountain of Māui"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Legend tells of the demigod Māui fishing up the North Island, so it is called Te Ika-a-Māui, the fish of Māui."
+    },
+    {
+      "id": "nza-036",
+      "prompt": "The Māori name for the South Island, Te Waipounamu, refers to what valuable stone often found there?",
+      "choices": ["Pounamu, or greenstone", "Gold", "Coal", "Marble"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Te Waipounamu means 'the waters of greenstone', named for the pounamu found in South Island rivers, especially on the West Coast."
+    },
+    {
+      "id": "nza-037",
+      "prompt": "What happened when Abel Tasman's crew first met Māori in Golden Bay in 1642?",
+      "choices": [
+        "A misunderstanding led to a clash, and Tasman sailed away without landing",
+        "He was welcomed with a huge feast",
+        "He stayed and built a settlement",
+        "He never met any Māori at all"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A clash broke out between Tasman's crew and local Māori, several of Tasman's men were killed, and Tasman left without ever setting foot on land."
+    },
+    {
+      "id": "nza-038",
+      "prompt": "James Cook's first voyage to the Pacific, which led to his charting New Zealand, was largely sent for what stated scientific purpose?",
+      "choices": [
+        "To observe the transit of Venus, then explore further south",
+        "To build the first European city in New Zealand",
+        "To search for gold",
+        "To map Australia only"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Cook's voyage was sent partly to observe the transit of Venus from Tahiti, with sealed orders to search further south afterwards, which is how he reached New Zealand."
+    },
+    {
+      "id": "nza-039",
+      "prompt": "What was William Hobson's role at the signing of the Treaty of Waitangi?",
+      "choices": [
+        "He represented the British Crown, and soon after became the colony's first governor",
+        "He was a Māori chief who refused to sign",
+        "He was a French explorer",
+        "He wrote the Māori version of the Treaty by himself"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "William Hobson represented the British Crown at Waitangi and went on to become New Zealand's first governor."
+    },
+    {
+      "id": "nza-040",
+      "prompt": "Why is it hard to translate some Treaty of Waitangi terms exactly between English and Māori?",
+      "choices": [
+        "Some English legal and political ideas had no exact matching word in Māori at the time",
+        "Māori had no written language at all before the Treaty",
+        "The two texts were written centuries apart",
+        "English has no word for land"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Concepts such as full sovereignty did not map neatly onto Māori words for authority and guardianship, which is part of why the two texts read differently."
+    },
+    {
+      "id": "nza-041",
+      "prompt": "The Matariki star cluster is also known in Western astronomy by which name?",
+      "choices": ["The Pleiades", "The Southern Cross", "Orion's Belt", "The Milky Way"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Matariki is the Māori name for the Pleiades star cluster, which becomes visible in the dawn sky in midwinter."
+    },
+    {
+      "id": "nza-042",
+      "prompt": "Traditionally, how did the rising of Matariki help Māori plan for the year ahead?",
+      "choices": [
+        "It was a sign to reflect on the past year and plan the timing of planting crops",
+        "It warned that a storm was coming that same day",
+        "It predicted exactly how many fish would be caught",
+        "It was the only time waka could be built"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The appearance of Matariki traditionally marked a time for remembering the dead, giving thanks, and planning ahead for planting and harvests."
+    },
+    {
+      "id": "nza-043",
+      "prompt": "Kauri forests in the upper North Island are under threat today from which disease?",
+      "choices": ["Kauri dieback", "Kauri blight", "Foot rot", "Rust fungus"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Kauri dieback is a soil-borne disease that damages kauri roots, and it is a major reason for cleaning stations at the entrance to kauri forests."
+    },
+    {
+      "id": "nza-044",
+      "prompt": "Tradition says Rotorua's name comes from Māori words roughly meaning what?",
+      "choices": ["Second lake", "Long white cloud", "Weeping waters", "Great harbour"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Rotorua comes from roto, meaning lake, and rua, meaning two or second, remembered as the second great lake found by an early explorer of the district."
+    },
+    {
+      "id": "nza-045",
+      "prompt": "Which of these Māori words means 'water', and appears in many New Zealand place names?",
+      "choices": ["Wai", "Roto", "Maunga", "Whenua"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Wai means water, which is why so many New Zealand place names containing 'wai', such as Waitangi and Waikato, are near water."
+    },
+    {
+      "id": "nza-046",
+      "prompt": "What did the Treaty of Waitangi's third article promise to Māori?",
+      "choices": [
+        "The same rights and protections as British subjects",
+        "Ownership of all Crown land",
+        "A permanent seat in parliament for every iwi",
+        "Free passage to Britain for every family"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The third article promised Māori the same rights and royal protection as British subjects, alongside the earlier articles on governance and land."
+    },
+    {
+      "id": "nza-047",
+      "prompt": "Current archaeological evidence suggests Polynesian settlers first reached Aotearoa around which period?",
+      "choices": ["The late 1200s", "1000 BC", "The 1500s", "50,000 years ago"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Most current evidence, including tree-ring and pollen studies, points to first settlement in the late 1200s, much more recently than many other Pacific islands."
+    },
+    {
+      "id": "nza-048",
+      "prompt": "How did early Polynesian navigators find their way across open ocean without modern instruments?",
+      "choices": [
+        "By reading stars, ocean swells, winds and the flight paths of birds",
+        "By following underwater cables",
+        "By using a magnetic compass",
+        "By radio signals from other islands"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Navigators memorised the rising and setting points of stars, the pattern of ocean swells, prevailing winds and the flight paths of land-seeking birds to find their way across vast stretches of open ocean."
+    },
+    {
+      "id": "nza-049",
+      "prompt": "Kaikōura, a town on the South Island's east coast, takes its name from Māori words meaning roughly what?",
+      "choices": ["Meal of crayfish", "Long white cloud", "Meeting of waters", "Sacred mountain"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Kaikōura comes from kai, meaning food, and kōura, meaning crayfish, remembered from a tradition about a traveller stopping there to eat crayfish."
+    },
+    {
+      "id": "nza-050",
+      "prompt": "Why do many New Zealand places have both an English name and a Māori name, such as Auckland and Tāmaki Makaurau?",
+      "choices": [
+        "Māori communities already had names for the land long before European settlers arrived and added their own",
+        "The Māori names were invented recently for tourism",
+        "The English names came first and the Māori names were translated from them",
+        "The two sets of names are unrelated and mean the same thing by coincidence"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Long before European ships arrived, Māori already had names for the land, and settlers often added new English names alongside, or instead of, those that already existed."
+    }
+  ]
+}

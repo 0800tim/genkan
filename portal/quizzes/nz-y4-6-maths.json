@@ -1,0 +1,427 @@
+{
+  "id": "nz-y4-6-maths",
+  "title": "Maths, Years 4 to 6",
+  "emoji": "🧮",
+  "suggested_age_min": 8,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Written for the New Zealand Curriculum, Years 4 to 6 (Levels 2 to 3), ages 8 to 11. Covers times facts, place value, fractions, decimals, percentages, rounding, measurement, angles, symmetry, timetables and graphs, probability, and negative numbers. Checked 2026-08-30.",
+  "questions": [
+    {
+      "id": "nzm-001",
+      "prompt": "6 × 7 = ?",
+      "choices": ["40", "48", "42", "36"],
+      "answer_index": 2,
+      "difficulty": 1,
+      "explanation": "6 groups of 7 make 42."
+    },
+    {
+      "id": "nzm-002",
+      "prompt": "45 ÷ 9 = ?",
+      "choices": ["6", "5", "9", "4"],
+      "answer_index": 1,
+      "difficulty": 1,
+      "explanation": "45 split into 9 equal groups gives 5 in each."
+    },
+    {
+      "id": "nzm-003",
+      "prompt": "In the number 4,826, what is the value of the digit 8?",
+      "choices": ["8", "80", "800", "8,000"],
+      "answer_index": 2,
+      "difficulty": 1,
+      "explanation": "The 8 sits in the hundreds place, so it stands for 800."
+    },
+    {
+      "id": "nzm-004",
+      "prompt": "Which fraction shows exactly half?",
+      "choices": ["1/2", "1/3", "1/4", "2/3"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "One half means one part out of two equal parts."
+    },
+    {
+      "id": "nzm-005",
+      "prompt": "What do we call an angle that is exactly 90 degrees?",
+      "choices": ["A right angle", "An acute angle", "An obtuse angle", "A straight angle"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "A right angle is exactly 90 degrees, like the corner of a square."
+    },
+    {
+      "id": "nzm-006",
+      "prompt": "Round 47 to the nearest 10.",
+      "choices": ["40", "45", "50", "47"],
+      "answer_index": 2,
+      "difficulty": 1,
+      "explanation": "47 is closer to 50 than to 40, so it rounds up to 50."
+    },
+    {
+      "id": "nzm-007",
+      "prompt": "How many centimetres are in 1 metre?",
+      "choices": ["10", "100", "1,000", "10,000"],
+      "answer_index": 1,
+      "difficulty": 1,
+      "explanation": "A metre is made up of 100 centimetres."
+    },
+    {
+      "id": "nzm-008",
+      "prompt": "A shape has a line of symmetry if...?",
+      "choices": [
+        "folding it in half along that line makes both sides match exactly",
+        "it has four sides",
+        "it can roll",
+        "it has more than one colour"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "A line of symmetry is a fold line where both halves match exactly."
+    },
+    {
+      "id": "nzm-009",
+      "prompt": "0.5 is the same amount as which fraction?",
+      "choices": ["1/2", "1/3", "1/4", "3/4"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "0.5 means 5 tenths, which is the same as one half."
+    },
+    {
+      "id": "nzm-010",
+      "prompt": "What is 10 more than 356?",
+      "choices": ["357", "366", "356", "376"],
+      "answer_index": 1,
+      "difficulty": 1,
+      "explanation": "Adding 10 changes the tens digit, so 356 becomes 366."
+    },
+    {
+      "id": "nzm-011",
+      "prompt": "What is 23 × 4?",
+      "choices": ["86", "92", "83", "812"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "20 × 4 is 80 and 3 × 4 is 12, and 80 plus 12 gives 92."
+    },
+    {
+      "id": "nzm-012",
+      "prompt": "84 ÷ 7 = ?",
+      "choices": ["11", "12", "14", "17"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "84 split into 7 equal groups gives 12 in each."
+    },
+    {
+      "id": "nzm-013",
+      "prompt": "In 7,309 what is the value of the digit 3?",
+      "choices": ["3", "30", "300", "3,000"],
+      "answer_index": 2,
+      "difficulty": 2,
+      "explanation": "The 3 sits in the hundreds place, so it is worth 300."
+    },
+    {
+      "id": "nzm-014",
+      "prompt": "Which of these is the same amount as 3/4?",
+      "choices": ["25%", "50%", "75%", "34%"],
+      "answer_index": 2,
+      "difficulty": 2,
+      "explanation": "Three quarters means 75 out of 100, which is 75%."
+    },
+    {
+      "id": "nzm-015",
+      "prompt": "What is 50% of 20?",
+      "choices": ["5", "10", "15", "25"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "50% means half, and half of 20 is 10."
+    },
+    {
+      "id": "nzm-016",
+      "prompt": "Round 683 to the nearest 100.",
+      "choices": ["600", "650", "680", "700"],
+      "answer_index": 3,
+      "difficulty": 2,
+      "explanation": "683 is closer to 700 than to 600, so it rounds up."
+    },
+    {
+      "id": "nzm-017",
+      "prompt": "A rectangle is 5 cm long and 3 cm wide. What is its perimeter?",
+      "choices": ["8 cm", "15 cm", "16 cm", "18 cm"],
+      "answer_index": 2,
+      "difficulty": 2,
+      "explanation": "Perimeter is the distance all the way round: 5 + 3 + 5 + 3 makes 16 cm."
+    },
+    {
+      "id": "nzm-018",
+      "prompt": "A square has sides of 4 cm. What is its area?",
+      "choices": ["8 sq cm", "12 sq cm", "16 sq cm", "20 sq cm"],
+      "answer_index": 2,
+      "difficulty": 2,
+      "explanation": "The area of a square is side times side, so 4 × 4 gives 16 square cm."
+    },
+    {
+      "id": "nzm-019",
+      "prompt": "How many grams are in 1 kilogram?",
+      "choices": ["10", "100", "1,000", "10,000"],
+      "answer_index": 2,
+      "difficulty": 2,
+      "explanation": "A kilogram is made up of 1,000 grams."
+    },
+    {
+      "id": "nzm-020",
+      "prompt": "How many millilitres are in 1 litre?",
+      "choices": ["10", "100", "1,000", "10,000"],
+      "answer_index": 2,
+      "difficulty": 2,
+      "explanation": "A litre holds 1,000 millilitres."
+    },
+    {
+      "id": "nzm-021",
+      "prompt": "Which angle is bigger than a right angle but smaller than a straight line?",
+      "choices": ["Acute", "Obtuse", "Reflex", "Right"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "An obtuse angle measures somewhere between 90 and 180 degrees."
+    },
+    {
+      "id": "nzm-022",
+      "prompt": "A regular hexagon has how many lines of symmetry?",
+      "choices": ["3", "4", "5", "6"],
+      "answer_index": 3,
+      "difficulty": 2,
+      "explanation": "A regular hexagon has six equal sides, so it has six lines of symmetry."
+    },
+    {
+      "id": "nzm-023",
+      "prompt": "If you roll a normal six-sided dice once, what is the chance of rolling a 4?",
+      "choices": ["1 out of 2", "1 out of 4", "1 out of 6", "1 out of 3"],
+      "answer_index": 2,
+      "difficulty": 2,
+      "explanation": "There are six equally likely numbers on the dice, so each one has a 1 in 6 chance."
+    },
+    {
+      "id": "nzm-024",
+      "prompt": "What is 234 × 3?",
+      "choices": ["692", "702", "712", "724"],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "200 × 3 is 600, 30 × 3 is 90, and 4 × 3 is 12. Added together that makes 702."
+    },
+    {
+      "id": "nzm-025",
+      "prompt": "156 ÷ 4 = ?",
+      "choices": ["36", "38", "39", "41"],
+      "answer_index": 2,
+      "difficulty": 3,
+      "explanation": "156 split into 4 equal groups gives 39 in each."
+    },
+    {
+      "id": "nzm-026",
+      "prompt": "Which fraction is equivalent to 2/3?",
+      "choices": ["3/4", "4/6", "5/6", "2/6"],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "Multiplying the top and bottom of 2/3 by 2 gives 4/6, which is the same amount split into more pieces."
+    },
+    {
+      "id": "nzm-027",
+      "prompt": "Write 0.6 as a fraction in its simplest form.",
+      "choices": ["6/10", "3/5", "6/5", "3/10"],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "0.6 means 6 tenths, or 6/10. Dividing the top and bottom by 2 simplifies that to 3/5."
+    },
+    {
+      "id": "nzm-028",
+      "prompt": "What is 25% of 60?",
+      "choices": ["10", "15", "20", "25"],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "25% is a quarter, and a quarter of 60 is 15."
+    },
+    {
+      "id": "nzm-029",
+      "prompt": "Round 3,847 to the nearest 1,000.",
+      "choices": ["3,000", "3,800", "3,900", "4,000"],
+      "answer_index": 3,
+      "difficulty": 3,
+      "explanation": "3,847 is closer to 4,000 than to 3,000, so it rounds up."
+    },
+    {
+      "id": "nzm-030",
+      "prompt": "A garden is 6 m long and 4 m wide. What is its area?",
+      "choices": ["10 sq m", "20 sq m", "24 sq m", "28 sq m"],
+      "answer_index": 2,
+      "difficulty": 3,
+      "explanation": "Area is length times width, so 6 × 4 gives 24 square metres."
+    },
+    {
+      "id": "nzm-031",
+      "prompt": "A path goes all the way round a rectangular field 30 m by 20 m. How far is that?",
+      "choices": ["50 m", "60 m", "100 m", "120 m"],
+      "answer_index": 2,
+      "difficulty": 3,
+      "explanation": "Perimeter is 30 + 20 + 30 + 20, which adds up to 100 metres."
+    },
+    {
+      "id": "nzm-032",
+      "prompt": "Two angles sit on a straight line. One is 110 degrees. What is the other?",
+      "choices": ["60 degrees", "70 degrees", "80 degrees", "90 degrees"],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "Angles on a straight line always add up to 180 degrees, so 180 minus 110 leaves 70."
+    },
+    {
+      "id": "nzm-033",
+      "prompt": "How many centimetres are in 2.5 metres?",
+      "choices": ["25 cm", "205 cm", "250 cm", "2,500 cm"],
+      "answer_index": 2,
+      "difficulty": 3,
+      "explanation": "Each metre is 100 cm, so 2.5 metres is 2.5 × 100, which is 250 cm."
+    },
+    {
+      "id": "nzm-034",
+      "prompt": "A bus timetable shows a bus leaving at 9:15 and taking 25 minutes to reach town. What time does it arrive?",
+      "choices": ["9:30", "9:35", "9:40", "9:45"],
+      "answer_index": 2,
+      "difficulty": 3,
+      "explanation": "9:15 plus 25 minutes lands on 9:40."
+    },
+    {
+      "id": "nzm-035",
+      "prompt": "A bag has 4 red balls and 6 blue balls. What is the chance of picking a red ball without looking?",
+      "choices": ["4 out of 10", "6 out of 10", "4 out of 6", "1 out of 4"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "There are 10 balls in total and 4 are red, so the chance is 4 out of 10."
+    },
+    {
+      "id": "nzm-036",
+      "prompt": "What is 47 × 26?",
+      "choices": ["1,212", "1,222", "1,322", "1,102"],
+      "answer_index": 1,
+      "difficulty": 4,
+      "explanation": "47 × 20 is 940 and 47 × 6 is 282, and 940 plus 282 makes 1,222."
+    },
+    {
+      "id": "nzm-037",
+      "prompt": "312 ÷ 8 = ?",
+      "choices": ["36", "38", "39", "41"],
+      "answer_index": 2,
+      "difficulty": 4,
+      "explanation": "8 × 39 is 312, so 312 divided by 8 is 39."
+    },
+    {
+      "id": "nzm-038",
+      "prompt": "What is 3/4 of 24?",
+      "choices": ["16", "18", "20", "6"],
+      "answer_index": 1,
+      "difficulty": 4,
+      "explanation": "A quarter of 24 is 6, and three quarters is three lots of 6, which is 18."
+    },
+    {
+      "id": "nzm-039",
+      "prompt": "A shop puts a $40 jacket up by 10%. What is the new price?",
+      "choices": ["$40.10", "$41", "$44", "$50"],
+      "answer_index": 2,
+      "difficulty": 4,
+      "explanation": "10% of $40 is $4, and adding that to $40 gives $44."
+    },
+    {
+      "id": "nzm-040",
+      "prompt": "Round 6.28 to one decimal place.",
+      "choices": ["6.2", "6.3", "6.4", "6.0"],
+      "answer_index": 1,
+      "difficulty": 4,
+      "explanation": "Look at the second decimal place, which is 8. That rounds the first decimal place up from 2 to 3."
+    },
+    {
+      "id": "nzm-041",
+      "prompt": "A triangle has a base of 8 cm and a height of 5 cm. What is its area?",
+      "choices": ["13 sq cm", "20 sq cm", "40 sq cm", "30 sq cm"],
+      "answer_index": 1,
+      "difficulty": 4,
+      "explanation": "The area of a triangle is half the base times the height. Half of 8 × 5, which is half of 40, is 20 square cm."
+    },
+    {
+      "id": "nzm-042",
+      "prompt": "Four angles meet at a point. Three of them are 90, 90 and 100 degrees. What is the fourth?",
+      "choices": ["70 degrees", "80 degrees", "90 degrees", "100 degrees"],
+      "answer_index": 1,
+      "difficulty": 4,
+      "explanation": "Angles all the way around a point add up to 360 degrees. 90 + 90 + 100 makes 280, and 360 minus 280 leaves 80."
+    },
+    {
+      "id": "nzm-043",
+      "prompt": "How many millimetres are in 3.5 metres?",
+      "choices": ["350 mm", "3,500 mm", "35,000 mm", "305 mm"],
+      "answer_index": 1,
+      "difficulty": 4,
+      "explanation": "Each metre is 1,000 mm, so 3.5 metres is 3.5 × 1,000, which is 3,500 mm."
+    },
+    {
+      "id": "nzm-044",
+      "prompt": "On a cold morning the temperature is minus 2 degrees. By midday it has risen by 7 degrees. What is the midday temperature?",
+      "choices": ["5 degrees", "9 degrees", "minus 5 degrees", "minus 9 degrees"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Starting at minus 2 and going up 7 degrees lands on 5 degrees."
+    },
+    {
+      "id": "nzm-045",
+      "prompt": "A graph shows a line climbing steadily from left to right. What does that usually mean?",
+      "choices": [
+        "The amount is increasing over time",
+        "The amount is staying the same",
+        "The amount is decreasing over time",
+        "There is no pattern at all"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A line sloping upward on a graph shows the value getting bigger as time goes on."
+    },
+    {
+      "id": "nzm-046",
+      "prompt": "Which of these lists is ordered from smallest to largest: -5, 2, -8, 0?",
+      "choices": ["-8, -5, 0, 2", "-5, -8, 0, 2", "2, 0, -5, -8", "0, -5, -8, 2"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "On a number line, the further left a number sits, the smaller it is, so -8 comes before -5."
+    },
+    {
+      "id": "nzm-047",
+      "prompt": "A rectangle 12 cm by 8 cm has a smaller rectangle 4 cm by 3 cm cut out of one corner. What is the area left over?",
+      "choices": ["72 sq cm", "84 sq cm", "92 sq cm", "96 sq cm"],
+      "answer_index": 1,
+      "difficulty": 5,
+      "explanation": "The whole rectangle is 96 square cm and the cut-out piece is 12 square cm, so 96 minus 12 leaves 84."
+    },
+    {
+      "id": "nzm-048",
+      "prompt": "A number is between 3,000 and 4,000. Rounded to the nearest 100 it becomes 3,500. Which of these could it be?",
+      "choices": ["3,462", "3,560", "3,440", "3,620"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Numbers from 3,450 up to 3,549 all round to 3,500, and 3,462 is the only one of these that falls in that range."
+    },
+    {
+      "id": "nzm-049",
+      "prompt": "A spinner is split into 8 equal sections numbered 1 to 8. What is the chance of spinning a number greater than 5?",
+      "choices": ["3 out of 8", "5 out of 8", "2 out of 8", "4 out of 8"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Three of the eight numbers, 6, 7 and 8, are greater than 5, so the chance is 3 out of 8."
+    },
+    {
+      "id": "nzm-050",
+      "prompt": "Which decimal, fraction and percentage all describe the same amount?",
+      "choices": [
+        "0.75, 3/4, 75%",
+        "0.75, 3/4, 25%",
+        "0.25, 3/4, 75%",
+        "0.75, 1/4, 75%"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "0.75 means 75 hundredths, which is the same amount as three quarters and as 75 percent."
+    }
+  ]
+}

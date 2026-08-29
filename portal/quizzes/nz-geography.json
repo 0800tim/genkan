@@ -17,6 +17,7 @@
         "Dunedin"
       ],
       "answer_index": 0,
+      "difficulty": 1,
       "explanation": "Auckland is bigger, but Wellington has been the capital since 1865."
     },
     {
@@ -29,6 +30,7 @@
         "Christchurch"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "About a third of all New Zealanders live in Auckland."
     },
     {
@@ -41,6 +43,7 @@
         "Rangitīkei River"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "The Waikato runs 425 km from Lake Taupō to the Tasman Sea."
     },
     {
@@ -53,6 +56,7 @@
         "Lake Taupō"
       ],
       "answer_index": 3,
+      "difficulty": 2,
       "explanation": "Lake Taupō fills the crater of a huge ancient volcano."
     },
     {
@@ -65,6 +69,7 @@
         "Mount Taranaki"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "Aoraki / Mount Cook stands 3,724 metres tall in the Southern Alps."
     },
     {
@@ -77,6 +82,7 @@
         "3,724 metres"
       ],
       "answer_index": 3,
+      "difficulty": 5,
       "explanation": "It lost about 30 metres in a rock collapse in 1991 but is still the tallest."
     },
     {
@@ -89,6 +95,7 @@
         "Queenstown"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "Christchurch is the South Island's biggest city by far."
     },
     {
@@ -101,6 +108,7 @@
         "Aotearoa"
       ],
       "answer_index": 3,
+      "difficulty": 1,
       "explanation": "Aotearoa is often translated as 'land of the long white cloud'."
     },
     {
@@ -113,6 +121,7 @@
         "Te Waipounamu"
       ],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "Te Ika-a-Māui means 'the fish of Māui', from the legend of Māui fishing it up."
     },
     {
@@ -125,6 +134,7 @@
         "Piopiotahi"
       ],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "Te Waipounamu refers to the greenstone (pounamu) waters of the south."
     },
     {
@@ -137,6 +147,7 @@
         "Hauraki Gulf"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "Cook Strait is only about 22 km across at its narrowest."
     },
     {
@@ -149,6 +160,7 @@
         "Foveaux Strait"
       ],
       "answer_index": 3,
+      "difficulty": 4,
       "explanation": "Foveaux Strait is famous for its wild weather and its oysters."
     },
     {
@@ -161,6 +173,7 @@
         "Great Barrier Island"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "Rakiura means 'glowing skies', a nod to its sunsets and the aurora."
     },
     {
@@ -173,6 +186,7 @@
         "Christchurch"
       ],
       "answer_index": 3,
+      "difficulty": 2,
       "explanation": "Christchurch earned the name for its big parks and gardens, like Hagley Park."
     },
     {
@@ -185,6 +199,7 @@
         "Auckland"
       ],
       "answer_index": 3,
+      "difficulty": 1,
       "explanation": "Auckland has more boats per person than almost anywhere in the world."
     },
     {
@@ -197,6 +212,7 @@
         "Invercargill"
       ],
       "answer_index": 3,
+      "difficulty": 3,
       "explanation": "Invercargill is the country's southernmost city; Bluff is a town further south."
     },
     {
@@ -209,6 +225,7 @@
         "Whakatāne"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "Rotorua sits on a geothermal field, which is also why it smells of sulphur."
     },
     {
@@ -221,6 +238,7 @@
         "Bay of Plenty"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "Whangārei is the only city in Northland, Te Tai Tokerau."
     },
     {
@@ -233,6 +251,7 @@
         "Fiordland National Park"
       ],
       "answer_index": 3,
+      "difficulty": 2,
       "explanation": "Piopiotahi is a fiord carved by glaciers in Fiordland."
     },
     {
@@ -245,6 +264,7 @@
         "Te Urewera"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "Fiordland covers about 12,600 square kilometres of the lower South Island."
     },
     {
@@ -257,6 +277,7 @@
         "Whanganui"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "New Plymouth sits on the coast in the shadow of Taranaki Maunga."
     },
     {
@@ -269,6 +290,7 @@
         "Dunedin"
       ],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "The capital moved from Auckland to more central Wellington in 1865."
     },
     {
@@ -281,6 +303,7 @@
         "Golden Bay"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Whakaari steams away about 48 km off the Bay of Plenty coast."
     },
     {
@@ -293,6 +316,7 @@
         "Stewart Island"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "The Southern Alps form the mountainous spine of the South Island."
     },
     {
@@ -305,6 +329,7 @@
         "Auckland"
       ],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "Otago opened in Dunedin in 1869, making it the country's first university."
     },
     {
@@ -317,6 +342,7 @@
         "Manukau Harbour"
       ],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "Waitematā means 'sparkling waters', and the Harbour Bridge crosses it."
     },
     {
@@ -329,6 +355,7 @@
         "Dunedin"
       ],
       "answer_index": 3,
+      "difficulty": 3,
       "explanation": "Baldwin Street climbs at a gradient of about 1 in 2.9 at its steepest."
     },
     {
@@ -341,6 +368,7 @@
         "Lake Wakatipu"
       ],
       "answer_index": 3,
+      "difficulty": 2,
       "explanation": "Lake Wakatipu is shaped like a lightning bolt and is 380 metres deep."
     },
     {
@@ -353,6 +381,7 @@
         "Northland"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "The sunny Bay of Plenty grows most of New Zealand's kiwifruit."
     },
     {
@@ -365,6 +394,7 @@
         "Apples"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "Marlborough sauvignon blanc is famous all over the world."
     },
     {
@@ -377,6 +407,7 @@
         "Northland"
       ],
       "answer_index": 3,
+      "difficulty": 3,
       "explanation": "Despite the name it is about 88 kilometres long, not 90 miles."
     },
     {
@@ -389,6 +420,7 @@
         "The top of the North Island"
       ],
       "answer_index": 3,
+      "difficulty": 2,
       "explanation": "In Māori tradition, spirits leave for Hawaiki from Te Rerenga Wairua."
     },
     {
@@ -401,6 +433,7 @@
         "Kaikōura"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "Picton sits at the head of Queen Charlotte Sound in the Marlborough Sounds."
     },
     {
@@ -413,6 +446,7 @@
         "Lake Tekapo"
       ],
       "answer_index": 0,
+      "difficulty": 5,
       "explanation": "Lake Te Anau is the South Island's largest lake and New Zealand's second largest."
     },
     {
@@ -425,6 +459,7 @@
         "Taranaki"
       ],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "Ngāuruhoe stands with Tongariro and Ruapehu in the national park."
     },
     {
@@ -437,6 +472,7 @@
         "Ngāuruhoe"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "Ruapehu reaches 2,797 metres and even has ski fields on a volcano."
     },
     {
@@ -449,6 +485,7 @@
         "Manawatū"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Napier was rebuilt in Art Deco style after the 1931 earthquake."
     },
     {
@@ -461,6 +498,7 @@
         "Waipā River"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Hamilton, Kirikiriroa, grew up along the banks of the Waikato."
     },
     {
@@ -473,6 +511,7 @@
         "Northland"
       ],
       "answer_index": 1,
+      "difficulty": 5,
       "explanation": "The hill is near Pōrangahau in southern Hawke's Bay."
     },
     {
@@ -485,6 +524,7 @@
         "12"
       ],
       "answer_index": 1,
+      "difficulty": 5,
       "explanation": "There are 16 regions, from Northland down to Southland."
     }
   ]

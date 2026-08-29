@@ -1,0 +1,675 @@
+{
+  "id": "nz-y9-10-humanities",
+  "title": "History and Geography, Years 9 and 10",
+  "emoji": "🗺️",
+  "suggested_age_min": 13,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Covers NZ Curriculum Level 5 social sciences (Years 9 and 10): plate tectonics and hazards, climate, population and urbanisation, the World Wars, the New Zealand Wars, women's suffrage, Treaty settlements, government and MMP, and basic economics. The New Zealand Wars and Treaty settlements questions are limited to dates, places and uncontested facts.",
+  "questions": [
+    {
+      "id": "hum910-001",
+      "prompt": "What is the Earth's outer layer, broken into large moving pieces, called?",
+      "choices": [
+        "The crust, broken into tectonic plates",
+        "The core",
+        "The atmosphere",
+        "The mantle only, which never moves"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Earth's surface is made of the crust, split into huge slabs called tectonic plates. These plates move very slowly over time, driven by movement in the layer beneath them."
+    },
+    {
+      "id": "hum910-002",
+      "prompt": "New Zealand lies along the boundary of which two tectonic plates?",
+      "choices": [
+        "The Australian Plate and the Pacific Plate",
+        "The African Plate and the Antarctic Plate",
+        "The North American Plate and the Eurasian Plate",
+        "The Indian Plate and the Nazca Plate"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "New Zealand sits directly on the boundary between the Australian Plate and the Pacific Plate, which is the main reason the country has so many earthquakes and volcanoes."
+    },
+    {
+      "id": "hum910-003",
+      "prompt": "What is created when two tectonic plates collide and one is forced underneath the other?",
+      "choices": [
+        "A subduction zone, which often causes volcanoes and earthquakes",
+        "A flat plain with no activity",
+        "A coral reef",
+        "A permanent calm zone"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "When one plate is forced down beneath another, it is called subduction. The friction and melting rock this creates are a major cause of earthquakes and volcanic eruptions along the boundary."
+    },
+    {
+      "id": "hum910-004",
+      "prompt": "Why does New Zealand have so many active volcanoes and frequent earthquakes?",
+      "choices": [
+        "It sits on a tectonic plate boundary, part of the Pacific Ring of Fire",
+        "It is a very large country",
+        "It has no mountains, which causes instability",
+        "It sits in the middle of a single, still tectonic plate"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "New Zealand's position on the boundary between two tectonic plates puts it inside the Pacific Ring of Fire, the zone around the Pacific Ocean known for frequent earthquakes and volcanic activity."
+    },
+    {
+      "id": "hum910-005",
+      "prompt": "What is the name given to the earthquake and volcano zone that circles the Pacific Ocean?",
+      "choices": [
+        "The Pacific Ring of Fire",
+        "The Pacific Trench Line",
+        "The Equatorial Fault Belt",
+        "The Southern Volcanic Chain"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Pacific Ring of Fire is the name for the horseshoe-shaped zone around the edge of the Pacific Ocean where most of the world's earthquakes and volcanic eruptions happen. New Zealand sits within it."
+    },
+    {
+      "id": "hum910-006",
+      "prompt": "Roughly how fast do tectonic plates typically move in a year?",
+      "choices": [
+        "A few centimetres",
+        "Several kilometres",
+        "About a metre",
+        "They do not move at all"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Tectonic plates move very slowly, typically only a few centimetres a year, about the same rate your fingernails grow. Over millions of years, though, that slow movement adds up to huge changes in the Earth's surface."
+    },
+    {
+      "id": "hum910-007",
+      "prompt": "What is the official advice for what to do if you feel an earthquake in New Zealand?",
+      "choices": [
+        "Drop, Cover and Hold",
+        "Run outside immediately",
+        "Stand in a doorway",
+        "Call 111 straight away, before doing anything else"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "New Zealand's official earthquake advice is Drop, Cover and Hold: drop to the ground, take cover under something sturdy, and hold on until the shaking stops. Running outside during shaking is specifically discouraged, since falling debris is a major danger."
+    },
+    {
+      "id": "hum910-008",
+      "prompt": "Which natural hazard can follow a large earthquake that happens under the sea?",
+      "choices": [
+        "A tsunami",
+        "A drought",
+        "A heatwave",
+        "A locust swarm"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A large undersea earthquake can suddenly shift the sea floor, pushing huge amounts of water and creating a tsunami, a series of powerful waves that can travel long distances."
+    },
+    {
+      "id": "hum910-009",
+      "prompt": "Which organisation coordinates New Zealand's response to natural disasters?",
+      "choices": [
+        "Civil Defence (the National Emergency Management Agency)",
+        "The Reserve Bank",
+        "The Department of Conservation",
+        "The Electoral Commission"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Civil Defence, run through the National Emergency Management Agency, coordinates New Zealand's planning and response for emergencies such as earthquakes, floods and tsunamis."
+    },
+    {
+      "id": "hum910-010",
+      "prompt": "In February 2011, a major earthquake struck which New Zealand city, causing significant damage and loss of life?",
+      "choices": [
+        "Christchurch",
+        "Auckland",
+        "Wellington",
+        "Dunedin"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Christchurch earthquake of 22 February 2011 caused major damage across the city and was one of New Zealand's most significant natural disasters, following a larger but less destructive earthquake in the wider region in September 2010."
+    },
+    {
+      "id": "hum910-011",
+      "prompt": "In December 2019, a volcanic eruption occurred on which New Zealand island?",
+      "choices": [
+        "Whakaari, also known as White Island",
+        "Stewart Island",
+        "Great Barrier Island",
+        "Waiheke Island"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Whakaari, also called White Island, is an active volcanic island off the Bay of Plenty coast. It erupted in December 2019 while people were visiting, making it a well-known example of New Zealand's ongoing volcanic hazard."
+    },
+    {
+      "id": "hum910-012",
+      "prompt": "What is the difference between weather and climate?",
+      "choices": [
+        "Weather is short-term conditions; climate is the average pattern over many years",
+        "Weather and climate mean exactly the same thing",
+        "Climate only describes temperature, and weather only describes rain",
+        "Weather is measured in cities, and climate is measured in the countryside"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Weather describes conditions on a particular day, like today's rain or sunshine. Climate describes the average pattern of weather in a place over a long period, usually decades."
+    },
+    {
+      "id": "hum910-013",
+      "prompt": "Which prevailing winds mostly affect New Zealand's weather?",
+      "choices": [
+        "Westerlies",
+        "Trade winds from the north-east",
+        "Polar easterlies",
+        "Monsoon winds"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "New Zealand sits in the path of the westerlies, strong winds that blow from west to east across the Southern Ocean, which is a major influence on the country's rainfall and temperature patterns."
+    },
+    {
+      "id": "hum910-014",
+      "prompt": "Why is the West Coast of the South Island much wetter than Canterbury on the east coast?",
+      "choices": [
+        "The Southern Alps block moisture-carrying westerly winds, creating a rain shadow on the eastern side",
+        "The West Coast is closer to the equator",
+        "Canterbury has no rivers to collect rainfall",
+        "The West Coast has more cities, which attract rain"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Moist westerly winds hit the Southern Alps and are forced upward, cooling and dropping their rain mostly on the West Coast. By the time the air crosses the mountains, it has lost much of its moisture, leaving Canterbury in a drier rain shadow."
+    },
+    {
+      "id": "hum910-015",
+      "prompt": "What is the term for the drier area that forms on the sheltered side of a mountain range, after rain-bearing winds cross it?",
+      "choices": [
+        "A rain shadow",
+        "A wind tunnel",
+        "A monsoon trough",
+        "A dry front"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A rain shadow forms when mountains force moist air upward, causing it to cool and release its rain on the windward side, leaving the sheltered side much drier."
+    },
+    {
+      "id": "hum910-016",
+      "prompt": "What does 'urbanisation' mean?",
+      "choices": [
+        "A growing proportion of a population living in towns and cities rather than rural areas",
+        "A country building more farms",
+        "A decrease in the total number of people in a country",
+        "A government policy about voting"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Urbanisation describes the process where more and more of a population comes to live in urban areas (towns and cities) rather than in the countryside, often because of jobs and services concentrated there."
+    },
+    {
+      "id": "hum910-017",
+      "prompt": "Which city is New Zealand's largest by population?",
+      "choices": [
+        "Auckland",
+        "Wellington",
+        "Christchurch",
+        "Hamilton"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Auckland is New Zealand's largest city by population, and by far the biggest urban area in the country."
+    },
+    {
+      "id": "hum910-018",
+      "prompt": "Which of these is generally considered a 'pull factor' drawing people to live in a city?",
+      "choices": [
+        "More jobs and services",
+        "Fewer job opportunities",
+        "Higher cost of transport",
+        "Isolation from other people"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A pull factor is something that attracts people towards a place. Cities generally offer more jobs, better transport links and more services like hospitals and universities, which pulls people towards them."
+    },
+    {
+      "id": "hum910-019",
+      "prompt": "Which of these is generally considered a 'push factor' that might cause someone to leave a rural area?",
+      "choices": [
+        "Limited job opportunities in farming areas",
+        "Excellent local hospitals",
+        "Lower cost of housing",
+        "Strong sense of community"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A push factor is something that drives people away from a place. Fewer jobs and services in some rural areas can push people to move to cities in search of better opportunities."
+    },
+    {
+      "id": "hum910-020",
+      "prompt": "What does 'population density' measure?",
+      "choices": [
+        "The number of people living in a given area, such as per square kilometre",
+        "The total number of people in a country",
+        "The average age of a population",
+        "The number of cities in a country"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Population density measures how crowded a place is: the number of people living within a set area, usually expressed as people per square kilometre. A city has a much higher population density than a rural district."
+    },
+    {
+      "id": "hum910-021",
+      "prompt": "What does ANZAC stand for?",
+      "choices": [
+        "Australian and New Zealand Army Corps",
+        "Allied New Zealand Air Corps",
+        "Australia and New Zealand Alliance Council",
+        "Auckland and New Zealand Army Command"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "ANZAC stands for the Australian and New Zealand Army Corps, the combined force that fought together at Gallipoli in the First World War."
+    },
+    {
+      "id": "hum910-022",
+      "prompt": "The Gallipoli campaign, where ANZAC troops landed on 25 April 1915, took place in which present-day country?",
+      "choices": [
+        "Turkey",
+        "Greece",
+        "Egypt",
+        "France"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Gallipoli is a peninsula in present-day Turkey. ANZAC troops landed there on 25 April 1915 as part of a campaign to try to open a sea route through the Dardanelles strait."
+    },
+    {
+      "id": "hum910-023",
+      "prompt": "What does New Zealand commemorate every year on 25 April?",
+      "choices": [
+        "ANZAC Day",
+        "Waitangi Day",
+        "Labour Day",
+        "Armistice Day"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "ANZAC Day, on 25 April each year, commemorates the anniversary of the Gallipoli landing and honours all New Zealanders who have served and died in wars and conflicts."
+    },
+    {
+      "id": "hum910-024",
+      "prompt": "Which years does the First World War span?",
+      "choices": [
+        "1914 to 1918",
+        "1939 to 1945",
+        "1899 to 1902",
+        "1904 to 1908"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The First World War ran from 1914 to 1918. The Second World War, a separate conflict, ran later, from 1939 to 1945."
+    },
+    {
+      "id": "hum910-025",
+      "prompt": "In 1916, during the First World War, what did New Zealand introduce to increase the number of troops available?",
+      "choices": [
+        "Conscription (compulsory military service)",
+        "A ban on all military service",
+        "Volunteer-only recruitment for the first time",
+        "A treaty ending New Zealand's involvement"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "By 1916, with volunteer numbers falling and heavy losses overseas, New Zealand introduced conscription, making military service compulsory for eligible men, to keep up the number of troops being sent."
+    },
+    {
+      "id": "hum910-026",
+      "prompt": "The 28th Māori Battalion, a unit that became well known for its service overseas, fought for New Zealand in which war?",
+      "choices": [
+        "The Second World War",
+        "The First World War",
+        "The New Zealand Wars",
+        "The Gallipoli campaign only"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The 28th Māori Battalion was formed for the Second World War (1939 to 1945) and served in campaigns including in Greece, Crete and North Africa, becoming one of New Zealand's most well-known wartime units."
+    },
+    {
+      "id": "hum910-027",
+      "prompt": "The New Zealand Wars were fought mainly across which years?",
+      "choices": [
+        "1845 to 1872",
+        "1914 to 1918",
+        "1770 to 1800",
+        "1990 to 2000"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The New Zealand Wars were a series of conflicts fought mainly between 1845 and 1872, in various parts of the North Island, between Crown and colonial forces and Māori who opposed land sales or the Crown's growing authority."
+    },
+    {
+      "id": "hum910-028",
+      "prompt": "The Waikato War, one of the largest conflicts of the New Zealand Wars, was fought mainly in which region?",
+      "choices": [
+        "Waikato",
+        "Otago",
+        "Wellington",
+        "Southland"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Waikato War (1863 to 1864) was fought in the Waikato region of the North Island, and was one of the largest and most significant conflicts of the New Zealand Wars."
+    },
+    {
+      "id": "hum910-029",
+      "prompt": "What is the term for land taken from Māori by the government after the New Zealand Wars, without the owners' agreement?",
+      "choices": [
+        "Confiscation (raupatu)",
+        "Purchase",
+        "Long-term lease",
+        "Gift"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Following the New Zealand Wars, the government confiscated large areas of Māori land, especially in Waikato and Taranaki, under laws such as the New Zealand Settlements Act 1863. This confiscation is known in te reo Māori as raupatu."
+    },
+    {
+      "id": "hum910-030",
+      "prompt": "Broadly, the New Zealand Wars were conflicts mainly between which two sides?",
+      "choices": [
+        "Crown and colonial forces, and Māori who opposed land sales or Crown authority",
+        "Britain and France",
+        "North Island tribes and South Island tribes only",
+        "New Zealand and Australia"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The New Zealand Wars were mainly fought between Crown and colonial forces on one side, and Māori who opposed further land sales or the Crown's growing authority on the other, although some Māori also fought alongside the Crown."
+    },
+    {
+      "id": "hum910-031",
+      "prompt": "In which year did New Zealand women gain the right to vote in parliamentary elections?",
+      "choices": [
+        "1893",
+        "1918",
+        "1928",
+        "1945"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "New Zealand women won the right to vote in 1893, after years of campaigning, making New Zealand a world leader on this issue."
+    },
+    {
+      "id": "hum910-032",
+      "prompt": "Who was the most prominent leader of the New Zealand women's suffrage campaign?",
+      "choices": [
+        "Kate Sheppard",
+        "Helen Clark",
+        "Te Puea Herangi",
+        "Whina Cooper"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Kate Sheppard led the campaign for women's suffrage in New Zealand during the 1880s and 1890s, organising petitions and public meetings that helped bring about the 1893 law change."
+    },
+    {
+      "id": "hum910-033",
+      "prompt": "Why was New Zealand's achievement in 1893 significant on a world scale?",
+      "choices": [
+        "It became the first self-governing country where women won the right to vote in parliamentary elections",
+        "It was the first country in the world to have a written constitution",
+        "It was the first country to allow women to become Prime Minister",
+        "It was the first country where women outnumbered men"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "New Zealand is recognised as the first self-governing country in the world where women won the right to vote in parliamentary elections, which made it a reference point for suffrage campaigns in other countries afterwards."
+    },
+    {
+      "id": "hum910-034",
+      "prompt": "Roughly how many women signed the 1893 petition presented to the New Zealand Parliament calling for the vote?",
+      "choices": [
+        "Nearly 32,000",
+        "About 3,200",
+        "About 320,000",
+        "About 32"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The 1893 suffrage petition, organised largely by Kate Sheppard and other campaigners, gathered signatures from nearly 32,000 women, a huge number for the population of New Zealand at the time."
+    },
+    {
+      "id": "hum910-035",
+      "prompt": "Whose image appears on the New Zealand ten-dollar note, in recognition of the suffrage campaign?",
+      "choices": [
+        "Kate Sheppard",
+        "Queen Elizabeth II",
+        "Edmund Hillary",
+        "Kate Shepherd, a fictional early settler"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Kate Sheppard's portrait appears on the New Zealand ten-dollar note, honouring her leadership of the campaign that won New Zealand women the vote in 1893."
+    },
+    {
+      "id": "hum910-036",
+      "prompt": "In what year was the Treaty of Waitangi signed?",
+      "choices": [
+        "1840",
+        "1893",
+        "1907",
+        "1975"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Treaty of Waitangi was signed on 6 February 1840, at Waitangi in the Bay of Islands, between representatives of the British Crown and many Māori chiefs."
+    },
+    {
+      "id": "hum910-037",
+      "prompt": "Which body was set up in 1975 to investigate claims about breaches of the Treaty of Waitangi?",
+      "choices": [
+        "The Waitangi Tribunal",
+        "The Reserve Bank",
+        "The Court of Appeal",
+        "The Electoral Commission"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Waitangi Tribunal was established in 1975 as a permanent commission of inquiry, to investigate claims that the Crown had breached the promises made in the Treaty of Waitangi."
+    },
+    {
+      "id": "hum910-038",
+      "prompt": "What does a Treaty settlement between the Crown and an iwi (tribe) generally include?",
+      "choices": [
+        "An apology, and some form of financial or cultural redress",
+        "A cash prize with no other conditions",
+        "A new local council with no connection to the Crown",
+        "A change to the national flag"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Treaty settlements generally include a Crown apology for breaches of the Treaty, along with financial and commercial redress and the return of some land or sites of significance to the iwi involved."
+    },
+    {
+      "id": "hum910-039",
+      "prompt": "What is the process called where the Crown and an iwi negotiate to resolve historical Treaty of Waitangi claims?",
+      "choices": [
+        "A Treaty settlement",
+        "A referendum",
+        "A general election",
+        "A local council election"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A Treaty settlement is the outcome of negotiations between the Crown and an iwi, following a claim to the Waitangi Tribunal, aimed at resolving historical breaches of the Treaty of Waitangi."
+    },
+    {
+      "id": "hum910-040",
+      "prompt": "What does MMP stand for, the voting system New Zealand uses to elect Parliament?",
+      "choices": [
+        "Mixed Member Proportional",
+        "Majority Member Parliament",
+        "Multiple Member Preference",
+        "Ministerial Member Placement"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "MMP stands for Mixed Member Proportional, the voting system New Zealand has used to elect its Parliament since 1996."
+    },
+    {
+      "id": "hum910-041",
+      "prompt": "In a New Zealand general election under MMP, how many votes does each voter get?",
+      "choices": [
+        "Two: a party vote and an electorate vote",
+        "One vote only",
+        "Three votes for three different candidates",
+        "As many votes as there are parties"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Under MMP, each voter gets two votes on the same ballot paper: a party vote for the political party they support, and an electorate vote for their local Member of Parliament."
+    },
+    {
+      "id": "hum910-042",
+      "prompt": "In New Zealand's MMP system, which vote mainly decides the overall share of seats each party gets in Parliament?",
+      "choices": [
+        "The party vote",
+        "The electorate vote",
+        "Neither vote affects the number of seats",
+        "A random draw after voting closes"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The party vote is the one that mainly decides how many total seats each party gets in Parliament, which is what makes the system proportional: a party's share of seats closely matches its share of the party vote."
+    },
+    {
+      "id": "hum910-043",
+      "prompt": "In which year was MMP first used to elect a New Zealand government?",
+      "choices": [
+        "1996",
+        "1893",
+        "1975",
+        "1935"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "New Zealand voted to adopt MMP in a 1993 referendum, and the system was first used to elect Parliament at the 1996 general election."
+    },
+    {
+      "id": "hum910-044",
+      "prompt": "Under MMP, what is generally the minimum share of the party vote a party needs to enter Parliament, unless it wins an electorate seat?",
+      "choices": [
+        "5%",
+        "50%",
+        "1%",
+        "25%"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Under MMP, a party generally needs to win at least 5% of the party vote to be allocated seats in Parliament, unless it instead wins at least one electorate seat, in which case this threshold does not apply."
+    },
+    {
+      "id": "hum910-045",
+      "prompt": "What best describes New Zealand's system of government and head of state?",
+      "choices": [
+        "A constitutional monarchy, with the monarch represented in New Zealand by the Governor-General",
+        "A republic with an elected president as head of state",
+        "A one-party state",
+        "A monarchy with no elected Parliament"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "New Zealand is a constitutional monarchy: the monarch is the formal head of state, represented day to day in New Zealand by the Governor-General, while an elected Parliament and Prime Minister run the government."
+    },
+    {
+      "id": "hum910-046",
+      "prompt": "According to the law of supply and demand, what usually happens to the price of a good when demand increases but supply stays the same?",
+      "choices": [
+        "The price tends to rise",
+        "The price tends to fall",
+        "The price always stays exactly the same",
+        "The good disappears from the market immediately"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "When more people want to buy a good but the amount available has not changed, buyers compete for the limited supply, and the price tends to rise."
+    },
+    {
+      "id": "hum910-047",
+      "prompt": "What usually happens to the price of a good if its supply increases but demand stays the same?",
+      "choices": [
+        "The price tends to fall",
+        "The price tends to rise",
+        "The price always stays exactly the same",
+        "Demand automatically rises to match it"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "When more of a good becomes available but the same number of people want it, sellers often need to lower the price to sell the extra supply, so the price tends to fall."
+    },
+    {
+      "id": "hum910-048",
+      "prompt": "What is inflation?",
+      "choices": [
+        "A general increase in prices over time, which reduces what money can buy",
+        "A general decrease in prices over time",
+        "An increase in the number of banks in a country",
+        "A tax added to wages"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Inflation is a general, ongoing rise in the level of prices across an economy. As prices rise, each dollar buys less than it used to, which is why inflation is often described as reducing the purchasing power of money."
+    },
+    {
+      "id": "hum910-049",
+      "prompt": "What term describes a general, ongoing fall in the level of prices, which is the opposite of inflation?",
+      "choices": [
+        "Deflation",
+        "Recession",
+        "Depreciation",
+        "Interest"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Deflation is the term for a sustained fall in the general level of prices in an economy, the opposite of inflation, where prices are generally rising."
+    },
+    {
+      "id": "hum910-050",
+      "prompt": "What is GST in New Zealand?",
+      "choices": [
+        "A tax added to the price of most goods and services, collected by businesses for the government",
+        "A tax only businesses pay, never included in shop prices",
+        "A discount offered on goods bought in bulk",
+        "A type of savings account"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "GST stands for Goods and Services Tax. It is added to the price of most things people buy, and businesses collect it on the government's behalf when they make a sale."
+    },
+    {
+      "id": "hum910-051",
+      "prompt": "If a shop advertises a price as 'GST inclusive', what does that mean for the customer?",
+      "choices": [
+        "The tax is already included in the price shown",
+        "The tax will be added on top at the checkout",
+        "The item is exempt from tax",
+        "GST inclusive prices are always cheaper than GST exclusive ones"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A 'GST inclusive' price already has the tax built into the number shown, so the customer pays exactly that amount at the till, with no extra tax added afterwards."
+    }
+  ]
+}

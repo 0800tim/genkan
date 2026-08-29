@@ -1,0 +1,662 @@
+{
+  "id": "nz-ncea-chemistry",
+  "title": "Chemistry, NCEA",
+  "emoji": "🧪",
+  "suggested_age_min": 15,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Senior secondary chemistry spanning NCEA Levels 1 to 3: atomic structure and electron configuration, the periodic table and periodic trends, ionic, covalent and metallic bonding, molecular shapes, moles and stoichiometry, concentration calculations, acids, bases and titration, redox and oxidation numbers, organic chemistry, and rates of reaction and equilibrium.",
+  "questions": [
+    {
+      "id": "chem-001",
+      "prompt": "An atom is made up of which three types of subatomic particle?",
+      "choices": [
+        "Protons, neutrons and electrons",
+        "Protons, neutrons and photons",
+        "Electrons, neutrons and quarks",
+        "Protons, ions and electrons"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Every atom is built from protons and neutrons packed into a central nucleus, with electrons occupying the space around it."
+    },
+    {
+      "id": "chem-002",
+      "prompt": "Where are protons and neutrons found in an atom?",
+      "choices": [
+        "In the nucleus",
+        "Orbiting the nucleus in shells",
+        "Spread evenly throughout the atom",
+        "Only in the outer shell"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Protons and neutrons together make up the small, dense nucleus at the centre of the atom, while the much lighter electrons occupy shells around it."
+    },
+    {
+      "id": "chem-003",
+      "prompt": "An atom of sodium (atomic number 11) has how many electrons in a neutral atom?",
+      "choices": [
+        "11",
+        "12",
+        "23",
+        "1"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "In a neutral atom, the number of electrons always equals the number of protons, which is given by the atomic number. Sodium's atomic number is 11, so a neutral sodium atom has 11 electrons."
+    },
+    {
+      "id": "chem-004",
+      "prompt": "What is the electron configuration of a neutral chlorine atom (atomic number 17)?",
+      "choices": [
+        "2,8,7",
+        "2,8,8",
+        "2,7,8",
+        "8,8,1"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Electron shells fill from the inside out: the first shell holds up to 2 electrons, the second up to 8. Chlorine has 17 electrons in total, so after filling 2 and then 8, the remaining 17 - 2 - 8 = 7 electrons go into the third shell, giving 2,8,7."
+    },
+    {
+      "id": "chem-005",
+      "prompt": "Which electron configuration would you expect for a stable chloride ion, Cl-, formed when a chlorine atom gains one electron?",
+      "choices": [
+        "2,8,8",
+        "2,8,7",
+        "2,8,9",
+        "2,9,7"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "A neutral chlorine atom has the configuration 2,8,7 with 17 electrons. Gaining one extra electron brings the total to 18, and that extra electron fills the third shell up to 8, giving 2,8,8, a full outer shell like the noble gas argon."
+    },
+    {
+      "id": "chem-006",
+      "prompt": "Ionic bonding occurs between",
+      "choices": [
+        "a metal and a non-metal, through transfer of electrons",
+        "two non-metals, through sharing electrons",
+        "two metals, through a sea of delocalised electrons",
+        "two identical atoms only"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Ionic bonds form when a metal atom transfers one or more electrons to a non-metal atom, creating a positive metal ion and a negative non-metal ion that attract each other."
+    },
+    {
+      "id": "chem-007",
+      "prompt": "Covalent bonding involves",
+      "choices": [
+        "sharing of electron pairs between non-metal atoms",
+        "transfer of electrons from metal to non-metal",
+        "a lattice of positive ions in a sea of electrons",
+        "no electrons at all"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "In covalent bonding, two non-metal atoms each contribute an electron to a shared pair, and it is the attraction of both nuclei to that shared pair that holds the atoms together."
+    },
+    {
+      "id": "chem-008",
+      "prompt": "Metallic bonding explains why metals conduct electricity because",
+      "choices": [
+        "delocalised electrons are free to move throughout the metal structure, carrying charge",
+        "metal ions are negatively charged and repel each other",
+        "metals have no electrons at all",
+        "covalent bonds allow electrons to jump between atoms"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "In a metal, outer electrons are not tied to any single atom. They form a 'sea' of delocalised electrons that can drift freely through the whole structure, and it is this free movement of charge that allows metals to conduct electricity."
+    },
+    {
+      "id": "chem-009",
+      "prompt": "Sodium chloride (NaCl) is an ionic compound. Which property would you expect it to have?",
+      "choices": [
+        "A high melting point, since strong electrostatic forces hold the ions in a lattice",
+        "A low melting point, like most covalent molecules",
+        "The ability to conduct electricity as a solid",
+        "Softness and flexibility like a metal"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Ionic compounds form a rigid lattice held together by strong electrostatic attraction between oppositely charged ions in every direction. Breaking that lattice apart to melt the solid takes a lot of energy, which is why ionic compounds typically have high melting points."
+    },
+    {
+      "id": "chem-010",
+      "prompt": "Diamond and graphite are both made entirely of carbon atoms bonded covalently, yet graphite conducts electricity and diamond does not. What best explains this difference?",
+      "choices": [
+        "In graphite, each carbon bonds to only three others, leaving one delocalised electron per atom free to move between layers, whereas every one of diamond's carbon atoms uses all four electrons in fixed bonds",
+        "Graphite contains metal impurities that carry the charge",
+        "Diamond has more electrons overall than graphite",
+        "Graphite is ionic while diamond is covalent"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "In diamond, every carbon atom forms four strong covalent bonds, locking all of its outer electrons in place, so there are no free charge carriers. In graphite, each carbon only bonds to three neighbours within a flat layer, leaving one electron per atom delocalised and free to move along the layer, which is what lets graphite conduct."
+    },
+    {
+      "id": "chem-011",
+      "prompt": "The pH scale runs from",
+      "choices": [
+        "0 to 14",
+        "0 to 100",
+        "1 to 10",
+        "-7 to 7"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The pH scale runs from 0, the most acidic, up to 14, the most alkaline, with 7 sitting exactly in the middle as neutral."
+    },
+    {
+      "id": "chem-012",
+      "prompt": "A solution with pH 7 is",
+      "choices": [
+        "Neutral",
+        "Strongly acidic",
+        "Strongly alkaline (basic)",
+        "Not possible"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Pure water has a pH of 7, which is the midpoint of the scale and is neither acidic nor alkaline, so it is described as neutral."
+    },
+    {
+      "id": "chem-013",
+      "prompt": "As pH decreases from 7 towards 0, a solution becomes",
+      "choices": [
+        "More acidic",
+        "More alkaline",
+        "More neutral",
+        "Less concentrated"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Lower pH values sit further from neutral on the acidic side of the scale, so a falling pH from 7 down towards 0 means the solution is becoming more strongly acidic."
+    },
+    {
+      "id": "chem-014",
+      "prompt": "In a titration, a student adds acid from a burette to a measured volume of alkali until an indicator changes colour at the end point. This end point shows",
+      "choices": [
+        "The acid and alkali have exactly neutralised each other (or reached the reaction's set ratio)",
+        "The acid has run out completely with no reaction occurring",
+        "The alkali has evaporated",
+        "The indicator has stopped working"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The indicator is chosen so its colour change happens right at the point where the acid added has exactly reacted with all the alkali present, according to the mole ratio in the equation. That volume reading is what lets you calculate an unknown concentration."
+    },
+    {
+      "id": "chem-015",
+      "prompt": "A strong acid and a weak acid have the same concentration (same moles per litre). Which statement is correct?",
+      "choices": [
+        "The strong acid has a lower pH, because it ionises more fully in water, releasing more H+ ions",
+        "The weak acid has a lower pH, because it is weaker",
+        "Both acids have exactly the same pH, since concentration is identical",
+        "pH cannot be compared between strong and weak acids"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Strong and weak describe how fully an acid ionises in water, not how concentrated it is. A strong acid ionises almost completely, releasing many more H+ ions into solution than a weak acid of the same concentration, which only partly ionises, so the strong acid ends up with a lower pH."
+    },
+    {
+      "id": "chem-016",
+      "prompt": "Alkanes are hydrocarbons that contain only",
+      "choices": [
+        "single carbon-carbon bonds (they are saturated)",
+        "at least one carbon-carbon double bond",
+        "an -OH group",
+        "a carbon-oxygen double bond"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Alkanes have every carbon-carbon bond as a single bond, which is why they are described as saturated: each carbon holds as many hydrogen atoms as it possibly can."
+    },
+    {
+      "id": "chem-017",
+      "prompt": "Alkenes differ from alkanes because alkenes contain",
+      "choices": [
+        "at least one carbon-carbon double bond",
+        "no carbon atoms",
+        "an -OH group",
+        "only single bonds"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Alkenes contain at least one carbon-carbon double bond, which makes them unsaturated, since fewer hydrogen atoms are attached at that double bond than an alkane of the same length would carry."
+    },
+    {
+      "id": "chem-018",
+      "prompt": "Alkenes can be distinguished from alkanes using bromine water because alkenes",
+      "choices": [
+        "decolourise bromine water rapidly, as the double bond reacts with it",
+        "turn bromine water blue",
+        "have no reaction with bromine water at all",
+        "explode instantly on contact"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The carbon-carbon double bond in an alkene readily reacts with bromine in an addition reaction, quickly turning the orange bromine water colourless. Alkanes have no double bond to react at, so they leave bromine water unchanged."
+    },
+    {
+      "id": "chem-019",
+      "prompt": "Ethanol (an alcohol) can be produced industrially by fermentation. This process uses",
+      "choices": [
+        "yeast, which converts glucose into ethanol and carbon dioxide, in the absence of oxygen",
+        "a metal catalyst reacting ethanol with oxygen",
+        "distillation of crude oil",
+        "a strong acid breaking down starch directly into ethanol"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Fermentation relies on yeast enzymes breaking down glucose without oxygen present, producing ethanol and carbon dioxide as the main products. This is a biological process, distinct from the way ethanol can also be made industrially from ethene."
+    },
+    {
+      "id": "chem-020",
+      "prompt": "An alkene such as ethene can be converted into an alcohol such as ethanol by which type of reaction?",
+      "choices": [
+        "Addition of water (hydration) across the carbon-carbon double bond",
+        "Combustion in excess oxygen",
+        "Substitution of a hydrogen atom for an -OH group",
+        "Polymerisation of many ethene molecules"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "In the hydration reaction, steam adds across the carbon-carbon double bond with the help of a catalyst. The double bond opens into a single bond, and an H and an OH end up attached to the two carbons, turning the alkene into an alcohol."
+    },
+    {
+      "id": "chem-021",
+      "prompt": "Which of these generally increases the rate of a chemical reaction?",
+      "choices": [
+        "Increasing the temperature",
+        "Decreasing the temperature",
+        "Removing the reactants",
+        "Using a smaller volume of the same concentration solution alone"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Raising the temperature makes particles move faster, so they collide more often and with more energy, meaning more collisions succeed in causing a reaction each second."
+    },
+    {
+      "id": "chem-022",
+      "prompt": "Using a catalyst in a reaction",
+      "choices": [
+        "speeds up the reaction without being used up itself",
+        "slows the reaction down",
+        "is permanently changed into a new substance",
+        "only works at very low temperatures"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A catalyst provides an alternative pathway for the reaction that needs less energy, speeding the reaction up, but it comes out of the reaction chemically unchanged, so the same amount can be used again."
+    },
+    {
+      "id": "chem-023",
+      "prompt": "Increasing the concentration of a reactant in solution generally increases the rate of reaction because",
+      "choices": [
+        "there are more particles in the same volume, so collisions between reacting particles happen more often",
+        "the particles move faster individually",
+        "the reaction becomes exothermic",
+        "there is less energy needed for each collision"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A higher concentration packs more reacting particles into the same volume of solution, so they bump into each other more frequently. This is different from raising temperature, which makes each particle move faster rather than just more crowded."
+    },
+    {
+      "id": "chem-024",
+      "prompt": "A reversible reaction reaches dynamic equilibrium. At equilibrium,",
+      "choices": [
+        "the forward and reverse reactions continue to happen, but at equal rates, so the amounts of reactants and products stay constant",
+        "the forward and reverse reactions have both completely stopped",
+        "only the forward reaction is still occurring",
+        "the reactants have been fully converted into products"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Dynamic equilibrium does not mean the reaction has stopped. Both the forward and reverse reactions are still happening constantly, but because they now occur at exactly the same rate, the overall amounts of reactants and products no longer change."
+    },
+    {
+      "id": "chem-025",
+      "prompt": "A reversible reaction at equilibrium is disturbed by adding more of one reactant. According to Le Chatelier's principle, the equilibrium will",
+      "choices": [
+        "shift to favour the forward reaction, producing more product, to partly counteract the added reactant",
+        "shift to favour the reverse reaction, removing more product",
+        "stay exactly where it was, since equilibrium cannot change",
+        "stop the reaction completely"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Le Chatelier's principle says a system at equilibrium responds to a disturbance by shifting to partly cancel it out. Adding more reactant pushes the equilibrium to use some of that extra reactant up, favouring the forward reaction and producing more product until a new balance is reached."
+    },
+    {
+      "id": "chem-026",
+      "prompt": "Elements in the periodic table are arranged in order of increasing",
+      "choices": [
+        "atomic number (number of protons)",
+        "atomic mass only",
+        "number of neutrons",
+        "alphabetical order"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The modern periodic table lists elements in order of increasing atomic number, which is the number of protons in the nucleus, not by mass or alphabetical order."
+    },
+    {
+      "id": "chem-027",
+      "prompt": "Elements in the same group (column) of the periodic table have similar chemical properties because they have the same",
+      "choices": [
+        "number of electrons in their outer shell",
+        "total number of electrons",
+        "number of neutrons",
+        "atomic mass"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Chemical behaviour is largely governed by the outer shell electrons, since these are the ones involved in bonding. Elements in the same group share the same number of outer shell electrons, which is why they react in similar ways."
+    },
+    {
+      "id": "chem-028",
+      "prompt": "Moving left to right across a period, atomic radius generally",
+      "choices": [
+        "decreases, as increasing nuclear charge pulls the electrons in more strongly",
+        "increases steadily",
+        "stays exactly the same",
+        "becomes impossible to measure"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Across a period, protons are being added to the nucleus while electrons are added to the same outer shell. The extra positive charge pulls that outer shell in more tightly, so atoms get smaller from left to right."
+    },
+    {
+      "id": "chem-029",
+      "prompt": "Moving down a group, reactivity of the alkali metals (Group 1)",
+      "choices": [
+        "increases, because the outer electron is further from the nucleus and more easily lost",
+        "decreases, because atoms get smaller",
+        "stays the same for every alkali metal",
+        "only changes for noble gases"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Going down Group 1, each element has an extra electron shell, so the single outer electron sits further from the nucleus and is held less tightly. That makes it easier to lose in a reaction, so reactivity increases down the group."
+    },
+    {
+      "id": "chem-030",
+      "prompt": "Which of these best explains why noble gases (Group 18) are generally unreactive?",
+      "choices": [
+        "They already have a full outer electron shell, so they have little tendency to gain, lose or share electrons",
+        "They have no electrons at all",
+        "They are all radioactive",
+        "They only exist as liquids at room temperature"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Noble gases already have a complete outer electron shell, which is the stable arrangement that other atoms are trying to achieve by bonding. With nothing to gain from reacting, they take part in very few chemical reactions."
+    },
+    {
+      "id": "chem-031",
+      "prompt": "The shape of a simple covalent molecule is mainly determined by",
+      "choices": [
+        "the repulsion between electron pairs around the central atom, which push as far apart as possible",
+        "the colour of the atoms involved",
+        "the temperature of the room",
+        "the mass of the central atom"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Electron pairs around a central atom all carry negative charge and repel each other, so they arrange themselves as far apart as possible in three dimensions. This repulsion is what fixes the overall shape of the molecule."
+    },
+    {
+      "id": "chem-032",
+      "prompt": "A molecule with a central atom surrounded by four bonding pairs and no lone pairs, such as methane (CH4), has which shape?",
+      "choices": [
+        "Tetrahedral",
+        "Linear",
+        "Trigonal planar",
+        "Bent (angular)"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Four bonding pairs with no lone pairs spread out as far apart as possible in three dimensions, which gives a tetrahedral shape, with bond angles of 109.5 degrees, as seen in methane."
+    },
+    {
+      "id": "chem-033",
+      "prompt": "A molecule with a central atom surrounded by two bonding pairs and no lone pairs, such as carbon dioxide (CO2), has which shape?",
+      "choices": [
+        "Linear",
+        "Tetrahedral",
+        "Bent",
+        "Pyramidal"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "With only two bonding pairs and no lone pairs to push them out of line, the two bonds spread as far apart as possible, which means directly opposite each other. That gives a straight, linear shape with a 180 degree bond angle."
+    },
+    {
+      "id": "chem-034",
+      "prompt": "Water (H2O) has two bonding pairs and two lone pairs around its central oxygen atom. Compared to methane's perfect tetrahedral bond angle of 109.5 degrees, water's H-O-H bond angle is",
+      "choices": [
+        "smaller, because lone pairs repel more strongly than bonding pairs, pushing the bonding pairs closer together",
+        "larger, because lone pairs push the bonds further apart",
+        "exactly the same, since both have four electron pairs",
+        "impossible to predict"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Lone pairs are held closer to the central atom than bonding pairs, so they repel neighbouring electron pairs more strongly. In water, the two lone pairs squeeze the two O-H bonds closer together than in a perfect tetrahedron, giving a bent shape with a smaller angle of about 104.5 degrees."
+    },
+    {
+      "id": "chem-035",
+      "prompt": "Ammonia (NH3) has three bonding pairs and one lone pair around its central nitrogen atom. What shape does this give the molecule?",
+      "choices": [
+        "Trigonal pyramidal",
+        "Tetrahedral",
+        "Linear",
+        "Trigonal planar"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The four electron pairs (three bonding, one lone) still arrange in a roughly tetrahedral pattern, but since the lone pair itself is invisible in the molecule's shape, what you actually see is the three N-H bonds forming a pyramid shape with nitrogen at the apex, called trigonal pyramidal."
+    },
+    {
+      "id": "chem-036",
+      "prompt": "The mole is a unit used to count",
+      "choices": [
+        "a fixed number of particles (atoms, molecules or ions), equal to Avogadro's number",
+        "grams of a substance directly",
+        "the volume of a gas only",
+        "the number of protons in an atom"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A mole is simply a very large fixed number of particles, Avogadro's number, in the same way a dozen always means 12. It lets chemists count atoms and molecules by weighing out a convenient mass."
+    },
+    {
+      "id": "chem-037",
+      "prompt": "How many moles are in 20 grams of a substance with a molar mass of 40 g/mol?",
+      "choices": [
+        "0.5",
+        "2",
+        "20",
+        "800"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Moles are found by dividing mass by molar mass: 20 grams divided by 40 g/mol gives 0.5 moles."
+    },
+    {
+      "id": "chem-038",
+      "prompt": "What is the molar mass of water, H2O (H = 1, O = 16)?",
+      "choices": [
+        "18 g/mol",
+        "17 g/mol",
+        "16 g/mol",
+        "34 g/mol"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Add up the atomic masses of every atom in the formula: two hydrogens at 1 each give 2, plus one oxygen at 16, giving 2 + 16 = 18 g/mol."
+    },
+    {
+      "id": "chem-039",
+      "prompt": "In the reaction 2H2 + O2 -> 2H2O, how many moles of oxygen are needed to completely react with 4 moles of hydrogen?",
+      "choices": [
+        "2",
+        "4",
+        "1",
+        "8"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The balanced equation shows a mole ratio of 2 moles of H2 to 1 mole of O2. Scaling that ratio up to 4 moles of H2 (double the 2 in the equation) means you also need double the oxygen, so 2 moles of O2."
+    },
+    {
+      "id": "chem-040",
+      "prompt": "Using the equation N2 + 3H2 -> 2NH3, what mass of ammonia (NH3, molar mass 17 g/mol) can be produced from 6 moles of hydrogen gas?",
+      "choices": [
+        "68 g",
+        "102 g",
+        "34 g",
+        "17 g"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The equation's mole ratio is 3 moles of H2 to 2 moles of NH3. Scaling 6 moles of H2 up by that ratio: 6 divided by 3, times 2, gives 4 moles of NH3. Converting moles to mass: 4 moles times 17 g/mol gives 68 g."
+    },
+    {
+      "id": "chem-041",
+      "prompt": "Concentration in mol/L (molarity) is calculated using",
+      "choices": [
+        "moles of solute divided by volume of solution in litres",
+        "mass of solute divided by mass of solvent",
+        "volume of solution divided by moles of solute",
+        "moles of solute multiplied by volume in litres"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Concentration in mol/L is defined as the number of moles of dissolved solute divided by the volume of the whole solution measured in litres."
+    },
+    {
+      "id": "chem-042",
+      "prompt": "What is the concentration of a solution made by dissolving 0.5 moles of solute in 2 litres of solution?",
+      "choices": [
+        "0.25 mol/L",
+        "1 mol/L",
+        "2.5 mol/L",
+        "4 mol/L"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Concentration is moles divided by volume in litres: 0.5 moles divided by 2 litres gives 0.25 mol/L."
+    },
+    {
+      "id": "chem-043",
+      "prompt": "How many moles of solute are in 0.5 litres of a 2 mol/L solution?",
+      "choices": [
+        "1 mol",
+        "0.25 mol",
+        "2.5 mol",
+        "4 mol"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Rearranging the concentration formula gives moles = concentration times volume: 2 mol/L times 0.5 L gives 1 mole."
+    },
+    {
+      "id": "chem-044",
+      "prompt": "A solution has a concentration of 0.1 mol/L. What volume (in litres) contains exactly 0.02 moles of solute?",
+      "choices": [
+        "0.2 L",
+        "2 L",
+        "0.02 L",
+        "20 L"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Rearranging the concentration formula for volume gives volume = moles divided by concentration: 0.02 moles divided by 0.1 mol/L gives 0.2 L."
+    },
+    {
+      "id": "chem-045",
+      "prompt": "In a titration, 25 mL of an unknown acid exactly neutralises 20 mL of a 0.1 mol/L alkali solution, in a 1:1 mole ratio. What is the concentration of the acid?",
+      "choices": [
+        "0.08 mol/L",
+        "0.1 mol/L",
+        "0.125 mol/L",
+        "0.02 mol/L"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "First find the moles of alkali used: 0.1 mol/L times 0.020 L gives 0.002 mol. Since the reaction ratio is 1:1, the acid also supplied 0.002 mol, but in a volume of 0.025 L. Dividing gives the acid's concentration: 0.002 mol divided by 0.025 L equals 0.08 mol/L."
+    },
+    {
+      "id": "chem-046",
+      "prompt": "Oxidation is best defined (in terms of electrons) as",
+      "choices": [
+        "loss of electrons",
+        "gain of electrons",
+        "loss of protons",
+        "gain of protons"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A handy way to remember this is OIL RIG: Oxidation Is Loss of electrons, Reduction Is Gain of electrons."
+    },
+    {
+      "id": "chem-047",
+      "prompt": "Reduction is best defined (in terms of electrons) as",
+      "choices": [
+        "gain of electrons",
+        "loss of electrons",
+        "gain of protons",
+        "loss of neutrons"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Following OIL RIG, Reduction Is Gain of electrons, the exact opposite of oxidation, which is loss of electrons."
+    },
+    {
+      "id": "chem-048",
+      "prompt": "What is the oxidation number of oxygen in most compounds (excluding peroxides)?",
+      "choices": [
+        "-2",
+        "+2",
+        "-1",
+        "0"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Oxygen almost always has an oxidation number of -2 in compounds, since it typically gains two electrons or shares them unevenly in its favour. Peroxides, like hydrogen peroxide, are an unusual exception where oxygen is -1."
+    },
+    {
+      "id": "chem-049",
+      "prompt": "In the reaction Zn + Cu2+ -> Zn2+ + Cu, which species is oxidised?",
+      "choices": [
+        "Zn, since it loses two electrons to become Zn2+",
+        "Cu2+, since it loses electrons",
+        "Zn2+, since it gains electrons",
+        "Cu, since it gains electrons"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Zinc starts with an oxidation number of 0 and ends as Zn2+, meaning it lost two electrons, which is oxidation. Meanwhile Cu2+ gains those two electrons to become neutral copper metal, which is reduction, so copper is the species reduced, not oxidised."
+    },
+    {
+      "id": "chem-050",
+      "prompt": "In the reaction 2Fe2+ + Cl2 -> 2Fe3+ + 2Cl-, what are the oxidation number changes for iron and chlorine?",
+      "choices": [
+        "Iron is oxidised (+2 to +3), chlorine is reduced (0 to -1)",
+        "Iron is reduced (+2 to +3), chlorine is oxidised (0 to -1)",
+        "Both iron and chlorine are oxidised",
+        "Neither element changes oxidation number"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Track each element's oxidation number before and after: iron goes from +2 up to +3, an increase that means it lost an electron, which is oxidation. Chlorine goes from 0 down to -1 in each chloride ion, a decrease that means it gained an electron, which is reduction."
+    }
+  ]
+}

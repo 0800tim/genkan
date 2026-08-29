@@ -33,7 +33,7 @@ import { livePage, family as familyView } from "./views.mjs";
 import { LiveWire } from "./live.mjs";
 import { SysMonitor } from "./sysmon.mjs";
 import { householdApi } from "./household.mjs";
-import { earnData, earnPage, taskApi, quizApi, bankApi, earnSettingsApi, decideClaim } from "./earn.mjs";
+import { earnData, earnPage, taskApi, quizApi, bankApi, earnSettingsApi, boardApi, decideClaim } from "./earn.mjs";
 import { dirname, join } from "node:path";
 
 const BIND = process.env.BIND || "127.0.0.1";
@@ -256,7 +256,7 @@ const server = createServer(async (req, res) => {
 
     if (req.method === "POST" && ["/api/claim", "/api/act", "/api/assign", "/api/ack", "/api/goal",
       "/api/child", "/api/tier", "/api/device", "/api/household", "/api/task", "/api/quiz",
-      "/api/bank", "/api/earnsettings"].includes(req.url) && !authed(req)) {
+      "/api/bank", "/api/earnsettings", "/api/board"].includes(req.url) && !authed(req)) {
       res.writeHead(403, { "content-type": "application/json" }); res.end('{"out":"forbidden"}'); return; }
     if (req.method === "POST" && req.url === "/api/assign") {
       let b = ""; req.on("data", c => b += c); await new Promise(r => req.on("end", r));
@@ -286,10 +286,12 @@ const server = createServer(async (req, res) => {
     // Both are database only: the banks a parent writes never touch
     // portal/quizzes, which is tracked in git, and neither call goes near the
     // firewall. Same token guard as every other control.
-    if (req.method === "POST" && (req.url === "/api/bank" || req.url === "/api/earnsettings")) {
+    if (req.method === "POST" && (req.url === "/api/bank" || req.url === "/api/earnsettings" || req.url === "/api/board")) {
       const body = await readJson(req);
       try {
-        if (req.url === "/api/bank") await bankApi(q, body, res); else await earnSettingsApi(q, body, res);
+        if (req.url === "/api/bank") await bankApi(q, body, res);
+        else if (req.url === "/api/board") await boardApi(q, body, res);
+        else await earnSettingsApi(q, body, res);
       } catch (e) {
         res.writeHead(400, { "content-type": "application/json" });
         res.end(JSON.stringify({ ok: false, out: `That did not save: ${e.message}` }));

@@ -17,6 +17,7 @@
         "14"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "3 groups of 4 make 12."
     },
     {
@@ -29,6 +30,7 @@
         "29"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "5 groups of 6 make 30."
     },
     {
@@ -41,6 +43,7 @@
         "17"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "2 groups of 9 make 18."
     },
     {
@@ -53,6 +56,7 @@
         "26"
       ],
       "answer_index": 0,
+      "difficulty": 1,
       "explanation": "4 groups of 4 make 16."
     },
     {
@@ -65,6 +69,7 @@
         "63"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "10 groups of 7 make 70."
     },
     {
@@ -77,6 +82,7 @@
         "20"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "5 groups of 5 make 25."
     },
     {
@@ -89,6 +95,7 @@
         "24"
       ],
       "answer_index": 3,
+      "difficulty": 2,
       "explanation": "3 groups of 8 make 24."
     },
     {
@@ -101,6 +108,7 @@
         "20"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "6 groups of 4 make 24."
     },
     {
@@ -113,6 +121,7 @@
         "15"
       ],
       "answer_index": 0,
+      "difficulty": 1,
       "explanation": "2 groups of 7 make 14."
     },
     {
@@ -125,6 +134,7 @@
         "36"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "9 groups of 3 make 27."
     },
     {
@@ -137,6 +147,7 @@
         "20"
       ],
       "answer_index": 3,
+      "difficulty": 1,
       "explanation": "4 groups of 5 make 20."
     },
     {
@@ -149,6 +160,7 @@
         "26"
       ],
       "answer_index": 0,
+      "difficulty": 1,
       "explanation": "8 groups of 2 make 16."
     },
     {
@@ -161,6 +173,7 @@
         "36"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "6 groups of 7 make 42."
     },
     {
@@ -173,6 +186,7 @@
         "56"
       ],
       "answer_index": 3,
+      "difficulty": 3,
       "explanation": "7 groups of 8 make 56."
     },
     {
@@ -185,6 +199,7 @@
         "72"
       ],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "8 groups of 8 make 64."
     },
     {
@@ -197,6 +212,7 @@
         "55"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "9 groups of 6 make 54."
     },
     {
@@ -209,6 +225,7 @@
         "49"
       ],
       "answer_index": 3,
+      "difficulty": 2,
       "explanation": "7 groups of 7 make 49."
     },
     {
@@ -221,6 +238,7 @@
         "42"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "8 groups of 6 make 48."
     },
     {
@@ -233,6 +251,7 @@
         "79"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "9 groups of 9 make 81."
     },
     {
@@ -245,6 +264,7 @@
         "63"
       ],
       "answer_index": 3,
+      "difficulty": 3,
       "explanation": "7 groups of 9 make 63."
     },
     {
@@ -257,6 +277,7 @@
         "36"
       ],
       "answer_index": 3,
+      "difficulty": 2,
       "explanation": "6 groups of 6 make 36."
     },
     {
@@ -269,6 +290,7 @@
         "64"
       ],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "8 groups of 9 make 72."
     },
     {
@@ -281,6 +303,7 @@
         "18"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "7 groups of 4 make 28."
     },
     {
@@ -293,6 +316,7 @@
         "34"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "9 groups of 4 make 36."
     },
     {
@@ -305,6 +329,7 @@
         "120"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "11 groups of 11 make 121."
     },
     {
@@ -317,6 +342,7 @@
         "146"
       ],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "12 groups of 12 make 144."
     },
     {
@@ -329,6 +355,7 @@
         "132"
       ],
       "answer_index": 3,
+      "difficulty": 3,
       "explanation": "11 groups of 12 make 132."
     },
     {
@@ -341,6 +368,7 @@
         "91"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "12 groups of 7 make 84."
     },
     {
@@ -353,6 +381,7 @@
         "96"
       ],
       "answer_index": 3,
+      "difficulty": 4,
       "explanation": "12 groups of 8 make 96."
     },
     {
@@ -365,6 +394,7 @@
         "109"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "11 groups of 9 make 99."
     },
     {
@@ -377,6 +407,7 @@
         "72"
       ],
       "answer_index": 3,
+      "difficulty": 3,
       "explanation": "12 groups of 6 make 72."
     },
     {
@@ -389,6 +420,7 @@
         "90"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "11 groups of 8 make 88."
     },
     {
@@ -401,6 +433,7 @@
         "98"
       ],
       "answer_index": 1,
+      "difficulty": 5,
       "explanation": "12 groups of 9 make 108."
     },
     {
@@ -413,6 +446,7 @@
         "52"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "13 groups of 3 make 39."
     },
     {
@@ -425,6 +459,7 @@
         "45"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "15 groups of 4 make 60."
     },
     {
@@ -437,6 +472,7 @@
         "60"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "14 groups of 5 make 70."
     },
     {
@@ -449,6 +485,7 @@
         "75"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "25 groups of 4 make 100."
     },
     {
@@ -461,6 +498,7 @@
         "50"
       ],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "16 groups of 3 make 48."
     },
     {
@@ -473,6 +511,7 @@
         "92"
       ],
       "answer_index": 0,
+      "difficulty": 5,
       "explanation": "15 groups of 6 make 90."
     },
     {
@@ -485,6 +524,7 @@
         "48"
       ],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "13 groups of 4 make 52."
     },
     {
@@ -497,6 +537,7 @@
         "8"
       ],
       "answer_index": 3,
+      "difficulty": 4,
       "explanation": "56 split into 7 equal groups gives 8 in each."
     },
     {
@@ -509,6 +550,7 @@
         "11"
       ],
       "answer_index": 1,
+      "difficulty": 4,
       "explanation": "72 split into 8 equal groups gives 9 in each."
     },
     {
@@ -521,6 +563,7 @@
         "13"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "81 split into 9 equal groups gives 9 in each."
     },
     {
@@ -533,6 +576,7 @@
         "9"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "42 split into 6 equal groups gives 7 in each."
     },
     {
@@ -545,6 +589,7 @@
         "5"
       ],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "63 split into 9 equal groups gives 7 in each."
     },
     {
@@ -557,6 +602,7 @@
         "18"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "48 split into 6 equal groups gives 8 in each."
     },
     {
@@ -569,6 +615,7 @@
         "11"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "36 split into 4 equal groups gives 9 in each."
     },
     {
@@ -581,6 +628,7 @@
         "9"
       ],
       "answer_index": 3,
+      "difficulty": 3,
       "explanation": "54 split into 6 equal groups gives 9 in each."
     },
     {
@@ -593,6 +641,7 @@
         "12"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "64 split into 8 equal groups gives 8 in each."
     },
     {
@@ -605,6 +654,7 @@
         "8"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "45 split into 5 equal groups gives 9 in each."
     },
     {
@@ -617,6 +667,7 @@
         "4"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "40 split into 8 equal groups gives 5 in each."
     },
     {
@@ -629,6 +680,7 @@
         "17"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "28 split into 4 equal groups gives 7 in each."
     },
     {
@@ -641,6 +693,7 @@
         "17"
       ],
       "answer_index": 1,
+      "difficulty": 5,
       "explanation": "132 split into 12 equal groups gives 11 in each."
     },
     {
@@ -653,6 +706,7 @@
         "14"
       ],
       "answer_index": 1,
+      "difficulty": 5,
       "explanation": "144 split into 12 equal groups gives 12 in each."
     },
     {
@@ -665,6 +719,7 @@
         "12"
       ],
       "answer_index": 3,
+      "difficulty": 4,
       "explanation": "96 split into 8 equal groups gives 12 in each."
     },
     {
@@ -677,6 +732,7 @@
         "12"
       ],
       "answer_index": 3,
+      "difficulty": 4,
       "explanation": "108 split into 9 equal groups gives 12 in each."
     },
     {
@@ -689,6 +745,7 @@
         "2"
       ],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "84 split into 7 equal groups gives 12 in each."
     },
     {
@@ -701,6 +758,7 @@
         "13"
       ],
       "answer_index": 0,
+      "difficulty": 5,
       "explanation": "121 split into 11 equal groups gives 11 in each."
     },
     {
@@ -713,6 +771,7 @@
         "13"
       ],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "90 split into 6 equal groups gives 15 in each."
     },
     {
@@ -725,6 +784,7 @@
         "26"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "100 split into 4 equal groups gives 25 in each."
     }
   ]

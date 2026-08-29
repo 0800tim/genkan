@@ -13,6 +13,7 @@
       "prompt": "How many planets are in our solar system?",
       "choices": ["7", "8", "9", "10"],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "Eight planets orbit the Sun; Pluto was reclassified as a dwarf planet in 2006."
     },
     {
@@ -20,6 +21,7 @@
       "prompt": "Which planet is closest to the Sun?",
       "choices": ["Venus", "Mars", "Mercury", "Earth"],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "Mercury is the innermost planet, whipping around the Sun in just 88 days."
     },
     {
@@ -27,6 +29,7 @@
       "prompt": "Which planet is the hottest in the solar system?",
       "choices": ["Mercury", "Venus", "Mars", "Jupiter"],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Venus beats Mercury because its thick carbon dioxide atmosphere traps heat like a runaway greenhouse."
     },
     {
@@ -39,6 +42,7 @@
         "Red algae grow on its surface"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "Iron minerals in the Martian dust have rusted, giving the whole planet its red colour."
     },
     {
@@ -46,6 +50,7 @@
       "prompt": "Which is the largest planet in our solar system?",
       "choices": ["Saturn", "Neptune", "Earth", "Jupiter"],
       "answer_index": 3,
+      "difficulty": 1,
       "explanation": "Jupiter is so big that more than 1,300 Earths could fit inside it."
     },
     {
@@ -53,6 +58,7 @@
       "prompt": "Which planet is famous for its bright, easily seen rings?",
       "choices": ["Saturn", "Mars", "Venus", "Mercury"],
       "answer_index": 0,
+      "difficulty": 1,
       "explanation": "Saturn's rings are made of countless chunks of ice and rock."
     },
     {
@@ -65,6 +71,7 @@
         "It left the solar system"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "Astronomers agreed on a new definition of planet, and Pluto became the most famous dwarf planet."
     },
     {
@@ -72,6 +79,7 @@
       "prompt": "What is the Sun?",
       "choices": ["A planet", "A star", "A moon", "A galaxy"],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "The Sun is an ordinary star that just happens to be very close to us."
     },
     {
@@ -84,6 +92,7 @@
         "By reflecting light from other stars"
       ],
       "answer_index": 1,
+      "difficulty": 4,
       "explanation": "Deep in its core the Sun fuses hydrogen into helium, releasing enormous energy."
     },
     {
@@ -91,6 +100,7 @@
       "prompt": "About how long does sunlight take to reach Earth?",
       "choices": ["8 seconds", "8 minutes", "8 hours", "8 days"],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Light crosses the 150 million km from the Sun to Earth in about 8 minutes."
     },
     {
@@ -103,6 +113,7 @@
         "The lifetime of a star"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "A light year measures distance, about 9.5 trillion kilometres."
     },
     {
@@ -110,6 +121,7 @@
       "prompt": "What is the nearest star to the Sun?",
       "choices": ["Sirius", "Proxima Centauri", "Betelgeuse", "Polaris"],
       "answer_index": 1,
+      "difficulty": 4,
       "explanation": "Proxima Centauri is about 4.2 light years away, part of the Alpha Centauri system we can see from NZ."
     },
     {
@@ -117,6 +129,7 @@
       "prompt": "Roughly how old is the Sun?",
       "choices": ["4.6 million years", "460 million years", "4.6 billion years", "46 billion years"],
       "answer_index": 2,
+      "difficulty": 5,
       "explanation": "The Sun and the whole solar system formed about 4.6 billion years ago."
     },
     {
@@ -124,6 +137,7 @@
       "prompt": "What will the Sun eventually become when it runs low on hydrogen fuel?",
       "choices": ["A black hole", "A red giant", "A comet", "A supernova"],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "In about 5 billion years the Sun will swell into a red giant, then fade to a white dwarf."
     },
     {
@@ -136,6 +150,7 @@
         "Clouds pass in front of them"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "Wobbling air in our atmosphere bends starlight around, which we see as twinkling."
     },
     {
@@ -148,6 +163,7 @@
         "A tunnel between galaxies"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "A black hole packs so much mass into so little space that light itself cannot escape its gravity."
     },
     {
@@ -160,6 +176,7 @@
         "Changes in the Sun's brightness"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "Earth is tilted about 23.5 degrees, so each hemisphere leans towards the Sun for part of the year."
     },
     {
@@ -172,6 +189,7 @@
         "New Zealand moves north in summer"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "In December the southern half of Earth leans sunward, so we get long hot days while the north shivers."
     },
     {
@@ -179,6 +197,7 @@
       "prompt": "How long does Earth take to spin once on its axis?",
       "choices": ["About 12 hours", "About 24 hours", "About 7 days", "About 365 days"],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "One full spin takes about 24 hours, which is why we have day and night."
     },
     {
@@ -186,6 +205,7 @@
       "prompt": "How long does Earth take to orbit the Sun once?",
       "choices": ["24 hours", "29.5 days", "365.25 days", "12 years"],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "One orbit takes 365 and a quarter days, and the quarter days add up to a leap day every four years."
     },
     {
@@ -193,6 +213,7 @@
       "prompt": "About how long is a full cycle of Moon phases, from full moon to full moon?",
       "choices": ["One week", "About 29.5 days", "Exactly 24 hours", "One year"],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "The Moon runs through all its phases in about 29 and a half days."
     },
     {
@@ -205,6 +226,7 @@
         "Ships moving through the water"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "The Moon's gravity (helped by the Sun's) drags the oceans into bulges that we experience as tides."
     },
     {
@@ -217,6 +239,7 @@
         "A storm on the Sun"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "In a solar eclipse the Moon blocks our view of the Sun and casts its shadow on Earth."
     },
     {
@@ -229,6 +252,7 @@
         "Clouds covering the Moon"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "In a lunar eclipse Earth sits between the Sun and Moon, and our shadow turns the Moon a coppery red."
     },
     {
@@ -241,6 +265,7 @@
         "Inside Mercury's orbit"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Most asteroids orbit in a belt between Mars and Jupiter."
     },
     {
@@ -253,6 +278,7 @@
         "Straight down"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Sunlight and the solar wind blow the tail away from the Sun, whichever way the comet is moving."
     },
     {
@@ -265,6 +291,7 @@
         "Lightning high in the sky"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "Shooting stars are meteors, tiny bits of rock or dust blazing as they hit our atmosphere."
     },
     {
@@ -272,6 +299,7 @@
       "prompt": "What do we call a space rock that survives its fall and lands on the ground?",
       "choices": ["A meteor", "A meteorite", "A comet", "An asteroid belt"],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Once it reaches the ground it is a meteorite; while it burns in the sky it is a meteor."
     },
     {
@@ -279,6 +307,7 @@
       "prompt": "What is the name of our galaxy?",
       "choices": ["Andromeda", "The Milky Way", "The Magellanic Cloud", "Orion"],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "We live in the Milky Way, a spiral galaxy of billions of stars."
     },
     {
@@ -286,6 +315,7 @@
       "prompt": "One te reo Māori name for the Milky Way, pictured as a great fish of the sky, is:",
       "choices": ["Te Ikaroa", "Aoraki", "Te Waipounamu", "Ruapehu"],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "Te Ikaroa, the long fish, stretches across the summer sky (Mangōroa, the long shark, is another name)."
     },
     {
@@ -293,6 +323,7 @@
       "prompt": "What is the nearest large galaxy to the Milky Way?",
       "choices": ["The Sombrero Galaxy", "Andromeda", "The Whirlpool Galaxy", "Centaurus A"],
       "answer_index": 1,
+      "difficulty": 4,
       "explanation": "Andromeda is about 2.5 million light years away and is slowly heading our way."
     },
     {
@@ -300,6 +331,7 @@
       "prompt": "About how old is the universe, according to the Big Bang theory?",
       "choices": ["13.8 thousand years", "13.8 million years", "13.8 billion years", "13.8 trillion years"],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "Evidence points to the universe beginning about 13.8 billion years ago."
     },
     {
@@ -312,6 +344,7 @@
         "They are made of dark matter only"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "Hubble showed distant galaxies are racing away from us, the key evidence that space is expanding."
     },
     {
@@ -319,6 +352,7 @@
       "prompt": "Which famous constellation appears on the New Zealand flag?",
       "choices": ["Orion", "The Southern Cross", "The Big Dipper", "Scorpius"],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "The four red stars on our flag are the Southern Cross, Te Punga, visible all year from NZ."
     },
     {
@@ -326,6 +360,7 @@
       "prompt": "What can the Southern Cross help you find at night?",
       "choices": ["North", "South", "East", "The Moon"],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "Extend the long axis of the Cross about four and a half times and you are looking towards due south."
     },
     {
@@ -333,6 +368,7 @@
       "prompt": "The bright 'evening star' or 'morning star' is usually not a star at all. What is it?",
       "choices": ["The planet Venus", "The ISS", "Sirius", "A comet"],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "Venus outshines every true star, appearing near the Sun at dusk or dawn."
     },
     {
@@ -340,6 +376,7 @@
       "prompt": "Who was the first person to walk on the Moon, in 1969?",
       "choices": ["Buzz Aldrin", "Yuri Gagarin", "Neil Armstrong", "Michael Collins"],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "Neil Armstrong stepped out first on the Apollo 11 mission, followed by Buzz Aldrin."
     },
     {
@@ -347,6 +384,7 @@
       "prompt": "About how long does the International Space Station take to orbit Earth once?",
       "choices": ["90 minutes", "24 hours", "7 days", "30 days"],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "The ISS zips around Earth roughly every 90 minutes, so its crew see 16 sunrises a day."
     },
     {
@@ -354,6 +392,7 @@
       "prompt": "From where in New Zealand does Rocket Lab launch its Electron rockets?",
       "choices": ["Aoraki Mount Cook", "Māhia Peninsula", "Stewart Island", "Cape Rēinga"],
       "answer_index": 1,
+      "difficulty": 5,
       "explanation": "Rocket Lab launches from Māhia Peninsula on the East Coast, one of the few private launch sites on Earth."
     },
     {
@@ -361,6 +400,7 @@
       "prompt": "Which NZ region is famous as an International Dark Sky Reserve for stargazing?",
       "choices": ["Aoraki Mackenzie", "Central Auckland", "Wellington Harbour", "The Waikato"],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "The Aoraki Mackenzie reserve protects some of the darkest, clearest night skies in the world."
     },
     {
@@ -373,6 +413,7 @@
         "A comet that returns every 76 years"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "Matariki is a star cluster, and its midwinter rising signals the Māori New Year in many traditions."
     },
     {
@@ -380,6 +421,7 @@
       "prompt": "By what other name do astronomers know the Matariki cluster?",
       "choices": ["The Pleiades", "The Southern Cross", "Orion's Belt", "Alpha Centauri"],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "Matariki is the Pleiades, known as the Seven Sisters in Greek stories and Subaru in Japan."
     },
     {
@@ -387,6 +429,7 @@
       "prompt": "In the Matariki tradition, how many stars of the cluster are named and honoured?",
       "choices": ["Five", "Seven", "Nine", "Twelve"],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "Nine stars are honoured, including Matariki herself, Waitī, Waitā, and the wishing star Hiwa-i-te-rangi."
     },
     {
@@ -399,6 +442,7 @@
         "Rain and storms"
       ],
       "answer_index": 0,
+      "difficulty": 5,
       "explanation": "Pōhutukawa carries remembrance of loved ones lost since Matariki last rose, a gentle part of the celebration."
     },
     {
@@ -406,6 +450,7 @@
       "prompt": "Some iwi mark the Māori New Year by a different star rising, because Matariki is hard to see from their area. Which star?",
       "choices": ["Puanga (Rigel)", "Polaris", "The Sun", "Sirius"],
       "answer_index": 0,
+      "difficulty": 5,
       "explanation": "Iwi in areas like Whanganui and Taranaki look to Puanga, showing how traditions differ around the motu."
     }
   ]

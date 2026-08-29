@@ -18,6 +18,7 @@
         "The centre"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "In Aotearoa we drive on the left, always."
     },
     {
@@ -30,6 +31,7 @@
         "70 km/h"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "The default urban speed limit is 50 km/h unless a sign shows a different limit."
     },
     {
@@ -42,6 +44,7 @@
         "110 km/h"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "The default open road limit is 100 km/h, and some motorways are signposted 110 km/h."
     },
     {
@@ -54,6 +57,7 @@
         "The 5 second rule"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Stay at least 2 seconds behind the vehicle in front in good, dry conditions."
     },
     {
@@ -66,6 +70,7 @@
         "6 seconds"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "Stretch the gap to at least 4 seconds when the road is wet, icy or gravelly."
     },
     {
@@ -78,6 +83,7 @@
         "Flash your lights and count the reply"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "Pick a fixed point like a power pole, and if you reach it before you finish counting two seconds, drop back."
     },
     {
@@ -90,6 +96,7 @@
         "80 mg per 100 ml of blood"
       ],
       "answer_index": 0,
+      "difficulty": 1,
       "explanation": "Under 20 the limit is zero, meaning no alcohol at all before driving."
     },
     {
@@ -102,6 +109,7 @@
         "80 mg per 100 ml of blood"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "For drivers 20 and over the limit is 50 mg of alcohol per 100 ml of blood (250 mcg per litre of breath)."
     },
     {
@@ -114,6 +122,7 @@
         "Fresh air and exercise"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "Only time removes alcohol from your body, nothing speeds it up."
     },
     {
@@ -126,6 +135,7 @@
         "It makes you legally sober"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "Coffee might make you feel more awake, but your reactions and judgement stay impaired."
     },
     {
@@ -138,6 +148,7 @@
         "Sound your horn before entering"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "Slow down, be ready to stop, and give way to any traffic that would cross your path."
     },
     {
@@ -150,6 +161,7 @@
         "Give way to the right only"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "A stop sign means a complete stop every time, then move off only when it is safe."
     },
     {
@@ -162,6 +174,7 @@
         "Triangle"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "The 8 sided red octagon is unique so you can recognise a stop sign even from the back."
     },
     {
@@ -174,6 +187,7 @@
         "Road narrows"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "The upside down triangle is the give way sign."
     },
     {
@@ -186,6 +200,7 @@
         "Roadworks payment zone"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "Yellow diamonds are permanent warning signs that alert you to hazards ahead."
     },
     {
@@ -198,6 +213,7 @@
         "A recommended speed"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "Red circles are prohibition signs, like no entry or no right turn."
     },
     {
@@ -210,6 +226,7 @@
         "You must not go under 35 km/h"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Advisory speed signs recommend a safe speed in good conditions, they are not the legal limit."
     },
     {
@@ -222,6 +239,7 @@
         "Straight across the middle island"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "Because we drive on the left, traffic flows clockwise around NZ roundabouts."
     },
     {
@@ -234,6 +252,7 @@
         "No signal at all"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "Going straight through, you do not signal on entry but you signal left as you leave."
     },
     {
@@ -246,6 +265,7 @@
         "No signal is needed at roundabouts"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Signal right into the roundabout, then flick on a left signal as you pass the exit before yours."
     },
     {
@@ -258,6 +278,7 @@
         "The bigger vehicle"
       ],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "Traffic on the terminating road gives way to everything on the road that continues."
     },
     {
@@ -270,6 +291,7 @@
         "The car going uphill"
       ],
       "answer_index": 1,
+      "difficulty": 4,
       "explanation": "Give way to your right, so the car on the left is the one that waits."
     },
     {
@@ -282,6 +304,7 @@
         "Only pedestrians"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "Right turners give way to oncoming traffic going straight through or turning left."
     },
     {
@@ -294,6 +317,7 @@
         "Neither, the main road car must stop"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "Traffic entering from a side road gives way to all traffic on the road it is joining."
     },
     {
@@ -306,6 +330,7 @@
         "Nobody, it is first in first served"
       ],
       "answer_index": 1,
+      "difficulty": 4,
       "explanation": "Merging traffic gives way to vehicles already on the motorway and joins when there is a safe gap."
     },
     {
@@ -318,6 +343,7 @@
         "Cyclists only"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "You must slow down and give way to anyone on or stepping onto a pedestrian crossing."
     },
     {
@@ -330,6 +356,7 @@
         "The posted limit"
       ],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "Pass a stopped school bus at no more than 20 km/h, from either direction, and watch for kids."
     },
     {
@@ -342,6 +369,7 @@
         "Only during rush hour"
       ],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "In zones of 60 km/h or less you give way to a bus signalling out from a stop, when you can do so safely."
     },
     {
@@ -354,6 +382,7 @@
         "3 metres"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "The Road Code says give cyclists at least 1.5 metres of space when passing."
     },
     {
@@ -366,6 +395,7 @@
         "The road is one way"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "A solid yellow line on your side marks a no passing zone because it is too dangerous to overtake."
     },
     {
@@ -378,6 +408,7 @@
         "Road narrows ahead"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "You may cross a broken white centre line to overtake, but only when you can see it is safe."
     },
     {
@@ -390,6 +421,7 @@
         "Neither side"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "If the broken line is on your side you may overtake, and if the solid line is on your side you must not."
     },
     {
@@ -402,6 +434,7 @@
         "Whenever it is raining, day or night"
       ],
       "answer_index": 1,
+      "difficulty": 5,
       "explanation": "Lights go on from half an hour after sunset to half an hour before sunrise, and any time you cannot see clearly."
     },
     {
@@ -414,6 +447,7 @@
         "500 metres"
       ],
       "answer_index": 1,
+      "difficulty": 5,
       "explanation": "If you cannot clearly see 100 metres ahead, in fog or heavy rain for example, turn your lights on."
     },
     {
@@ -426,6 +460,7 @@
         "300 metres"
       ],
       "answer_index": 2,
+      "difficulty": 5,
       "explanation": "Dip your lights within 200 metres of the vehicle ahead so you do not dazzle the driver in their mirrors."
     },
     {
@@ -438,6 +473,7 @@
         "No lights, to reduce glare"
       ],
       "answer_index": 1,
+      "difficulty": 4,
       "explanation": "Use dipped headlights in fog because high beam reflects off the fog and blinds you."
     },
     {
@@ -450,6 +486,7 @@
         "Right up to the corner"
       ],
       "answer_index": 1,
+      "difficulty": 5,
       "explanation": "Keep parked cars at least 6 metres back from intersections so everyone can see and turn safely."
     },
     {
@@ -462,6 +499,7 @@
         "Residents' parking"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "Double yellow lines by the kerb mean no stopping or parking there at any time."
     },
     {
@@ -474,6 +512,7 @@
         "It makes no difference"
       ],
       "answer_index": 1,
+      "difficulty": 4,
       "explanation": "Point the wheels away from the kerb uphill, so if the car rolls back the tyre catches on the kerb."
     },
     {
@@ -486,6 +525,7 @@
         "It makes no difference"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "Point the wheels into the kerb downhill, so the kerb stops the car if it rolls forward."
     },
     {
@@ -498,6 +538,7 @@
         "Yes, on quiet streets"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "Park on the left in the direction you were travelling, facing the same way as the traffic flow."
     },
     {
@@ -510,6 +551,7 @@
         "Following in another car"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "Your supervisor must sit beside you in the front passenger seat whenever you drive."
     },
     {
@@ -522,6 +564,7 @@
         "On the driver's door"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "An L plate must be clearly visible from both the front and the back of the vehicle."
     },
     {
@@ -534,6 +577,7 @@
         "18"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "You can sit your learner licence theory test from age 16."
     },
     {
@@ -546,6 +590,7 @@
         "24 months"
       ],
       "answer_index": 1,
+      "difficulty": 4,
       "explanation": "At least 6 months on your learner licence first (this is changing in 2027, so check NZTA when you apply)."
     },
     {
@@ -558,6 +603,7 @@
         "7 am to 7 pm"
       ],
       "answer_index": 1,
+      "difficulty": 4,
       "explanation": "On a restricted licence you can drive solo between 5 am and 10 pm, and you need a supervisor outside those hours."
     },
     {
@@ -570,6 +616,7 @@
         "Your passport"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "You must have your driver licence with you every time you drive."
     },
     {
@@ -582,6 +629,7 @@
         "3 mm"
       ],
       "answer_index": 1,
+      "difficulty": 5,
       "explanation": "Tyres need at least 1.5 mm of tread across most of the tyre to be legal and to grip in the wet."
     },
     {
@@ -594,6 +642,7 @@
         "Swap numbers and leave"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "Always stop, check people are okay, help if it is safe, and call 111 when anyone is injured."
     },
     {
@@ -606,6 +655,7 @@
         "Carry on at the same speed"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "Move left and stop as soon as it is safe so the emergency vehicle can get past."
     }
   ]

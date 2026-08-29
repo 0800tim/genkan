@@ -17,6 +17,7 @@
         "H2O2"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "Each water molecule is two hydrogen atoms joined to one oxygen atom."
     },
     {
@@ -29,6 +30,7 @@
         "Mercury"
       ],
       "answer_index": 3,
+      "difficulty": 1,
       "explanation": "Mercury whips around the Sun in just 88 Earth days."
     },
     {
@@ -41,6 +43,7 @@
         "Jupiter"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "Mars looks red because its surface is covered in rusty iron oxide dust."
     },
     {
@@ -53,6 +56,7 @@
         "Jupiter"
       ],
       "answer_index": 3,
+      "difficulty": 1,
       "explanation": "Jupiter is so big that more than 1,300 Earths could fit inside it."
     },
     {
@@ -65,6 +69,7 @@
         "Oxygen"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Plants use carbon dioxide, water and sunlight to make their food."
     },
     {
@@ -77,6 +82,7 @@
         "Oxygen"
       ],
       "answer_index": 3,
+      "difficulty": 3,
       "explanation": "The oxygen we breathe mostly comes from plants and ocean algae."
     },
     {
@@ -89,6 +95,7 @@
         "Nitrogen"
       ],
       "answer_index": 3,
+      "difficulty": 4,
       "explanation": "The air is about 78 percent nitrogen and only 21 percent oxygen."
     },
     {
@@ -101,6 +108,7 @@
         "Gravity"
       ],
       "answer_index": 3,
+      "difficulty": 1,
       "explanation": "Gravity is why dropped things fall and why the Moon stays in orbit."
     },
     {
@@ -113,6 +121,7 @@
         "The electron"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "The nucleus holds the protons and neutrons, with electrons whizzing around it."
     },
     {
@@ -125,6 +134,7 @@
         "Negative"
       ],
       "answer_index": 3,
+      "difficulty": 4,
       "explanation": "Electrons are negative, protons are positive, neutrons are neutral."
     },
     {
@@ -137,6 +147,7 @@
         "Hydrogen"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "O for oxygen, the gas your body needs every second."
     },
     {
@@ -149,6 +160,7 @@
         "Fluorine"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "Fe comes from ferrum, the Latin word for iron."
     },
     {
@@ -161,6 +173,7 @@
         "Aluminium"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "Au comes from aurum, the Latin word for gold."
     },
     {
@@ -173,6 +186,7 @@
         "120 °C"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "Water boils at 100 degrees Celsius at sea level, lower up a mountain."
     },
     {
@@ -185,6 +199,7 @@
         "10 °C"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "Zero degrees Celsius was actually defined from water's freezing point."
     },
     {
@@ -197,6 +212,7 @@
         "The lungs"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "Your heart beats about 100,000 times every day."
     },
     {
@@ -209,6 +225,7 @@
         "The liver"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "Skin counts as an organ, and it is by far the biggest one you have."
     },
     {
@@ -221,6 +238,7 @@
         "306"
       ],
       "answer_index": 2,
+      "difficulty": 5,
       "explanation": "Babies start with around 300 bones, and many fuse together as they grow."
     },
     {
@@ -233,6 +251,7 @@
         "A cell wall"
       ],
       "answer_index": 3,
+      "difficulty": 4,
       "explanation": "The stiff cell wall helps plants stand up without a skeleton."
     },
     {
@@ -245,6 +264,7 @@
         "Deoxyribonucleic acid"
       ],
       "answer_index": 3,
+      "difficulty": 5,
       "explanation": "DNA is the molecule that carries the instructions for building you."
     },
     {
@@ -257,6 +277,7 @@
         "A planet"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "The Sun is an ordinary star that just happens to be very close to us."
     },
     {
@@ -269,6 +290,7 @@
         "About a day"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "One trip around Earth takes the Moon about 27 days."
     },
     {
@@ -281,6 +303,7 @@
         "Warm gas"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "Particles in a solid are packed tightly, so vibrations pass along quickly."
     },
     {
@@ -293,6 +316,7 @@
         "Your eyes react faster than your ears"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "Light reaches you almost instantly, while sound takes about 3 seconds per kilometre."
     },
     {
@@ -305,6 +329,7 @@
         "Heat only"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "Solar cells turn light energy straight into electrical energy."
     },
     {
@@ -317,6 +342,7 @@
         "Solid, liquid and gas"
       ],
       "answer_index": 3,
+      "difficulty": 2,
       "explanation": "Most everyday stuff is a solid, a liquid or a gas, and plasma makes a fourth."
     },
     {
@@ -329,6 +355,7 @@
         "Evaporation"
       ],
       "answer_index": 3,
+      "difficulty": 3,
       "explanation": "Puddles disappear on a sunny day because the water evaporates."
     },
     {
@@ -341,6 +368,7 @@
         "Evaporation"
       ],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "Water droplets on a cold window are condensation from the air."
     },
     {
@@ -353,6 +381,7 @@
         "A predator"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "Herbivores eat plants, carnivores eat meat, omnivores eat both."
     },
     {
@@ -365,6 +394,7 @@
         "An amphibian"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "Whales breathe air and feed their babies milk, so they are mammals."
     },
     {
@@ -377,6 +407,7 @@
         "6"
       ],
       "answer_index": 3,
+      "difficulty": 2,
       "explanation": "Six legs is the insect rule; spiders have eight, so they are not insects."
     },
     {
@@ -389,6 +420,7 @@
         "6"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "Eight legs makes spiders arachnids, not insects."
     },
     {
@@ -401,6 +433,7 @@
         "About 365 days"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "One full spin gives us one day and one night."
     },
     {
@@ -413,6 +446,7 @@
         "About 100 days"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "One full orbit is one year, which is why a year has about 365 days."
     },
     {
@@ -425,6 +459,7 @@
         "Strongly acidic"
       ],
       "answer_index": 0,
+      "difficulty": 5,
       "explanation": "Pure water sits at pH 7, right in the middle of the scale."
     },
     {
@@ -437,6 +472,7 @@
         "They push apart"
       ],
       "answer_index": 3,
+      "difficulty": 3,
       "explanation": "Like poles repel and opposite poles attract."
     },
     {
@@ -449,6 +485,7 @@
         "Plastic"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "That is why electrical wires are usually made of copper."
     },
     {
@@ -461,6 +498,7 @@
         "Haemoglobin"
       ],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "Chlorophyll is what makes leaves look green."
     },
     {
@@ -473,6 +511,7 @@
         "The volt"
       ],
       "answer_index": 0,
+      "difficulty": 5,
       "explanation": "It is named after Isaac Newton, who described how forces work."
     },
     {
@@ -485,6 +524,7 @@
         "It teaches your immune system to recognise a germ"
       ],
       "answer_index": 3,
+      "difficulty": 4,
       "explanation": "After a vaccine, your immune system remembers the germ and fights it fast."
     }
   ]

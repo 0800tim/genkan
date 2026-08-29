@@ -1,0 +1,332 @@
+{
+  "id": "nz-y1-3-world",
+  "title": "Our World, Years 1 to 3",
+  "emoji": "🌏",
+  "suggested_age_min": 5,
+  "minutes_per_pass": 10,
+  "pass_mark": 6,
+  "questions_per_round": 8,
+  "source_note": "Written for the New Zealand Curriculum, Years 1 to 3 (Levels 1 to 2), ages 5 to 8. Covers days, months, southern hemisphere seasons, weather, the five senses, living and non-living things, farm and native animals, road and water safety, and everyday Te Reo Māori words. Te Reo words and macrons checked against general reference sources, 2026-08-30.",
+  "questions": [
+    {
+      "id": "wld-001",
+      "prompt": "How many days are in a week?",
+      "choices": ["7", "5", "10", "12"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "A week has 7 days, from Monday through to Sunday."
+    },
+    {
+      "id": "wld-002",
+      "prompt": "Which season comes after summer in New Zealand?",
+      "choices": ["winter", "autumn", "spring", "summer"],
+      "answer_index": 1,
+      "difficulty": 1,
+      "explanation": "In New Zealand the order is summer, autumn, winter, then spring."
+    },
+    {
+      "id": "wld-003",
+      "prompt": "Which part of your body do you see with?",
+      "choices": ["ears", "nose", "eyes", "hands"],
+      "answer_index": 2,
+      "difficulty": 1,
+      "explanation": "You see with your eyes, one of your five senses."
+    },
+    {
+      "id": "wld-004",
+      "prompt": "Which part of your body do you hear with?",
+      "choices": ["eyes", "nose", "feet", "ears"],
+      "answer_index": 3,
+      "difficulty": 1,
+      "explanation": "You hear with your ears, one of your five senses."
+    },
+    {
+      "id": "wld-005",
+      "prompt": "Is a rock living or non-living?",
+      "choices": ["non-living", "living", "both", "neither"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "A rock does not grow, eat or breathe, so it is non-living."
+    },
+    {
+      "id": "wld-006",
+      "prompt": "Is a dog living or non-living?",
+      "choices": ["non-living", "living", "both", "neither"],
+      "answer_index": 1,
+      "difficulty": 1,
+      "explanation": "A dog eats, grows and breathes, so it is living."
+    },
+    {
+      "id": "wld-007",
+      "prompt": "What is New Zealand's national bird?",
+      "choices": ["tui", "pukeko", "kiwi", "weta"],
+      "answer_index": 2,
+      "difficulty": 1,
+      "explanation": "The kiwi is New Zealand's national bird, and it cannot fly."
+    },
+    {
+      "id": "wld-008",
+      "prompt": "What should you do before crossing the road?",
+      "choices": ["run across", "close your eyes", "shout loudly", "look both ways"],
+      "answer_index": 3,
+      "difficulty": 1,
+      "explanation": "Always look both ways for cars before you cross the road."
+    },
+    {
+      "id": "wld-009",
+      "prompt": "How many months are in a year?",
+      "choices": ["12", "10", "7", "52"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A year has 12 months, from January through to December."
+    },
+    {
+      "id": "wld-010",
+      "prompt": "Which season is the coldest in New Zealand?",
+      "choices": ["summer", "winter", "spring", "autumn"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "Winter is the coldest season, and in New Zealand it falls in June, July and August."
+    },
+    {
+      "id": "wld-011",
+      "prompt": "Which part of your body do you smell with?",
+      "choices": ["ears", "eyes", "nose", "tongue"],
+      "answer_index": 2,
+      "difficulty": 2,
+      "explanation": "You smell with your nose, one of your five senses."
+    },
+    {
+      "id": "wld-012",
+      "prompt": "Which part of your body do you taste with?",
+      "choices": ["nose", "ears", "skin", "tongue"],
+      "answer_index": 3,
+      "difficulty": 2,
+      "explanation": "You taste with your tongue, one of your five senses."
+    },
+    {
+      "id": "wld-013",
+      "prompt": "Is a chair living or non-living?",
+      "choices": ["non-living", "living", "both", "neither"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A chair does not grow, eat or breathe, so it is non-living."
+    },
+    {
+      "id": "wld-014",
+      "prompt": "Which of these is a farm animal?",
+      "choices": ["tui", "cow", "weta", "kiwi"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "A cow is a farm animal. The others are native New Zealand animals."
+    },
+    {
+      "id": "wld-015",
+      "prompt": "What falls from the sky when it rains?",
+      "choices": ["snowflakes", "leaves", "water drops", "sand"],
+      "answer_index": 2,
+      "difficulty": 2,
+      "explanation": "Rain is water falling from clouds in drops."
+    },
+    {
+      "id": "wld-016",
+      "prompt": "What does 'kia ora' mean?",
+      "choices": ["goodbye", "please", "thank you", "hello"],
+      "answer_index": 3,
+      "difficulty": 2,
+      "explanation": "'Kia ora' is a Te Reo Māori greeting, often used to say hello."
+    },
+    {
+      "id": "wld-017",
+      "prompt": "What does 'kai' mean in Te Reo Māori?",
+      "choices": ["food", "water", "house", "family"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "'Kai' is the Te Reo Māori word for food."
+    },
+    {
+      "id": "wld-018",
+      "prompt": "Before you cross the road, whose hand should you hold?",
+      "choices": ["a stranger's", "an adult's", "nobody's", "a pet's"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "Hold an adult's hand so someone you trust is watching for cars too."
+    },
+    {
+      "id": "wld-019",
+      "prompt": "Which season comes before winter in New Zealand?",
+      "choices": ["spring", "summer", "autumn", "winter"],
+      "answer_index": 2,
+      "difficulty": 3,
+      "explanation": "Autumn comes before winter in New Zealand, as the weather cools down."
+    },
+    {
+      "id": "wld-020",
+      "prompt": "In New Zealand, summer includes which month?",
+      "choices": ["June", "March", "September", "December"],
+      "answer_index": 3,
+      "difficulty": 3,
+      "explanation": "New Zealand's summer is December, January and February, unlike countries north of the equator."
+    },
+    {
+      "id": "wld-021",
+      "prompt": "Which part of your body do you feel with?",
+      "choices": ["skin", "eyes", "ears", "nose"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "You feel touch with your skin, one of your five senses."
+    },
+    {
+      "id": "wld-022",
+      "prompt": "Which of these is a native New Zealand bird?",
+      "choices": ["cow", "tui", "sheep", "horse"],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "The tui is a native New Zealand bird. The others are farm animals."
+    },
+    {
+      "id": "wld-023",
+      "prompt": "Which native insect is known for being one of the heaviest insects in the world?",
+      "choices": ["ant", "bee", "weta", "fly"],
+      "answer_index": 2,
+      "difficulty": 3,
+      "explanation": "The weta is a large native New Zealand insect, and some kinds are unusually heavy."
+    },
+    {
+      "id": "wld-024",
+      "prompt": "What does 'whānau' mean in Te Reo Māori?",
+      "choices": ["food", "mountain", "river", "family"],
+      "answer_index": 3,
+      "difficulty": 3,
+      "explanation": "'Whānau' is the Te Reo Māori word for family."
+    },
+    {
+      "id": "wld-025",
+      "prompt": "What does 'moana' mean in Te Reo Māori?",
+      "choices": ["sea", "mountain", "river", "sky"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "'Moana' is the Te Reo Māori word for sea or ocean."
+    },
+    {
+      "id": "wld-026",
+      "prompt": "What does 'awa' mean in Te Reo Māori?",
+      "choices": ["sea", "river", "mountain", "cloud"],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "'Awa' is the Te Reo Māori word for river."
+    },
+    {
+      "id": "wld-027",
+      "prompt": "Which of these shows something is a living thing?",
+      "choices": ["it is made of metal", "it never moves", "it grows", "it is a toy"],
+      "answer_index": 2,
+      "difficulty": 3,
+      "explanation": "Growing is something only living things do, unlike rocks, toys or metal."
+    },
+    {
+      "id": "wld-028",
+      "prompt": "At the beach, where should you swim?",
+      "choices": ["near the rocks", "far from everyone", "anywhere you like", "between the flags"],
+      "answer_index": 3,
+      "difficulty": 3,
+      "explanation": "Lifeguards watch the water between the flags, so that is the safest place to swim."
+    },
+    {
+      "id": "wld-029",
+      "prompt": "What does 'maunga' mean in Te Reo Māori?",
+      "choices": ["mountain", "river", "sea", "family"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "'Maunga' is the Te Reo Māori word for mountain."
+    },
+    {
+      "id": "wld-030",
+      "prompt": "What does 'aroha' mean in Te Reo Māori?",
+      "choices": ["food", "love", "water", "home"],
+      "answer_index": 1,
+      "difficulty": 4,
+      "explanation": "'Aroha' is the Te Reo Māori word for love or compassion."
+    },
+    {
+      "id": "wld-031",
+      "prompt": "Which native NZ bird is known for copying sounds it hears?",
+      "choices": ["kiwi", "pukeko", "tui", "weta"],
+      "answer_index": 2,
+      "difficulty": 4,
+      "explanation": "The tui sings a complex song and can copy other sounds it hears."
+    },
+    {
+      "id": "wld-032",
+      "prompt": "Which native NZ bird has long legs and lives near swamps?",
+      "choices": ["kiwi", "tui", "weta", "pukeko"],
+      "answer_index": 3,
+      "difficulty": 4,
+      "explanation": "The pukeko has long legs and toes for walking through wet, swampy ground."
+    },
+    {
+      "id": "wld-033",
+      "prompt": "Kiwi are unusual birds because they cannot do what?",
+      "choices": ["fly", "walk", "eat", "sleep"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Kiwi are flightless birds, so they cannot fly like most other birds."
+    },
+    {
+      "id": "wld-034",
+      "prompt": "In New Zealand, which month is in spring?",
+      "choices": ["December", "September", "June", "March"],
+      "answer_index": 1,
+      "difficulty": 4,
+      "explanation": "New Zealand's spring is September, October and November."
+    },
+    {
+      "id": "wld-035",
+      "prompt": "On a boat, what should you wear to stay safe in the water?",
+      "choices": ["sunglasses", "a sunhat", "a lifejacket", "sandals"],
+      "answer_index": 2,
+      "difficulty": 4,
+      "explanation": "A lifejacket helps keep you afloat if you end up in the water."
+    },
+    {
+      "id": "wld-036",
+      "prompt": "Which of these uses your senses to notice the weather?",
+      "choices": ["reading a book", "watching television", "eating dinner", "feeling the wind on your skin"],
+      "answer_index": 3,
+      "difficulty": 4,
+      "explanation": "Feeling the wind uses your sense of touch to notice what the weather is doing."
+    },
+    {
+      "id": "wld-037",
+      "prompt": "Which country has opposite seasons to New Zealand?",
+      "choices": ["England", "Australia", "Fiji", "Samoa"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "England is north of the equator, so when New Zealand has summer, England has winter."
+    },
+    {
+      "id": "wld-038",
+      "prompt": "Why is a weta unusual compared to most insects?",
+      "choices": ["it can fly very fast", "it is very heavy for an insect", "it lives underwater", "it has no legs"],
+      "answer_index": 1,
+      "difficulty": 5,
+      "explanation": "Some weta grow surprisingly heavy for an insect, which is why people notice them."
+    },
+    {
+      "id": "wld-039",
+      "prompt": "Which is true of living things but not non-living things?",
+      "choices": ["they can be big", "they can be found outside", "they need food", "they have a colour"],
+      "answer_index": 2,
+      "difficulty": 5,
+      "explanation": "Only living things need food to survive. Size, colour and location do not tell living and non-living apart."
+    },
+    {
+      "id": "wld-040",
+      "prompt": "In New Zealand, which two months are both in spring?",
+      "choices": ["June and July", "December and January", "March and April", "September and October"],
+      "answer_index": 3,
+      "difficulty": 5,
+      "explanation": "Spring in New Zealand runs from September through to November, so September and October are both spring months."
+    }
+  ]
+}

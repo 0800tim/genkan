@@ -1,0 +1,661 @@
+{
+  "id": "world-general-knowledge",
+  "title": "General Knowledge",
+  "emoji": "🌍",
+  "suggested_age_min": 9,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "questions": [
+    {
+      "id": "wgk-001",
+      "prompt": "What is the capital city of Saudi Arabia?",
+      "choices": [
+        "Riyadh",
+        "Jeddah",
+        "Mecca",
+        "Dubai"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Riyadh is the capital and largest city of Saudi Arabia, in the centre of the country."
+    },
+    {
+      "id": "wgk-002",
+      "prompt": "What is the capital city of Pakistan?",
+      "choices": [
+        "Islamabad",
+        "Karachi",
+        "Lahore",
+        "Peshawar"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Many people guess Karachi, since it is Pakistan's biggest city, but the capital is actually Islamabad."
+    },
+    {
+      "id": "wgk-003",
+      "prompt": "Which city is the capital of the United Arab Emirates, even though many people assume it is Dubai?",
+      "choices": [
+        "Abu Dhabi",
+        "Dubai",
+        "Sharjah",
+        "Ajman"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Abu Dhabi is the capital of the UAE. Dubai is more famous internationally, but it is not the capital."
+    },
+    {
+      "id": "wgk-004",
+      "prompt": "Belgium's capital, Brussels, is also the headquarters city for which major international organisation of European countries?",
+      "choices": [
+        "The European Union",
+        "The United Nations",
+        "NATO only",
+        "The World Bank"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Brussels hosts the main institutions of the European Union, as well as NATO's headquarters."
+    },
+    {
+      "id": "wgk-005",
+      "prompt": "South Africa is unusual in having how many capital cities, each handling a different role of government?",
+      "choices": [
+        "Three",
+        "One",
+        "Two",
+        "Five"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "South Africa has three capitals: Pretoria (administrative), Cape Town (legislative) and Bloemfontein (judicial)."
+    },
+    {
+      "id": "wgk-006",
+      "prompt": "Which country's official capital is Dodoma, even though its largest and best known city is Dar es Salaam?",
+      "choices": [
+        "Tanzania",
+        "Kenya",
+        "Uganda",
+        "Mozambique"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Tanzania's official capital is Dodoma, though Dar es Salaam remains the country's largest city and main port."
+    },
+    {
+      "id": "wgk-007",
+      "prompt": "Which country has a national flag that is not a rectangle, but two triangular pennants stacked on top of each other?",
+      "choices": [
+        "Nepal",
+        "Switzerland",
+        "Bhutan",
+        "Vatican City"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Nepal's flag is the only national flag in the world that is not a rectangle, made of two stacked triangular pennants."
+    },
+    {
+      "id": "wgk-008",
+      "prompt": "The flags of Australia and New Zealand both include a small Union Jack, honouring their history as former colonies of which country?",
+      "choices": [
+        "The United Kingdom",
+        "France",
+        "the Netherlands",
+        "Portugal"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Both flags carry the Union Jack in the corner as a link to their shared history as British colonies."
+    },
+    {
+      "id": "wgk-009",
+      "prompt": "Which river is usually considered the longest in the world, flowing through Egypt to the Mediterranean Sea?",
+      "choices": [
+        "The Nile",
+        "The Amazon",
+        "The Yangtze",
+        "The Mississippi"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Nile, flowing north through north east Africa, is usually considered the longest river in the world."
+    },
+    {
+      "id": "wgk-010",
+      "prompt": "Which mountain is the tallest above sea level in the world, found in the Himalayas?",
+      "choices": [
+        "Mount Everest",
+        "K2",
+        "Mount Kilimanjaro",
+        "Mont Blanc"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Mount Everest, on the border of Nepal and Tibet, is the highest mountain above sea level on Earth."
+    },
+    {
+      "id": "wgk-011",
+      "prompt": "The Amazon River flows mainly through which continent?",
+      "choices": [
+        "South America",
+        "Africa",
+        "Asia",
+        "North America"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Amazon flows through several South American countries and carries more water than any other river in the world."
+    },
+    {
+      "id": "wgk-012",
+      "prompt": "Which is the largest hot desert in the world, covering much of northern Africa?",
+      "choices": [
+        "The Sahara",
+        "The Gobi",
+        "The Atacama",
+        "The Kalahari"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Sahara Desert stretches across much of northern Africa and is the world's largest hot desert."
+    },
+    {
+      "id": "wgk-013",
+      "prompt": "Which mountain range, running through several South American countries, is the longest mountain range on land?",
+      "choices": [
+        "The Andes",
+        "The Rockies",
+        "The Alps",
+        "The Himalayas"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Andes run down the western edge of South America and form the longest continuous mountain range on land."
+    },
+    {
+      "id": "wgk-014",
+      "prompt": "Which desert, found along the coast of Chile, is often called one of the driest places on Earth?",
+      "choices": [
+        "The Atacama",
+        "The Sahara",
+        "The Gobi",
+        "The Mojave"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Atacama Desert in Chile is one of the driest places on Earth, with some areas that almost never see rain."
+    },
+    {
+      "id": "wgk-015",
+      "prompt": "Which cold, high desert covers a large area of Mongolia and northern China?",
+      "choices": [
+        "The Gobi Desert",
+        "The Sahara",
+        "The Kalahari",
+        "The Namib"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Gobi Desert is a cold desert, unlike the hot Sahara, and covers parts of Mongolia and northern China."
+    },
+    {
+      "id": "wgk-016",
+      "prompt": "Which river, flowing through China, is Asia's longest river?",
+      "choices": [
+        "The Yangtze",
+        "The Yellow River",
+        "The Mekong",
+        "The Ganges"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The Yangtze is the longest river in Asia and the third longest in the world, flowing through central China."
+    },
+    {
+      "id": "wgk-017",
+      "prompt": "How many continents are there, most commonly taught?",
+      "choices": [
+        "Seven",
+        "Five",
+        "Six",
+        "Nine"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The seven continents are usually listed as Asia, Africa, North America, South America, Antarctica, Europe and Oceania."
+    },
+    {
+      "id": "wgk-018",
+      "prompt": "Which is the largest ocean on Earth?",
+      "choices": [
+        "The Pacific Ocean",
+        "The Atlantic Ocean",
+        "The Indian Ocean",
+        "The Arctic Ocean"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Pacific Ocean is the largest and deepest ocean, covering more area than all the continents combined."
+    },
+    {
+      "id": "wgk-019",
+      "prompt": "Which continent is almost entirely covered by ice and has no permanent population?",
+      "choices": [
+        "Antarctica",
+        "Greenland",
+        "Siberia",
+        "The Arctic"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Antarctica is a continent almost entirely covered by ice, home only to scientists at research stations, not permanent residents."
+    },
+    {
+      "id": "wgk-020",
+      "prompt": "Which ocean lies between Africa, Asia and Australia?",
+      "choices": [
+        "The Indian Ocean",
+        "The Atlantic Ocean",
+        "The Pacific Ocean",
+        "The Southern Ocean"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Indian Ocean stretches between the east coast of Africa, southern Asia and Australia."
+    },
+    {
+      "id": "wgk-021",
+      "prompt": "Which continent is also a single country, and the smallest of the seven continents?",
+      "choices": [
+        "Australia",
+        "Antarctica",
+        "Europe",
+        "South America"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Australia is unusual in being both a continent and a single country, and it is the smallest of the seven continents."
+    },
+    {
+      "id": "wgk-022",
+      "prompt": "Which two continents are joined on one continuous landmass, sometimes called Eurasia?",
+      "choices": [
+        "Europe and Asia",
+        "Africa and Asia",
+        "North and South America",
+        "Europe and Africa"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Europe and Asia sit on one continuous landmass, so geographers sometimes refer to them together as Eurasia."
+    },
+    {
+      "id": "wgk-023",
+      "prompt": "Which scientist is famous for describing gravity, supposedly after watching an apple fall?",
+      "choices": [
+        "Isaac Newton",
+        "Albert Einstein",
+        "Charles Darwin",
+        "Galileo Galilei"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Isaac Newton described the laws of motion and gravity in the late 1600s."
+    },
+    {
+      "id": "wgk-024",
+      "prompt": "Which scientist developed the theory of evolution by natural selection, after studying wildlife including on the Galapagos Islands?",
+      "choices": [
+        "Charles Darwin",
+        "Gregor Mendel",
+        "Louis Pasteur",
+        "Alfred Wallace"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Charles Darwin published On the Origin of Species in 1859, explaining how species change over time through natural selection."
+    },
+    {
+      "id": "wgk-025",
+      "prompt": "Which scientist developed the theory of relativity and is famous for the equation E = mc²?",
+      "choices": [
+        "Albert Einstein",
+        "Isaac Newton",
+        "Niels Bohr",
+        "Stephen Hawking"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Albert Einstein's theory of relativity, including the equation E = mc², changed how scientists understand space, time and energy."
+    },
+    {
+      "id": "wgk-026",
+      "prompt": "Which scientist's experiments with pea plants helped found the modern study of genetics?",
+      "choices": [
+        "Gregor Mendel",
+        "Charles Darwin",
+        "Louis Pasteur",
+        "Marie Curie"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Gregor Mendel's careful experiments breeding pea plants in the 1800s revealed the basic rules of how traits are inherited."
+    },
+    {
+      "id": "wgk-027",
+      "prompt": "Which scientist discovered radioactivity alongside her husband, and was the first person to win Nobel Prizes in two different sciences?",
+      "choices": [
+        "Marie Curie",
+        "Rosalind Franklin",
+        "Dorothy Hodgkin",
+        "Ada Lovelace"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Marie Curie's research on radioactivity won her Nobel Prizes in both physics and chemistry."
+    },
+    {
+      "id": "wgk-028",
+      "prompt": "Which scientist's X-ray images were crucial evidence in working out the double helix structure of DNA?",
+      "choices": [
+        "Rosalind Franklin",
+        "Marie Curie",
+        "Ada Lovelace",
+        "Jane Goodall"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Rosalind Franklin's X-ray images of DNA gave vital clues that helped James Watson and Francis Crick work out its double helix structure."
+    },
+    {
+      "id": "wgk-029",
+      "prompt": "Which scientist developed an early vaccine against rabies and showed that heating liquids like milk could kill harmful germs, a process now named after him?",
+      "choices": [
+        "Louis Pasteur",
+        "Edward Jenner",
+        "Alexander Fleming",
+        "Robert Koch"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Louis Pasteur developed the process now called pasteurisation and also created an early vaccine against rabies."
+    },
+    {
+      "id": "wgk-030",
+      "prompt": "Which scientist accidentally discovered a mould that killed bacteria in his lab, leading to the antibiotic penicillin?",
+      "choices": [
+        "Alexander Fleming",
+        "Louis Pasteur",
+        "Edward Jenner",
+        "Jonas Salk"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Alexander Fleming noticed in 1928 that a mould killed bacteria growing near it, leading to the development of penicillin."
+    },
+    {
+      "id": "wgk-031",
+      "prompt": "Which invention, credited to Johannes Gutenberg in the 1400s, allowed books to be produced much faster than by hand?",
+      "choices": [
+        "The printing press",
+        "The telephone",
+        "The steam engine",
+        "The lightbulb"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Gutenberg's printing press, developed around the 1440s in Germany, made it possible to print many copies of a book far faster than copying by hand."
+    },
+    {
+      "id": "wgk-032",
+      "prompt": "Who is usually credited with patenting a practical telephone in the 1870s?",
+      "choices": [
+        "Alexander Graham Bell",
+        "Thomas Edison",
+        "Nikola Tesla",
+        "Guglielmo Marconi"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Alexander Graham Bell patented a working telephone in 1876, though others were experimenting with similar ideas at the same time."
+    },
+    {
+      "id": "wgk-033",
+      "prompt": "Which invention, made practical by Thomas Edison and others in the late 1800s, gave people electric light in their homes?",
+      "choices": [
+        "The electric lightbulb",
+        "The telegraph",
+        "The radio",
+        "The battery"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Edison and other inventors developed a long lasting, practical electric lightbulb in the late 1800s, changing how homes and streets were lit."
+    },
+    {
+      "id": "wgk-034",
+      "prompt": "The Wright brothers made history in 1903 by achieving what?",
+      "choices": [
+        "The first powered aeroplane flight",
+        "The first car journey",
+        "The first radio broadcast",
+        "The first telephone call"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Orville and Wilbur Wright achieved the first sustained, controlled flight of a powered aeroplane in 1903 in the United States."
+    },
+    {
+      "id": "wgk-035",
+      "prompt": "Roughly when was the World Wide Web invented, making the internet easy for ordinary people to use?",
+      "choices": [
+        "Around 1990",
+        "Around 1950",
+        "Around 1850",
+        "Around 2005"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Tim Berners-Lee developed the World Wide Web around 1989 to 1991, building a way to link and browse pages over the internet."
+    },
+    {
+      "id": "wgk-036",
+      "prompt": "Which ancient invention, first used for pottery before being used for transport, is considered one of the most important in human history?",
+      "choices": [
+        "The wheel",
+        "The compass",
+        "Paper",
+        "Gunpowder"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The wheel was first used to shape pottery, long before anyone thought to attach it to a cart for transport."
+    },
+    {
+      "id": "wgk-037",
+      "prompt": "Which ancient civilisation built the pyramids and the Sphinx, and was ruled by pharaohs?",
+      "choices": [
+        "Ancient Egypt",
+        "Ancient Rome",
+        "Ancient Greece",
+        "The Aztec Empire"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Ancient Egypt, along the Nile River, built enormous pyramids as tombs for its pharaohs thousands of years ago."
+    },
+    {
+      "id": "wgk-038",
+      "prompt": "Which ancient civilisation, based around the city of Rome, built a huge empire across Europe and controlled the Mediterranean?",
+      "choices": [
+        "The Roman Empire",
+        "Ancient Greece",
+        "Ancient Egypt",
+        "The Persian Empire"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Roman Empire grew from the city of Rome to control territory across Europe, North Africa and the Middle East."
+    },
+    {
+      "id": "wgk-039",
+      "prompt": "Ancient Greece is often credited with developing an early form of what system of government, where citizens could vote?",
+      "choices": [
+        "Democracy",
+        "Federation",
+        "Feudalism",
+        "Monarchy"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Ancient Athens developed an early form of democracy, in which some citizens could vote directly on decisions."
+    },
+    {
+      "id": "wgk-040",
+      "prompt": "Which river valley civilisation, in what is now Iraq, is often called one of the earliest, and developed an early writing system called cuneiform?",
+      "choices": [
+        "Mesopotamia",
+        "Ancient Egypt",
+        "The Indus Valley",
+        "Ancient China"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Mesopotamia, between the Tigris and Euphrates rivers, is often considered among the earliest civilisations, and its cuneiform writing is one of the first writing systems."
+    },
+    {
+      "id": "wgk-041",
+      "prompt": "The Indus Valley Civilisation, one of the world's earliest, grew up along a river now mainly running through which present day countries?",
+      "choices": [
+        "Pakistan and India",
+        "Iraq and Iran",
+        "Egypt and Sudan",
+        "China and Mongolia"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Indus Valley Civilisation flourished along the Indus River, in what is now mostly Pakistan and part of north west India."
+    },
+    {
+      "id": "wgk-042",
+      "prompt": "Which ancient civilisation in Central America is known for accurate calendar systems and step pyramids, and had a writing system only fully deciphered in recent times?",
+      "choices": [
+        "The Maya",
+        "The Aztecs",
+        "The Inca",
+        "The Olmecs"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The Maya civilisation, in what is now Mexico and Central America, built step pyramids and developed one of the most accurate calendars of the ancient world."
+    },
+    {
+      "id": "wgk-043",
+      "prompt": "What is the name of the star at the centre of our solar system, which the Earth orbits?",
+      "choices": [
+        "The Sun",
+        "The Moon",
+        "Polaris",
+        "Sirius"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Sun is the star at the centre of our solar system, and every planet, including Earth, orbits it."
+    },
+    {
+      "id": "wgk-044",
+      "prompt": "What is the correct term for the huge collection of stars, including our Sun, that we belong to?",
+      "choices": [
+        "A galaxy",
+        "A solar system",
+        "A constellation",
+        "A nebula"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Our Sun is one of hundreds of billions of stars in the Milky Way galaxy."
+    },
+    {
+      "id": "wgk-045",
+      "prompt": "Which of these correctly lists the four planets closest to the Sun, in order?",
+      "choices": [
+        "Mercury, Venus, Earth, Mars",
+        "Venus, Mercury, Mars, Earth",
+        "Earth, Venus, Mercury, Mars",
+        "Mars, Earth, Venus, Mercury"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Moving out from the Sun, the four rocky inner planets are Mercury, Venus, Earth and Mars, in that order."
+    },
+    {
+      "id": "wgk-046",
+      "prompt": "What is the term for a large object, smaller than a full planet, that orbits the Sun but has not cleared its orbital path of other objects, like Pluto?",
+      "choices": [
+        "A dwarf planet",
+        "An asteroid",
+        "A comet",
+        "A moon"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Pluto is classified as a dwarf planet rather than a full planet because it has not cleared its orbit of other similarly sized objects."
+    },
+    {
+      "id": "wgk-047",
+      "prompt": "Judaism, Christianity and Islam are often grouped together because they all trace their origins back to which figure?",
+      "choices": [
+        "Abraham",
+        "Buddha",
+        "Confucius",
+        "Zoroaster"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Judaism, Christianity and Islam are often called the Abrahamic religions because each traces its roots back to Abraham."
+    },
+    {
+      "id": "wgk-048",
+      "prompt": "Which religion's central holy text is the Quran, believed by its followers to have been revealed to the Prophet Muhammad?",
+      "choices": [
+        "Islam",
+        "Christianity",
+        "Judaism",
+        "Sikhism"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Quran is the central religious text of Islam, which followers believe was revealed to the Prophet Muhammad over about 23 years."
+    },
+    {
+      "id": "wgk-049",
+      "prompt": "Buddhism traces its origins to the teachings of a spiritual teacher known as the Buddha, who lived in which part of the world?",
+      "choices": [
+        "The Indian subcontinent",
+        "East Asia",
+        "The Middle East",
+        "Southern Europe"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The historical Buddha, Siddhartha Gautama, lived in what is now Nepal and northern India around 2,500 years ago."
+    },
+    {
+      "id": "wgk-050",
+      "prompt": "Jerusalem is considered a holy city by which three major world religions?",
+      "choices": [
+        "Judaism, Christianity and Islam",
+        "Buddhism, Hinduism and Sikhism",
+        "Christianity, Buddhism and Islam",
+        "Judaism, Hinduism and Islam"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Jerusalem holds deep religious significance for Jewish, Christian and Muslim traditions alike, each with important historic sites in the city."
+    }
+  ]
+}

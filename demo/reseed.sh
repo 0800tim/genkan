@@ -17,7 +17,7 @@ PSQL=("${DC[@]}" exec -T demo-db psql -v ON_ERROR_STOP=1 -U postgres -d hearth_d
 FILES=(schema schema-categories schema-time schema-safety schema-earn
        schema-people schema-devices schema-flags schema-services
        schema-voice schema-goals schema-policies schema-tasks
-       schema-quizresults schema-quizbanks seed schema-presence schema-appliance
+       schema-quizresults schema-quizbanks schema-badges seed schema-presence schema-appliance
        schema-roles)
 
 echo "==> waiting for the demo database"

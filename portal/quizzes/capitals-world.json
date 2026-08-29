@@ -17,6 +17,7 @@
         "Auckland"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "Auckland is bigger, but Wellington has been the capital since 1865."
     },
     {
@@ -29,6 +30,7 @@
         "Brisbane"
       ],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "Canberra was purpose-built as the capital so Sydney and Melbourne would stop arguing."
     },
     {
@@ -41,6 +43,7 @@
         "Kyoto"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "Tokyo took over from Kyoto as Japan's capital in 1868."
     },
     {
@@ -53,6 +56,7 @@
         "Lyon"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "Paris sits on the River Seine and is home to the Eiffel Tower."
     },
     {
@@ -65,6 +69,7 @@
         "Manchester"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "London is the UK capital; Edinburgh is Scotland's capital city."
     },
     {
@@ -77,6 +82,7 @@
         "Chicago"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "New York is the biggest city, but Washington, D.C. is the capital."
     },
     {
@@ -89,6 +95,7 @@
         "Vancouver"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Ottawa is the capital even though Toronto is much larger."
     },
     {
@@ -101,6 +108,7 @@
         "Shanghai"
       ],
       "answer_index": 1,
+      "difficulty": 1,
       "explanation": "Beijing means 'northern capital' in Chinese."
     },
     {
@@ -113,6 +121,7 @@
         "Venice"
       ],
       "answer_index": 0,
+      "difficulty": 1,
       "explanation": "Rome has been a capital city for well over 2,000 years."
     },
     {
@@ -125,6 +134,7 @@
         "Madrid"
       ],
       "answer_index": 3,
+      "difficulty": 2,
       "explanation": "Madrid sits almost exactly in the middle of Spain."
     },
     {
@@ -137,6 +147,7 @@
         "Frankfurt"
       ],
       "answer_index": 0,
+      "difficulty": 1,
       "explanation": "Berlin became the capital of a reunited Germany in 1990."
     },
     {
@@ -149,6 +160,7 @@
         "Novosibirsk"
       ],
       "answer_index": 2,
+      "difficulty": 1,
       "explanation": "Moscow is home to the Kremlin and Red Square."
     },
     {
@@ -161,6 +173,7 @@
         "Kolkata"
       ],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "New Delhi is the capital; Mumbai is India's biggest city."
     },
     {
@@ -173,6 +186,7 @@
         "Rio de Janeiro"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "Brasília was built from scratch in the 1950s to be the capital."
     },
     {
@@ -185,6 +199,7 @@
         "Santiago"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "Buenos Aires sits on the wide Río de la Plata."
     },
     {
@@ -197,6 +212,7 @@
         "Alexandria"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "Cairo, on the Nile, is one of the biggest cities in Africa."
     },
     {
@@ -209,6 +225,7 @@
         "Mombasa"
       ],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "Nairobi even has a national park right on the edge of the city."
     },
     {
@@ -221,6 +238,7 @@
         "Kano"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "Lagos is far bigger, but Abuja became the capital in 1991."
     },
     {
@@ -233,6 +251,7 @@
         "Marrakesh"
       ],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "Casablanca is the famous big city, but Rabat is the capital."
     },
     {
@@ -245,6 +264,7 @@
         "Istanbul"
       ],
       "answer_index": 1,
+      "difficulty": 4,
       "explanation": "Istanbul is huge, but Ankara has been the capital since 1923."
     },
     {
@@ -257,6 +277,7 @@
         "Crete"
       ],
       "answer_index": 0,
+      "difficulty": 1,
       "explanation": "Athens is named after Athena and is over 3,000 years old."
     },
     {
@@ -269,6 +290,7 @@
         "Madrid"
       ],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "Lisbon sits where the River Tagus meets the Atlantic."
     },
     {
@@ -281,6 +303,7 @@
         "Amsterdam"
       ],
       "answer_index": 3,
+      "difficulty": 1,
       "explanation": "Amsterdam is the capital, though the government sits in The Hague."
     },
     {
@@ -293,6 +316,7 @@
         "Bern"
       ],
       "answer_index": 3,
+      "difficulty": 5,
       "explanation": "Zurich and Geneva are bigger, but Bern is the capital."
     },
     {
@@ -305,6 +329,7 @@
         "Vienna"
       ],
       "answer_index": 3,
+      "difficulty": 2,
       "explanation": "Vienna is famous for music, from Mozart to Beethoven."
     },
     {
@@ -317,6 +342,7 @@
         "Gdansk"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Warsaw was rebuilt almost completely after World War Two."
     },
     {
@@ -329,6 +355,7 @@
         "Kharkiv"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "Kyiv sits on the Dnipro River and is over 1,400 years old."
     },
     {
@@ -341,6 +368,7 @@
         "Oslo"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "Stockholm is built across 14 islands."
     },
     {
@@ -353,6 +381,7 @@
         "Stockholm"
       ],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "Oslo sits at the top of a long fjord."
     },
     {
@@ -365,6 +394,7 @@
         "Copenhagen"
       ],
       "answer_index": 3,
+      "difficulty": 3,
       "explanation": "Copenhagen is home to the Little Mermaid statue."
     },
     {
@@ -377,6 +407,7 @@
         "Tampere"
       ],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "Helsinki is the world's northernmost capital of a whole country, or close to it."
     },
     {
@@ -389,6 +420,7 @@
         "Copenhagen"
       ],
       "answer_index": 1,
+      "difficulty": 4,
       "explanation": "Reykjavík is heated largely by underground volcanic hot water."
     },
     {
@@ -401,6 +433,7 @@
         "Cork"
       ],
       "answer_index": 2,
+      "difficulty": 2,
       "explanation": "Dublin sits on the River Liffey on Ireland's east coast."
     },
     {
@@ -413,6 +446,7 @@
         "Pyongyang"
       ],
       "answer_index": 0,
+      "difficulty": 2,
       "explanation": "Around half of all South Koreans live in the greater Seoul area."
     },
     {
@@ -425,6 +459,7 @@
         "Hanoi"
       ],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "Bangkok's full ceremonial name is one of the longest city names in the world."
     },
     {
@@ -437,6 +472,7 @@
         "Hanoi"
       ],
       "answer_index": 3,
+      "difficulty": 4,
       "explanation": "Ho Chi Minh City is bigger, but Hanoi is the capital."
     },
     {
@@ -449,6 +485,7 @@
         "Quezon City"
       ],
       "answer_index": 2,
+      "difficulty": 3,
       "explanation": "Manila sits on a huge natural bay on the island of Luzon."
     },
     {
@@ -461,6 +498,7 @@
         "Singapore"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Kuala Lumpur is home to the Petronas Twin Towers."
     },
     {
@@ -473,6 +511,7 @@
         "Nadi"
       ],
       "answer_index": 0,
+      "difficulty": 4,
       "explanation": "Most flights land at Nadi, but Suva is Fiji's capital."
     },
     {
@@ -485,6 +524,7 @@
         "Apia"
       ],
       "answer_index": 3,
+      "difficulty": 4,
       "explanation": "Apia is on Upolu, Samoa's most populated island."
     },
     {
@@ -497,6 +537,7 @@
         "Suva"
       ],
       "answer_index": 0,
+      "difficulty": 5,
       "explanation": "Nukuʻalofa is on Tongatapu, Tonga's main island."
     },
     {
@@ -509,6 +550,7 @@
         "Suva"
       ],
       "answer_index": 0,
+      "difficulty": 5,
       "explanation": "Port Moresby faces the Coral Sea on PNG's southern coast."
     },
     {
@@ -521,6 +563,7 @@
         "Valparaíso"
       ],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "Santiago sits in a valley with the Andes rising behind it."
     },
     {
@@ -533,6 +576,7 @@
         "Santiago"
       ],
       "answer_index": 1,
+      "difficulty": 3,
       "explanation": "Lima was founded in 1535 and sits on the Pacific coast."
     },
     {
@@ -545,6 +589,7 @@
         "Cali"
       ],
       "answer_index": 0,
+      "difficulty": 3,
       "explanation": "Bogotá sits high in the Andes, about 2,640 metres up."
     },
     {
@@ -557,6 +602,7 @@
         "Havana"
       ],
       "answer_index": 3,
+      "difficulty": 2,
       "explanation": "Havana is famous for its old town and classic cars."
     },
     {
@@ -569,6 +615,7 @@
         "Mexico City"
       ],
       "answer_index": 3,
+      "difficulty": 1,
       "explanation": "Mexico City is built on the site of the Aztec city Tenochtitlan."
     },
     {
@@ -581,6 +628,7 @@
         "Mogadishu"
       ],
       "answer_index": 0,
+      "difficulty": 5,
       "explanation": "Addis Ababa means 'new flower' in Amharic."
     },
     {
@@ -593,6 +641,7 @@
         "Astana"
       ],
       "answer_index": 0,
+      "difficulty": 5,
       "explanation": "Ulaanbaatar is the coldest capital city on Earth."
     },
     {
@@ -605,6 +654,7 @@
         "Lhasa"
       ],
       "answer_index": 2,
+      "difficulty": 4,
       "explanation": "Kathmandu is the gateway city for Mount Everest expeditions."
     }
   ]

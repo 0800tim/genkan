@@ -1,0 +1,701 @@
+{
+  "id": "nz-y9-10-science",
+  "title": "Science, Years 9 and 10",
+  "emoji": "🔬",
+  "suggested_age_min": 13,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Covers NZ Curriculum Level 5 science (Years 9 and 10): atomic structure, the periodic table, bonding, balancing equations, reaction types, Newton's laws, energy, waves, the electromagnetic spectrum, circuits and Ohm's law, cells, DNA, inheritance, evolution, and photosynthesis and respiration.",
+  "questions": [
+    {
+      "id": "sci910-001",
+      "prompt": "Which particle in an atom has a positive charge?",
+      "choices": [
+        "Proton",
+        "Neutron",
+        "Electron",
+        "Nucleus"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Protons carry a positive charge, electrons carry a negative charge, and neutrons carry no charge at all, which is why they are called neutral."
+    },
+    {
+      "id": "sci910-002",
+      "prompt": "Which particle in an atom has no electrical charge?",
+      "choices": [
+        "Neutron",
+        "Proton",
+        "Electron",
+        "Ion"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Neutrons are neutral: they have no charge. Protons are positive and electrons are negative."
+    },
+    {
+      "id": "sci910-003",
+      "prompt": "Where are an atom's protons and neutrons found?",
+      "choices": [
+        "In the nucleus, at the centre of the atom",
+        "Orbiting the outside of the atom",
+        "Spread evenly throughout the atom",
+        "Only in radioactive atoms"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The nucleus is the small, dense centre of an atom and it is where the protons and neutrons sit. Electrons are the particles found orbiting around the outside."
+    },
+    {
+      "id": "sci910-004",
+      "prompt": "An atom has 6 protons and 6 electrons. What is true about this atom?",
+      "choices": [
+        "It is electrically neutral, because the positive and negative charges balance",
+        "It is positively charged overall",
+        "It is negatively charged overall",
+        "It cannot exist because the numbers are equal"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A neutral atom has equal numbers of protons (positive) and electrons (negative), so the charges cancel out and the atom has no overall charge."
+    },
+    {
+      "id": "sci910-005",
+      "prompt": "An atom of carbon has 6 protons. If it loses one electron, what does it become?",
+      "choices": [
+        "A positive ion, because it now has more protons than electrons",
+        "A negative ion, because it lost a particle",
+        "A neutron",
+        "A different element"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Losing an electron does not change the number of protons, so there are now more positive charges (protons) than negative charges (electrons). The atom becomes a positively charged ion. It is still carbon, because the number of protons, not electrons, decides the element."
+    },
+    {
+      "id": "sci910-006",
+      "prompt": "What does a column (a group) in the periodic table tell you about the elements in it?",
+      "choices": [
+        "They have similar chemical properties",
+        "They all have the same number of protons",
+        "They are all metals",
+        "They were all discovered in the same year"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Elements in the same group have the same number of electrons in their outer shell, which is what gives elements in a group similar chemical properties, even though they are different elements."
+    },
+    {
+      "id": "sci910-007",
+      "prompt": "Which of these is a group in the periodic table known for being very reactive metals?",
+      "choices": [
+        "Group 1, the alkali metals",
+        "Group 8 (or 18), the noble gases",
+        "Group 7 (or 17), the halogens",
+        "The transition metals"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Group 1 elements, like sodium and potassium, are called alkali metals and react vigorously, especially with water. Noble gases (the other end of the table) are the opposite: they are almost totally unreactive."
+    },
+    {
+      "id": "sci910-008",
+      "prompt": "Rows in the periodic table are called what?",
+      "choices": [
+        "Periods",
+        "Groups",
+        "Families",
+        "Blocks"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A horizontal row is called a period, and a vertical column is called a group. Elements across a period have the same number of electron shells, but the number of outer electrons increases across the row."
+    },
+    {
+      "id": "sci910-009",
+      "prompt": "In ionic bonding, what happens between the two atoms involved?",
+      "choices": [
+        "Electrons are transferred from one atom to another",
+        "Electrons are shared equally between the atoms",
+        "Protons move between the atoms",
+        "The atoms simply touch without exchanging anything"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "In ionic bonding, one atom (usually a metal) gives up one or more electrons and becomes a positive ion, and another atom (usually a non-metal) gains those electrons and becomes a negative ion. The opposite charges then attract each other."
+    },
+    {
+      "id": "sci910-010",
+      "prompt": "In covalent bonding, what happens between the two atoms involved?",
+      "choices": [
+        "They share a pair (or pairs) of electrons",
+        "One atom gives all its electrons to the other",
+        "The nuclei fuse together",
+        "They repel each other"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Covalent bonds form when two atoms, usually both non-metals, share electrons so that both atoms feel like they have a fuller outer shell. Neither atom fully gives its electrons away, unlike in ionic bonding."
+    },
+    {
+      "id": "sci910-011",
+      "prompt": "Sodium chloride (table salt) is held together by which type of bond?",
+      "choices": [
+        "Ionic bonding",
+        "Covalent bonding",
+        "Metallic bonding",
+        "No bonding, it is a mixture"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Sodium (a metal) loses an electron to become a positive ion, and chlorine (a non-metal) gains that electron to become a negative ion. The attraction between the oppositely charged sodium and chloride ions is an ionic bond."
+    },
+    {
+      "id": "sci910-012",
+      "prompt": "Why do metals typically form ionic bonds with non-metals rather than covalent bonds?",
+      "choices": [
+        "Metals tend to lose electrons easily, and non-metals tend to gain them",
+        "Metals and non-metals cannot share electrons at all",
+        "Metals always have a full outer shell",
+        "Non-metals repel electrons"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Metal atoms generally have few electrons in their outer shell and lose them easily to become positive ions. Non-metal atoms generally need only a few more electrons to fill their outer shell, so they gain electrons easily to become negative ions. This transfer is what makes an ionic bond."
+    },
+    {
+      "id": "sci910-013",
+      "prompt": "Why must a chemical equation be balanced?",
+      "choices": [
+        "The number of atoms of each element must be the same on both sides",
+        "It makes the equation look neater",
+        "It changes the products formed",
+        "It is only needed for equations with gases"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Atoms are not created or destroyed in a chemical reaction, they are just rearranged. So a correctly written equation must have the same number of atoms of each element on the reactant side as on the product side."
+    },
+    {
+      "id": "sci910-014",
+      "prompt": "Balance this equation: __ H2 + O2 -> __ H2O",
+      "choices": [
+        "2 H2 + O2 -> 2 H2O",
+        "H2 + O2 -> H2O",
+        "2 H2 + O2 -> H2O",
+        "H2 + 2 O2 -> 2 H2O"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Count the atoms: O2 has 2 oxygen atoms, so you need 2 H2O to use both of them (2 oxygen atoms total on each side). That means you need 2 H2 to supply the 4 hydrogen atoms needed for 2 H2O. The balanced equation is 2H2 + O2 -> 2H2O."
+    },
+    {
+      "id": "sci910-015",
+      "prompt": "Balance this equation: __ Mg + O2 -> __ MgO",
+      "choices": [
+        "2 Mg + O2 -> 2 MgO",
+        "Mg + O2 -> MgO",
+        "Mg + O2 -> 2 MgO",
+        "2 Mg + 2 O2 -> MgO"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "O2 supplies 2 oxygen atoms, so 2 MgO are needed on the product side to use both. That requires 2 magnesium atoms as well, so the balanced equation is 2Mg + O2 -> 2MgO."
+    },
+    {
+      "id": "sci910-016",
+      "prompt": "What is it called when a substance reacts with oxygen, often releasing heat and light?",
+      "choices": [
+        "Combustion",
+        "Decomposition",
+        "Neutralisation",
+        "Precipitation"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Combustion is the reaction of a substance with oxygen, and it usually releases energy as heat and light, such as when wood or petrol burns."
+    },
+    {
+      "id": "sci910-017",
+      "prompt": "In a decomposition reaction, what generally happens?",
+      "choices": [
+        "One larger compound breaks down into two or more simpler substances",
+        "Two substances combine to make one new substance",
+        "One element replaces another in a compound",
+        "A solid forms from two liquids"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Decomposition is the opposite of a combining reaction: a single compound is broken down, often by heating, into two or more simpler products."
+    },
+    {
+      "id": "sci910-018",
+      "prompt": "Zinc reacts with copper sulfate solution, and copper metal is produced along with zinc sulfate. What type of reaction is this?",
+      "choices": [
+        "A displacement reaction",
+        "A neutralisation reaction",
+        "A combustion reaction",
+        "A decomposition reaction"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "This is a displacement reaction: a more reactive metal (zinc) takes the place of a less reactive metal (copper) in the compound, freeing the copper as a pure metal."
+    },
+    {
+      "id": "sci910-019",
+      "prompt": "According to Newton's first law, what happens to an object with no overall force acting on it?",
+      "choices": [
+        "It keeps moving at a constant speed in a straight line, or stays still, if it was already still",
+        "It always slows down",
+        "It always speeds up",
+        "It changes direction randomly"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Newton's first law says an object's motion does not change unless a resultant force acts on it. A moving object keeps moving at the same speed and direction, and a still object stays still, until something pushes or pulls on it."
+    },
+    {
+      "id": "sci910-020",
+      "prompt": "Newton's second law is often written as F = ma. What does the 'a' stand for?",
+      "choices": [
+        "Acceleration",
+        "Area",
+        "Average speed",
+        "Altitude"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "F = ma means force equals mass times acceleration. Rearranged, it also tells you that a bigger force causes a bigger acceleration on the same mass."
+    },
+    {
+      "id": "sci910-021",
+      "prompt": "A 2 kg object is pushed with a force of 10 N. Using F = ma, what is its acceleration?",
+      "choices": [
+        "5 m/s^2",
+        "20 m/s^2",
+        "0.2 m/s^2",
+        "12 m/s^2"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Rearranging F = ma to find acceleration gives a = F / m. Here that is 10 N divided by 2 kg, which is 5 m/s^2."
+    },
+    {
+      "id": "sci910-022",
+      "prompt": "A rocket pushes hot gas downward and out of its engine. According to Newton's third law, why does the rocket move upward?",
+      "choices": [
+        "The gas pushes back on the rocket with an equal and opposite force",
+        "Hot gas is lighter than the rocket, so the rocket floats",
+        "The rocket is being pulled up by the atmosphere",
+        "The rocket loses mass and that makes it rise"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The rocket engine pushes gas downward (the action). By Newton's third law, the gas pushes back on the rocket with an equal and opposite force, upward (the reaction), and that reaction force is what launches the rocket."
+    },
+    {
+      "id": "sci910-023",
+      "prompt": "In science, what does it mean to do 'work' on an object?",
+      "choices": [
+        "To apply a force that moves the object through a distance",
+        "To think hard about a problem",
+        "To heat the object up",
+        "To hold the object still against gravity"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "In physics, work is done when a force causes something to move. Holding a heavy object still does no work in the scientific sense, because nothing moves, even though your muscles get tired."
+    },
+    {
+      "id": "sci910-024",
+      "prompt": "A person lifts a 20 N object a height of 3 metres. How much work is done?",
+      "choices": [
+        "60 J",
+        "23 J",
+        "6.7 J",
+        "17 J"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Work = force x distance = 20 N x 3 m = 60 joules (J)."
+    },
+    {
+      "id": "sci910-025",
+      "prompt": "What happens to energy according to the law of conservation of energy?",
+      "choices": [
+        "Energy cannot be created or destroyed, only changed from one form to another",
+        "Energy is slowly created over time",
+        "Energy disappears when a machine is used",
+        "Energy can be destroyed by friction"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The law of conservation of energy says the total amount of energy in a closed system stays constant. It is not destroyed, it just changes form, for example from chemical energy in fuel to kinetic energy and heat."
+    },
+    {
+      "id": "sci910-026",
+      "prompt": "What is the distance between one wave crest and the next crest called?",
+      "choices": [
+        "Wavelength",
+        "Amplitude",
+        "Frequency",
+        "Period"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Wavelength is the distance from one point on a wave to the same point on the next wave, most easily measured from crest to crest."
+    },
+    {
+      "id": "sci910-027",
+      "prompt": "Sound waves need a medium, like air or water, to travel through. What kind of wave is a sound wave?",
+      "choices": [
+        "A longitudinal wave",
+        "A transverse wave",
+        "An electromagnetic wave",
+        "A standing wave only"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Sound travels as a longitudinal wave, where the particles of the medium vibrate back and forth in the same direction the wave travels, unlike a transverse wave, where the vibration is at right angles to the direction of travel."
+    },
+    {
+      "id": "sci910-028",
+      "prompt": "Which of these is part of the electromagnetic spectrum?",
+      "choices": [
+        "Visible light",
+        "Sound waves",
+        "Ocean waves",
+        "Seismic waves"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The electromagnetic spectrum includes radio waves, microwaves, infrared, visible light, ultraviolet, X-rays and gamma rays. Sound, ocean and seismic waves are not electromagnetic: they need a physical medium to travel through."
+    },
+    {
+      "id": "sci910-029",
+      "prompt": "Which type of electromagnetic radiation is used in microwave ovens to cook food?",
+      "choices": [
+        "Microwaves",
+        "Gamma rays",
+        "Radio waves",
+        "Ultraviolet"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Microwave ovens use microwaves, a part of the electromagnetic spectrum with a wavelength between radio waves and infrared, which are absorbed well by water molecules in food and heat them up."
+    },
+    {
+      "id": "sci910-030",
+      "prompt": "Why is too much exposure to ultraviolet (UV) radiation from the sun harmful to skin?",
+      "choices": [
+        "It carries enough energy to damage cells and DNA",
+        "It makes the skin cold",
+        "It is a type of sound wave that vibrates skin cells",
+        "It only affects the eyes, never the skin"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "UV radiation has a shorter wavelength and higher energy than visible light, and that extra energy is enough to damage the DNA in skin cells, which is why sunburn and a higher skin cancer risk are linked to UV exposure."
+    },
+    {
+      "id": "sci910-031",
+      "prompt": "What is electrical current measured in?",
+      "choices": [
+        "Amperes (A)",
+        "Volts (V)",
+        "Ohms (ohm)",
+        "Watts (W)"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Current, the flow of electric charge, is measured in amperes, usually just called amps (A). Voltage is measured in volts, and resistance in ohms."
+    },
+    {
+      "id": "sci910-032",
+      "prompt": "What is voltage a measure of?",
+      "choices": [
+        "The energy given to each unit of charge by the power source",
+        "The speed the electrons travel at",
+        "The heat produced in a wire",
+        "The number of electrons in a circuit"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Voltage (measured in volts) is the amount of energy transferred to each unit of electric charge as it passes through a component or is supplied by a source, like a battery."
+    },
+    {
+      "id": "sci910-033",
+      "prompt": "Ohm's law is V = I x R. A circuit has a current of 2 A and a resistance of 6 ohm. What is the voltage?",
+      "choices": [
+        "12 V",
+        "3 V",
+        "8 V",
+        "4 V"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Using Ohm's law, V = I x R = 2 A x 6 ohm = 12 V."
+    },
+    {
+      "id": "sci910-034",
+      "prompt": "Ohm's law is V = I x R. A circuit has a voltage of 12 V and a resistance of 4 ohm. What is the current?",
+      "choices": [
+        "3 A",
+        "48 A",
+        "8 A",
+        "16 A"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Rearranging Ohm's law to find current gives I = V / R. Here that is 12 V divided by 4 ohm, which is 3 A. A common mistake is multiplying instead of dividing, which is where 48 A comes from."
+    },
+    {
+      "id": "sci910-035",
+      "prompt": "A student measures 9 V across a resistor and 3 A of current through it, but says the resistance is 27 ohm. What did they get wrong?",
+      "choices": [
+        "They multiplied V by I instead of dividing V by I",
+        "They used the wrong units for voltage",
+        "Resistance cannot be calculated from these values",
+        "27 ohm is actually correct"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Resistance is found by rearranging Ohm's law to R = V / I, not V x I. The correct working is R = 9 V / 3 A = 3 ohm. Multiplying instead of dividing gives the wrong value of 27."
+    },
+    {
+      "id": "sci910-036",
+      "prompt": "In the equation V = I x R, if the resistance R stays the same but the voltage V is doubled, what happens to the current I?",
+      "choices": [
+        "The current also doubles",
+        "The current halves",
+        "The current stays the same",
+        "The current becomes zero"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Rearranging gives I = V / R. If R is fixed and V doubles, then I = (2V) / R, which is double the original current. Voltage and current rise and fall together when resistance is constant."
+    },
+    {
+      "id": "sci910-037",
+      "prompt": "What is the basic unit of life that makes up all living things?",
+      "choices": [
+        "The cell",
+        "The atom",
+        "The organ",
+        "The tissue"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The cell is the smallest unit that can be considered alive on its own, and every living organism is made of one or more cells."
+    },
+    {
+      "id": "sci910-038",
+      "prompt": "Which part of a cell contains most of its genetic material (DNA)?",
+      "choices": [
+        "The nucleus",
+        "The cell membrane",
+        "The mitochondria",
+        "The cytoplasm"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The nucleus is the control centre of a cell and holds most of the cell's DNA, organised into chromosomes."
+    },
+    {
+      "id": "sci910-039",
+      "prompt": "What is mitosis?",
+      "choices": [
+        "Cell division that produces two identical daughter cells for growth and repair",
+        "The process of a cell dying",
+        "The joining of a sperm and egg cell",
+        "The movement of substances across a cell membrane"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Mitosis is the type of cell division used for growth and to repair damaged tissue. One cell copies its DNA and splits into two daughter cells, each genetically identical to the original."
+    },
+    {
+      "id": "sci910-040",
+      "prompt": "Why must a cell copy its DNA before it divides by mitosis?",
+      "choices": [
+        "So each of the two new cells ends up with a complete, identical set of DNA",
+        "So the cell can grow bigger before dividing",
+        "So the cell can change its function",
+        "DNA does not actually need to be copied before mitosis"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "If the DNA were not copied first, splitting the cell in two would leave each new cell with only half the genetic instructions. Copying it first means both daughter cells get a full, identical set."
+    },
+    {
+      "id": "sci910-041",
+      "prompt": "What does DNA stand for?",
+      "choices": [
+        "Deoxyribonucleic acid",
+        "Deoxyribose nuclear acid",
+        "Dual nucleic acid",
+        "Diribonucleic acid"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "DNA is short for deoxyribonucleic acid, the molecule that carries genetic instructions in almost every living thing."
+    },
+    {
+      "id": "sci910-042",
+      "prompt": "What shape is a DNA molecule famously described as?",
+      "choices": [
+        "A double helix",
+        "A single straight strand",
+        "A perfect circle",
+        "A branching tree"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "DNA is made of two strands twisted around each other in a spiral shape, known as a double helix."
+    },
+    {
+      "id": "sci910-043",
+      "prompt": "In genetics, what is an allele?",
+      "choices": [
+        "A different version of the same gene",
+        "A whole chromosome",
+        "A type of mutation only",
+        "The physical appearance of an organism"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "An allele is one particular version of a gene. For example, a gene for flower colour might have a purple allele and a white allele."
+    },
+    {
+      "id": "sci910-044",
+      "prompt": "In a Punnett square cross of Aa x Aa, what fraction of offspring are expected to show the recessive characteristic (aa)?",
+      "choices": [
+        "1/4",
+        "1/2",
+        "3/4",
+        "0"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Crossing Aa with Aa gives four equally likely combinations: AA, Aa, aA, aa. Only one of those four, aa, has two recessive alleles and shows the recessive characteristic, so the expected fraction is 1/4."
+    },
+    {
+      "id": "sci910-045",
+      "prompt": "In a Punnett square cross of Aa x aa, what fraction of offspring are expected to be Aa (showing the dominant characteristic)?",
+      "choices": [
+        "1/2",
+        "1/4",
+        "3/4",
+        "1"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Crossing Aa with aa gives four combinations: Aa, Aa, aa, aa (two possible alleles from each parent, paired every way). Half of these, 2 out of 4, are Aa, so the expected fraction is 1/2."
+    },
+    {
+      "id": "sci910-046",
+      "prompt": "Two parents are both Aa for a trait where A is dominant. What is the probability their child is aa and shows the recessive trait?",
+      "choices": [
+        "1 in 4",
+        "1 in 2",
+        "3 in 4",
+        "1 in 8"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "A Punnett square for Aa x Aa gives the combinations AA, Aa, aA, aa, each equally likely. Only aa shows the recessive trait, so the probability is 1 in 4, the same as flipping two coins and needing both to land on the same one specific side."
+    },
+    {
+      "id": "sci910-047",
+      "prompt": "What is natural selection?",
+      "choices": [
+        "The process where organisms better suited to their environment are more likely to survive and reproduce",
+        "The process of a scientist choosing which animals to breed",
+        "A sudden change in an organism's DNA",
+        "The process of an organism learning new skills during its life"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Natural selection is the idea that, within a population, individuals with characteristics better suited to their environment are more likely to survive, reproduce and pass those characteristics on to their offspring."
+    },
+    {
+      "id": "sci910-048",
+      "prompt": "Where does the variation that natural selection acts on originally come from?",
+      "choices": [
+        "Differences in DNA between individuals, including mutations",
+        "Animals deciding to change",
+        "The environment directly rewriting an animal's DNA during its life",
+        "It does not come from anywhere, all individuals start identical"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Natural variation exists because individuals have slightly different DNA, partly from how genes combine during reproduction and partly from mutations. Natural selection then acts on that existing variation, it does not create it."
+    },
+    {
+      "id": "sci910-049",
+      "prompt": "A population of insects is exposed to a pesticide. Over many generations, the insects become resistant to it. What is the best explanation using natural selection?",
+      "choices": [
+        "Insects that happened to already have resistance survived and reproduced more, passing resistance on",
+        "The pesticide directly changed every insect's DNA to make them resistant",
+        "The insects deliberately evolved resistance because they needed it",
+        "Resistance appeared by chance in every insect at the same time"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Some insects likely already carried genetic variation giving partial resistance, before the pesticide was ever used. Those insects survived the pesticide and reproduced, passing the resistance genes to more of the next generation, so resistance became common over time. The pesticide did not create the resistance, it selected for insects that already had it."
+    },
+    {
+      "id": "sci910-050",
+      "prompt": "Which equation represents photosynthesis?",
+      "choices": [
+        "6CO2 + 6H2O -> C6H12O6 + 6O2",
+        "C6H12O6 + 6O2 -> 6CO2 + 6H2O",
+        "6O2 + 6H2O -> C6H12O6 + 6CO2",
+        "C6H12O6 -> 6CO2 + 6H2O"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Photosynthesis uses carbon dioxide and water, with light energy, to produce glucose and oxygen: 6CO2 + 6H2O -> C6H12O6 + 6O2. Respiration is essentially the reverse of this."
+    },
+    {
+      "id": "sci910-051",
+      "prompt": "Which equation represents respiration?",
+      "choices": [
+        "C6H12O6 + 6O2 -> 6CO2 + 6H2O",
+        "6CO2 + 6H2O -> C6H12O6 + 6O2",
+        "6O2 -> 6CO2",
+        "C6H12O6 -> 6O2 + 6H2O"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Respiration releases the energy stored in glucose by combining it with oxygen, producing carbon dioxide and water: C6H12O6 + 6O2 -> 6CO2 + 6H2O."
+    },
+    {
+      "id": "sci910-052",
+      "prompt": "What raw materials does a plant need to carry out photosynthesis?",
+      "choices": [
+        "Carbon dioxide, water and light energy",
+        "Oxygen and glucose",
+        "Only sunlight",
+        "Nitrogen and carbon dioxide"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Photosynthesis needs carbon dioxide (taken in through leaves), water (taken up through roots) and light energy (usually from the sun) to produce glucose and oxygen."
+    },
+    {
+      "id": "sci910-053",
+      "prompt": "A plant carries out both photosynthesis and respiration. During the day, in bright light, which process usually produces more oxygen than the other consumes?",
+      "choices": [
+        "Photosynthesis produces more oxygen than respiration uses, so there is a net release of oxygen",
+        "Respiration always uses more oxygen than photosynthesis makes",
+        "Neither process involves oxygen",
+        "The two processes always exactly cancel out, second by second"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Plants respire all the time, using a little oxygen and releasing carbon dioxide. In good light, though, photosynthesis runs faster than respiration, making more oxygen than the plant's own respiration uses, so the extra oxygen is released. That is why leafy plants are considered a net source of oxygen during the day."
+    }
+  ]
+}
