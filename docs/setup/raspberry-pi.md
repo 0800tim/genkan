@@ -319,7 +319,7 @@ as `kids0`, and the segment guard listens before the island goes live.
     systemctl status kids-nic-warden           # active, "handover done" in the journal
     kidnet status                              # CLI talks to the island
     kidnet allow-status                        # safety net domains resolved
-    sudo test/container-test.sh                # the full 25-check proof
+    sudo test/container-test.sh                # the full 26-check proof
 
 Then the real test: join the kids' WiFi from a phone. It should get a
 `192.168.60.x` address, browse the internet, load the portal at

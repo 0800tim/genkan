@@ -14,7 +14,7 @@ database stays the source of truth; AdGuard is the DNS enforcement plane
 ## Base URL and authentication
 
 Everything lives under `http://192.168.60.1:3000/control`. Reach it from
-clawdia itself or the main LAN; nftables blocks the kids' subnet from port
+the Hearth box itself or the main LAN; nftables blocks the kids' subnet from port
 3000.
 
 Two auth options; kidnet uses the first:

@@ -11,8 +11,14 @@
 # Build context is the repo root (see compose.yaml) so the one canonical
 # ruleset config/nftables/kids.nft is the one baked in.
 FROM debian:trixie-slim
+# python3 is not optional: the entrypoint uses it to read the CURRENT nft set
+# contents (so a reconcile only writes on an actual change) and to read
+# AdGuard's live DHCP leases (so a freshly joined device gets internet within
+# one tick instead of waiting for the host timer). Without it both silently
+# degrade rather than fail, which is how it went unnoticed.
 RUN apt-get update && apt-get install -y --no-install-recommends \
       nftables iproute2 iputils-ping tcpdump postgresql-client ca-certificates \
+      python3 \
     && rm -rf /var/lib/apt/lists/*
 COPY config/nftables/kids.nft /etc/kids.nft
 COPY gateway/entrypoint.sh /entrypoint.sh

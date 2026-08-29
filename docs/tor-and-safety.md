@@ -4,6 +4,12 @@ For parents and contributors. What the Tor/darknet layer actually does,
 what it honestly cannot do, and why the response to a blocked attempt is a
 warm page and a conversation, not a punishment screen.
 
+**Status: built, with one gap.** The DNS layer, the `tor_nodes` and `tor_dev`
+nft sets, the daily relay-list refresh and the warm portal page all ship and
+are covered by tests. The one piece still missing is the alert pass that turns
+a `tor_dev` counter into an alert row, so the IP road counts attempts but does
+not yet tell you about them. Detail at the end of this file.
+
 ## Why this layer exists
 
 Tor itself is legitimate technology (journalists, activists and plenty of
@@ -81,10 +87,11 @@ be false comfort.
 
 ## The warm portal page
 
-When a Tor or darknet attempt hits the portal, the kid should see this.
-Tone rules: no shame, no alarm, name the block honestly, make the next
-step tiny, keep the safety lines visible, and keep the bug-bounty door
-open. Proposed copy for the main agent to wire in:
+When a Tor or darknet attempt hits the portal, the kid sees this. It is
+built: `dashboard/portal.mjs` renders it for the flag categories `tor`,
+`darknet` and `drugs`. Tone rules: no shame, no alarm, name the block
+honestly, make the next step tiny, keep the safety lines visible, and keep
+the bug-bounty door open.
 
 > ### This one is blocked, and it is a "come find me" one
 >
@@ -107,17 +114,18 @@ open. Proposed copy for the main agent to wire in:
 >
 > [Help lines: 1737, Youthline, Kidsline, The Lowdown]
 
-Implementation notes for the main agent: the portal can distinguish this
-case because the redirect comes from a flag_domains category of `tor`,
-`darknet` or `drugs` (DNS path), or from a `tor_dev` attempt (IP path,
-surfaced on the next portal load). Fall back to the generic blocked page
-if the category is unknown. The self-harm category must NEVER route to
-this page or any blocking page; that category is alert-only by policy.
+How the portal knows: it reads the `alerts` table for a recent row whose
+category is `tor`, `darknet` or `drugs`, within a twenty minute window
+(`PORTAL_FLAG_WINDOW_MIN`). Both roads into the page are meant to arrive
+there, which is why the portal only has to read one table. Anything else
+falls back to the generic blocked page. Self-harm is an explicit allow-list
+exclusion rather than a filter, so a flag category added later cannot quietly
+start putting a struggling kid in front of a wall.
 
-## Design: nftables pieces for kids.nft (main agent to integrate)
+## The nftables pieces, as they ship
 
-New pieces for `config/nftables/kids.nft`. Everything below is additive;
-nothing weakens isolation, DNS forcing or the safety net.
+This is what is in `config/nftables/kids.nft` today. Nothing here weakens
+isolation, DNS forcing or the safety net.
 
 ```nft
 # --- declarations, alongside the existing sets -------------------------
@@ -151,22 +159,36 @@ iifname $KIDS_IF ip daddr @tor_nodes meta l4proto tcp reject with tcp reset
 iifname $KIDS_IF ip daddr @tor_nodes reject
 ```
 
-Wiring checklist for the main agent (all outside this file's remit, listed
-so nothing is dropped):
+## What is wired, and the one thing that is not
 
-1. `kidnet-tor-sync sync` at deploy, then a daily systemd timer (matching
-   kids-metering.timer's shape). The consensus churns hourly but slowly;
-   daily is plenty for a home, and respects the sources.
-2. Apply step after each sync, inside the gateway netns:
-   `nft -f /var/lib/hearth/tor-nodes.nft` (the snippet flushes and refills
-   `@tor_nodes` atomically in one file).
-3. An alert pass reading `@tor_dev` (natural home: kidnet-catmeter's
-   minute loop): nonzero counter -> alert row category `tor`, severity
-   `urgent`, note "connected toward N Tor relay addresses"; then reset the
-   element, same read-and-reset pattern as the byte counters.
-4. flag_domains seed additions and the AdGuard rule rendering per
-   config/adguard/tor-and-serious.md.
-5. firewall-test.sh additions: island client to a fake relay IP in
-   @tor_nodes is refused and lands in @tor_dev; the same IP in @kids_allow
-   as well stays reachable (safety net precedence); a kids_block device
-   attempting a relay is still counted.
+Done:
+
+1. **The relay list.** `kidnet-tor-sync sync` runs at deploy and then daily
+   from `kids-tor-sync.timer`, with up to two hours of jitter so we are not
+   hammering the Tor Project's directory API on the stroke of midnight.
+2. **The apply step.** `kids-tor-sync.service` pipes the generated snippet
+   into the gateway container, so `@tor_nodes` is flushed and refilled in a
+   single nft transaction and is never momentarily empty. If the running
+   image predates the set, the apply is skipped rather than failing the unit.
+3. **The DNS layer.** The `flag_domains` seed in `config/db/schema-flags.sql`
+   carries the on-ramps, bridges, onion gateways and market directories, and
+   `kidnet-adguard` renders the `tor`, `darknet` and `drugs` patterns as a
+   portal redirect for every child.
+4. **The tests.** `test/firewall-test.sh` proves an online kid cannot reach a
+   relay, that the attempt is counted in `@tor_dev`, that the safety net still
+   wins over the Tor block, and that an already-blocked device's attempt is
+   still counted.
+
+**Not done: the alert pass.** Nothing reads `@tor_dev` and turns a nonzero
+counter into an alert row. So the IP road blocks and counts, but only the DNS
+road actually tells a parent. A kid whose Tor client dials a baked-in relay
+address without ever making a lookup is refused and counted, silently. The
+natural home is `kidnet-catmeter`'s minute loop, using the same read-and-reset
+pattern as the byte counters: nonzero counter becomes an `alerts` row with
+category `tor` and severity `urgent`, noting how many relay addresses were
+attempted.
+
+Until that lands, this document, the portal comment that says the counters are
+"attributed to a child by the metering pass", and anything that implies the IP
+road alerts, are describing an intention rather than behaviour. Said plainly
+here because a half-built tripwire you believe in is worse than no tripwire.

@@ -6,7 +6,7 @@ category separately (e.g. 2h gaming/day, 1h YouTube/day; music unlimited).
 
 ## The one trick that makes it possible
 
-We can't read inside encrypted traffic, but **clawdia is the DNS server**, so
+We can't read inside encrypted traffic, but **the Hearth box is the DNS server**, so
 we see every name a device looks up and the IPs it got back. That lets us tag
 otherwise-opaque traffic by category WITHOUT decrypting it:
 
@@ -35,7 +35,7 @@ do it.
 |---|---|---|
 | gaming (Roblox/Fortnite/Steam/consoles) | YES | the main issue |
 | video (YouTube, Shorts, TikTok, Netflix) | YES | time-wasting |
-| social (Insta/Snap) | optional | overlaps video |
+| social (Insta/Snap) | no | blockable, but not counted: it overlaps video |
 | audio (Spotify, Apple Music) | NO | "singing in the shower" is fine |
 | schoolwork (Drive/Docs/Khan) | NO | encourage it |
 | chess, messaging Dad, general web | NO | not in a metered set |
@@ -51,15 +51,15 @@ Precise: kills Roblox/Fortnite/Steam while chess, music and homework stay up.
 ## Honest limits
 
 - **Shorts vs full YouTube**: same domains, can't split. Both count as video.
-- **YouTube Music**: shares YouTube's domains, so it'd count as video. You use
-  Spotify for music, so fine, just don't rely on YouTube for music during a
-  video block.
+- **YouTube Music**: shares YouTube's domains, so it counts as video. Fine if
+  the house uses Spotify or Apple Music, which are never metered. Do not rely
+  on YouTube for music during a video block.
 - **Active vs background**: threshold-based, ~90% right, not perfect (a paused,
   pre-buffered video can look idle).
 - **Determined bypass**: a VPN hides destination IPs, so categorisation fails.
   That's a bug-bounty level, and we can block known VPNs to raise the bar.
 
-## Status: BUILT (2026-08-29), enforced at deploy
+## Status: built and deployed (2026-08-29)
 
 1. `kidnet-catmap` reads AdGuard's query log, maps answer IPs of known
    category domains into `category_ips` (the "these IPs = gaming" learning).
@@ -73,9 +73,30 @@ Precise: kills Roblox/Fortnite/Steam while chess, music and homework stay up.
    `category_budgets` daily_min blocks that category (DNS via kidnet-adguard
    plus the category set). Music, schoolwork and chess are never metered.
 4. `kids-metering.timer` runs both each minute. Proven by test/meter-test.sh
-   (active counts, idle ignored, budget reached, category blocked, others
-   untouched).
+   (eight checks: active counts, idle ignored, budget reached, category
+   blocked, others untouched, and the grant path below).
+5. `kidnet grant <kid> <gaming|video> <min>` tops up ONE category: it raises
+   that category's daily budget and clears an over-budget block for it. It
+   deliberately cannot clear a block a parent set, only one the meter set, so
+   earning time never overrides a parent's decision. `kidnet bonus` remains the
+   general-minutes grant.
 
-Bonus/earn topping up a specific category is the next small addition
-(kidnet bonus currently adds general minutes; a per-category grant clears the
-over-budget block for that category only).
+## Bytes as well as minutes: per-service accounting
+
+Metering answers "how long". A second layer, built the same way, answers "how
+much, and of what". `kidnet-servicemap` learns which addresses belong to which
+named service (YouTube, Netflix, TikTok, Roblox, Steam and the rest) from the
+same DNS answers, and `kidnet-servicemeter` generates its own nftables sets and
+a counting chain from the `services` table, then reads real byte counters per
+device per service into `service_usage`.
+
+That chain only counts. Its policy is accept and it never drops, so it cannot
+change any verdict or affect connectivity. It runs every minute from
+`kids-services.timer`, and it is what lets the dashboard's Trends page report
+measured bytes rather than a guess derived from lookup counts.
+
+The same honest limits apply, one level sharper: services sharing a CDN blur
+together, an address serving several services attributes to whichever resolved
+it most recently for that device, and bytes are not minutes. Both numbers are
+reported; neither is the whole story. Adding a service is a database row, not a
+firewall edit: see `config/db/schema-services.sql` and docs/CLI.md.

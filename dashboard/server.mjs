@@ -2,18 +2,20 @@
 // the per-kid analytics the charts read out of Postgres.
 // Binds to the tailnet so it is private to the operator.
 //
-// Three views, all server rendered so the page works with no internet and with
+// Five views, all server rendered so the page works with no internet and with
 // JavaScript disabled (the controls need JS, the charts and numbers do not):
 //   /          Tonight  - state and controls, unchanged behaviour
+//   /week      Week     - the weekly digest, with a plain-text version to send
 //   /trends    Trends   - usage, services and the earn/spend balance per kid
 //   /devices   Devices  - the roster and the naming queue
+//   /kid/:name Kid      - one child: their devices, time, goals and controls
 // The control API (/api/act, /api/assign, /api/claim) and its optional
 // DASH_TOKEN are untouched.
 import { createServer } from "node:http";
 import { execFile } from "node:child_process";
 import pg from "pg";
-import { analytics } from "./analytics.mjs";
-import { shell, tonight, trends, devices as devicesView } from "./views.mjs";
+import { analytics, digest, kidDetail, GOAL_METRICS } from "./analytics.mjs";
+import { shell, tonight, trends, devices as devicesView, week as weekView, kid as kidView } from "./views.mjs";
 
 const BIND = process.env.BIND || "127.0.0.1";
 const PORT = Number(process.env.PORT || 8899);
@@ -36,13 +38,17 @@ async function state() {
   // alerts held the people list, times held block_events and claims held the
   // time ledger. With almost no data in the tables nothing looked wrong; with
   // real rows every one of those panels showed the wrong thing.
-  const [children, devices, people, alerts, cats, events, times, claims] = await Promise.all([
+  const [children, devices, people, alerts, alertsAck, cats, events, times, claims] = await Promise.all([
     q("SELECT id,name,age,policy_tier FROM children ORDER BY age"),
     q(`SELECT id,label,hostname,mac,ip,device_kind,category,vendor,person,person_kind,unassigned,
          (last_seen > now()-interval '5 minutes') AS online
        FROM device_roster ORDER BY unassigned DESC, online DESC, person NULLS LAST, label`),
     q("SELECT name,kind FROM children ORDER BY kind,name"),
-    q("SELECT ts,severity,category,domain,detail FROM alerts WHERE NOT acknowledged ORDER BY ts DESC LIMIT 10"),
+    q("SELECT id,ts,severity,category,domain,detail FROM alerts WHERE NOT acknowledged ORDER BY ts DESC LIMIT 10"),
+    // Acknowledged alerts are kept, not deleted: "we talked about it" is part
+    // of the record, and a parent should be able to check what they already
+    // dealt with without it shouting at them from the top of the page.
+    q("SELECT id,ts,severity,category,domain,detail FROM alerts WHERE acknowledged ORDER BY ts DESC LIMIT 10"),
     q("SELECT c.name kid, cs.category FROM category_state cs JOIN children c ON c.id=cs.child_id WHERE cs.blocked"),
     q("SELECT ts,target_ref,action,source FROM block_events ORDER BY ts DESC LIMIT 12"),
     q("SELECT child_id,name,budget_min,bonus_min,used_min,remaining_min FROM time_remaining"),
@@ -50,14 +56,14 @@ async function state() {
        JOIN children c ON c.id=ec.child_id JOIN tasks t ON t.id=ec.task_id
        WHERE ec.status='pending' ORDER BY ec.ts`),
   ]);
-  return { children, devices, alerts, cats, events, times, claims, people };
+  return { children, devices, alerts, alertsAck, cats, events, times, claims, people };
 }
 
 const authed = req => !DASH_TOKEN || (req.headers["x-dash-token"] === DASH_TOKEN);
 
 const server = createServer(async (req, res) => {
   try {
-    if (req.method === "POST" && (req.url === "/api/claim" || req.url === "/api/act" || req.url === "/api/assign") && !authed(req)) {
+    if (req.method === "POST" && ["/api/claim", "/api/act", "/api/assign", "/api/ack", "/api/goal"].includes(req.url) && !authed(req)) {
       res.writeHead(403, { "content-type": "application/json" }); res.end('{"out":"forbidden"}'); return; }
     if (req.method === "POST" && req.url === "/api/assign") {
       let b = ""; req.on("data", c => b += c); await new Promise(r => req.on("end", r));
@@ -78,6 +84,44 @@ const server = createServer(async (req, res) => {
         out = (await runKidnet(["earn", info.kid, info.task])).out;
       }
       res.writeHead(200, { "content-type": "application/json" }); res.end(JSON.stringify({ ok: true, out })); return;
+    }
+    if (req.method === "POST" && req.url === "/api/ack") {
+      // Mark an alert as talked about. The only thing it changes is whether the
+      // alert keeps asking for attention: nothing is deleted, and nothing about
+      // the network changes.
+      let b = ""; req.on("data", c => b += c); await new Promise(r => req.on("end", r));
+      const { id } = JSON.parse(b || "{}");
+      if (!Number.isInteger(id) || id <= 0) { res.writeHead(400).end('{"out":"bad alert"}'); return; }
+      const rows = await q("UPDATE alerts SET acknowledged=true WHERE id=$1 AND NOT acknowledged RETURNING id", [id]);
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ok: true, out: rows.length ? "noted, moved to the quiet list" : "already noted" })); return;
+    }
+    if (req.method === "POST" && req.url === "/api/goal") {
+      // Set, replace or remove one weekly goal. Goals never enforce anything:
+      // the worst a bad value can do is put a silly number on a progress bar.
+      let b = ""; req.on("data", c => b += c); await new Promise(r => req.on("end", r));
+      const g = JSON.parse(b || "{}");
+      if (g.remove) {
+        if (!Number.isInteger(g.id) || g.id <= 0) { res.writeHead(400).end('{"out":"bad goal"}'); return; }
+        await q("DELETE FROM goals WHERE id=$1", [g.id]);
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end(JSON.stringify({ ok: true, out: "goal removed" })); return;
+      }
+      const cid = Number(g.child_id);
+      const target = Number(g.target_min);
+      if (!Number.isInteger(cid) || cid <= 0
+        || !Object.prototype.hasOwnProperty.call(GOAL_METRICS, String(g.metric))
+        || !["at_most", "at_least"].includes(String(g.direction))
+        || !Number.isFinite(target) || target < 1 || target > 10080) {
+        res.writeHead(400).end('{"out":"bad goal"}'); return; }
+      await q(`INSERT INTO goals(child_id,metric,direction,target_min,set_by)
+               VALUES($1,$2,$3,$4,'dashboard')
+               ON CONFLICT (child_id,metric) DO UPDATE
+                 SET direction=EXCLUDED.direction, target_min=EXCLUDED.target_min,
+                     active=true, updated_ts=now()`,
+        [cid, String(g.metric), String(g.direction), Math.round(target)]);
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ok: true, out: "goal saved" })); return;
     }
     if (req.method === "POST" && req.url === "/api/act") {
       let b = ""; req.on("data", c => b += c); await new Promise(r => req.on("end", r));
@@ -105,7 +149,21 @@ const server = createServer(async (req, res) => {
     if (DASH_TOKEN) headers["set-cookie"] = `dash=${DASH_TOKEN}; Path=/; SameSite=Strict; HttpOnly=false`;
     const s = await state();
     let html;
-    if (url.pathname === "/trends") {
+    if (url.pathname === "/week") {
+      // ?week=last or ?week=YYYY-MM-DD reaches any past week; anything else is
+      // this week. The digest resolves the Monday itself, from the DB clock.
+      const raw = url.searchParams.get("week") || "";
+      const ref = raw === "last" ? "last" : (/^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : null);
+      html = shell({ tab: "/week", title: "Hearth week", body: weekView(s, await digest(q, ref)) });
+    } else if (url.pathname.startsWith("/kid/")) {
+      const name = decodeURIComponent(url.pathname.slice(5));
+      if (!/^[A-Za-z0-9_ -]{1,32}$/.test(name)) {
+        res.writeHead(404, { "content-type": "text/plain" }); res.end("not found"); return; }
+      const days = url.searchParams.get("days") === "30" ? 30 : 7;
+      const kd = await kidDetail(q, name, days);
+      if (!kd) { res.writeHead(404, { "content-type": "text/plain" }); res.end("no such child"); return; }
+      html = shell({ tab: "/", title: `Hearth: ${kd.child.name}`, body: kidView(s, kd) });
+    } else if (url.pathname === "/trends") {
       const days = url.searchParams.get("days") === "30" ? 30 : 7;
       html = shell({ tab: "/trends", title: "Hearth trends", body: trends(s, await analytics(q, days)) });
     } else if (url.pathname === "/devices") {

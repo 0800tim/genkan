@@ -1,0 +1,160 @@
+#!/bin/bash
+
+# omarchy:summary=Run a Hearth action from the Omarchy menu or the status bar
+# omarchy:args=run <kidnet args...> | pick <prompt> <kidnet args with KID> | status | dashboard | menu
+# omarchy:examples=hearth-action run dinner | hearth-action pick "Internet off" off KID | hearth-action dashboard
+
+# Every menu row and every bar click lands here. It runs one kidnet command
+# through hearth-kidnet, then says what happened in a desktop notification, so
+# the parent gets feedback without opening a terminal.
+
+set -euo pipefail
+
+readonly conf_file="${HEARTH_CONF:-${XDG_CONFIG_HOME:-$HOME/.config}/hearth/omarchy.conf}"
+if [[ -r $conf_file ]]; then
+  # shellcheck disable=SC1090
+  source "$conf_file"
+fi
+
+: "${HEARTH_URL:=}"
+: "${HEARTH_DASHBOARD_URL:=$HEARTH_URL}"
+
+readonly bin_dir="${HEARTH_BIN:-$(dirname "$(readlink -f "$0")")}"
+readonly kidnet_cmd="$bin_dir/hearth-kidnet"
+
+fail() {
+  echo "${0##*/}: $*" >&2
+  exit 1
+}
+
+kidnet() {
+  if [[ -x $kidnet_cmd ]]; then
+    "$kidnet_cmd" "$@"
+  else
+    hearth-kidnet "$@"
+  fi
+}
+
+# Omarchy's own notifier when it is there, the freedesktop one otherwise, and
+# silence when neither is. A menu action must never fail because of feedback.
+notify() {
+  local headline="$1" body="${2:-}" urgency="${3:-low}"
+  if command -v omarchy-notification-send >/dev/null 2>&1; then
+    omarchy-notification-send --app-name Hearth -u "$urgency" "$headline" "$body" >/dev/null 2>&1 || true
+  elif command -v notify-send >/dev/null 2>&1; then
+    notify-send -a Hearth -u "$urgency" "$headline" "$body" >/dev/null 2>&1 || true
+  fi
+}
+
+# Ask which child. Omarchy's own menu is the picker when the shell is running,
+# and the usual dmenu-alikes cover every other desktop.
+choose_kid() {
+  local prompt="$1"
+  local -a kids=()
+  mapfile -t kids < <(kidnet --kids 2>/dev/null) || true
+  ((${#kids[@]} > 0)) || fail "no kids to choose from"
+
+  if command -v omarchy-menu-select >/dev/null 2>&1; then
+    omarchy-menu-select "$prompt" "${kids[@]}"
+  elif command -v walker >/dev/null 2>&1; then
+    printf '%s\n' "${kids[@]}" | walker --dmenu --placeholder "$prompt"
+  elif command -v fuzzel >/dev/null 2>&1; then
+    printf '%s\n' "${kids[@]}" | fuzzel --dmenu --prompt "$prompt: "
+  elif command -v wofi >/dev/null 2>&1; then
+    printf '%s\n' "${kids[@]}" | wofi --dmenu --prompt "$prompt"
+  elif command -v rofi >/dev/null 2>&1; then
+    printf '%s\n' "${kids[@]}" | rofi -dmenu -p "$prompt"
+  else
+    fail "no picker available (omarchy-menu-select, walker, fuzzel, wofi or rofi)"
+  fi
+}
+
+run_action() {
+  local out status=0
+  out=$(kidnet "$@" 2>&1) || status=$?
+  if ((status == 0)); then
+    notify "Hearth" "${out:-$*}"
+  else
+    notify "Hearth could not do that" "${out:-$*}" normal
+  fi
+  printf '%s\n' "$out"
+  return "$status"
+}
+
+open_url() {
+  local url="$1"
+  if command -v omarchy-launch-webapp >/dev/null 2>&1; then
+    omarchy-launch-webapp "$url"
+  elif command -v xdg-open >/dev/null 2>&1; then
+    setsid xdg-open "$url" >/dev/null 2>&1 &
+  else
+    fail "no way to open a browser"
+  fi
+}
+
+case "${1:-}" in
+  run)
+    shift
+    (($# > 0)) || fail "run needs a kidnet command"
+    run_action "$@"
+    ;;
+
+  # "pick <prompt> <args...>": the literal word KID in the args is replaced by
+  # whoever the parent chooses, so one script covers every per-kid action.
+  pick)
+    shift
+    (($# > 1)) || fail "pick needs a prompt and a kidnet command"
+    prompt="$1"
+    shift
+    kid=$(choose_kid "$prompt") || exit 0 # cancelled is not an error
+    [[ -n $kid ]] || exit 0
+    args=()
+    for arg in "$@"; do
+      [[ $arg == KID ]] && args+=("$kid") || args+=("$arg")
+    done
+    run_action "${args[@]}"
+    ;;
+
+  status)
+    body=$(kidnet status 2>&1) || body=""
+    [[ -n ${body//[[:space:]]/} ]] || body="Nothing is blocked."
+    while read -r kid; do
+      [[ -n $kid ]] || continue
+      line=$(kidnet time "$kid" 2>/dev/null) || continue
+      body="$body"$'\n'"$line"
+    done < <(kidnet --kids 2>/dev/null)
+    notify "Hearth right now" "$body"
+    printf '%s\n' "$body"
+    ;;
+
+  dashboard)
+    [[ -n $HEARTH_DASHBOARD_URL ]] ||
+      fail "set HEARTH_DASHBOARD_URL (or HEARTH_URL) in $conf_file"
+    open_url "$HEARTH_DASHBOARD_URL"
+    ;;
+
+  menu)
+    # Rebuild the menu entries against the current kid list, then reload it.
+    "$bin_dir/hearth-menu-jsonc" --install >/dev/null &&
+      notify "Hearth" "Menu rebuilt from the current kid list" ||
+      notify "Hearth" "Could not rebuild the menu" normal
+    ;;
+
+  -h | --help | "")
+    cat <<USAGE
+Usage: hearth-action <command>
+
+  run <kidnet args...>            run a kidnet command and notify the result
+  pick <prompt> <args with KID>   ask which child first, then run it
+  status                          notify what is blocked and who has time left
+  dashboard                       open the Hearth dashboard in a browser
+  menu                            rebuild the Omarchy menu from the kid list
+
+Configuration lives in $conf_file.
+USAGE
+    ;;
+
+  *)
+    fail "unknown command '$1'. Try 'hearth-action --help'."
+    ;;
+esac

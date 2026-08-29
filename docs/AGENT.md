@@ -21,7 +21,18 @@ in the house.
 | "give Ben 30 more minutes" | `kidnet bonus Ben 30` |
 | "give Ben 30 more minutes of gaming" | `kidnet grant Ben gaming 30` (clears just the gaming cap) |
 | "how much time has everyone got?" | `kidnet time <kid>` per kid |
+| "what's blocked right now?" | `kidnet status` |
+| "whose device is this?" | `kidnet devices`, or `kidnet unassigned` |
+| "that new tablet is Ada's" | `kidnet assign <mac> Ada "Ada's tablet"` |
+| "what has Ben been looking at?" | `kidnet recent Ben` |
+| "what's busy tonight?" | `kidnet topsites` |
+| "how was this week?" | `bin/kidnet-report all last` |
 | "what's been going on?" | reads alerts, block_events, time_events |
+
+The full reference, every command and every argument, is docs/CLI.md. Read it
+rather than guessing at a flag: several commands look similar and are not
+(`bonus` adds general minutes, `grant` adds minutes to one category and clears
+only a meter-set block, never a parent's).
 
 The agent should confirm the action in one short line, and refuse nothing
 in this table: these are the parent's calls to make.
@@ -41,12 +52,22 @@ the rest when asked. Urgent includes: segment guard tripped, safety net
 empty, self-harm category flags (that one is a care conversation, not a
 discipline one; the docs are explicit about this).
 
+## Operating it
+
+When something is wrong rather than when something needs changing, the agent
+should reach for docs/OPERATIONS.md: how to check health, what each timer does,
+what the segment guard refusing to start means, and why a device might have no
+internet. It is written so an agent can work the list top to bottom.
+
 ## Boundaries built into the tools
 
 - Help lines (1737, Youthline, Kidsline) stay reachable through every cut;
   the agent cannot and must not try to remove them.
 - The agent has no way to read message content: the network sees domains,
   never inside encrypted apps. Don't imply otherwise to parents or kids.
+- Smart-home devices are never cut. `off all`, `dinner` and the rest only
+  touch devices classified `personal`, so the agent cannot darken a camera or
+  a door lock by pausing the kids, and should say so if asked.
 - Kids may talk to the agent too (their own tailnet ACL or the portal).
   The agent answers kids honestly: what's blocked, why, what they can earn,
   and never shames them. The bug bounty is real; a kid reporting a bypass

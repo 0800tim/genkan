@@ -2,7 +2,7 @@
 # hearth:summary=Learn which IPs belong to which category from AdGuard answers.
 #
 # The trick that makes per-category metering possible without decrypting
-# traffic: clawdia is the DNS server, so when a device resolves a gaming or
+# traffic: the Hearth box is the DNS server, so when a device resolves a gaming or
 # video domain we learn the IPs it will talk to, and tag those IPs by category
 # (category_ips). The firewall then meters bytes per category by destination
 # IP. Runs on a short timer. See METERING.md.

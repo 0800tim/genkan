@@ -1,0 +1,185 @@
+#!/bin/bash
+
+# omarchy:summary=Print the Hearth family state as Waybar-style JSON for the status bar
+# omarchy:args=[--once]
+# omarchy:examples=hearth-bar-status
+
+# Polled by the bar. Prints ONE line of Waybar-format JSON on stdout:
+#
+#   {"text":"...","tooltip":"...","class":["hearth","warn"]}
+#
+# The same shape feeds the Omarchy 4 Quickshell bar (a "type": "command"
+# module) and a classic Waybar "custom/hearth" module.
+#
+# Rules this script lives by, because it runs every few seconds forever:
+#   - it never writes to stderr and never exits non-zero
+#   - a gateway it cannot reach is a quiet, dim glyph, not an error
+#   - a brief blip shows the last good answer rather than flapping
+
+set -uo pipefail
+
+readonly conf_file="${HEARTH_CONF:-${XDG_CONFIG_HOME:-$HOME/.config}/hearth/omarchy.conf}"
+if [[ -r $conf_file ]]; then
+  # shellcheck disable=SC1090
+  source "$conf_file"
+fi
+
+: "${HEARTH_HIDE_WHEN_DOWN:=0}"
+: "${HEARTH_STALE_SEC:=180}"
+: "${HEARTH_LOW_MIN:=15}"
+
+readonly cache_file="${XDG_RUNTIME_DIR:-/tmp}/hearth-bar-status.json"
+readonly kidnet_cmd="${HEARTH_BIN:-$(dirname "$(readlink -f "$0")")}/hearth-kidnet"
+
+# Nerd Font glyphs, written as escapes so no multi-byte character has to
+# survive being copied around. Left to right: home, warning triangle, pause.
+readonly glyph_home=$'\uf015'
+readonly glyph_warn=$'\uf071'
+readonly glyph_pause=$'\uf04c'
+readonly sep=$' \u00b7 '
+
+kidnet() {
+  if [[ -x $kidnet_cmd ]]; then
+    "$kidnet_cmd" "$@" 2>/dev/null
+  else
+    hearth-kidnet "$@" 2>/dev/null
+  fi
+}
+
+emit() {
+  local text="$1" tooltip="$2"
+  shift 2
+  jq -nc --arg text "$text" --arg tooltip "$tooltip" \
+    '{ text: $text, tooltip: $tooltip, class: $ARGS.positional }' --args "$@"
+}
+
+# Nothing to talk to. Show the least we can get away with.
+emit_down() {
+  local text="$glyph_home"
+  [[ $HEARTH_HIDE_WHEN_DOWN == 1 ]] && text=""
+  emit "$text" "Hearth: the gateway is not reachable" hearth down
+}
+
+# A blip is not an outage. Reprint the last good answer, marked stale, for as
+# long as HEARTH_STALE_SEC allows.
+emit_stale_or_down() {
+  local age
+  if [[ -s $cache_file ]]; then
+    age=$(( $(date +%s) - $(stat -c %Y "$cache_file" 2>/dev/null || echo 0) ))
+    if ((age >= 0 && age < HEARTH_STALE_SEC)); then
+      jq -c '.class = ((.class // []) + ["stale"]) | .tooltip = (.tooltip + "\n(waiting for the gateway)")' \
+        "$cache_file" 2>/dev/null && return 0
+    fi
+  fi
+  emit_down
+}
+
+build() {
+  local devices status kids alerts
+  devices=$(kidnet devices) || return 1
+  [[ -n $devices ]] || return 1
+  kids=$(kidnet --kids) || return 1
+  status=$(kidnet status)
+  alerts=$(kidnet --alerts)
+  [[ $alerts =~ ^[0-9]+$ ]] || alerts=0
+
+  local kid line mins blocked online
+  local total=0 count_online=0 count_paused=0 count_out=0
+  local low_kid="" low_min=-1 first_out=""
+  local tooltip="Hearth"
+
+  while read -r kid; do
+    [[ -n $kid ]] || continue
+    total=$((total + 1))
+
+    online=no
+    grep -F "[$kid]" <<<"$devices" | grep -q 'online$' && online=yes
+
+    # "Ada: 45 min left today (budget 90 + bonus 0 - used 45)"
+    # "Ada: no daily limit (teen tier)"
+    mins=-1
+    line=$(kidnet time "$kid")
+    [[ $line =~ ([0-9]+)\ min\ left ]] && mins="${BASH_REMATCH[1]}"
+
+    # "  Ada: gaming, internet"  (only the blocked categories are listed)
+    blocked=$(sed -n "s/^[[:space:]]*${kid}:[[:space:]]*//p" <<<"$status" | head -1)
+
+    local paused=no
+    [[ ",${blocked//[[:space:]]/}," == *,internet,* ]] && paused=yes
+    [[ $paused == yes ]] && count_paused=$((count_paused + 1))
+    [[ $online == yes ]] && count_online=$((count_online + 1))
+
+    if ((mins == 0)); then
+      count_out=$((count_out + 1))
+      [[ -n $first_out ]] || first_out="$kid"
+    fi
+    if ((mins >= 0)) && { ((low_min < 0)) || ((mins < low_min)); }; then
+      low_min=$mins
+      low_kid=$kid
+    fi
+
+    local detail
+    if ((mins < 0)); then
+      detail="no daily limit"
+    elif ((mins == 0)); then
+      detail="out of time"
+    else
+      detail="${mins}m left"
+    fi
+    [[ $online == yes ]] && detail="$detail, online" || detail="$detail, offline"
+    [[ -n $blocked ]] && detail="$detail, blocked: $blocked"
+    tooltip="$tooltip"$'\n'"$kid: $detail"
+  done <<<"$kids"
+
+  ((total > 0)) || return 1
+
+  local -a classes=(hearth)
+  local glyph="$glyph_home" head detail=""
+
+  if ((alerts > 0 || count_out > 0)); then
+    glyph="$glyph_warn"
+    classes+=(warn active)
+  elif ((count_paused == total)); then
+    glyph="$glyph_pause"
+    classes+=(paused active)
+  elif ((count_paused > 0)); then
+    classes+=(active)
+  elif ((low_min >= 0 && low_min <= HEARTH_LOW_MIN)); then
+    classes+=(low)
+  fi
+
+  head="$glyph $count_online/$total"
+
+  if ((count_out > 0)); then
+    detail="$first_out out of time"
+  elif ((count_paused == total)); then
+    detail="all paused"
+  elif ((low_min >= 0)); then
+    detail="$low_kid ${low_min}m"
+  fi
+  if ((alerts > 0)); then
+    local word="alert"
+    ((alerts == 1)) || word="alerts"
+    detail="${detail:+${detail}${sep}}$alerts $word"
+  fi
+
+  tooltip="$tooltip"$'\n'"$count_online of $total online"
+  ((count_paused == 0)) || tooltip="$tooltip, $count_paused paused"
+  tooltip="$tooltip"$'\n'"Click for the Hearth menu"
+
+  emit "${head}${detail:+${sep}${detail}}" "$tooltip" "${classes[@]}"
+}
+
+if ! command -v jq >/dev/null 2>&1; then
+  # No jq means no safe way to build JSON. Plain text is a valid module output.
+  echo "$glyph_home"
+  exit 0
+fi
+
+if out=$(build) && [[ -n $out ]]; then
+  printf '%s\n' "$out" >"$cache_file" 2>/dev/null
+  printf '%s\n' "$out"
+else
+  emit_stale_or_down
+fi
+exit 0

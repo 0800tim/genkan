@@ -1,8 +1,15 @@
 # Voice design: "Hey Claudia"
 
-Status: design, not yet built. The phone-chat agent is the primary
-interface; open-mic voice is an optional module for houses that want an
-Alexa replacement that answers to the family instead of a corporation.
+Status: designed and specified, no code yet. What exists is `voice/`: a
+separate compose file, an intent grammar (`voice/intents.md`), an enrolment
+guide (`voice/enrolment.md`) and the `voice_events` audit table
+(`config/db/schema-voice.sql`). The containers it describes are not written.
+
+The phone-chat agent is the primary interface and always will be; open-mic
+voice is an optional module for houses that want an Alexa replacement that
+answers to the family instead of a corporation. Nothing in the core stack
+references it, and if the whole `voice/` directory were deleted the island
+would run exactly as before.
 
 ## Stack (all local, all containerised, no audio leaves the house)
 

@@ -1,0 +1,27 @@
+#!/bin/bash
+
+# omarchy:summary=Check a file the way the Omarchy menu parses JSONC
+# omarchy:args=<file>
+# omarchy:examples=hearth-jsonc-check ~/.config/omarchy/extensions/omarchy-menu.jsonc
+
+# Omarchy's menu does not use a real JSONC grammar. It strips WHOLE-LINE "//"
+# comments and trailing commas, then runs JSON.parse. A file that fails to
+# parse contributes no entries at all, so a broken extension silently drops
+# every entry the user has. This reproduces that stripping and reports whether
+# the result is valid JSON, so nothing writes a file the menu will reject.
+
+set -euo pipefail
+
+file="${1:-}"
+if [[ -z $file || $file == "-h" || $file == "--help" ]]; then
+  echo "Usage: hearth-jsonc-check <file>" >&2
+  exit 2
+fi
+[[ -r $file ]] || {
+  echo "hearth-jsonc-check: cannot read $file" >&2
+  exit 2
+}
+
+sed '/^[[:space:]]*\/\//d' "$file" |
+  perl -0pe 's/,(\s*[}\]])/$1/g' |
+  jq -e . >/dev/null

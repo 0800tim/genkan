@@ -153,10 +153,10 @@ agent in it, and say:
 ## Verification
 
     docker ps                              # hearth-gw, hearth-adguard, hearth-portal, postgres
-    docker logs hearth-gw | tail -20       # "segment guard: wire is quiet", firewall loaded
+    docker logs hearth-gw | tail -20       # "safe to own it", "firewall loaded", "island is UP"
     systemctl status kids-nic-warden       # active; "handover done" in the journal
     kidnet status && kidnet allow-status   # CLI works, safety net populated
-    sudo test/container-test.sh            # the full 25-check proof
+    sudo test/container-test.sh            # the full 26-check proof
     sudo ufw status                        # unchanged, exactly as you left it
 
 Then join the kids' network from a phone: a `192.168.60.x` lease, working

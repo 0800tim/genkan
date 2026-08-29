@@ -1,13 +1,17 @@
-# Before this repo goes public
+# Going public: what was required, and what is still outstanding
 
-Hearth is not pushed anywhere yet. Tim decides when. These MUST be done first,
-because a public repo exposes its whole history, not just the current files.
+**The repo is now public at github.com/0800tim/hearth.** This file is no longer
+a gate; it is the record of what had to be true first, and of the one blocking
+item that a public repo makes urgent rather than optional.
+
+A public repo exposes its whole history, not just the current files. That is
+why the item below still matters after publication.
 
 ## Status (last audited 2026-08-29)
 
-Nothing has ever been pushed. None of the three repos has a git remote
-configured, so a push is not merely disallowed, it is not currently possible
-without deliberately adding one. 41 local commits are waiting.
+Published. Note that the working copy on the reference box still has no git
+remote configured, so pushes from that box are a deliberate act rather than an
+accident.
 
 Repo separation, verified:
   kids-network       the intended PUBLIC repo. No commercial content.
@@ -20,8 +24,9 @@ examples; the real names live only in the database on the family's own box).
 
 ## Must do (blocking)
 
-- [ ] **Scrub git history of secrets.** Current files are clean, but history
-      is not. A security review cracked a committed bcrypt hash in under a
+- [ ] **Scrub git history of secrets.** STILL OUTSTANDING, and now urgent
+      rather than blocking, because the history is public. Current files are
+      clean, but history is not. A security review cracked a committed bcrypt hash in under a
       second. Known items in history:
       - The AdGuard dev password `<the dev password>` (commit that added the seed
         config with a real hash). Local-only, but must not ship.
@@ -38,8 +43,9 @@ examples; the real names live only in the database on the family's own box).
 
 ## Should do
 
-- [ ] Add a SECURITY.md with the responsible-disclosure address (mirrors the
-      household bug bounty, but for the open-source project).
+- [x] Add a SECURITY.md with the responsible-disclosure route (mirrors the
+      household bug bounty, but for the open-source project). Done: it points
+      at GitHub's private vulnerability reporting.
 - [x] Optional dashboard API token (DASH_TOKEN). Done 2026-08-29: unset keeps
       today's tailnet-only behaviour; set makes every /api/* call require the
       secret (injected via a same-origin cookie, never typed). Set it in the
@@ -50,8 +56,18 @@ examples; the real names live only in the database on the family's own box).
 - [ ] Load a deny-all ruleset before the interface comes up in the entrypoint,
       to close the sub-second window between address assignment and firewall
       load.
-- [ ] Decide the LLM-agnostic story in docs before launch so "bring your own
-      AI" is real on day one, not just Claude.
+- [x] Decide the LLM-agnostic story in docs so "bring your own AI" is real,
+      not just Claude. Done: docs/AGENT.md and docs/VISION.md both state the
+      contract, which is that any agent able to run shell commands can drive
+      the whole surface.
+- [ ] Ship a systemd unit for the admin dashboard. It exists only on the
+      reference box, so a new family has no supported way to run it. A minimal
+      unit to copy is in docs/OPERATIONS.md.
+- [ ] Seed the `tasks` table, or a fresh install has no earnable chores at
+      all. The INSERT is in docs/DATABASE.md.
+- [ ] Add python3 to the gateway image. The entrypoint uses it to read the
+      current nft sets, so without it the "has anything changed" comparison
+      never matches and both sets are rewritten every fifteen seconds.
 
 ## Verified solid (security review, 2026-08-29)
 

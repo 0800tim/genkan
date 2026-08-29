@@ -12,10 +12,15 @@ us the DNS lookups that drive the alerts. Neither layer is complete alone.
 
 ## a. Tor on-ramps: block AND portal-redirect
 
-These are rendered by kidnet as `$ctag=user_child` dnsrewrite rules to the
-portal IP, so a kid who tries them gets the warm "come talk to me" page
-(docs/tor-and-safety.md has the copy), not a silent NXDOMAIN. Every one of
-them also raises an alert on the query-log ingestion pass.
+These are rendered by `bin/kidnet-adguard` as one `$client=<child name>`
+dnsrewrite rule per child, pointed at the portal address, so a kid who tries
+them gets the warm "come talk to me" page (docs/tor-and-safety.md has the
+copy), not a silent NXDOMAIN. `.onion` patterns are excluded from the render,
+since there is nothing to redirect. Every one of them also raises an alert on
+the query-log ingestion pass, via `bin/kidnet-alerts`.
+
+Self-harm patterns are deliberately NOT rendered here. That category is
+alert-only by policy and must never route a child to any blocking page.
 
 | Domain | What it is | flag_domains |
 |---|---|---|
@@ -57,12 +62,13 @@ all urgent:
 |---|---|
 | `dark.fail` | drugs / urgent (seeded) |
 | `tor.taxi` | drugs / urgent (seeded) |
-| `onion.live` | darknet / urgent (add) |
-| `darknetlive.com` | darknet / urgent (add) |
-| `daunt.link` | darknet / urgent (add) |
+| `onion.live` | darknet / urgent (seeded) |
+| `darknetlive.com` | darknet / urgent (seeded) |
+| `daunt.link` | darknet / urgent (seeded) |
 
-Suggested seed additions for schema-flags.sql (the main agent owns that
-file; this is the payload):
+All of the below is now seeded in `config/db/schema-flags.sql`, in a second
+additive INSERT so re-running the file never rewrites a hand-tuned severity.
+Kept here as the payload of record:
 
 ```sql
 INSERT INTO flag_domains(pattern, category, severity, note) VALUES

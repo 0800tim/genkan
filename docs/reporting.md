@@ -1,7 +1,9 @@
 # Weekly reporting: the family digest
 
 `bin/kidnet-report` turns a week of gateway data into a short plain-text
-digest per child. It is the "section 8" piece from RECOMMENDATIONS.md: a
+digest per child. Note that `deploy.sh` deliberately does not install it into
+`/usr/local/bin`, so run it from the repo (`bin/kidnet-report`) or copy it
+yourself. It is the "section 8" piece from RECOMMENDATIONS.md: a
 weekly summary to the parent that keeps screen time a conversation, not a
 surveillance operation.
 
@@ -24,6 +26,27 @@ One block per child, for a Monday-to-Sunday week:
 - **Earned.** Quizzes passed on the portal (count, minutes, topics),
   chores a parent approved, and any task minutes credited from the CLI.
 
+## The same digest on a phone
+
+The parent dashboard renders this digest as a page at `/week`, which is where
+most people will actually read it. It is the same week (Monday to Sunday, the
+database's clock) and the same source tables, so the page and the CLI never
+tell you two different stories. What the page adds:
+
+- day-by-day and service charts per child, each with a table of the same
+  numbers underneath;
+- progress against that child's weekly goal, if one is set (`goals`, see
+  config/db/schema-goals.sql);
+- an acknowledge control on alerts, so one you have already talked about stops
+  asking for attention without being deleted;
+- a **Copy as text** button that produces this same plain text, ready to paste
+  into a message to your kid or your partner.
+
+`?week=last` and `?week=YYYY-MM-DD` reach any past week, exactly like the CLI's
+`[week]` argument. Tapping a child's name anywhere in the dashboard opens
+`/kid/<name>`: their devices, today, the week, their goal, quiz history, what
+has been flagged, and their controls, in one place.
+
 ## Philosophy: why weekly, and why this shape
 
 A live feed of everything a child does teaches the child that they are
@@ -34,7 +57,7 @@ nice", "what is this Tor thing about?").
 
 The digest deliberately cannot show message content. The network sees
 domain names, not conversations: Snapchat, Discord and friends are
-end-to-end encrypted, and HEARTH does not try to break that (see
+end-to-end encrypted, and Hearth does not try to break that (see
 PLAN.md's honest limits). That is a feature. The kids should know exactly
 what the house can and cannot see, and the digest should be something you
 would happily show the child it is about. Transparency runs both ways in
@@ -45,9 +68,10 @@ openness.
 Practical notes:
 
 - It is read-only. The script only ever runs SELECT.
-- `kidnet-report <child>` shows the current week so far; `kidnet-report
-  <child> last` shows the previous full week; a date picks that date's
-  week. `kidnet-report all` covers every child.
+- `bin/kidnet-report <child>` shows the current week so far;
+  `bin/kidnet-report <child> last` shows the previous full week; a
+  `YYYY-MM-DD` date picks that date's week. `bin/kidnet-report all` covers
+  every child with `kind='child'`.
 - Output is plain text, so it pipes cleanly into a file, an email, or a
   chat message.
 

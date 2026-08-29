@@ -1,120 +1,117 @@
-# Kids' network island: build plan
+# Topology, and the honest limits of network monitoring
 
-Goal: a separate wired+wireless network for the kids that clawdia is the
-sole gateway for, so internet on/off (per kid, or all) is a firewall rule
-clawdia owns, drivable by the agent from Tim's phone. Plus DNS-level
-safety filtering and per-device domain logging.
+What the island physically looks like, and what a network-layer tool can and
+cannot see. This began as the build plan before anything existed. The build is
+done, so what survives here is the part that stays true: the shape of the
+network, and the boundary of what it can know.
 
-Status: adapter found and detected 2026-08-27. Building not started (waiting
-on the physical island: switch + WiFi 6 AP cabling, and the AP model).
+Status: built and deployed. The reference household has been running it since
+2026-08-29. What each piece does day to day is in
+[docs/OPERATIONS.md](docs/OPERATIONS.md); the reasoning behind each choice is in
+[DECISIONS.md](DECISIONS.md).
 
-## Hardware / interfaces (facts)
-
-- Uplink: clawdia `enp5s0` (r8169) = 192.168.1.10,
-  gateway 192.168.1.1 (ASUS). UNCHANGED by this build.
-- Kids' gateway NIC: USB ASIX AX88179, interface `enx000ec6cccd56`
-  (mac <your-adapter-MAC>, driver ax88179_178a). Stable-named `kids0`
-  via udev (rule written 2026-08-27). "down" until cabled to the switch.
-- Spare unmanaged switch (Tim has) = the wired backbone of the island.
-- WiFi 6 AP: TP-Link Deco X20 (AX1800), set to ACCESS POINT mode (its own
-  DHCP/NAT OFF) so it is a dumb bridge; hangs off the switch and broadcasts
-  the kids' SSID. NOTE: consumer Deco is app-only (no web UI / SSH / local
-  API). The agent cannot manage the Deco. Only requirement: Tim flips it to
-  AP mode once via the Deco app and names the SSID (e.g. kids-wifi). After
-  that it is a radio and clawdia owns all logic. Do NOT leave it in router
-  mode (it would NAT + hide devices behind one IP and defeat per-device
-  control).
-- Son's desktop: wired into the same switch.
-
-## Topology
+## The shape
 
     Internet
       |
-    ASUS 192.168.1.1
+    your existing router                 <- untouched; your own devices stay here
       |
-    clawdia enp5s0 (192.168.1.10)      <- uplink, unchanged
-      |  [NAT / masquerade]
-    clawdia kids0 = 192.168.60.1/24      <- kids' gateway
+    Hearth box, uplink NIC               <- ordinary DHCP client on your LAN
+      |  [NAT / masquerade, inside the gateway container]
+    Hearth box, kids0 = 192.168.60.1/24  <- the kids' gateway
       |
-    spare switch (wired)
-      +-- son's desktop (wired, DHCP from clawdia)
-      +-- WiFi 6 AP (AP/bridge mode) --- kids' SSID --- phones/tablets
+    a switch, or straight to the AP
+      +-- wired kids' devices
+      +-- WiFi access point (AP / bridge mode) --- the kids' SSID --- phones, tablets, consoles
 
-New subnet: 192.168.60.0/24. clawdia = .1 (gateway, DNS, DHCP).
+New subnet: `192.168.60.0/24`. The Hearth box is `.1`, and is the **single**
+DHCP and DNS server for that segment. Configurable in `config.env`.
 
-Confirmed cabling (Deco X20 has 2 gigabit ports; in AP mode both ports +
-WiFi are ONE bridged segment):
-  Deco port 1 -> clawdia kids0 (uplink to gateway)
-  Deco port 2 -> spare switch -> wired kids' devices (desktop, etc.)
-  Deco WiFi   -> wireless kids' devices
-Equivalent alt: kids0 -> switch (as hub); switch -> Deco (one port only,
-no loop) + desktop + other wired. Same L2 segment either way.
-DHCP: clawdia is the SINGLE DHCP+DNS server for the island. Deco in AP mode
-runs neither (that is the point of AP mode). Never leave two DHCP servers on.
+The two hard requirements:
 
-## Software layers on clawdia
+1. **The access point must be in Access Point or bridge mode**, with its own
+   DHCP and NAT off. Left in router mode it would NAT every device behind one
+   address and defeat per-device control entirely.
+2. **Never two DHCP servers on the island.** The gateway refuses to start if it
+   hears one, which is the segment guard, and that is the single most common
+   reason a first deploy will not come up. See OPERATIONS.md.
 
-1. Interface + address: udev names it `kids0`; static 192.168.60.1/24 via
-   systemd-networkd (or netplan). No default route on kids0.
-2. NAT: nftables masquerade 192.168.60.0/24 -> enp5s0. ip_forward already 1.
-3. DHCP + DNS: AdGuard Home (Docker, bound to 192.168.60.1:53 + a UI port)
-   RECOMMENDED over plain dnsmasq because it gives: per-client query logs
-   (the "what sites" view), category blocklists (adult/gambling/self-harm/
-   malware), SafeSearch + YouTube-restricted enforcement, and schedules,
-   all with a UI. DHCP can be AdGuard's or a small dnsmasq; hand out
-   .60.1 as gateway+DNS. Per-device DHCP reservations give each kid device
-   a stable IP for grouping.
-4. On/off control: nftables `kids_block` set of blocked IPs; a device in
-   the set has its forward traffic dropped = internet off instantly.
-   Script `kidnet` (to write): `kidnet off Ben|Cleo|all`,
-   `kidnet on ...`, `kidnet status`. Agent runs it when Tim says
-   "turn off Ben's internet" etc. from his phone.
-5. Schedules: systemd timers (e.g. off 21:00, on 07:00) calling `kidnet`.
+The kids' interface is named `kids0` by a udev rule generated from the MAC in
+`config.env`, so it survives replugs and reboots. It carries no default route:
+the default route stays on the uplink.
 
-## Device -> kid mapping
+## Where each layer lives
 
-Captured once devices join (DHCP leases show up under kids0). Groups so
-far named: Ben, Cleo (+ son with the wired desktop + Android phone).
-On the kids' own SSID, MACs are stable per-network even if "private MAC"
-is on, but set private/random MAC OFF for that one SSID on each device to
-be safe. Reserve a fixed .60.x per device and block by IP.
+Everything island-facing runs in the gateway container's network namespace:
+nftables (NAT, isolation, DNS forcing, the category and service counters),
+AdGuard Home (DHCP, DNS, filtering) and the kids' portal. The host runs one
+warden service that hands the physical NIC in, plus the timers. The admin
+dashboard runs on the host, outside the island, on your private network.
 
-## Safety monitoring: what it can and cannot do (set expectations)
+That split is the safety argument, and it is the thing the container test suite
+exists to prove: a mistake in the firewall can take the kids' network down and
+cannot touch the host, the main LAN or a VPN, because those interfaces do not
+exist inside the container.
 
-CAN (network layer, nothing installed on devices):
-- Log every DOMAIN each device visits; flag/alert/block by category
-  (porn, gambling, self-harm, known-bad). Enforce SafeSearch + YouTube
-  restricted. Good coverage of the "dodgy sites" goal.
-CANNOT:
-- Read page CONTENT or search terms: HTTPS shows the domain only. Reading
-  content needs TLS interception (root cert on each device + MITM), which
-  is invasive and breaks pinned apps; only if Tim explicitly wants it.
-- See in-app bullying: Snapchat/Instagram/Discord DMs are end-to-end
-  encrypted. Network monitoring can't see them. That needs a consenting
-  app-based tool (e.g. Bark) or platform supervision, not the network.
-Recommended posture: category filtering + SafeSearch + alerts on serious
-categories, NOT full surveillance. Being open with the kids that the
-network is filtered tends to work better than covert monitoring.
+## Device to person mapping
 
-## Mobile data (separate problem, not network-solvable)
+Devices appear from DHCP leases, owned by nobody. A parent assigns each one
+(`kidnet assign`), which sets the label, the owner and the DHCP reservation, and
+immediately points AdGuard's per-child client at the right addresses so the age
+tier follows the device.
 
-Son's Android cellular never touches home WiFi. Only Google Family Link
-(pause device / downtime, works over cellular) controls it. One-time
-setup linking his Google account to Tim's; the agent can't press the
-button but can write the setup guide. Bark can ride alongside for the
-in-app safety signals.
+Blocking is by reserved address on a network we fully control, not by MAC on the
+main LAN. That matters: modern phones randomise their WiFi MAC, which quietly
+defeats MAC-based blocking on an ordinary home router. On our own segment,
+randomisation cannot dodge anything, because we hand out the address.
 
-## Resilience notes
+Turn "private" or "randomised" MAC **off for the kids' SSID** on each device
+anyway. It is one setting, and it keeps the roster readable.
 
-- If clawdia reboots, the kids' island drops (fail-closed). Main house
-  internet via the ASUS is unaffected. Acceptable, but note it.
-- Persist: udev name (done), networkd static, nftables ruleset at boot,
-  AdGuard/dnsmasq as services.
+## Safety monitoring: what it can and cannot do
 
-## Open items before/at build
+Set expectations here rather than anywhere else, because this is the part
+people get wrong about every product in this category.
 
-- Deco X20 flipped to Access Point mode via the Deco app + kids SSID set (Tim, one-time).
-- Physically cable: kids0 -> switch -> {AP, son's desktop}.
-- Confirm AdGuard Home vs plain dnsmasq (recommend AdGuard Home).
-- Family Link go-ahead + guide.
-- Capture device inventory, set reservations, name per-kid groups.
+It CAN, with nothing installed on any device:
+
+- Log every DOMAIN each device looks up, per device and per child.
+- Block by category (adult, gambling, self-harm, malware, VPN and proxy), and
+  enforce SafeSearch and YouTube restricted mode.
+- Count real bytes and active minutes per category and per named service,
+  because we are the resolver and can tag addresses without decrypting.
+- Alert on genuinely concerning lookups: Tor, darknet directories, self-harm
+  forums.
+
+It CANNOT:
+
+- Read page CONTENT or search terms. HTTPS shows the domain only. Reading
+  inside would need TLS interception: a root certificate installed on every
+  device, breaking pinned apps and app security. We will not do it, and any
+  product that does should tell you it is doing it.
+- See in-app bullying. Snapchat, Instagram and Discord messages are end to end
+  encrypted and invisible here. That needs a consenting app-based tool or
+  platform supervision, not the network.
+- Do anything at all about mobile data. Cellular goes phone, tower, internet,
+  and never comes near the house. Google Family Link (or the iOS equivalent) is
+  the only lever there, and it runs alongside this rather than overlapping it.
+  There is no shared API, so a bonus granted here is not granted there.
+- Beat a determined VPN. A tunnel hides destination addresses, so categorisation
+  and per-service accounting both fail. We block the easy routes, we alert, and
+  the household bug bounty turns the attempt into a conversation.
+
+The recommended posture is category filtering, SafeSearch, and alerts on the
+serious categories, not full surveillance. Being open with the kids that the
+network is filtered works better than covert monitoring, and it is the whole
+reason the bug bounty exists.
+
+## Resilience
+
+- If the Hearth box reboots or the Docker daemon restarts, the island drops
+  briefly and comes back on its own. The house internet through your own router
+  is unaffected. That is the designed worst case: kids offline, house untouched.
+- Nothing is held in memory. The firewall is a projection of the database,
+  reconciled every fifteen seconds, so a restart or a USB replug cannot silently
+  forget that a child is switched off.
+- If Postgres is unreachable, the gateway keeps its last known good sets rather
+  than emptying them. A stale allowlist beats a kid who cannot reach a help line.

@@ -1,6 +1,6 @@
 # Runbook: a per-kid AI tutor on your own agent
 
-HEARTH's quizzes are self-marking and the time economy is automatic.
+Hearth's quizzes are self-marking and the time economy is automatic.
 The missing ingredient is a teacher: something that notices what a kid
 is good at, what they are avoiding, and what would stretch them next.
 This runbook sets that up as an AI tutor running on the family's own
@@ -18,7 +18,7 @@ Design principles, non-negotiable:
 ## 1. Per-kid tutor profiles
 
 Create one profile file per kid, kept out of the public repo. Suggested
-location on the HEARTH box:
+location on the Hearth box:
 
 ```
 /srv/hearth-private/tutor/<kid-slug>/profile.md

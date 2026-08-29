@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# kidnet - control the kids' internet island from the clawdia gateway.
+# kidnet - control the kids' internet island from the Hearth box gateway.
 # Block state per kid lives in Postgres (category_state); time in time_ledger.
 # Enforcement (wired at deploy): 'internet'->nftables kids_block; gaming|video|
 # social->AdGuard domain blocks; always_allow (Spotify/schoolwork/help) wins.
@@ -47,7 +47,7 @@ ips_for(){ case "$1" in
   guests) psqll "SELECT host(d.reserved_ip) FROM devices d JOIN children c ON c.id=d.child_id WHERE c.kind='guest' AND d.category='personal' AND d.reserved_ip IS NOT NULL AND d.is_active";;
   *)      psqll "SELECT host(d.reserved_ip) FROM devices d JOIN children c ON c.id=d.child_id WHERE lower(c.name)=lower('$1') AND d.category='personal' AND d.reserved_ip IS NOT NULL";;
   esac; }
-audit(){ psqll "INSERT INTO block_events(target_type,target_ref,action,source,actor) VALUES('$1','$2','$3','${4:-agent}','clawdia')" >/dev/null; }
+audit(){ psqll "INSERT INTO block_events(target_type,target_ref,action,source,actor) VALUES('$1','$2','$3','${4:-agent}','the Hearth box')" >/dev/null; }
 # Push category_state to AdGuard's DNS layer. Best-effort and non-fatal: if
 # AdGuard is down the DB is still the source of truth and the container
 # reconciler will catch up. Silent unless it fails.

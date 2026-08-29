@@ -1,7 +1,10 @@
 # Omarchy validation (2026-08-29)
 
 Hearth built and validated on a real Omarchy box over the tailnet, the first
-time the stack ran on the target platform rather than the clawdia reference.
+time the stack ran on the target platform rather than the reference box.
+
+This is a point-in-time record of one validation run, not a living document.
+Version numbers below were true on the day.
 
 ## The box
 
@@ -20,7 +23,8 @@ time the stack ran on the target platform rather than the clawdia reference.
   container's own NET_ADMIN cap (so it validates without host sudo).
 - docker compose config valid.
 - All 8 quiz banks pass tools/validate-quizzes.mjs on the box's node (v26).
-- Both Node services and all nine shell scripts pass syntax checks.
+- Both Node services and all shell scripts pass syntax checks (fourteen in
+  `bin/`, plus deploy.sh, the installer, the warden and the five test rigs).
 - install/omarchy-setup.sh assumptions all hold on real Omarchy: docker,
   docker-compose, git in the pacman repos; NetworkManager running (so the
   unmanage-the-NIC drop-in works); ~/.config/omarchy/hooks exists (so the

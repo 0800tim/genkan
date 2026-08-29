@@ -12,9 +12,9 @@ kill his son's Android MOBILE DATA.
 
 ## First reality checks
 
-1. **Clawdia is a LAN host, not the router.** The gateway is an ASUS at
+1. **The Hearth box is a LAN host, not the router.** The gateway is an ASUS at
    192.168.1.1 (SSH off). A host can't cleanly cut another device's traffic
-   without controlling the router or ugly ARP tricks. So we needed clawdia to
+   without controlling the router or ugly ARP tricks. So we needed the Hearth box to
    BE the gateway for the kids, on its own segment.
 2. **Mobile data can't be touched by ANY router.** Cellular goes phone ->
    tower -> internet, never through the house. The only lever is Google
@@ -30,14 +30,14 @@ kill his son's Android MOBILE DATA.
 - **OPNsense/pfSense** -> these are x86 whole-network firewalls, not router
   firmware. Overkill and the wrong shape (would route the whole house through
   a new box). Rejected for this job.
-- **CHOSEN: clawdia as the kids' gateway** via a spare USB-ethernet adapter.
+- **CHOSEN: the Hearth box as the kids' gateway** via a spare USB-ethernet adapter.
   Zero new OS, always-on, fully agent-controlled, ~$0. This is essentially
   "OPNsense-style control" but on the Linux box we already own.
 
 ## The topology we settled on
 
-    ASUS (192.168.1.1) -> clawdia enp5s0 (uplink, unchanged)
-                           clawdia kids0 (USB ASIX AX88179) = 192.168.60.1 gateway
+    ASUS (192.168.1.1) -> the Hearth box enp5s0 (uplink, unchanged)
+                           the Hearth box kids0 (USB ASIX AX88179) = 192.168.60.1 gateway
                               -> spare switch
                                    -> son's wired PC
                                    -> TP-Link Deco X20 (AP MODE) -> kids' + guest WiFi
@@ -45,19 +45,19 @@ kill his son's Android MOBILE DATA.
 - USB NIC detected: ASIX AX88179 = kids0 (mac in config.env, gitignored).
 - Deco X20 is APP-ONLY (no web UI / SSH / API). We don't need to control it:
   Tim flips it to Access Point mode ONCE via the app, then it's a dumb bridge
-  and clawdia owns everything. Must NOT stay in router mode (it would NAT and
+  and the Hearth box owns everything. Must NOT stay in router mode (it would NAT and
   hide devices behind one IP, defeating per-device control).
 - Confirmed cabling (Tim, for his house layout): kids0 -> Deco port 1;
   Deco port 2 -> switch -> wired devices.
-- DHCP: clawdia is the single DHCP+DNS server. Deco in AP mode runs neither.
+- DHCP: the Hearth box is the single DHCP+DNS server. Deco in AP mode runs neither.
 - Guests join the SAME isolated island (internet yes; main network no).
 
 ## Security decisions
 
 - **Segment isolation**: the kids/guest island cannot reach the main
-  192.168.1.0/24 LAN where clawdia and all client work live. Guests get
+  192.168.1.0/24 LAN where the Hearth box and all client work live. Guests get
   internet, nothing else. (nftables forward drop to RFC1918 internals.)
-- **DNS forcing**: redirect all :53 to clawdia, block DoT (853), filter DoH,
+- **DNS forcing**: redirect all :53 to the Hearth box, block DoT (853), filter DoH,
   so a kid can't set 8.8.8.8 or "Secure DNS" to bypass filtering. (Tim asked
   what DoH/DoT were; this is why they matter.)
 
@@ -80,7 +80,7 @@ talking to him. So metering is PER CATEGORY, not "internet on":
 - Metered: gaming (Roblox/Fortnite/Steam/consoles) + video (YouTube/Shorts/
   TikTok/Netflix). Each with its own daily budget.
 - Never metered: audio (Spotify), schoolwork, chess, messaging Dad.
-- **The trick**: clawdia is the DNS server, so it knows which IPs belong to
+- **The trick**: the Hearth box is the DNS server, so it knows which IPs belong to
   which app, and can tag encrypted traffic by category WITHOUT decrypting it
   (device resolves googlevideo.com -> those IPs = video). Per-minute byte
   counters on category IP sets tell us "actively using" vs idle.
@@ -135,11 +135,12 @@ skill: DNS (lvl 1), DoH/DoT (lvl 2), static IP (3), MAC spoof (4), VPN/hotspot
 - Repo GENERICISED: real MAC + tailnet IP removed from tracked files (they
   live only in gitignored config.env); deploy.sh generates the udev rule from
   config.env. secrets (DB password) gitignored.
-- NOT pushed to GitHub yet, Tim is holding off publicising. gh is authed as
-  0800tim when he's ready. A rendered public pitch would need GitHub Pages
-  (a raw .html GitHub link shows source, not the page).
+- At the time: not pushed to GitHub yet, Tim holding off publicising. gh is
+  authed as 0800tim. A rendered public pitch would need GitHub Pages (a raw
+  .html GitHub link shows source, not the page). The repo has since been
+  published at github.com/0800tim/hearth.
 
-## Status at handover
+## Status at handover (2026-08-28, superseded)
 
 Software built + committed, NOT deployed to live networking. Dashboard
 (:8899) + captive portal (:8890) run on the tailnet. DB seeded. Waiting on
@@ -172,7 +173,7 @@ that were written down as true but were not.
    "off" meant no address and no name resolution: pages fail silently, which
    is the exact thing the captive portal was built to prevent. DHCP, DNS and
    the portal are now unconditional, and the accepts are pinned to the gateway
-   address (without that, `tcp dport 80 accept` matched every address clawdia
+   address (without that, `tcp dport 80 accept` matched every address the Hearth box
    holds, including its main-LAN and tailnet ones).
 
 4. **always_allow was doing two jobs.** It had grown to hold both the help
@@ -190,8 +191,10 @@ silently killed the replies for the allowlist flows above it, taking the safety
 net with it. Unsolicited inbound cannot reach the island through NAT anyway.
 
 All of this is now held in place by `test/firewall-test.sh`, which builds a
-three-namespace lab (kid, clawdia, internet), loads the ruleset that ships, and
-asserts the guarantees with real packets. Twenty checks, no hardware needed.
+three-namespace lab (kid, the Hearth box, internet), loads the ruleset that ships, and
+asserts the guarantees with real packets. Twenty checks at the time, no
+hardware needed; the suite has since grown to 31 as the Tor layer and the
+static-IP defence landed.
 Two of them are bug-bounty levels 1 and 2: hardcoding 8.8.8.8 still lands on
 our resolver, and the known DoH endpoints are refused.
 
@@ -293,3 +296,57 @@ Assistant), a full learn-to-earn curriculum, and per-kid AI tutors. DHH
 endorsement is a stated goal; trademark use stays strictly nominative. Monorepo
 for now (revisit when a piece has real external consumers). Commercial thinking
 stays entirely in the separate private repo.
+
+## Public, and the documentation audit (2026-08-29)
+
+The repo is now public at github.com/0800tim/hearth. Everything above about
+"not pushed yet" is history; docs/GO-PUBLIC-CHECKLIST.md carries what that
+means for the items on it, including the history scrub.
+
+A full documentation pass ran the same day, checking every document against
+what the code actually does. Four things worth recording, because they are the
+same failure mode each time: **a document that describes an intention in the
+present tense is indistinguishable from a document that describes behaviour,
+and only one of them is true.**
+
+1. **Shipped features were undocumented.** Per-service byte accounting
+   (kidnet-servicemap, kidnet-servicemeter, schema-services.sql) and device
+   classification (kidnet-classify, schema-devices.sql) both existed, were
+   tested, and appeared in no prose anywhere. The second one is a genuine
+   selling point: your smart lock is never cut when you pause the kids,
+   because the group commands only touch devices classed `personal`.
+2. **The tool count drifted.** Documents said nine shell scripts; there are
+   fourteen. deploy.sh installs thirteen of them.
+3. **The Tor layer read as a design.** docs/tor-and-safety.md still carried a
+   "wiring checklist for the main agent" for work that had shipped, while the
+   one piece that had NOT shipped, the alert pass that turns a `tor_dev`
+   counter into an alert row, was buried in the same list. Corrected: the IP
+   road blocks and counts, but only the DNS road tells a parent. Named
+   plainly, because a half-built tripwire you believe in is worse than none.
+4. **The database story had a hole.** docs/DATABASE.md listed six of the ten
+   schema files, in an order that would have silently produced a
+   `device_roster` view with no device class, and claimed compose provisions
+   Postgres. It does not: compose joins an external `postgres` network and
+   expects a container to be there. There is also no seed for the `tasks`
+   table, so a fresh install has no earnable chores at all.
+
+Two new documents came out of it: docs/CLI.md (every command, its arguments and
+what it really does, written from the scripts) and docs/OPERATIONS.md (health
+checks, what each timer does, reading the logs, what the segment guard refusing
+to start means, a device with no internet, rotating the AdGuard password,
+backup and restore).
+
+Open, and deliberately not fixed in a documentation pass:
+
+- **python3 is missing from the gateway image.** The Dockerfile installs
+  nftables, iproute2, ping, tcpdump, psql and ca-certificates. The entrypoint's
+  `reconcile_set` uses python3 to read the current nft set, so the comparison
+  always sees an empty set and rewrites both sets every fifteen seconds. The
+  island works because the rewrite is idempotent, but the "has anything
+  changed" check does nothing, the logs are noise, and `adguard_lease_ips`
+  (the optimisation that gets a freshly joined device online without waiting a
+  minute) silently returns nothing.
+- **No systemd unit for the dashboard ships in the repo.** It exists only on the
+  reference box. OPERATIONS.md now carries a minimal one to copy.
+- **No seed for `tasks`.** DATABASE.md carries the INSERT to run.
+- **`schedules` is a table nothing reads.** Bedtimes are not automatic yet.

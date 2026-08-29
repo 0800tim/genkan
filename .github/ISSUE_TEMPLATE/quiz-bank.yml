@@ -1,0 +1,25 @@
+name: A quiz bank (teachers and tutors especially welcome)
+description: Contribute questions kids can earn screen time from
+title: "[quiz] "
+labels: ["quiz bank", "content"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Quiz banks are plain JSON files in `portal/quizzes/`, and a good one is
+        worth more to this project than most features. See
+        `portal/quizzes/FORMAT.md`, and `docs/runbooks/curriculum-generation.md`
+        if you want your AI agent to draft one for your country's curriculum.
+
+        You can open a pull request directly if you would rather.
+  - type: input
+    id: subject
+    attributes:
+      label: Subject and age range
+      placeholder: "Fractions, ages 9 to 12"
+    validations: { required: true }
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything we should know
+      description: Curriculum it follows, whether answers have been checked, any cultural or regional care needed.

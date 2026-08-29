@@ -1,0 +1,50 @@
+name: I found a way around it
+description: A filter bypass, a way to get time you were not given, or an escape from the kids' network
+title: "[bypass] "
+labels: ["bypass", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Good. Genuinely.
+
+        This project assumes kids will try to beat it, and a bypass that gets
+        reported is worth far more than one that stays quiet. If you are the
+        teenager who found this: well done, and see BUG-BOUNTY.md, your parent
+        owes you.
+
+        **If this lets a device reach the main home network, the host, or a
+        VPN range, please close this and report it privately instead**
+        (Security tab, "Report a vulnerability"). That one is serious enough
+        to fix before it is public.
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What did you get around?
+      options:
+        - A blocked category (gaming, video, social)
+        - A blocked site or the DNS filtering
+        - The time limit, or being switched off
+        - Device identification (changed IP or MAC)
+        - Something else
+    validations: { required: true }
+  - type: textarea
+    id: how
+    attributes:
+      label: How did you do it?
+      description: Enough detail to reproduce. "It just worked" does not help us fix it.
+      placeholder: |
+        1. Set my phone's DNS to ...
+        2. ...
+        3. Result: I could reach ... while supposedly blocked
+    validations: { required: true }
+  - type: input
+    id: level
+    attributes:
+      label: Bug bounty level, if you know it
+      description: See BUG-BOUNTY.md. Level 1 is DNS, boss level is a VPN or hotspot.
+  - type: textarea
+    id: setup
+    attributes:
+      label: Your setup
+      description: Distro, how it is deployed, and the device you did it from.

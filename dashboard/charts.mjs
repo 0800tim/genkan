@@ -45,6 +45,16 @@ function ticks(max) {
   return Array.from({ length: n + 1 }, (_, i) => Math.round(max * (n - i) / n));
 }
 
+// Direct labels have to fit inside one column on a 360px phone, so they use a
+// compact form of the same unit the axis uses: 45, 1h, 1h30. Never a bare
+// minute count in the hundreds, which reads as a quantity with no unit.
+function compactMin(v) {
+  const m = Math.round(v || 0);
+  if (m < 60) return String(m);
+  const h = Math.floor(m / 60), r = m % 60;
+  return r ? `${h}h${String(r).padStart(2, "0")}` : `${h}h`;
+}
+
 // A tooltip payload: [[label, value, colourVar|null], ...]. Read with
 // textContent on the client, never innerHTML, because domain and service names
 // are data we did not write.
@@ -163,11 +173,11 @@ export function columns({
     if (direct) {
       if (diverging) {
         const u = upTotal(c), d = downTotal(c);
-        if (u > 0) labels += `<text class="dval" x="${cx}%" y="${zeroY - px(u) - 5}">${esc(String(Math.round(u)))}</text>`;
-        if (d > 0) labels += `<text class="dval" x="${cx}%" y="${zeroY + px(d) + 12}">${esc(String(Math.round(d)))}</text>`;
+        if (u > 0) labels += `<text class="dval" x="${cx}%" y="${zeroY - px(u) - 5}">${esc(compactMin(u))}</text>`;
+        if (d > 0) labels += `<text class="dval" x="${cx}%" y="${zeroY + px(d) + 12}">${esc(compactMin(d))}</text>`;
       } else {
         const t = total(c);
-        if (t > 0) labels += `<text class="dval" x="${cx}%" y="${zeroY - px(t) - 5}">${esc(String(Math.round(t)))}</text>`;
+        if (t > 0) labels += `<text class="dval" x="${cx}%" y="${zeroY - px(t) - 5}">${esc(compactMin(t))}</text>`;
       }
     }
     // X axis: every column when there are few, every fifth when there are many.
@@ -232,6 +242,9 @@ export function ranked(rows, { max = null, height = 34, title = "" } = {}) {
 export function sparkline(values, { w = 108, h = 26, key = null } = {}) {
   const v = (values || []).map(x => Number(x) || 0);
   if (v.length < 2) return "";
+  // A flat line along the floor is not information, it is decoration. An empty
+  // series draws nothing and lets the tile's own empty wording do the talking.
+  if (!v.some(x => x > 0)) return "";
   const max = Math.max(...v, 1);
   const step = w / (v.length - 1);
   const y = x => h - 3 - (x / max) * (h - 6);
@@ -273,3 +286,35 @@ export function table(head, rows, { summary = "Show the numbers" } = {}) {
 }
 
 export { esc };
+
+// ---------------------------------------------------------------------------
+// Goal bar: one week's progress against one agreed target.
+//
+// Not a gauge and not a scoreboard. The track is scaled to whichever is larger
+// of "where they are" and "where they said they would be", so the target tick
+// is always on screen and the gap is always readable. State is carried by a
+// word and a glyph as well as by colour, because a red bar on its own is just
+// a red bar.
+//
+// g is a goalProgress() result: { metric, direction, used, target, state,
+// headline, elapsed }.
+// ---------------------------------------------------------------------------
+export function goalBar(g) {
+  const scale = Math.max(g.used, g.target, 1);
+  const fillPct = Math.min(100, (g.used / scale) * 100);
+  const markPct = Math.min(100, (g.target / scale) * 100);
+  const glyph = { met: "✓", ok: "✓", near: "!", over: "!", behind: "→" }[g.state] || "·";
+  const aim = g.direction === "at_least"
+    ? `at least ${fmt.min(g.target)} a week`
+    : `no more than ${fmt.min(g.target)} a week`;
+  return `<div class="goal ${esc(g.state)}">
+    <div class="ghead"><span class="gname">${esc(g.metric.label)}<span class="gaim">${esc(aim)}</span></span>
+      <b class="gval">${esc(fmt.min(g.used))}</b></div>
+    <div class="gtrack" style="--mc:var(--s-${esc(g.metric.key)})" role="img"
+         aria-label="${esc(g.metric.label)}: ${esc(fmt.min(g.used))} of a ${esc(aim)} goal. ${esc(g.headline)}.">
+      <div class="gfill" style="width:${fillPct.toFixed(1)}%"></div>
+      <div class="gmark" style="left:${markPct.toFixed(1)}%"></div></div>
+    <div class="gfoot"><span class="gstate"><span aria-hidden="true">${glyph}</span> ${esc(g.headline)}</span>
+      <span class="gaim">${g.elapsed < 7 ? `day ${g.elapsed} of 7` : "full week"}</span></div>
+  </div>`;
+}

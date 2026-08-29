@@ -1,8 +1,11 @@
 # Recommendations: things worth doing (some you didn't ask for)
 
 Kids are 11, 14 and 16. That spread matters: the same filter for all three
-is wrong. Below is what I'd build in, flagged by priority. Nothing here is
-deployed yet; it's the design we execute once the island is cabled.
+is wrong. Below is what to build in, flagged by priority.
+
+This started as a design document and is now mostly a record of what shipped.
+Each item carries its real status. Where something is still an intention, it
+says so rather than reading as though it were done.
 
 ## 1. Age-tiered policy (built into the DB already)
 
@@ -27,10 +30,13 @@ don't just surveil.)
 
 ## 3. Tamper resistance (a 16yo WILL try)
 
-- Force all DNS through clawdia; block DoT (853) and DoH endpoints. [done in nft, tested]
+- Force all DNS through the Hearth box; block DoT (853) and DoH endpoints. [done in nft, tested]
 - Segment isolation so they can't reach the main LAN. [done in nft]
 - Log/alert on an unknown device joining the island, or a device using an
-  IP that isn't its reservation (static-IP dodge).
+  IP that isn't its reservation (static-IP dodge). [ENFORCEMENT DONE: the
+  `kids_known` default-deny set means an address we never handed out gets no
+  internet at all, proved by both test rigs. The ALERT half is not built: an
+  unknown device is silently refused rather than reported.]
 - Block known VPN/proxy domains (category proxy-vpn) to stop trivial
   filter-bypass. Cat-and-mouse, but covers the easy 90%.
 
@@ -40,13 +46,21 @@ don't just surveil.)
   Fortnite/consoles while the rest of his internet stays on. [in kidnet]
 - **Dinner / family pause:** one word pauses all kids, then resume. [in kidnet]
 - **Time budgets / quotas**, not just schedules: X minutes/day per kid.
+  [done: time_ledger + kids-meter.timer, and per-category budgets on top]
 - **Homework window:** education domains always allowed even during a cut.
-- **Temporary grants:** "give Cleo 30 more minutes", auto-expiring.
+  [done: always_allow scope='safety' covers schoolwork as well as help lines]
+- **Temporary grants:** "give Cleo 30 more minutes". [done: `kidnet bonus` for
+  general minutes, `kidnet grant` for one category. Neither auto-expires: they
+  are day-scoped, and the ledger resets at local midnight.]
 
 ## 5. Schedules
 
 - School-night vs weekend bedtimes, per kid (15-min-slot granularity, the
   jonas5 model). Auto-off at bedtime, auto-on in the morning, via timers.
+  [NOT BUILT. The `schedules` table exists and school-night versus weekend
+  budgets are honoured, but nothing reads a bedtime and flips the switch.
+  Today bedtime is `kidnet off` from a timer you write yourself, or a word to
+  the agent.]
 
 ## 6. Safety net (important)
 
@@ -61,14 +75,20 @@ don't just surveil.)
 ## 7. Guests
 
 - Guests join the SAME isolated island, so they get internet but cannot
-  touch the main network where clawdia and all client work live. [nft isolation]
+  touch the main network where the Hearth box and all client work live. [nft isolation]
 - Guest policy = adult/malware/VPN filtering only, no schedules, no
   per-person logging. [guest tier seeded]
 
 ## 8. Reporting
 
 - Weekly per-kid summary to you: hours online, top domains, any flagged
-  categories. Keeps it a conversation, not a spy report.
+  categories. Keeps it a conversation, not a spy report. [BUILT:
+  `bin/kidnet-report`, docs/reporting.md. Read-only, plain text, one block per
+  child. It is not installed by deploy.sh and has no timer by default; the
+  two units to create are in that document.]
+- Live view for the parent: the dashboard's three pages (tonight's state and
+  controls, per-child trends including measured bytes per service, and the
+  device roster). [BUILT: dashboard/, host-side, on your private network.]
 
 ## 9. Honest limits (unchanged, worth repeating)
 
@@ -86,6 +106,8 @@ don't just surveil.)
 - README/QUICKSTART for other parents; MIT like unrot. [licence added]
 
 ## 11. Time budgets, bonus time + captive portal (built 2026-08-27)
+
+Everything in this section shipped and is running.
 
 - **Daily budgets** per kid (time_ledger): 11yo 90 min school / 180 weekend,
   14yo 120/240, 16yo no network limit (teen tier). The `kidnet-meter` timer
@@ -114,11 +136,31 @@ earn rewards for finding + RESPONSIBLY REPORTING bypasses (DoH/DoT, static IP,
 MAC spoof, VPN), each a real networking skill. Closes the hole + pays the kid.
 Aligns with the unrot ethos.
 
-## Deploy-time wiring still to do (when the island is cabled)
+## 13. Device classification (built 2026-08-29)
 
-- Per-IP nftables byte counters so the meter senses real activity (not just
-  last_seen).
-- AdGuard: when a kid is blocked/out-of-time, answer their DNS with the portal
-  IP; redirect their :80 to the portal; let allowed kids' OS probes get their
-  normal 204 so no false portal.
-- Enable kids-meter.timer and the portal on 192.168.60.1:80.
+Every device is classed `personal`, `iot` or `infra` (`bin/kidnet-classify`,
+`config/db/schema-devices.sql`). It matters for one reason worth stating
+plainly: **the group commands only ever touch personal devices.** "Dinner",
+"kids off" and bedtime cannot darken a security camera, a smart lock, a
+thermostat or a speaker. A parental control that takes the front door offline
+at 9pm is not one anybody keeps using.
+
+Classification is a guess, in three passes: the hostname the device announces,
+then the MAC's manufacturer prefix, then the locally-administered bit (a
+randomised MAC with no other signal is almost always a phone). It is curated
+rather than exhaustive, it will get some devices wrong, and a parent can
+override it. `kidnet infra <mac>` and a one-line UPDATE are the two ways.
+
+## What shipped, and what is still an intention
+
+Shipped and enforced: segment isolation, DNS forcing, DoT and DoH blocking,
+the `kids_known` default-deny that closes the static-IP dodge, the safety net
+in the firewall, per-category kill, dinner and study modes, time budgets and
+the ledger, per-category budgets and metering, per-service byte accounting,
+the captive portal and quizzes, device classification, the Tor and darknet
+layer, the weekly digest, and the dashboard.
+
+Still an intention, and named as such elsewhere in this file: bedtime
+schedules that fire on their own, an alert when an unknown device is refused,
+and the alert pass that turns a `tor_dev` counter into a message rather than
+just a refused packet.

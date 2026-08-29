@@ -42,8 +42,8 @@ generates a real random password at first deploy. That is good. The problem is
 git history. Two real bcrypt hashes remain reachable to anyone who clones the
 repo:
 
-- `$2b$10$dA3ooUcjGquhyUhGdo9RrOKCJzX4Qo5M8lzwn1j.f7LRjQm2HibFe` = `change-me-on-deploy`
-- `$2b$10$FYHdCrws5EUVFAuQuF82Mu7wWiTvIfFjw65ZGnkPYxUOpLLArYwhG` = `<the dev password>`
+- `$2b$10$<redacted-see-SECURITY.md>` = `change-me-on-deploy`
+- `$2b$10$<redacted-see-SECURITY.md>` = `<the dev password>`
 
 Both were cracked offline in under a second during this review (they are weak,
 guessable strings). The second is the dev password the task flagged, and it is

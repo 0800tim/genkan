@@ -14,8 +14,8 @@
 // All existing controls behave exactly as before: the same kidnet commands, the
 // same /api/act, /api/assign, /api/claim calls, the same DASH_TOKEN cookie.
 
-import { SERIES, METERED, fmt } from "./analytics.mjs";
-import { columns, legend, ranked, sparkline, meter, table, esc } from "./charts.mjs";
+import { SERIES, METERED, GOAL_METRICS, fmt } from "./analytics.mjs";
+import { columns, legend, ranked, sparkline, meter, goalBar, table, esc } from "./charts.mjs";
 
 // ---------------------------------------------------------------------------
 // Style. One block, no external anything.
@@ -86,7 +86,7 @@ h3{font-size:16px;margin:0 0 2px;font-weight:600}
 /* ---- hero + stat tiles ---- */
 .hero{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}
 .hero .fig{font-size:48px;line-height:1;font-weight:600;letter-spacing:-.02em}
-.hero .cap{color:var(--ink-2);font-size:13px;padding-bottom:6px;flex:1;min-width:150px}
+.hero .cap{color:var(--ink-2);font-size:13px;padding-bottom:6px;flex:1;min-width:230px}
 .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:9px}
 .tile{background:var(--surface-2);border-radius:12px;padding:11px 12px}
 .tile .lab{font-size:11.5px;color:var(--ink-muted);display:block;margin-bottom:2px}
@@ -159,7 +159,9 @@ code{font-size:11.5px;color:var(--ink-muted);font-family:ui-monospace,SFMono-Reg
 .drow{display:block}
 .dname{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
 .dmeta{margin-top:2px}
-.alert{font-size:13.5px;padding:7px 0;border-top:1px solid var(--line);display:flex;gap:8px}
+.alert{font-size:13.5px;padding:7px 0;border-top:1px solid var(--line);display:flex;gap:8px;
+  flex-wrap:wrap;align-items:center}
+.alert .mini{margin-left:auto}
 .alert:first-of-type{border-top:0}
 .alert .sev{flex:none;font-weight:600}
 .alert.urgent .sev{color:var(--crit)}
@@ -228,7 +230,56 @@ input,select{background:var(--surface-2);color:var(--ink);border:1px solid var(-
 #tip .tv{font-weight:600;font-variant-numeric:tabular-nums}
 
 .foot{color:var(--ink-muted);font-size:11.5px;margin-top:18px;line-height:1.6}
-@media (max-width:460px){ .hero .fig{font-size:38px} body{padding:10px 10px 50px} .card,.kid{padding:13px} .brand span{display:none} }
+/* ---- goals ---- */
+.goal{margin:12px 0}
+.goal+.goal{border-top:1px solid var(--line);padding-top:12px}
+.ghead{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.gname{font-size:13.5px;font-weight:600;display:flex;flex-direction:column;min-width:0}
+.gaim{font-weight:400;font-size:11.5px;color:var(--ink-muted)}
+.gval{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;flex:none}
+.gtrack{position:relative;height:10px;border-radius:999px;margin-top:8px;
+  background:color-mix(in oklab,var(--mc) 16%,var(--surface-2))}
+.gfill{height:100%;border-radius:999px;background:var(--mc)}
+.gmark{position:absolute;top:-3px;height:16px;width:2px;background:var(--ink);border-radius:1px;transform:translateX(-1px)}
+.goal.over .gfill{background:var(--crit)}
+.goal.near .gfill{background:var(--warn)}
+.gfoot{display:flex;justify-content:space-between;gap:8px;font-size:12px;margin-top:7px;color:var(--ink-muted);flex-wrap:wrap}
+.gstate{font-weight:600;color:var(--ink-2)}
+.goal.ok .gstate,.goal.met .gstate{color:var(--ok)}
+.goal.near .gstate,.goal.behind .gstate{color:var(--serious)}
+.goal.over .gstate{color:var(--crit)}
+.gform{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:12px}
+.gform select{min-width:0;flex:1 1 120px}
+.gform input[type=number]{width:78px}
+.gform .lab{font-size:12px;color:var(--ink-muted)}
+
+/* ---- buttons and the text version ---- */
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 0}
+.btn{background:var(--surface-2);border:1px solid var(--line);color:var(--ink);border-radius:10px;
+  padding:10px 14px;font-size:13.5px;cursor:pointer;font-family:inherit;text-decoration:none;
+  display:inline-flex;align-items:center;gap:7px;min-height:40px}
+.btn.primary{background:var(--ink);color:var(--plane);border-color:var(--ink);font-weight:600}
+.textout summary{font-size:12.5px;color:var(--ink-muted);cursor:pointer;padding:6px 0}
+.textout textarea{width:100%;min-height:230px;margin-top:6px;
+  font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre;
+  background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px}
+
+/* ---- kid page ---- */
+.crumb{font-size:12.5px;margin:-6px 0 12px}
+.crumb a{color:var(--ink-muted)}
+.kidlink{text-decoration:none;border-bottom:1px solid var(--axis)}
+.kidlink:hover{border-bottom-color:var(--ember)}
+.wk{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:12px}
+.wk a,.wk span.now{text-decoration:none;font-size:12.5px;padding:6px 12px;border-radius:999px;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink-2)}
+.wk span.now{background:var(--ink);color:var(--plane);border-color:var(--ink);font-weight:600}
+.wk .off{opacity:.4}
+.said{font-size:13.5px;color:var(--ink-2);margin:0 0 10px}
+.done{opacity:.72}
+
+@media (max-width:460px){ .hero .fig{font-size:38px} body{padding:10px 10px 50px} .card,.kid{padding:13px} .brand span{display:none}
+  .gform select,.gform input[type=number]{flex:1 1 100%;width:100%} .gform .btn{width:100%;justify-content:center}
+  .textout textarea{min-height:180px} .acts .btn{flex:1 1 100%;justify-content:center} }
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 `;
 
@@ -250,6 +301,36 @@ async function assign(mac){const label=document.getElementById('lbl_'+mac).value
 async function claim(id,decision){say('working...');
   const r=await fetch('/api/claim',{method:'POST',headers:H(),body:JSON.stringify({id,decision})});
   const j=await r.json();say((j.out||'done').trim());setTimeout(()=>location.reload(),600);}
+
+async function ack(id){say('noting it...');
+  const r=await fetch('/api/ack',{method:'POST',headers:H(),body:JSON.stringify({id})});
+  const j=await r.json();say((j.out||'done').trim());setTimeout(()=>location.reload(),500);}
+async function setGoal(cid){
+  const m=document.getElementById('gm_'+cid).value;
+  const d=document.getElementById('gd_'+cid).value;
+  const h=parseFloat(document.getElementById('gh_'+cid).value||'0');
+  if(!(h>0)){say('Put in a number of hours first.');return;}
+  say('saving the goal...');
+  const r=await fetch('/api/goal',{method:'POST',headers:H(),
+    body:JSON.stringify({child_id:cid,metric:m,direction:d,target_min:Math.round(h*60)})});
+  const j=await r.json();say((j.out||'saved').trim());setTimeout(()=>location.reload(),500);}
+async function delGoal(id){say('removing the goal...');
+  const r=await fetch('/api/goal',{method:'POST',headers:H(),body:JSON.stringify({id:id,remove:true})});
+  const j=await r.json();say((j.out||'removed').trim());setTimeout(()=>location.reload(),500);}
+
+/* copy the plain-text digest. The text is always on the page in a textarea, so
+   a browser that refuses clipboard access loses nothing: it just gets opened. */
+function copyText(id){
+  var el=document.getElementById(id);if(!el)return;
+  var t=el.value;
+  function open(){var d=el.closest('details');if(d)d.open=true;}
+  function fallback(){try{open();el.focus();el.select();
+    var ok=document.execCommand('copy');say(ok?'Copied. Paste it wherever you like.':'Select the text below and copy it.');}
+    catch(e){say('Select the text below and copy it.');}}
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){say('Copied. Paste it wherever you like.');},fallback);
+  } else fallback();
+}
 
 /* theme: follow the system unless the operator picks a side */
 (function(){try{var t=localStorage.getItem('hearth-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}})();
@@ -296,7 +377,7 @@ function toggleTheme(){var d=document.documentElement;
 
 // ---------------------------------------------------------------------------
 export function shell({ tab, body, title = "Hearth" }) {
-  const nav = [["/", "Tonight"], ["/trends", "Trends"], ["/devices", "Devices"]];
+  const nav = [["/", "Tonight"], ["/week", "Week"], ["/trends", "Trends"], ["/devices", "Devices"]];
   return `<!doctype html><html lang="en-NZ"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
@@ -402,7 +483,7 @@ export function tonight(s, a) {
     const t = (s.times || []).find(x => x.child_id === k.id) || {};
     const out = (t.remaining_min ?? 0) <= 0 && (t.used_min || 0) > 0;
     return `<div class="kid">
-      <div class="kh"><h3>${esc(k.name)} <span class="tag">${k.age} · ${esc(k.policy_tier)}</span></h3>
+      <div class="kh"><h3><a class="kidlink" href="/kid/${encodeURIComponent(k.name)}">${esc(k.name)}</a> <span class="tag">${k.age} · ${esc(k.policy_tier)}</span></h3>
         ${st.study ? '<span class="pill study">Study mode</span>' : ""}
         ${out ? '<span class="pill out">Out of time</span>' : ""}
         ${st.inetOff ? '<span class="pill">Internet off</span>' : ""}</div>
@@ -411,7 +492,7 @@ export function tonight(s, a) {
       ${catMeters(an)}
       ${an ? `<div class="tmeta"><span>Last 7 days: ${esc(fmt.min(an.totals.metered))} metered, `
       + `${esc(fmt.min(an.totals.earned))} earned</span>`
-      + `<a class="mini" style="text-decoration:none" href="/trends#${esc(k.name.toLowerCase())}">See trends</a></div>` : ""}
+      + `<a class="mini" style="text-decoration:none" href="/kid/${encodeURIComponent(k.name)}">Open ${esc(k.name)}</a></div>` : ""}
     </div>`;
   }).join("");
 
@@ -420,21 +501,7 @@ export function tonight(s, a) {
     + (newDevices.length > 6 ? `<div class="row"><a href="/devices">See all ${newDevices.length}</a></div>` : "")
     + `</div>` : "";
 
-  const alerts = `<div class="card"><h2>Alerts</h2>${s.alerts.length
-    ? s.alerts.map(x => {
-        // Always show WHEN. An alert with no time reads as "happening now",
-        // which is alarming when the thing already fixed itself hours ago.
-        const mins = x.ts ? Math.max(0, Math.round((Date.now() - new Date(x.ts)) / 60000)) : null;
-        const ago = mins === null ? ""
-          : mins < 1 ? "just now"
-          : mins < 60 ? `${mins} min ago`
-          : mins < 1440 ? `${Math.round(mins / 60)} h ago`
-          : `${Math.round(mins / 1440)} d ago`;
-        return `<div class="alert ${esc(x.severity)}"><span class="sev">${esc(x.severity)}</span>`
-          + `<span>${esc([x.category, x.domain, x.detail].filter(Boolean).join(" · "))}</span>`
-          + (ago ? `<span class="r">${esc(ago)}</span>` : "") + `</div>`;
-      }).join("")
-    : '<div class="empty">Nothing flagged. Safety flags are a prompt for a conversation, never a verdict.</div>'}</div>`;
+  const alerts = alertsCard(s.alerts, s.alertsAck);
 
   const recent = `<div class="card"><h2>Recent actions</h2>${s.events.length
     ? s.events.map(e => `<div class="row"><span>${esc(e.target_ref)} → ${esc(e.action)}</span>`
@@ -547,7 +614,7 @@ function budgetPill(k, win) {
   return `<span class="pill">Over a budget on ${over} of ${k.days.length} days</span>`;
 }
 
-function kidTrends(k, win) {
+function kidTrends(k, win, { link = true } = {}) {
   const t = k.totals;
   const anchor = k.name.toLowerCase();
 
@@ -633,8 +700,11 @@ function kidTrends(k, win) {
       { summary: `What ${k.name} looked up most` })
     : "";
 
+  const heading = link
+    ? `<a class="kidlink" href="/kid/${encodeURIComponent(k.name)}">${esc(k.name)}</a>`
+    : esc(k.name);
   return `<div class="kid" id="${esc(anchor)}">
-    <div class="kh"><h3>${esc(k.name)} <span class="tag">${k.age} · ${esc(k.policy_tier)}</span></h3>
+    <div class="kh"><h3>${heading} <span class="tag">${k.age} · ${esc(k.policy_tier)}</span></h3>
       ${budgetPill(k, win)}</div>
     <div class="tiles">
       <div class="tile"><span class="lab">Online, last ${win} days</span>
@@ -690,4 +760,393 @@ function measurementCard(a) {
     ${a.notes.length ? `<p class="cnote">Panels unavailable: ${esc(a.notes.join("; "))}</p>` : ""}
     <p class="foot">Days follow the gateway's clock. Hearth logs domains, never content: it is a family conversation aid, not a surveillance console.</p>
   </div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Alerts, shared by Tonight and the kid page.
+//
+// Alerts used to pile up forever, which trains a parent to ignore them. An
+// alert is a prompt to say something, so once it has been said it should stop
+// shouting: "We talked about it" acknowledges it and moves it into the quiet
+// list, where it stays readable rather than being deleted.
+// ---------------------------------------------------------------------------
+function agoText(ts) {
+  if (!ts) return "";
+  const mins = Math.max(0, Math.round((Date.now() - new Date(ts)) / 60000));
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  if (mins < 1440) return `${Math.round(mins / 60)} h ago`;
+  return `${Math.round(mins / 1440)} d ago`;
+}
+
+function alertRow(x, { canAck = true } = {}) {
+  const body = [x.category, x.domain, x.detail].filter(Boolean).join(" · ");
+  const when = agoText(x.ts);
+  return `<div class="alert ${esc(x.severity)}${canAck ? "" : " done"}">`
+    + `<span class="sev">${esc(x.severity)}</span>`
+    + `<span style="flex:1;min-width:120px">${esc(body)}</span>`
+    + (when ? `<span class="r">${esc(when)}</span>` : "")
+    + (canAck && x.id ? `<button class="mini" onclick="ack(${Number(x.id)})">We talked about it</button>` : "")
+    + `</div>`;
+}
+
+function alertsCard(open = [], done = []) {
+  const quiet = done.length
+    ? `<details class="tview"><summary>Already talked about (${done.length})</summary>`
+      + done.map(x => alertRow(x, { canAck: false })).join("") + `</details>`
+    : "";
+  return `<div class="card"><h2>Alerts</h2>`
+    + (open.length
+      ? open.map(x => alertRow(x)).join("")
+      : `<div class="empty">Nothing waiting on you. Safety flags are a prompt for a conversation, never a verdict.</div>`)
+    + quiet + `</div>`;
+}
+
+// ---------------------------------------------------------------------------
+// Goals: one agreed number per kid per week.
+// ---------------------------------------------------------------------------
+function goalsBlock(child, goals, { unavailable = false } = {}) {
+  const cid = Number(child.id);
+  const opts = Object.entries(GOAL_METRICS)
+    .map(([k, m]) => `<option value="${esc(k)}">${esc(m.label.toLowerCase())}</option>`).join("");
+  const form = `<div class="gform">
+    <span class="lab">New goal</span>
+    <select id="gd_${cid}" aria-label="Goal direction for ${esc(child.name)}">
+      <option value="at_most">no more than</option><option value="at_least">at least</option></select>
+    <input id="gh_${cid}" type="number" min="0.25" max="60" step="0.25" placeholder="hours"
+      aria-label="Hours a week for ${esc(child.name)}">
+    <span class="lab">hours of</span>
+    <select id="gm_${cid}" aria-label="Goal metric for ${esc(child.name)}">${opts}</select>
+    <button class="btn" onclick="setGoal(${cid})">Set it</button>
+  </div>`;
+  if (unavailable) {
+    return `<div class="empty">Goals need the goals table. Run <code>config/db/schema-goals.sql</code> against the database and it appears here.</div>`;
+  }
+  const body = goals.length
+    ? goals.map(g => goalBar(g)
+        + `<div class="acts"><button class="mini" onclick="delGoal(${Number(g.id)})">Remove this goal</button></div>`).join("")
+    : `<div class="empty">No goal set yet. Pick one thing together, say "no more than 6 hours of video a week",
+        and it shows up here every week with the progress against it. One goal is plenty.</div>`;
+  return body + form;
+}
+
+// ---------------------------------------------------------------------------
+// The weekly digest, as a page. docs/reporting.md, on a phone.
+// ---------------------------------------------------------------------------
+// "1 quiz", "3 quizzes". Small thing, but a digest a parent pastes into a
+// message should read like a person wrote it.
+// Watch-list matches that no alert already covers. Both come from the same
+// lookup; only the alert can be acknowledged, so the alert is the one that
+// stays and the raw match is dropped.
+function unalerted(flags, alerts) {
+  const covered = new Set((alerts || []).map(a => a.domain).filter(Boolean));
+  return (flags || []).filter(f => !covered.has(f.domain));
+}
+
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+
+const shiftDay = (iso, d) => new Date(Date.parse(iso + "T00:00:00Z") + d * 86400000).toISOString().slice(0, 10);
+
+// "45 min earned back" is true even when it came from the CLI rather than from
+// a quiz or a chore, so the sentence only names the paths that were used.
+function earnedLine(min, quizzes, chores) {
+  if (!min) return "Nothing earned back yet this week.";
+  const how = [];
+  if (quizzes) how.push(plural(quizzes, "quiz", "quizzes"));
+  if (chores) how.push(plural(chores, "approved chore", "approved chores"));
+  return `${fmt.min(min)} earned back${how.length ? ` through ${how.join(" and ")}` : ""}.`;
+}
+
+export function week(s, dg) {
+  const w = dg.week;
+  const last = shiftDay(w.end, -1);
+  const goalsMissing = dg.notes.some(n => n.startsWith("goals"));
+
+  const nav = `<div class="wk">
+    <a href="/week?week=${esc(shiftDay(w.start, -7))}">‹ Earlier</a>
+    ${w.current ? `<span class="now">This week</span>` : `<a href="/week">This week</a>`}
+    ${w.current ? "" : `<span class="now">Week of ${esc(fmt.dayFull(w.start))}</span>`}
+    ${w.current ? `<span class="off">Later ›</span>` : `<a href="/week?week=${esc(shiftDay(w.start, 7))}">Later ›</a>`}
+  </div>`;
+
+  const anyData = dg.kids.some(k => k.totals.online || k.totals.metered || k.totals.earned);
+  const hMetered = dg.kids.reduce((a, k) => a + k.totals.metered, 0);
+  const hEarned = dg.kids.reduce((a, k) => a + k.totals.earned, 0);
+  const hQuiz = dg.kids.reduce((a, k) => a + k.quizCount, 0);
+  const hChores = dg.kids.reduce((a, k) => a + k.chores.length, 0);
+  const hFlags = dg.kids.reduce((a, k) => a + k.flags.length + k.alerts.filter(x => !x.acknowledged).length, 0);
+
+  const hero = `<div class="card">
+    <div class="hero"><div class="fig">${esc(fmt.min(hMetered))}</div>
+      <div class="cap">of metered time across the house, ${esc(fmt.dayFull(w.start))} to ${esc(fmt.dayFull(last))}${w.current ? " so far" : ""}.
+        ${esc(earnedLine(hEarned, hQuiz, hChores))}
+        ${hFlags ? `${plural(hFlags, "thing", "things")} worth a quiet word.` : "Nothing flagged."}</div></div>
+    <p class="said">This is a conversation starter, not a report card. Two or three things over dinner beats a printout.</p>
+    <div class="acts"><button class="btn primary" onclick="copyText('digesttext')">Copy as text</button>
+      <a class="btn" href="/trends?days=30">See the 30 day trend</a></div>
+  </div>`;
+
+  // Where the whole house's week went, one column per kid. Categorical colour
+  // by category, never by rank, so a kid's video slice is the same orange here
+  // as it is on their own page.
+  const keys = ["gaming", "video", "social", "other"];
+  const cols = dg.kids.map(k => {
+    const t = k.totals;
+    const other = Math.max(0, t.online - t.metered);
+    return {
+      label: k.name, sub: k.name, summary: fmt.min(t.online),
+      segs: [{ key: "gaming", value: t.gaming }, { key: "video", value: t.video },
+        { key: "social", value: t.social }, { key: "other", value: other }],
+    };
+  });
+  const anyMinutes = dg.kids.some(k => k.totals.online || k.totals.metered);
+  const houseChart = anyMinutes ? `<div class="card"><h2>The week, side by side</h2>
+    <p class="fsub">Minutes each child spent online this week. Gaming, video and social are the meter's figures; the rest is everything else the daily ledger counted.</p>
+    <div class="figure">${columns({ cols, series: keys.map(key => ({ key })), title: "Minutes per child this week" })}</div>
+    ${legend(keys)}
+    ${table(["Child", "Gaming", "Video", "Social", "Other", "Total online"],
+      dg.kids.map(k => [k.name, k.totals.gaming, k.totals.video, k.totals.social,
+        Math.max(0, k.totals.online - k.totals.metered), k.totals.online]))}
+    </div>` : "";
+
+  const empty = anyData ? "" : `<div class="card"><div class="empty">
+    Nothing was recorded this week yet. That is normal on a fresh gateway: minutes appear once devices are named
+    on the Devices tab and the metering timer has run for a day. The page fills itself in.</div></div>`;
+
+  const kids = dg.kids.map(k => weekKid(k, dg, goalsMissing)).join("");
+
+  const text = `<div class="card"><h2>Send it on</h2>
+    <p class="sub">The same digest as plain text, ready to paste into a message to your kid or your partner.</p>
+    <div class="acts"><button class="btn primary" onclick="copyText('digesttext')">Copy as text</button></div>
+    <details class="textout"><summary>Show the text version</summary>
+      <textarea id="digesttext" readonly rows="18" aria-label="The digest as plain text">${esc(digestText(dg))}</textarea>
+    </details></div>`;
+
+  return nav + hero + houseChart + empty + kids + text + measurementCard(dg);
+}
+
+function weekKid(k, dg, goalsMissing) {
+  const t = k.totals;
+  const nothing = !t.online && !t.metered && !t.earned;
+  const busiest = k.busiest ? `busiest on ${fmt.dayFull(k.busiest.day)} (${fmt.min(k.busiest.online)})` : "";
+  const line = nothing
+    ? `Nothing recorded for ${k.name} this week. If that looks wrong, check their devices are named on the Devices tab.`
+    : !t.online
+      ? `No online minutes counted for ${k.name} this week${t.earned ? `, though ${fmt.min(t.earned)} was earned` : ""}.`
+      : `${k.name} was online ${fmt.min(t.online)} across ${plural(k.daysActive, "day", "days")}${busiest ? ", " + busiest : ""}.`;
+
+  const cols = k.days.map(d => ({
+    label: fmt.dayFull(d.day), sub: fmt.dayShort(d.day), summary: fmt.min(d.online),
+    segs: [{ key: "gaming", value: d.gaming }, { key: "video", value: d.video },
+      { key: "social", value: d.social }, { key: "other", value: d.other }],
+  }));
+  const dayChart = (!t.online && !t.metered) ? "" : `<p class="ftitle">Day by day</p>
+    <div class="figure">${columns({ cols, series: [{ key: "gaming" }, { key: "video" }, { key: "social" }, { key: "other" }], title: `${k.name}: minutes per day this week` })}</div>
+    ${legend(["gaming", "video", "social", "other"])}
+    ${table(["Day", "Gaming", "Video", "Social", "Other", "Total"],
+      k.days.map(d => [fmt.dayFull(d.day), d.gaming, d.video, d.social, d.other, d.online]))}`;
+
+  const svc = k.serviceList.slice(0, 6);
+  const anyMin = svc.some(x => x.minutes > 0);
+  const svcRows = svc.map(x => ({
+    label: x.service.label, emoji: x.service.emoji,
+    key: METERED.includes(x.service.category) ? x.service.category : null,
+    value: anyMin ? x.minutes || 0 : x.lookups,
+    display: anyMin && x.minutes ? fmt.min(x.minutes) : `${fmt.count(x.lookups)} lookups`,
+    sub: x.bytes ? fmt.bytes(x.bytes) : "",
+  }));
+  const svcBlock = svcRows.length ? `<p class="ftitle">What they used</p>
+    <p class="fsub">${anyMin ? "Active minutes per service, from the firewall counters." : "DNS lookups per service. A proxy for activity, not minutes and not data."}</p>
+    <div class="figure">${ranked(svcRows, { title: `${k.name}: services this week` })}</div>
+    ${legend([], { note: "Coloured where the service falls in a metered category. Grey is never counted against a budget: music, schoolwork, messaging." })}
+    ${table(["Service", "Category", "Lookups", "Minutes", "Data"],
+      svc.map(x => [x.service.label, x.service.category, x.lookups, x.minutes || 0, x.bytes ? fmt.bytes(x.bytes) : "-"]))}` : "";
+
+  const earnedBits = [];
+  if (k.quizCount) earnedBits.push(`${k.quizCount} quiz${k.quizCount === 1 ? "" : "zes"} passed, +${k.quizMin} min${k.quizTopics.length ? ` (${k.quizTopics.map(x => x.topic).slice(0, 4).join(", ")})` : ""}`);
+  if (k.chores.length) earnedBits.push(`${k.chores.length} chore${k.chores.length === 1 ? "" : "s"} approved, +${k.chores.reduce((a, c) => a + c.minutes, 0)} min`);
+  if (k.taskCount && !k.chores.length) earnedBits.push(`${k.taskCount} task${k.taskCount === 1 ? "" : "s"} credited by a parent, +${k.taskMin} min`);
+  const earned = `<div class="mhead">Earned</div>` + (earnedBits.length
+    ? earnedBits.map(b => `<div class="row"><span>${esc(b)}</span></div>`).join("")
+    : `<div class="empty">No quizzes or chores this week. The portal is always open, and a quiz is five minutes of work for ten minutes of time.</div>`);
+
+  const openAlerts = k.alerts.filter(x => !x.acknowledged);
+  const doneAlerts = k.alerts.filter(x => x.acknowledged);
+  // An alert and a watch-list match are often the same event seen twice: the
+  // alert is the one a parent can act on, so it wins and the bare lookup is
+  // not repeated underneath it.
+  const extraFlags = unalerted(k.flags, k.alerts);
+  const chat = `<div class="mhead">Worth a chat</div>`
+    + (extraFlags.length || k.alerts.length
+      ? extraFlags.map(f => `<div class="alert ${esc(f.severity)}"><span class="sev">${esc(f.severity)}</span>`
+          + `<span style="flex:1;min-width:120px">${esc([f.category, f.domain, f.note].filter(Boolean).join(" · "))}</span>`
+          + `<span class="r">${f.n}×</span></div>`).join("")
+        + openAlerts.map(x => alertRow(x)).join("")
+        + (doneAlerts.length ? `<details class="tview"><summary>Already talked about (${doneAlerts.length})</summary>`
+          + doneAlerts.map(x => alertRow(x, { canAck: false })).join("") + `</details>` : "")
+        + `<p class="cnote">These are conversation prompts, not verdicts. Ask, do not accuse.</p>`
+      : `<div class="empty">Nothing flagged for ${esc(k.name)} this week.</div>`);
+
+  return `<div class="kid" id="${esc(k.name.toLowerCase())}">
+    <div class="kh"><h3><a class="kidlink" href="/kid/${encodeURIComponent(k.name)}">${esc(k.name)}</a>
+      <span class="tag">${k.age} · ${esc(k.policy_tier)}</span></h3>
+      <a class="mini" style="text-decoration:none" href="/kid/${encodeURIComponent(k.name)}">Everything about ${esc(k.name)}</a></div>
+    <p class="said">${esc(line)}</p>
+    <div class="tiles">
+      <div class="tile"><span class="lab">Time online</span><span class="val">${esc(fmt.min(t.online))}</span>
+        <span class="dlt">${k.daysActive} of 7 days</span>${sparkline(k.days.map(d => d.online))}</div>
+      <div class="tile"><span class="lab">Metered habits</span><span class="val">${esc(fmt.min(t.metered))}</span>
+        <span class="dlt">${esc(METERED.filter(c => t[c] > 0).map(c => `${c} ${fmt.min(t[c])}`).join(" · ") || "nothing metered")}</span>
+        ${sparkline(k.days.map(d => d.gaming + d.video + d.social), { key: "video" })}</div>
+      <div class="tile"><span class="lab">Earned</span><span class="val">${esc(fmt.min(t.earned))}</span>
+        <span class="dlt">${k.quizCount} quiz${k.quizCount === 1 ? "" : "zes"} · ${k.chores.length} chore${k.chores.length === 1 ? "" : "s"}</span></div>
+      <div class="tile"><span class="lab">Filter declined</span><span class="val">${esc(fmt.count(k.blocked))}</span>
+        <span class="dlt">lookups the filter turned down</span></div>
+    </div>
+    <div class="mhead">This week's goal</div>
+    ${goalsBlock(k, k.goals, { unavailable: goalsMissing })}
+    ${dayChart}${svcBlock}${earned}${chat}
+  </div>`;
+}
+
+// The same digest as plain text: something a parent can paste into a message.
+// Deliberately the same order and the same words as the page, so nobody has to
+// reconcile two versions of the week.
+export function digestText(dg) {
+  const w = dg.week;
+  const last = shiftDay(w.end, -1);
+  const L = [];
+  L.push(`HEARTH weekly digest`);
+  L.push(`${fmt.dayFull(w.start)} to ${fmt.dayFull(last)} ${last.slice(0, 4)}${w.current ? " (this week so far)" : ""}`);
+  L.push(`Something to talk about together, not a report card.`);
+  for (const k of dg.kids) {
+    const t = k.totals;
+    L.push("");
+    L.push(`${k.name} (${k.age})`);
+    if (!t.online && !t.metered && !t.earned) {
+      L.push(`  nothing recorded this week`);
+      continue;
+    }
+    L.push(`  online: ${t.online
+      ? `${fmt.min(t.online)} across ${plural(k.daysActive, "day", "days")}`
+        + (k.busiest ? `, busiest ${fmt.dayFull(k.busiest.day)} (${fmt.min(k.busiest.online)})` : "")
+      : "no minutes counted"}`);
+    const cats = METERED.map(c => (t[c] ? `${c} ${fmt.min(t[c])}` : null)).filter(Boolean);
+    L.push(`  metered: ${cats.length ? cats.join(", ") : "nothing metered"} (music and schoolwork are never metered)`);
+    for (const g of k.goals) {
+      L.push(`  goal: ${g.metric.label.toLowerCase()} ${g.direction === "at_least" ? "at least" : "no more than"} `
+        + `${fmt.min(g.target)} a week, at ${fmt.min(g.used)}, ${g.headline.toLowerCase()}`);
+    }
+    const svc = k.serviceList.slice(0, 5).map(x =>
+      x.minutes ? `${x.service.label} ${fmt.min(x.minutes)}` : `${x.service.label} ${fmt.count(x.lookups)} lookups`);
+    if (svc.length) L.push(`  top services: ${svc.join(", ")}`);
+    const earned = [];
+    if (k.quizCount) earned.push(`${plural(k.quizCount, "quiz", "quizzes")} passed, +${k.quizMin} min`
+      + (k.quizTopics.length ? ` on ${k.quizTopics.map(x => x.topic).slice(0, 4).join(", ")}` : ""));
+    if (k.chores.length) earned.push(`${plural(k.chores.length, "chore", "chores")} approved, +${k.chores.reduce((a, c) => a + c.minutes, 0)} min`);
+    if (k.taskCount && !k.chores.length) earned.push(`${plural(k.taskCount, "task", "tasks")} credited by a parent, +${k.taskMin} min`);
+    L.push(`  earned: ${earned.length ? earned.join("; ") : "no quizzes or chores this week"}`);
+    const chat = [
+      ...k.alerts.filter(x => !x.acknowledged)
+        .map(x => `${[x.category, x.domain].filter(Boolean).join(" ")}${x.detail ? ` (${x.detail})` : ""}`),
+      ...unalerted(k.flags, k.alerts).map(f => `${f.category} ${f.domain} (${f.n}x${f.note ? ", " + f.note : ""})`),
+    ];
+    L.push(`  worth a chat: ${chat.length ? chat.join("; ") : "nothing flagged"}`);
+  }
+  L.push("");
+  L.push(`Hearth sees domain names, never content. Minutes come from the meter, lookups are only a proxy for activity.`);
+  return L.join("\n");
+}
+
+// ---------------------------------------------------------------------------
+// One kid, everything in one place. This is where a parent lands when they tap
+// a name, so it leads with the controls and only then explains the week.
+// ---------------------------------------------------------------------------
+export function kid(s, kd) {
+  const c = kd.child;
+  const st = kidState(c, s.cats);
+  const t = (s.times || []).find(x => x.child_id === c.id) || {};
+  const out = (t.remaining_min ?? 0) <= 0 && (t.used_min || 0) > 0;
+  const goalsMissing = kd.notes.some(n => n.startsWith("goals"));
+  const wt = kd.weekTotals;
+  const today = kd.kid ? kd.kid.today : null;
+
+  const head = `<p class="crumb"><a href="/">‹ Tonight</a></p>
+    <div class="card"><div class="kh">
+      <h3 style="font-size:22px">${esc(c.name)} <span class="tag">${c.age} · ${esc(c.policy_tier)} tier</span></h3>
+      ${st.study ? '<span class="pill study">Study mode</span>' : ""}
+      ${out ? '<span class="pill out">Out of time</span>' : ""}
+      ${st.inetOff ? '<span class="pill">Internet off</span>' : ""}</div>
+      ${chips(c, st)}
+      ${timeBar(c, s.times)}
+      ${catMeters(kd.kid)}
+    </div>`;
+
+  const todayCard = `<div class="card"><h2>Today</h2>
+    ${today ? `<div class="tiles">
+      <div class="tile"><span class="lab">Online today</span><span class="val">${esc(fmt.min(today.online))}</span>
+        <span class="dlt">${esc(fmt.min(today.metered))} of it metered</span></div>
+      <div class="tile"><span class="lab">Earned today</span><span class="val">${esc(fmt.min(today.earned))}</span>
+        <span class="dlt">${today.quiz} min quizzes · ${today.chore} min chores</span></div>
+      <div class="tile"><span class="lab">Gaming</span><span class="val">${esc(fmt.min(today.gaming))}</span>
+        <span class="dlt">${kd.kid.budgets.gaming ? `of ${esc(fmt.min(kd.kid.budgets.gaming))} allowed` : "no daily cap set"}</span></div>
+      <div class="tile"><span class="lab">Video</span><span class="val">${esc(fmt.min(today.video))}</span>
+        <span class="dlt">${kd.kid.budgets.video ? `of ${esc(fmt.min(kd.kid.budgets.video))} allowed` : "no daily cap set"}</span></div>
+    </div>` : `<div class="empty">No figures for today yet. They appear as the meter runs.</div>`}</div>`;
+
+  const weekCard = `<div class="card"><h2>This week and the goal</h2>
+    <p class="sub">Week of ${esc(fmt.dayFull(kd.week.start))}${kd.week.current ? `, day ${kd.week.elapsed} of 7` : ""}.
+      <a href="/week">See the whole family's week</a>.</p>
+    <div class="tiles">
+      <div class="tile"><span class="lab">Online</span><span class="val">${esc(fmt.min(wt.online))}</span></div>
+      <div class="tile"><span class="lab">Metered</span><span class="val">${esc(fmt.min(wt.metered))}</span>
+        <span class="dlt">${esc(METERED.filter(c => wt[c] > 0).map(c => `${c} ${fmt.min(wt[c])}`).join(" · ") || "nothing metered")}</span></div>
+      <div class="tile"><span class="lab">Earned</span><span class="val">${esc(fmt.min(wt.earned))}</span>
+        <span class="dlt">quizzes ${esc(fmt.min(wt.quiz))} · chores ${esc(fmt.min(wt.chore))}</span></div>
+    </div>
+    ${goalsBlock(c, kd.goals, { unavailable: goalsMissing })}</div>`;
+
+  const charts = kd.kid
+    ? kidTrends(kd.kid, kd.window, { link: false })
+    : `<div class="card"><div class="empty">No analytics for ${esc(c.name)} yet.</div></div>`;
+
+  const quizzes = `<div class="card"><h2>Quizzes</h2>${kd.quizHistory.length
+    ? table(["When", "Topic", "Minutes"], kd.quizHistory.map(r =>
+        [new Date(r.ts).toLocaleString("en-NZ", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
+          r.topic, r.minutes]), { summary: `The last ${kd.quizHistory.length} quizzes passed` })
+      + `<p class="cnote">Quizzes credit minutes straight away, with a daily cap and a cooldown per topic, so nobody can farm the same quiz all afternoon.</p>`
+    : `<div class="empty">No quizzes yet. The portal has times tables, world flags, science and the road code, and a pass credits minutes immediately.</div>`}</div>`;
+
+  const openAlerts = kd.alerts.filter(x => !x.acknowledged);
+  const doneAlerts = kd.alerts.filter(x => x.acknowledged);
+  const extraFlags = unalerted(kd.flags, kd.alerts);
+  const flags = `<div class="card"><h2>Worth a chat</h2>`
+    + (extraFlags.length || kd.alerts.length
+      ? extraFlags.map(f => `<div class="alert ${esc(f.severity)}"><span class="sev">${esc(f.severity)}</span>`
+          + `<span style="flex:1;min-width:120px">${esc([f.category, f.domain, f.note].filter(Boolean).join(" · "))}</span>`
+          + `<span class="r">${f.n}× · ${esc(agoText(f.last_ts))}</span></div>`).join("")
+        + openAlerts.map(x => alertRow(x)).join("")
+        + (doneAlerts.length ? `<details class="tview"><summary>Already talked about (${doneAlerts.length})</summary>`
+          + doneAlerts.map(x => alertRow(x, { canAck: false })).join("") + `</details>` : "")
+        + `<p class="cnote">A flag is a prompt for a question, never a verdict, and a self-harm flag is a care signal that is never a discipline matter.</p>`
+      : `<div class="empty">Nothing flagged for ${esc(c.name)}. That is the usual state of things.</div>`)
+    + `</div>`;
+
+  const devices = `<div class="card"><h2>${esc(c.name)}'s devices (${kd.devices.length})</h2>`
+    + (kd.devices.length
+      ? kd.devices.map(d => `<div class="row drow">
+          <div class="dname">${d.online ? '<span class="dot-on"></span>' : ""}<b>${esc(d.label || d.hostname || "(unnamed)")}</b>
+            <span class="tag">${esc(d.device_kind || "device")}</span></div>
+          <div class="dmeta"><code>${esc([d.vendor, d.ip || "no reserved IP", d.mac].filter(Boolean).join(" · "))}</code></div>
+        </div>`).join("")
+      : `<div class="empty">No devices assigned yet. Until one is, none of ${esc(c.name)}'s time can be counted. Name it on the <a href="/devices">Devices</a> tab.</div>`)
+    + `</div>`;
+
+  const actions = kd.blocks.length ? `<div class="card"><h2>Recent actions</h2>`
+    + kd.blocks.map(b => `<div class="row"><span>${esc(c.name)} → ${esc(b.action)}</span>`
+      + `<span class="r">${esc(b.source || "")} · ${esc(new Date(b.ts).toLocaleString("en-NZ"))}</span></div>`).join("")
+    + `</div>` : "";
+
+  return head + todayCard + weekCard + charts + quizzes + flags + devices + actions
+    + measurementCard({ measurement: kd.measurement, notes: kd.notes });
 }

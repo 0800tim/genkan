@@ -34,3 +34,14 @@ INSERT INTO always_allow (domain, scope, category, note) VALUES
  ('spotifycdn.com',     'category','audio','Spotify CDN'),
  ('music.apple.com',    'category','audio','audio')
 ON CONFLICT (domain) DO NOTHING;
+
+-- Earnable chores. Without these the portal's "earn time" buttons and
+-- `kidnet earn` have nothing to offer, so a fresh install looks broken.
+-- Families should edit these to match their own household.
+INSERT INTO tasks (name, minutes, needs_approval, active) VALUES
+ ('Dishes done',        30, true,  true),
+ ('Room tidy',          20, true,  true),
+ ('Homework finished',  45, true,  true),
+ ('20 min reading',     20, true,  true),
+ ('Study quiz (unrot)', 15, false, true)
+ON CONFLICT DO NOTHING;

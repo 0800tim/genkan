@@ -3,7 +3,7 @@
 # without touching this machine's networking. Everything happens inside three
 # throwaway network namespaces:
 #
-#   hearth-kid (a kid's device) --- hearth-gw (clawdia) --- hearth-net (internet)
+#   hearth-kid (a kid's device) --- hearth-gw (the Hearth box) --- hearth-net (internet)
 #
 # The gateway namespace loads the real config/nftables/kids.nft, so what is
 # tested here is the file that ships. Run: sudo test/firewall-test.sh
@@ -48,7 +48,7 @@ $GW sysctl -qw net.ipv4.ip_forward=1
 # FORWARD isolation rule rather than the gateway's own input chain.
 $NET ip addr add 192.168.1.10/24  dev n-eth0
 $NET ip addr add 100.64.0.9/32  dev n-eth0
-$GW  ip addr add 198.51.100.1/24   dev wan0   # a second clawdia address
+$GW  ip addr add 198.51.100.1/24   dev wan0   # a second the Hearth box address
 # The gateway must be able to ROUTE to these, otherwise the packets die on an
 # unreachable-network error and the isolation checks pass without the firewall
 # ever seeing them. Give it the routes so the forward chain is what decides.
@@ -66,7 +66,7 @@ $GW $NFT -f "$R/config/nftables/kids.nft"
 # .50 is a known, reserved device. .77 (used later) is a static-IP squatter.
 $GW $NFT add element inet kids kids_known "{ 192.168.60.50 }"
 
-# Listeners: a fake site out on the internet, and clawdia's own DNS + portal.
+# Listeners: a fake site out on the internet, and the Hearth box's own DNS + portal.
 $NET python3 -c "
 import socket,threading
 def serve(p):
@@ -117,11 +117,11 @@ echo
 echo "A kid who is ALLOWED online"
 check "reaches the internet on :443"                 yes 203.0.113.2 443
 banner "reaches the REAL site on :80, not the portal" FAR 203.0.113.2 80
-check "reaches the DNS resolver on clawdia"          yes 192.168.60.1 53
+check "reaches the DNS resolver on the Hearth box"          yes 192.168.60.1 53
 check "cannot reach the main house LAN (isolation)"  no  192.168.1.10 80
 check "cannot reach the tailnet (isolation)"         no  100.64.0.9 80
-check "cannot reach clawdia's other addresses on :80" no 198.51.100.1 80
-check "cannot reach clawdia's admin dashboard"       no  192.168.60.1 8899
+check "cannot reach the Hearth box's other addresses on :80" no 198.51.100.1 80
+check "cannot reach the Hearth box's admin dashboard"       no  192.168.60.1 8899
 check "cannot use DNS-over-TLS on :853"              no  203.0.113.2 853
 banner "hardcoding 8.8.8.8 still lands on our resolver" GATEWAY 8.8.8.8 53
 check "cannot reach Cloudflare DoH on 1.1.1.1:443"   no  1.1.1.1 443

@@ -33,13 +33,19 @@ This box holds filtering config and logs, not your life.
 Omarchy ships agent-first (Claude Code is a first-class citizen). Sign in
 to your Claude plan, then:
 
-    git clone <this repo> hearth && cd hearth
+    git clone https://github.com/0800tim/hearth && cd hearth
     claude
 
 Tell the agent: "Read CLAUDE.md and set this box up as our Hearth gateway."
 It will copy config.env.example and secrets.env.example, ask you for your
 USB dongle's MAC address, mark the kids' NIC unmanaged in NetworkManager,
-run deploy.sh, and walk you through your AP and each kid's devices.
+provision Postgres and load the schema, run deploy.sh, and walk you through
+your AP and each kid's devices.
+
+One step is not scripted: Hearth needs a Postgres container and its schema.
+`install/omarchy-setup.sh` does the host preparation and `deploy.sh` assumes
+the database is already there. The commands are in docs/setup/README.md and
+docs/DATABASE.md, and they are about four of them.
 
 Because Hearth's firewall lives inside its own container namespace, the
 host's own Omarchy firewall (ufw) stays exactly as Omarchy ships it. Add
@@ -51,7 +57,9 @@ island down.
 
 Install Tailscale (free for families) so your phone can reach the box from
 anywhere, and talk to your agent in its terminal: "turn off gaming",
-"dinner", "give Ben 30 minutes". docs/AGENT.md is the agent's manual.
+"dinner", "give Ben 30 minutes". docs/AGENT.md is the agent's manual, and
+docs/CLI.md is the full command reference behind it. When something goes
+wrong rather than needing changing, docs/OPERATIONS.md is the one to read.
 Set each kid up with the portal (it is just http://192.168.60.1 on their
 network) and, if you like, their own tutor: docs/runbooks/ai-tutor.md.
 

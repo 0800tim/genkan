@@ -2,8 +2,13 @@
 
 **Your kids' internet, run from a box in your own house.**
 
-Filtering you control, time limits they can earn back by learning, and
-absolutely nothing sent to anyone else. Not to a cloud service, not to us.
+Not a monitoring tool. A **regulator and a teacher**: it helps your family
+agree how much is enough, makes that boundary hold without an argument every
+night, and lets kids earn their time back by learning something rather than by
+pleading.
+
+Filtering you control, and absolutely nothing sent to anyone else. Not to a
+cloud service, not to us.
 
 ---
 
@@ -43,7 +48,7 @@ Because it is yours:
   move to mobile data, where you have no visibility at all.
 
 You talk to it in plain sentences from your phone, through whichever AI
-assistant you already pay for: *"turn off Toby's gaming"*, *"dinner"*,
+assistant you already pay for: *"turn off Ben's gaming"*, *"dinner"*,
 *"give Ada thirty more minutes, she did the dishes"*.
 
 ## The bit people find surprising
@@ -86,8 +91,13 @@ Then, roughly:
 ```bash
 git clone https://github.com/0800tim/hearth && cd hearth
 ./install/omarchy-setup.sh     # host prep, asks which adapter is the kids' side
+# then: a Postgres container and the schema, per docs/setup/README.md
 sudo ./deploy.sh               # validates, builds, starts the island
 ```
+
+One step in there is not automated yet: Hearth needs a Postgres container and
+its schema loaded, and `deploy.sh` assumes you already have one. The setup
+guides walk through it, and it is about four commands.
 
 The honest version: this is a genuinely fiddly networking setup, and that is
 exactly why it is built agent-first. Clone the repo, point Claude Code (or
@@ -185,14 +195,14 @@ VPN defeats the categorisation entirely.
 
 ## Tests
 
-Five suites, all packet-level or database-level, no mocks:
+Five suites, eighty checks, all packet-level or database-level, no mocks:
 
 ```bash
-sudo test/firewall-test.sh      # the ruleset, in throwaway namespaces
-sudo test/container-test.sh     # the real image, containment proven
-sudo test/meter-test.sh         # time budgets and category enforcement
-sudo test/service-meter-test.sh # per-service byte accounting
-ADGUARD_PASS=... test/adguard-test.sh
+sudo test/firewall-test.sh      # 31  the ruleset, in throwaway namespaces
+sudo test/container-test.sh     # 26  the real image, containment proven
+sudo test/meter-test.sh         #  8  time budgets and category enforcement
+sudo test/service-meter-test.sh #  5  per-service byte accounting
+ADGUARD_PASS=... test/adguard-test.sh   # 10  the DNS layer, against a live AdGuard
 ```
 
 The container suite asserts, among other things, that a static IP outside its
@@ -207,12 +217,21 @@ help lines survive a cut.
 | `CLAUDE.md` | what to point your AI agent at first |
 | `docs/setup/` | platform guides: Omarchy, Debian, Raspberry Pi, generic |
 | `docs/AGENT.md` | the plain-sentence command surface |
+| `docs/CLI.md` | every command, its arguments and what it really does |
+| `docs/OPERATIONS.md` | health checks, timers, logs, troubleshooting, backups |
 | `DECISIONS.md` | every design decision and why, including the mistakes |
 | `PLAN.md` | topology and the limits of network monitoring |
 | `METERING.md` | how per-category time measurement works |
+| `docs/DATABASE.md` | the schema, the load order, the two connection strings |
+| `docs/reporting.md` | the weekly family digest, and how to schedule it |
+| `docs/tor-and-safety.md` | the Tor and darknet layer, and its honest limits |
 | `BUG-BOUNTY.md` | the household bug bounty, written for kids |
 | `docs/playbooks/` | the Switcheroo and other practical guides |
 | `RECOMMENDATIONS.md` | age-tiered policy and what to do beyond on/off |
+| `ROADMAP.md` | what is built, what is half built, and where to help |
+| `CONTRIBUTING.md` | what a change must not weaken |
+| `SECURITY.md` | reporting a bypass or a vulnerability |
+| `CONTRIBUTING.md`, `SECURITY.md` | how to help, and how to report a hole |
 
 ## Who made this, and why
 

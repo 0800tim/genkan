@@ -42,8 +42,9 @@ internet goes down and the house network does not notice.
 3. Open your AI agent in the repo and say: "Read CLAUDE.md and
    docs/setup/<your platform>.md, then set this box up as our Hearth
    gateway." The agent does the fiddly parts: package installs, marking
-   the kids' NIC as unmanaged, provisioning Postgres, running `deploy.sh`,
-   and proving it works with the test rigs.
+   the kids' NIC as unmanaged, provisioning Postgres and loading the schema,
+   running `deploy.sh`, and proving it works with the test rigs. Provisioning
+   Postgres is the one step no script in this repo does for you.
 4. Plug in the access point for the kids' WiFi (an old router flipped to
    AP or bridge mode is ideal) and move the kids' devices onto it.
 
@@ -81,13 +82,24 @@ From the repo root, once `config.env` and `secrets.env` exist:
     sudo ./deploy.sh                # validates, builds, installs, starts
     docker logs -f hearth-gw        # watch for the segment guard verdict
     kidnet allow-status             # safety net populated?
-    sudo test/container-test.sh     # full packet-level proof, 25 checks
+    sudo test/container-test.sh     # full packet-level proof, 26 checks
 
 The segment guard matters: on every appearance of `kids0` the gateway
 listens on the wire first. If it hears another DHCP server or traffic from
 a foreign subnet, the island refuses to start and raises an alert. That is
 deliberate. It catches an access point still bridged to your main LAN
 before Hearth's DHCP can fight your router's.
+
+## Once it is running
+
+- [../CLI.md](../CLI.md): every command, its arguments, and what it really
+  does. Written from the scripts.
+- [../OPERATIONS.md](../OPERATIONS.md): the day-two guide. Health checks, what
+  each timer does, reading the gateway logs, what the segment guard refusing to
+  start means, a device with no internet, rotating the AdGuard password,
+  backing up and restoring the database.
+- [../AGENT.md](../AGENT.md): what to say to your agent, and what it runs.
+- [../../BUG-BOUNTY.md](../../BUG-BOUNTY.md): hand this one to your teenager.
 
 ## The ethos
 
