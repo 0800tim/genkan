@@ -57,10 +57,16 @@ just noisier than they should be. Tracked in DECISIONS.md.
 Then the deeper checks, when you have changed something or you want proof
 rather than reassurance:
 
-    sudo test/firewall-test.sh          # 36 checks, throwaway namespaces, no hardware
+    sudo test/firewall-test.sh          # 46 checks, throwaway namespaces, no hardware
     sudo test/container-test.sh         # 26 checks, the real image, containment proven
-    test/schema-test.sh                 # 35 checks, a fresh install into an empty database
+    test/schema-test.sh                 # 88 checks, a fresh install into an empty database
+    test/db-role-test.sh                # 77 checks, the CLI's role cannot leave the database
+    test/alerts-test.sh                 # 15 checks, the safety alert path runs
     ADGUARD_PASS=... test/adguard-test.sh
+
+docs/CLI.md lists all fourteen suites. Run them one at a time: several build a
+throwaway database or a namespace with a fixed name, so two at once collide and
+report failures that are not real.
 
 The container suite is the one to run after any change to the firewall, the
 gateway or `kidnet`. It builds the real image, hands it a fake NIC the same way
@@ -278,6 +284,25 @@ the gateway, the meter and `kidnet-alerts` all converge:
 The gateway acknowledges its own `category='gateway'` alerts when it comes up
 healthy, so the dashboard stops showing a solved problem as if it were still
 happening.
+
+**Two categories are alerts about Hearth rather than about a child**, and both
+mean the safety path has stopped working:
+
+| Category | What it means |
+|---|---|
+| `dns-ingest` | the query log is not reaching the database, so nothing can be checked |
+| `alert-check` | the log is arriving but the check over it failed to run |
+
+Either one means no flagged look-up is being noticed. Both retire themselves on
+the next good run, so an unacknowledged one is a live problem, not history.
+After fixing one, sweep the window you lost rather than waiting for the timer:
+
+    ALERT_LOOKBACK="2 days" kidnet-alerts
+
+They exist because the failure of a safety check has no symptom of its own. No
+alerts is what a good night looks like, so silence had to be made to mean
+something. See DECISIONS.md, "A check that cannot run must never look like a
+quiet night".
 
 ---
 

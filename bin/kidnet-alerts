@@ -24,7 +24,7 @@ LOOKBACK="${ALERT_LOOKBACK:-15 minutes}"
   echo "kidnet-alerts: ALERT_LOOKBACK must be like '15 minutes'" >&2; exit 1; }
 
 # One alert per (child, pattern) per day, so a busy device does not spam.
-n=$(psqll "
+rows=$(psqll "
 WITH hits AS (
   -- Most SPECIFIC pattern wins per child+domain: bridges.torproject.org is a
   -- stronger signal (deliberate block evasion) than plain torproject.org, and
@@ -48,10 +48,32 @@ WHERE NOT EXISTS (
     AND a.category = h.category
     AND a.ts::date = CURRENT_DATE
 )
-  # ^1$ anchored, not a bare 1. psql -tAc prints the returned rows AND the
-  # command tag, so "INSERT 0 1" also contains a 1 and an unanchored grep
-  # counted it: one new alert was reported as two, every single time.
-RETURNING 1" | grep -c '^1$' || true)
+RETURNING 1" 2>&1)
+# A broken query used to print its ERROR to the terminal, count zero rows and
+# say "nothing new" with exit 0, so systemd recorded success. A bash comment
+# left inside this SQL string killed the whole alert path for a day and nothing
+# said so. Stderr is captured and a failure is now loud and non-zero: an alert
+# path that cannot run must never look like an alert path with nothing to say.
+case "$rows" in
+  *ERROR*)
+    msg="The safety alert check failed, so no flagged domain has been noticed since: $(printf '%s' "$rows" | grep '^ERROR' | head -1 | tr -d "'" | cut -c1-150)"
+    echo "kidnet-alerts: $msg" >&2
+    # The systemd unit that runs this uses ExecStartPost=- , so a non-zero exit
+    # is ignored by design: a failed alert check must not fail the DNS ingest
+    # that feeds it. That makes the exit status the wrong place to raise this.
+    # So the failure is raised as an alert itself, where a parent already
+    # looks, and retired by the next good run.
+    psqll "INSERT INTO alerts(severity,category,detail)
+           VALUES('urgent','alert-check','$(printf '%s' "$msg" | sed "s/'/''/g")')" >/dev/null 2>&1 || true
+    exit 1;;
+esac
+# A good run retires the warnings from the bad ones before it.
+psqll "UPDATE alerts SET acknowledged=true
+       WHERE category='alert-check' AND NOT acknowledged" >/dev/null 2>&1 || true
+# ^1$ anchored, not a bare 1. psql -tAc prints the returned rows AND the
+# command tag, so "INSERT 0 1" also contains a 1 and an unanchored grep
+# counted it: one new alert was reported as two, every single time.
+n=$(printf '%s\n' "$rows" | grep -c '^1$' || true)
 
 if [ "${n:-0}" -gt 0 ]; then
   echo "kidnet-alerts: raised $n new alert(s)"

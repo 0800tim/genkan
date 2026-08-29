@@ -68,7 +68,10 @@ tools/ is not part of the running system and deploy.sh installs none of it:
 validate-quizzes.mjs (the bank checker), worktree-snapshot.sh (commits the
 whole tree to refs/hearth/snapshots so a bad git command cannot destroy
 uncommitted work; the timer lives on the box, not the repo), publish.sh (the
-pre-publish leak scan) and enable-https.sh.
+pre-publish leak scan), validate-package.mjs (community packages),
+lint-sql-comments.py (refuses a bash '#' comment written inside a SQL string,
+which is legal bash and once killed the whole flagged-domain alert path for a
+day) and enable-https.sh.
 
 The learn-to-earn content is the largest part of the repo by volume: over 40
 quiz banks and more than 2,000 questions in portal/quizzes/ (every question
@@ -97,7 +100,11 @@ the kids_unclaimed nft set) are both OFF BY DEFAULT and must stay that way.
 - After ANY change to kids.nft, gateway/ or kidnet: run
   sudo test/firewall-test.sh (46 checks) and sudo test/container-test.sh
   (26 checks). Both must pass 100% before commit. After ANY change to
-  config/db/: test/schema-test.sh (35 checks, no root needed).
+  config/db/: test/schema-test.sh (88 checks) and test/db-role-test.sh
+  (77 checks), neither needing root. After ANY change to something that
+  raises an alert: test/alerts-test.sh (15 checks). Run suites ONE AT A
+  TIME: several build a throwaway database or a namespace with a fixed
+  name, so two at once collide and report failures that are not real.
 - Never oversell. If a feature is half built, say which half. The project's
   credibility rests on the limits being stated as plainly as the wins.
 - Style: NZ English, plain language, no em or en dashes as punctuation.

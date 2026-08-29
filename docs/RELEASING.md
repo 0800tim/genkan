@@ -76,11 +76,31 @@ gateway.
 ### 1. Everything must pass
 
 ```bash
-sudo test/firewall-test.sh      # 31 checks, the firewall
+sudo test/firewall-test.sh      # 46 checks, the firewall
 sudo test/container-test.sh     # 26 checks, the isolation
-test/schema-test.sh             # a fresh install loads
-sudo test/release-test.sh       # upgrade and rollback still work
+sudo test/roles-test.sh         # 108 checks, who may do what
+sudo test/release-test.sh       # 42 checks, upgrade and rollback still work
+sudo test/iot-policy-test.sh    # 39 checks, the household gadgets
+test/schema-test.sh             # 88 checks, a fresh install loads
+test/db-role-test.sh            # 77 checks, the CLI cannot leave the database
+test/schedule-test.sh           # 57 checks, bedtimes and who may lift a block
+test/notify-test.sh             # 41 checks, what a lock screen may say
+test/package-test.sh            # 31 checks, a community module cannot bite
+test/alerts-test.sh             # 15 checks, the safety alert path runs
+test/adguard-test.sh            # 9 checks, needs ADGUARD_PASS
+test/meter-test.sh              # 8 checks, time accounting
+test/service-meter-test.sh      # 6 checks, per-service time
+node tools/validate-quizzes.mjs # every quiz bank still parses and ramps
 ```
+
+Run them one at a time, not in parallel. Several build a throwaway database or
+a network namespace with a fixed name, so two suites running at once collide
+and report failures that are not real. If a suite fails, run it alone before
+believing it.
+
+One caution on a shared Postgres server: `db-role-test.sh`, `schema-test.sh`
+and `alerts-test.sh` each create a database and drop it again, which can break
+a whole-instance backup that enumerates databases mid-run. See OPERATIONS.md.
 
 `test/release-test.sh` is the one that is easy to forget and the one that
 matters here: it proves that a household that takes this release can get off

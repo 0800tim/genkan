@@ -155,26 +155,40 @@ youth help lines reachable even when a child is fully cut off).
 **Run the tests.** After any change to `config/nftables/kids.nft`, `gateway/` or
 `bin/kidnet`:
 
-    sudo test/firewall-test.sh      # 36 checks, throwaway namespaces
+    sudo test/firewall-test.sh      # 46 checks, throwaway namespaces
     sudo test/container-test.sh     # 26 checks, the real image
 
 Both must pass fully. They need root because they build network namespaces; they
-need no hardware. There are ten suites in total: the other eight are
-`iot-policy-test.sh` (39 checks, the household IoT layer), `roles-test.sh`
-(99 checks, who each scoped control reaches), `schema-test.sh` (88 checks, a
-fresh install into an empty database), `schedule-test.sh` (57 checks, scheduled
-bedtimes and who may lift a block), `package-test.sh` (31 checks, a community
-learning package treated as hostile input), `meter-test.sh` (8),
+need no hardware. There are fourteen suites in total: the other twelve are
+`roles-test.sh` (108 checks, who each scoped control reaches), `schema-test.sh`
+(88 checks, a fresh install into an empty database), `db-role-test.sh`
+(77 checks, the CLI's database role cannot leave the database),
+`schedule-test.sh` (57 checks, scheduled bedtimes and who may lift a block),
+`release-test.sh` (42 checks, upgrade and rollback), `notify-test.sh`
+(41 checks, what may appear on a lock screen), `iot-policy-test.sh` (39 checks,
+the household IoT layer), `package-test.sh` (31 checks, a community learning
+package treated as hostile input), `alerts-test.sh` (15 checks, the safety
+alert path runs and says so when it cannot), `meter-test.sh` (8),
 `service-meter-test.sh` (6) and `adguard-test.sh` (9, and it needs a running
-AdGuard and `ADGUARD_PASS`). `schema-test.sh`, `schedule-test.sh` and
-`package-test.sh` are the three that need no root and touch nothing that is
-running.
+AdGuard and `ADGUARD_PASS`).
+
+Run them one at a time. Several build a throwaway database or a namespace with
+a fixed name, so two at once collide and report failures that are not real.
+
+The ones that need no root and touch nothing that is running: `schema-test.sh`,
+`db-role-test.sh`, `schedule-test.sh`, `package-test.sh`, `alerts-test.sh` and
+`notify-test.sh`.
 
 If you touch anything in `config/db/`, run `test/schema-test.sh`. Every other
 suite runs against a database that was built up over months, so none of them
 would notice that a fresh install no longer loads.
 
 If you touch anything that unblocks a child, run `test/schedule-test.sh` too.
+
+If you touch anything that raises an alert, run `test/alerts-test.sh`. It also
+sweeps every script for a `#` comment written inside a SQL string, which is
+legal bash, reads perfectly well, and once killed the whole flagged-domain
+alert path for a day without anything saying so.
 
 If you touch `tools/validate-package.mjs`, `bin/kidnet-pack`, the portal's
 `esc()` or anything a community package's text passes through, run

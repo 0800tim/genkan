@@ -1804,8 +1804,9 @@ fix is 0x1f, the ASCII unit separator, which is not IFS whitespace.
 **`psql -tAc` prints the rows and the command tag.** A statement with
 `RETURNING 1` returns `1` on one line and `INSERT 0 1` on the next, so the
 `| grep -c 1` idiom this repo uses in several places reports double what
-actually happened. `grep -c '^1$'` is the fix. Worth knowing: `bin/kidnet-alerts`
-has the same idiom, and its "raised N new alert(s)" line has been overcounting.
+actually happened. `grep -c '^1$'` is the fix. `bin/kidnet-alerts` had the same
+idiom and the same overcount; fixed on 2026-08-30, and `test/alerts-test.sh`
+now proves one new alert is reported as one.
 
 **Secrets do not belong on a command line.** An ntfy topic name *is* the
 password. The sender is Python rather than curl for exactly that reason: the
@@ -1814,3 +1815,47 @@ target and the token arrive in a child process's environment and never in
 scrubs both out of any error string before returning it, because urllib puts the
 whole URL in an exception message and that message ends up in the journal and in
 `notify_log`. The dashboard shows a route's host and never its path.
+
+## A check that cannot run must never look like a quiet night
+
+**2026-08-30.** `kidnet-alerts` is the path that turns "a child looked up a
+self-harm site" into something a parent sees. It stopped working for a day and
+nothing said so.
+
+The cause was three lines of prose. A bash comment was written inside a
+double-quoted SQL string, and `#` is not a comment inside double quotes, so
+every run posted the comment to Postgres, got `syntax error at or near "^"`,
+matched no rows, printed `kidnet-alerts: nothing new` and exited 0. The unit
+that runs it recorded success once a minute for a day. The previous entry in
+this file even mentions the script by name, and still nobody noticed, because
+the only symptom was the *absence* of alerts and absence is what a good night
+looks like.
+
+Three things changed, and the second is the one that matters.
+
+**The comment moved out of the string.** A one-line fix to a one-line mistake.
+
+**A failed query is now loud, and loud in the right place.** The script keeps
+its stderr, checks for `ERROR`, and refuses to report calm. It exits non-zero,
+but the exit status is not the surface: the unit runs it as `ExecStartPost=-`
+so that a broken alert check cannot fail the DNS ingest that feeds it, which
+means systemd ignores the status by design. So the failure is raised as an
+`alert-check` alert of its own, urgent, where a parent already looks, and the
+next good run retires it. This is the same shape as the `dns-ingest` alert, and
+the pair of them now cover the whole path: if the log stops arriving, or the
+check over it stops running, the dashboard says so.
+
+**A scanner, because the next one will look just as right.** The comment was
+legal bash and read perfectly well in an editor. `tools/lint-sql-comments.py`
+sweeps every script for a `#` line inside a SQL string and runs as part of
+`test/alerts-test.sh`, which also proves a flagged domain still raises exactly
+one alert, that the same flag twice in a day raises only one, and that a broken
+query raises the alarm rather than reporting nothing new.
+
+The general rule this leaves behind, worth applying to anything else in `bin/`
+that reports on the absence of a thing: **a check that cannot run must not be
+able to report the same result as a check that ran and found nothing.** Where
+those two are indistinguishable, the quiet answer is the dangerous one.
+
+For the record, the household lost nothing. Re-running the check over the whole
+outage window found no flagged look-up in it.

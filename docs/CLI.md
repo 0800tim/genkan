@@ -815,9 +815,22 @@ busy device cannot spam you.
 An alert is a prompt to have a conversation, not a verdict. The self-harm
 category is a care signal and never routes a child to a blocking page.
 
+**If the check itself fails, it says so.** A query that errors used to print to
+a terminal nobody was reading, count nothing and report "nothing new", which is
+exactly what a quiet night looks like. It now raises an urgent `alert-check`
+alert of its own, visible on the dashboard, and the next good run retires it.
+The exit status is non-zero too, but the alert row is the surface that matters:
+the unit runs this as `ExecStartPost=-` so a failed check cannot fail the DNS
+ingest that feeds it, which means systemd ignores the status by design.
+
+To sweep a longer window than the timer does, for instance after fixing an
+outage, set the lookback for one run:
+
+    ALERT_LOOKBACK="2 days" kidnet-alerts
+
 | Variable | Default |
 |---|---|
-| `ALERT_LOOKBACK` | `15 minutes` |
+| `ALERT_LOOKBACK` | `15 minutes`. Must read as an interval, like `2 days`. |
 
 ---
 
@@ -1385,22 +1398,31 @@ as a hard failure. That combination matters more than it sounds: a negative
 assertion whose probe never ran reports PASS, and eleven isolation guarantees
 were doing exactly that on any machine without netcat. See DECISIONS.md.
 
-    sudo test/firewall-test.sh        36 checks: the shipped ruleset, real packets, three namespaces
+    sudo test/firewall-test.sh        46 checks: the shipped ruleset, real packets, three namespaces
     sudo test/container-test.sh       26 checks: the real image, containment, replug, segment guard
+    sudo test/roles-test.sh          108 checks: the household roles, who each scope reaches, and the 11pm scenario
+    sudo test/release-test.sh         42 checks: an upgrade, a failed upgrade, and getting back off it
     sudo test/iot-policy-test.sh      39 checks: the household IoT policy, real packets, six namespaces
     sudo test/meter-test.sh            8 checks: category minutes, budget enforcement, grant
     sudo test/service-meter-test.sh    6 checks: per-service bytes, active minutes, idle ignored
-    sudo test/roles-test.sh           99 checks: the household roles, who each scope reaches, and the 11pm scenario
     test/schema-test.sh               88 checks: a fresh install, every schema file into an empty database
+    test/db-role-test.sh              77 checks: the CLI's role cannot leave the database it is given
     test/schedule-test.sh             57 checks: bedtimes, the morning restore, and who may lift what
+    test/notify-test.sh               41 checks: what may reach a phone, and what may never reach a lock screen
+    test/package-test.sh              31 checks: a community learning package treated as hostile input
+    test/alerts-test.sh               15 checks: a flagged domain raises one alert, and a broken check says so
     ADGUARD_PASS=... test/adguard-test.sh    9 checks: the DNS layer, via AdGuard's own check_host API
+
+Run them one at a time. Several build a throwaway database or a namespace with
+a fixed name, so two at once collide and report failures that are not real.
 
 `container-test.sh` skips one containment check when the interim
 `hearth-share-gateway` service is running, because that service adds host NAT
 for the island subnet on purpose.
 
-`schema-test.sh`, `schedule-test.sh` and `adguard-test.sh` are the three that do
-not need root.
+The ones that do not need root: `schema-test.sh`, `db-role-test.sh`,
+`schedule-test.sh`, `notify-test.sh`, `package-test.sh`, `alerts-test.sh` and
+`adguard-test.sh`.
 `adguard-test.sh` is the only one that needs the island profile up.
 
 `schema-test.sh` creates a throwaway database, loads every file through
