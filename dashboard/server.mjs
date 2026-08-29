@@ -16,7 +16,7 @@
 //   /kid/:name Kid      - one child: their devices, time, goals and controls
 // The control API (/api/act, /api/assign, /api/claim) and its optional
 // DASH_TOKEN are untouched.
-import { createServer } from "node:http";
+import { createServer, request as httpRequest } from "node:http";
 import { execFile } from "node:child_process";
 import pg from "pg";
 import { analytics, digest, kidDetail, GOAL_METRICS } from "./analytics.mjs";
@@ -135,8 +135,96 @@ async function state() {
 
 const authed = req => !DASH_TOKEN || (req.headers["x-dash-token"] === DASH_TOKEN);
 
+// A slim bar linking back into the dashboard, injected into the speed test's
+// own page. Deliberately inline: the speed test is served from another
+// container and must not depend on this one for its stylesheet.
+const SPEED_NAV = `<div style="display:flex;gap:18px;align-items:center;padding:11px 20px;
+  background:#14161f;border-bottom:1px solid rgba(236,228,214,.11);
+  font:600 14px/1 ui-sans-serif,system-ui,sans-serif">
+  <a href="/" style="color:#f2a15a;text-decoration:none">&lsaquo; Hearth</a>
+  <a href="/" style="color:#c3bcaf;text-decoration:none">Home</a>
+  <a href="/live" style="color:#c3bcaf;text-decoration:none">Right now</a>
+  <a href="/devices" style="color:#c3bcaf;text-decoration:none">Devices</a>
+  <span style="color:#ece4d6">Speed</span>
+</div>`;
+
+// The speed test lives in the gateway container, on the docker bridge. In the
+// demo there is no gateway at all, so the page says so rather than hanging.
+// The dashboard runs on the host, outside docker, so it cannot resolve
+// "hearth-gw" by name. Ask docker for the gateway's bridge address instead and
+// cache it, because that address changes whenever the container is recreated.
+// Re-resolved on any connection failure, which is exactly when it has moved.
+const SPEED_PORT = Number(process.env.SPEEDTEST_PORT || 8877);
+let speedHost = process.env.SPEEDTEST_HOST || "";
+const resolveSpeedHost = () => new Promise(res => {
+  if (speedHost) return res(speedHost);
+  execFile("docker", ["inspect", "hearth-gw", "-f",
+    "{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}"], { timeout: 5000 },
+    (e, so) => { speedHost = e ? "" : String(so).trim().split(/\s+/)[0] || ""; res(speedHost); });
+});
+async function proxySpeed(req, res) {
+  if (DEMO) {
+    res.writeHead(200, { "content-type": "text/html; charset=utf-8" });
+    res.end('<!doctype html><meta charset="utf-8"><title>Speed test</title>'
+      + '<body style="font:16px/1.6 system-ui;padding:40px;max-width:36em">'
+      + '<h1>Speed test</h1><p>This is the demo, so there is no real network to '
+      + 'measure. On a real Hearth box this page runs a test against the gateway '
+      + 'itself, and a second one against the internet, so you can tell a slow '
+      + 'connection apart from slow wifi.</p>');
+    return;
+  }
+  // Streamed both ways on purpose: this endpoint moves tens of megabytes and
+  // buffering it would defeat the measurement and the memory budget alike.
+  const path = req.url.replace(/^\/speed/, "") || "/";
+  const host = await resolveSpeedHost();
+  if (!host) { res.writeHead(502, { "content-type": "text/plain" });
+    res.end("The gateway is not running, so there is nothing to measure."); return; }
+  const up = httpRequest({ host, port: SPEED_PORT, path, method: req.method,
+                           headers: { ...req.headers, host: `${host}:${SPEED_PORT}` } },
+    r => {
+      // The page itself gets the dashboard's nav bolted on, so Speed reads as
+      // a page of the dashboard rather than a link that threw you somewhere
+      // else. The measurement endpoints are streamed through untouched: they
+      // move tens of megabytes and must not be buffered to be rewritten.
+      const html = (r.headers["content-type"] || "").includes("text/html");
+      if (!html) { res.writeHead(r.statusCode || 502, r.headers); r.pipe(res); return; }
+      let body = "";
+      r.setEncoding("utf8");
+      r.on("data", c => body += c);
+      r.on("end", () => {
+        body = body.replace(/<body([^>]*)>/i, `<body$1>${SPEED_NAV}`);
+        const h = { ...r.headers, "content-type": "text/html; charset=utf-8" };
+        delete h["content-length"];
+        res.writeHead(r.statusCode || 200, h);
+        res.end(body);
+      });
+    });
+  up.on("error", e => {
+    speedHost = process.env.SPEEDTEST_HOST || "";   // it moved: look it up again next time
+    if (res.headersSent) { res.destroy(); return; }
+    res.writeHead(502, { "content-type": "text/html; charset=utf-8" });
+    res.end('<!doctype html><meta charset="utf-8"><title>Speed test</title>'
+      + '<body style="font:16px/1.6 system-ui;padding:40px;max-width:36em">'
+      + '<h1>The speed test is not answering</h1><p>It runs inside the gateway '
+      + 'container. Check that <code>hearth-speedtest</code> is up.</p><p><small>'
+      + String(e.message || e).replace(/[<>&]/g, "") + '</small></p>');
+  });
+  req.pipe(up);
+}
+
 const server = createServer(async (req, res) => {
   try {
+    // ---- the speed test -----------------------------------------------
+    // It runs inside the gateway's network namespace, because that is the only
+    // place that can see the family network. That also means it is only
+    // reachable from the island, so the old nav link to 192.168.60.1:8877 was
+    // dead for a parent on the tailnet, which is where a parent actually is.
+    // The dashboard already sits on both sides, so it proxies. One address for
+    // the whole dashboard, and the test still measures the gateway's own wire.
+    if (req.url === "/speed" || req.url.startsWith("/speed/")) {
+      await proxySpeed(req, res); return;
+    }
+
     if (req.method === "POST" && ["/api/claim", "/api/act", "/api/assign", "/api/ack", "/api/goal",
       "/api/child", "/api/tier", "/api/device", "/api/household", "/api/task", "/api/quiz"].includes(req.url) && !authed(req)) {
       res.writeHead(403, { "content-type": "application/json" }); res.end('{"out":"forbidden"}'); return; }

@@ -4,6 +4,10 @@
 # island up -d) and ADGUARD_PASS set. Uses AdGuard's check_host API, which
 # evaluates rules exactly as real DNS queries do, keyed by client IP.
 set -u
+# A suite that cannot run its own tools must say so, not report green.
+for _t in curl python3 docker; do
+  command -v "$_t" >/dev/null || { echo "MISSING REQUIRED TOOL: $_t"; exit 1; }
+done
 : "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}" "${ADGUARD_PASS:?set ADGUARD_PASS}"
 KN="$(dirname "$0")/../bin"
 pass=0; fail=0

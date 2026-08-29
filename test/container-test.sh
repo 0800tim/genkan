@@ -10,13 +10,33 @@
 # Run: sudo test/container-test.sh
 set -u
 R="$(cd "$(dirname "$0")/.." && pwd)"
+# Same reason as firewall-test.sh: do not assume /usr/sbin is on root's PATH.
+NFT="$(command -v nft || echo /usr/sbin/nft)"
+# Fail loudly on a missing tool. A security suite that cannot run its probes
+# must say so, not report green. Everything the probes need is checked here.
+for _t in ip nft python3 docker; do
+  command -v "$_t" >/dev/null || { echo "MISSING REQUIRED TOOL: $_t"; exit 1; }
+done
 C=hearth-gw-test
 KIDNS=hearthtest-kid
 pass=0; fail=0
 ok(){ pass=$((pass+1)); printf '  \033[32mPASS\033[0m  %s\n' "$1"; }
 bad(){ fail=$((fail+1)); printf '  \033[31mFAIL\033[0m  %s\n' "$1"; }
 chk(){ if eval "$2" >/dev/null 2>&1; then ok "$1"; else bad "$1"; fi; }
-chk_not(){ if eval "$2" >/dev/null 2>&1; then bad "$1"; else ok "$1"; fi; }
+# TCP reachability without netcat. bash speaks TCP itself, so this works on any
+# distro and inside any namespace. 0 = reachable.
+tcp(){ $KID timeout "${3:-2}" bash -c "exec 3<>/dev/tcp/$1/$2" 2>/dev/null; }
+# A negative assertion has to tell "the firewall blocked it" apart from "the
+# probe never ran". It could not: a missing binary exits 127, chk_not saw a
+# non-zero exit, and reported PASS. netcat is absent from a default Arch
+# install, which is now the intended production platform, so six of this
+# file's isolation guarantees went green while testing nothing at all. 127 is
+# now a hard failure, and probes below use bash's own TCP support so there is
+# no external binary left to be missing.
+chk_not(){ eval "$2" >/dev/null 2>&1; local rc=$?
+  if [ "$rc" = 0 ]; then bad "$1"
+  elif [ "$rc" = 127 ]; then bad "$1  [THE PROBE DID NOT RUN: command not found]"
+  else ok "$1"; fi; }
 KID="ip netns exec $KIDNS"
 cleanup(){
   docker rm -f $C hearth-lst-test >/dev/null 2>&1
@@ -59,7 +79,7 @@ done
 chk "gateway adopted the NIC and reports island UP" "docker logs $C 2>&1 | grep -q 'island is UP'"
 docker exec $C nft add element inet kids kids_known "{ 192.168.60.50 }" 2>/dev/null
 chk "segment guard passed on a quiet wire" "docker logs $C 2>&1 | grep -q 'safe to own it'"
-chk_not "no kids table appears in the HOST firewall" "nft list tables 2>/dev/null | grep -qw kids"
+chk_not "no kids table appears in the HOST firewall" "$NFT list tables 2>/dev/null | grep -qw kids"
 # The containerised gateway must leave no trace on the host. The interim
 # internet-share service (hearth-share-gateway) deliberately does add host NAT
 # for the island subnet, so skip this check while that is running rather than
@@ -67,7 +87,7 @@ chk_not "no kids table appears in the HOST firewall" "nft list tables 2>/dev/nul
 if systemctl is-active --quiet hearth-share-gateway 2>/dev/null; then
   printf '  \033[33mSKIP\033[0m  island subnet on host (interim share gateway is running by design)\n'
 else
-  chk_not "the island subnet appears nowhere in the HOST ruleset" "nft -s list ruleset 2>/dev/null | grep -q 192.168.60"
+  chk_not "the island subnet appears nowhere in the HOST ruleset" "$NFT -s list ruleset 2>/dev/null | grep -q 192.168.60"
 fi
 chk "firewall loaded INSIDE the container" "docker exec $C nft list set inet kids kids_block"
 
@@ -85,14 +105,14 @@ def serve(p):
 for p in (53,80): threading.Thread(target=serve,args=(p,),daemon=True).start()
 import time; time.sleep(600)" >/dev/null
 sleep 2
-banner(){ $KID timeout 3 sh -c "echo | nc -w2 $2 $3" 2>/dev/null | head -c7; }
+banner(){ $KID timeout 3 bash -c "exec 3<>/dev/tcp/$2/$3; head -c7 <&3" 2>/dev/null; }
 [ "$(banner x 192.168.60.1 80)" = GATEWAY ] && ok "kid reaches the portal on the gateway" || bad "kid cannot reach the portal"
-chk "kid reaches DNS on the gateway" "$KID nc -w2 -z 192.168.60.1 53"
-chk "kid gets real internet through the container (NAT out eth0)" "$KID nc -w3 -z 1.1.1.1 80"
-chk_not "kid CANNOT reach the main house LAN (192.168.1.10)" "$KID nc -w2 -z 192.168.1.10 8899"
-chk_not "kid CANNOT reach the host postgres network (172.18.0.2:5432)" "$KID nc -w2 -z 172.18.0.2 5432"
-chk_not "kid CANNOT reach the tailnet (100.64.0.10:8899)" "$KID nc -w2 -z 100.64.0.10 8899"
-chk_not "kid CANNOT use DoH (1.1.1.1:443)" "$KID nc -w2 -z 1.1.1.1 443"
+chk "kid reaches DNS on the gateway" "tcp 192.168.60.1 53"
+chk "kid gets real internet through the container (NAT out eth0)" "tcp 1.1.1.1 80 3"
+chk_not "kid CANNOT reach the main house LAN (192.168.1.10)" "tcp 192.168.1.10 8899"
+chk_not "kid CANNOT reach the host postgres network (172.18.0.2:5432)" "tcp 172.18.0.2 5432"
+chk_not "kid CANNOT reach the tailnet (100.64.0.10:8899)" "tcp 100.64.0.10 8899"
+chk_not "kid CANNOT use DoH (1.1.1.1:443)" "tcp 1.1.1.1 443"
 [ "$(banner x 8.8.8.8 53)" = GATEWAY ] && ok "hardcoded 8.8.8.8 DNS lands on OUR resolver" || bad "8.8.8.8 escape not redirected"
 
 # Static-IP bypass: a device on an address we never handed out gets nothing.
@@ -102,19 +122,19 @@ chk_not "kid CANNOT use DoH (1.1.1.1:443)" "$KID nc -w2 -z 1.1.1.1 443"
 $KID ip addr add 192.168.60.88/24 dev vkid0 2>/dev/null
 $KID ip addr del 192.168.60.50/24 dev vkid0 2>/dev/null
 $KID ip route replace default via 192.168.60.1 2>/dev/null
-chk_not "static-IP squatter (.88) gets NO internet" "$KID nc -w3 -z 9.9.9.9 443"
+chk_not "static-IP squatter (.88) gets NO internet" "tcp 9.9.9.9 443 3"
 $KID ip addr add 192.168.60.50/24 dev vkid0 2>/dev/null
 $KID ip addr del 192.168.60.88/24 dev vkid0 2>/dev/null
 $KID ip route replace default via 192.168.60.1 2>/dev/null
 docker exec $C nft add element inet kids kids_block "{ 192.168.60.50 }"
-chk_not "blocked kid loses the internet (:443 resets fast)" "$KID nc -w2 -z $INET443 443"
+chk_not "blocked kid loses the internet (:443 resets fast)" "tcp $INET443 443"
 [ "$(banner x 93.184.216.34 80)" = GATEWAY ] && ok "blocked kid's web lands on the captive portal" || bad "blocked kid not redirected to portal"
-chk "blocked kid still reaches DNS" "$KID nc -w2 -z 192.168.60.1 53"
+chk "blocked kid still reaches DNS" "tcp 192.168.60.1 53"
 docker exec $C nft add element inet kids kids_allow "{ $INET443 }"
-chk "blocked kid still reaches a safety-net address" "$KID nc -w3 -z $INET443 443"
+chk "blocked kid still reaches a safety-net address" "tcp $INET443 443 3"
 docker exec $C nft flush set inet kids kids_allow
 docker exec $C nft delete element inet kids kids_block "{ 192.168.60.50 }"
-chk "unblocked kid gets the internet back" "$KID nc -w3 -z $INET443 443"
+chk "unblocked kid gets the internet back" "tcp $INET443 443 3"
 
 echo; echo "Section 3: replug resilience + segment guard refusal"
 # Rip the NIC out (simulates USB replug): kernel returns veth to host on ns delete.

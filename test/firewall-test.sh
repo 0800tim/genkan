@@ -9,7 +9,17 @@
 # tested here is the file that ships. Run: sudo test/firewall-test.sh
 set -u
 R="$(cd "$(dirname "$0")/.." && pwd)"
-NFT=/usr/sbin/nft
+# Debian and Ubuntu put nft in /usr/sbin. Arch puts it in /usr/bin and keeps
+# /usr/sbin only as a compatibility symlink, and a distro that drops that
+# symlink would fail here in a way that looks like a firewall bug rather
+# than a missing binary. Ask the system where it is.
+NFT="$(command -v nft || echo /usr/sbin/nft)"
+# Fail loudly on a missing tool. A security suite that cannot run its probes
+# must say so, not report green. Everything the probes need is checked here.
+for _t in ip nft python3; do
+  command -v "$_t" >/dev/null || { echo "MISSING REQUIRED TOOL: $_t"; exit 1; }
+done
+[ -x "$NFT" ] || { echo "nft not found. Install nftables."; exit 1; }
 GW="ip netns exec hearth-gw"
 KID="ip netns exec hearth-kid"
 NET="ip netns exec hearth-net"
@@ -90,10 +100,14 @@ pids="$pids $!"
 sleep 1.5
 
 # --- helpers ---------------------------------------------------------------
-reach(){ $KID nc -w2 -z "$1" "$2" >/dev/null 2>&1; }   # 0 = reachable
+# TCP reachability without netcat, which a default Arch install does not have.
+# The old probe's absence would have made every "wanted no" assertion below
+# pass for the wrong reason, since a missing binary and a blocked port look
+# identical to a shell. bash speaks TCP itself, so nothing can go missing.
+reach(){ $KID timeout 2 bash -c "exec 3<>/dev/tcp/$1/$2" >/dev/null 2>&1; }   # 0 = reachable
 # Who answered? A NAT redirect makes a connection to anywhere look successful,
 # so identity, not reachability, is what proves the portal redirect.
-who(){ $KID nc -w2 "$1" "$2" 2>/dev/null | head -c 8; }
+who(){ $KID timeout 2 bash -c "exec 3<>/dev/tcp/$1/$2; head -c 8 <&3" 2>/dev/null; }
 banner(){ # banner <description> <expected banner> <host> <port>
   local got; got=$(who "$3" "$4")
   if [ "$got" = "$2" ]; then pass=$((pass+1)); printf '  \033[32mPASS\033[0m  %s\n' "$1"

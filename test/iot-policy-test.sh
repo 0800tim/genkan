@@ -25,7 +25,13 @@
 # Run: sudo test/iot-policy-test.sh
 set -u
 R="$(cd "$(dirname "$0")/.." && pwd)"
-NFT=/usr/sbin/nft
+# Discovered, not assumed: Arch keeps nft in /usr/bin. Failing loudly matters
+# more than the path, because a security suite that cannot run its tools must
+# say so rather than report green.
+NFT="$(command -v nft || echo /usr/sbin/nft)"
+for _t in ip nft python3; do
+  command -v "$_t" >/dev/null || { echo "MISSING REQUIRED TOOL: $_t"; exit 1; }
+done
 GWNS=hearth-iot-gw
 NETNS=hearth-iot-net
 DEVNS="hearth-iot-cam hearth-iot-vac hearth-iot-spk hearth-iot-phone"
@@ -144,12 +150,22 @@ psql "INSERT INTO vendor_ips(ip,vendor_id,seen) SELECT '203.0.113.2', id, now() 
       ON CONFLICT (ip,vendor_id) DO UPDATE SET seen=now()" >/dev/null
 
 # --- helpers ---------------------------------------------------------------
+# got defaults to "no", so anything that stops the probe running satisfies
+# every want=no assertion without testing a thing. netcat used to be that
+# thing: it is absent from a default Arch install, and these five would have
+# gone green on the very platform now intended for production:
+#   the vacuum cannot reach the rest of the internet
+#   a phone cannot reach the main house LAN
+#   a cut-off phone loses the internet
+#   a cut-off phone cannot use the camera grant as a way around it
+#   an unknown device gets no internet
+# bash speaks TCP itself, so there is no external binary left to be missing.
 check(){ # check <description> <yes|no> <netns> <host> <port>
   local want="$2" got=no
-  ip netns exec "$3" nc -w2 -z "$4" "$5" >/dev/null 2>&1 && got=yes
+  ip netns exec "$3" timeout 2 bash -c "exec 3<>/dev/tcp/$4/$5" >/dev/null 2>&1 && got=yes
   [ "$got" = "$want" ] && ok "$1" || bad "$1 (wanted $want, got $got)"; }
 banner(){ # banner <description> <expected> <netns> <host> <port>
-  local got; got=$(ip netns exec "$3" nc -w2 "$4" "$5" 2>/dev/null | head -c 8)
+  local got; got=$(ip netns exec "$3" timeout 2 bash -c "exec 3<>/dev/tcp/$4/$5; head -c 8 <&3" 2>/dev/null)
   [ "$got" = "$2" ] && ok "$1" || bad "$1 (wanted $2, got ${got:-nothing})"; }
 counted(){ # counted <description> <rule text fragment>
   if $GW $NFT list chain inet kids iotpolicy 2>/dev/null | grep -F "$2" | grep -qE 'counter packets [1-9]'

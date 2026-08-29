@@ -520,7 +520,7 @@ export function shell({ tab, body, title = "Hearth" }) {
 <div class="top"><div class="brand"><span class="porch"></span><b>Hearth</b>
   <span>the house with the porch light on</span></div>
   <button class="tbtn" onclick="toggleTheme()" aria-label="Switch light or dark">Theme</button></div>
-<nav>${nav.map(([h, l]) => `<a href="${h}"${tab === h ? ' class="sel" aria-current="page"' : ""}>${esc(l)}</a>`).join("")}<a href="http://${process.env.KIDS_GW_IP || "192.168.60.1"}:8877" target="_blank" rel="noopener" title="Runs on the gateway, reachable from any device on the family network">Speed</a></nav>
+<nav>${nav.map(([h, l]) => `<a href="${h}"${tab === h ? ' class="sel" aria-current="page"' : ""}>${esc(l)}</a>`).join("")}<a href="/speed"${tab === "/speed" ? ' class="sel" aria-current="page"' : ""} title="Measures the gateway's own wire, and its connection to the internet">Speed</a></nav>
 <div class="msg" id="msg" role="status" aria-live="polite"></div>
 ${DEMO_BAR}${body}
 <div id="tip" role="tooltip" aria-hidden="true"></div>

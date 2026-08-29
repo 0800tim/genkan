@@ -16,6 +16,10 @@
 #
 # Run: sudo test/roles-test.sh     (sudo only for the network namespace)
 set -u
+# A suite that cannot run its own tools must say so, not report green.
+for _t in nft python3 docker; do
+  command -v "$_t" >/dev/null || { echo "MISSING REQUIRED TOOL: $_t"; exit 1; }
+done
 R="$(cd "$(dirname "$0")/.." && pwd)"
 KN="$R/bin/kidnet"
 NS=hearth-roletest

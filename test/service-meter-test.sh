@@ -3,6 +3,10 @@
 # daily rollup that turns them into "how much Netflix did Ben watch".
 # Uses a throwaway netns and synthetic counters, so no real traffic is needed.
 set -u
+# A suite that cannot run its own tools must say so, not report green.
+for _t in nft python3 docker; do
+  command -v "$_t" >/dev/null || { echo "MISSING REQUIRED TOOL: $_t"; exit 1; }
+done
 R="$(cd "$(dirname "$0")/.." && pwd)"
 NS=svcmetertest
 pass=0; fail=0
