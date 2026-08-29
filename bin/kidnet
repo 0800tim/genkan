@@ -319,6 +319,29 @@ case "${1:-}" in
         echo "claim mode: $(psqll "SELECT mode FROM claim_settings")   (off | observe | enforce)"
         echo "$(psqll "SELECT count(*) FROM unclaimed_devices") personal device(s) belong to nobody";;
       *) echo "usage: kidnet claim-mode <off|observe|enforce>"; exit 1;; esac;;
+  # A child said a device is theirs. Until a parent agrees it stays in the
+  # restricted lane, so this is the queue that matters when claiming is on.
+  claims) psqll "
+      SELECT coalesce(d.label, d.hostname, '(no name)')||'  said to be '||c.name
+             ||'  '||host(d.reserved_ip)
+             ||coalesce('  since '||to_char(dc.ts,'DD Mon HH24:MI'),'')
+      FROM devices d JOIN children c ON c.id=d.child_id
+      LEFT JOIN LATERAL (SELECT ts FROM device_claims x
+                          WHERE x.child_id=d.child_id AND x.outcome='claimed'
+                          ORDER BY ts DESC LIMIT 1) dc ON true
+      WHERE d.claim_pending ORDER BY dc.ts" | sed 's/^/  /' \
+      || echo "  (nothing waiting)";;
+  # Say yes to a claim. The device leaves the restricted lane and gets its
+  # owner's real filtering level and clock.
+  confirm) ck_name "${2:?device-or-address}"
+    n=$(psqll "WITH u AS (UPDATE devices SET claim_pending=false
+                 WHERE claim_pending AND (label=\$q\$$2\$q\$ OR hostname=\$q\$$2\$q\$
+                                          OR host(reserved_ip)=\$q\$$2\$q\$)
+                 RETURNING 1) SELECT count(*) FROM u")
+    if [ "${n:-0}" = 0 ]; then echo "kidnet: nothing waiting called '$2'"; exit 1; fi
+    audit device "$2" claim-confirmed agent
+    d="$(dirname "$0")/kidnet-adguard-clients"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
+    echo "kidnet: confirmed $2. It has its owner's settings now.";;
   # Who is on the wire that nobody has claimed. Smart home kit, appliances and
   # the access point are the household's and are never expected to announce
   # themselves, so they are not in here.

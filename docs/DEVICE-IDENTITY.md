@@ -19,11 +19,32 @@ full, unfiltered, unmetered internet.
 That is not theoretical. On the household this was written on, six of thirteen
 active leases belonged to nobody, two of them ordinary personal devices.
 
-It also means MAC rotation is a bypass without anybody intending it. Every
-phone randomises its wifi address now. When one rotates it arrives as a brand
-new device, loses its owner, its tier and its clock, and lands in the
-unrestricted lane. A child does not have to be clever to do this. They have to
-turn wifi off and on.
+It also makes MAC rotation a bypass. Be precise about how easy that is, because
+an earlier draft of this note overstated it.
+
+Both platforms randomise, and both are **stable per network by default**. iOS
+Private Wi-Fi Address keeps one address per SSID and does not change it when
+you toggle wifi. Android's randomised MAC is persistent per network unless
+somebody deliberately picks the non-persistent option. So a phone reconnecting
+a hundred times a week keeps the same address, which is why the devices in
+this household have held theirs.
+
+The address changes when somebody **forgets the network and rejoins**, on a
+factory reset, or when a person deliberately chooses per-connection
+randomisation. That is a deliberate act, not an accident, which makes it an
+evasion technique rather than daily noise. Good news twice over: re-claiming
+will be rare in ordinary use, and a device that keeps needing to be re-claimed
+is itself a signal worth seeing.
+
+### The hostname is a hint, never an answer
+
+Devices announce a name over DHCP, which is why the roster shows things like
+`toby-s-phone`. It is tempting to treat that as identity. It is not: the name is
+set by whoever holds the phone, and renaming a device to somebody else's takes
+about fifteen seconds in settings.
+
+Use it to **pre-fill** the claim, so the common case is one tap, and never to
+decide the claim.
 
 ## Why not per-child wifi passwords
 

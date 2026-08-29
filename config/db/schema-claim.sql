@@ -20,6 +20,20 @@ INSERT INTO claim_settings (only_row) VALUES (true) ON CONFLICT DO NOTHING;
 -- means this child has no PIN and can claim without one.
 ALTER TABLE children ADD COLUMN IF NOT EXISTS claim_pin text;
 
+-- A device bound by a self-claim that no parent has confirmed. It STAYS in the
+-- restricted lane while this is true.
+--
+-- An earlier draft let a pending device run at the house's tightest filter
+-- level instead. That does not work, because a time budget belongs to a child,
+-- not to a device: a younger child claiming the eldest's name would still
+-- inherit her clock, and in this household the eldest has no daily limit at
+-- all. Unlimited time was exactly the prize worth lying for.
+--
+-- Staying restricted removes the prize entirely. A claim is a request that a
+-- parent grants, so naming the wrong sibling gains nothing and costs the liar
+-- the wait they were trying to skip.
+ALTER TABLE devices ADD COLUMN IF NOT EXISTS claim_pending boolean NOT NULL DEFAULT false;
+
 -- Who claimed what, and when. Kept even after the device is reassigned,
 -- because "my phone claimed itself as Toby at 2am" is the interesting row.
 CREATE TABLE IF NOT EXISTS device_claims (
@@ -41,7 +55,7 @@ CREATE OR REPLACE VIEW unclaimed_devices AS
 SELECT d.id, d.mac::text AS mac, d.hostname, d.label,
        host(d.reserved_ip) AS ip, d.last_seen
   FROM devices d
- WHERE d.child_id IS NULL
+ WHERE (d.child_id IS NULL OR d.claim_pending)
    AND coalesce(d.category,'personal') = 'personal'
    AND coalesce(d.kind,'') NOT IN ('ap','infra','gateway')
    AND d.reserved_ip IS NOT NULL
@@ -51,3 +65,4 @@ GRANT SELECT, INSERT, UPDATE ON claim_settings TO kids_app;
 GRANT SELECT, INSERT ON device_claims TO kids_app;
 GRANT USAGE, SELECT ON SEQUENCE device_claims_id_seq TO kids_app;
 GRANT SELECT ON unclaimed_devices TO kids_app;
+GRANT UPDATE (child_id, claim_pending) ON devices TO kids_app;

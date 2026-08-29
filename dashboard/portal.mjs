@@ -15,7 +15,7 @@
 // effect without the portal touching nft at all.
 import { createServer } from "node:http";
 import { readFileSync, readdirSync } from "node:fs";
-import { randomBytes } from "node:crypto";
+import { randomBytes, createHash } from "node:crypto";
 import path from "node:path";
 import pg from "pg";
 
@@ -295,6 +295,107 @@ const DEMO_NOTE = DEMO
   : "";
 const page = body => `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
 <title>${DEMO ? "Hearth demo" : "Hearth"}</title><style>${CSS}</style><div class="wrap">${DEMO_NOTE}${body}</div>`;
+// ---------------------------------------------------------------------------
+// Claiming a device
+// ---------------------------------------------------------------------------
+// A device nobody has claimed gets DNS, this page and the safety net, and
+// nothing else (docs/DEVICE-IDENTITY.md). This is the page that lets a child
+// out of that, by saying who they are.
+//
+// It is claiming, not proving. So the design makes lying pointless rather than
+// hard: a self-claim grants the TIGHTEST tier in the house until a parent
+// confirms it. Otherwise the obvious move is to claim as whichever sibling has
+// the loosest limits, which in a normal household is the eldest, and a
+// younger child would gain unlimited time by tapping a different name.
+//
+// The optional PIN buys convenience, not security: with the right one, the
+// claim takes effect immediately at that child's own tier instead of waiting
+// for a parent. That is the honest framing, and it means a shared PIN costs
+// very little, because sharing it only skips a wait.
+// What a claim actually grants. The whole security argument lives here.
+//
+// Without a PIN the device is bound to the named child but STAYS restricted
+// until a parent confirms on the dashboard. Not "restricted to the tightest
+// filter level": a time budget belongs to a child rather than a device, so a
+// younger child naming the eldest would still inherit her clock, and in a
+// normal household the eldest is the one with no daily limit. Unlimited time
+// is exactly the prize worth lying for, so the claim must grant nothing at all
+// until a parent says yes. Then there is no reward for lying, and no arms race.
+//
+// With the right PIN the claim takes effect immediately at that child's own
+// tier. A wrong PIN is recorded and refused: a parent should be able to see
+// that somebody tried.
+async function doClaim(dev, ip, form) {
+  const childId = Number(form.get("child"));
+  const pin = String(form.get("pin") || "").trim();
+  if (!Number.isInteger(childId) || childId <= 0) return claimPage(dev?.mac, ip, dev?.hostname, "Pick a name first.");
+  const [child] = await q(`SELECT id, name, policy_tier, claim_pin FROM children
+     WHERE id=$1 AND kind IN ('child','guest-child') AND active`, [childId]);
+  if (!child) return claimPage(dev?.mac, ip, dev?.hostname, "That is not somebody Hearth knows.");
+
+  const log = (outcome, cid) => q(`INSERT INTO device_claims(mac,ip,child_id,hostname,outcome)
+      VALUES($1,$2,$3,$4,$5)`, [dev?.mac || null, ip, cid, dev?.hostname || null, outcome]).catch(() => {});
+
+  if (child.claim_pin) {
+    if (!pin) return claimPage(dev?.mac, ip, dev?.hostname, `${child.name} has a PIN. Put it in and tap your name again.`);
+    if (!(await pinMatches(pin, child.claim_pin))) {
+      await log("wrong-pin", child.id);
+      return claimPage(dev?.mac, ip, dev?.hostname, "That PIN is not right. Try again, or ask a grown-up.");
+    }
+  }
+
+  // Bind the device. `claim_pending` decides whether it runs at the child's own
+  // level or at the house's tightest until a parent says yes.
+  const confirmed = Boolean(child.claim_pin);
+  await q(`UPDATE devices SET child_id=$2, claim_pending=$3
+            WHERE host(reserved_ip)=$1`, [ip, child.id, !confirmed]);
+  await log("claimed", child.id);
+
+  return page(`<div class="card">
+    <h1>Kia ora ${esc(child.name)}</h1>
+    <div class="msg">${confirmed
+      ? "This device is yours now, and your time is already on it."
+      : "Noted, thank you. A grown-up sees this on their screen and can say yes, and then your time is on it."}</div>
+    <p><a class="back" href="/">Go to my page</a></p>
+    ${helpFoot}</div>`);
+}
+
+// A PIN is a shared secret between a child and their parent, not a password,
+// so this is a digest with a salt and nothing more elaborate. It stops somebody
+// reading PINs out of the database; it does not pretend to resist an offline
+// attack on a four-digit number, and nothing could.
+async function pinMatches(given, stored) {
+  const [salt, want] = String(stored).split(":");
+  if (!salt || !want) return false;
+  const got = createHash("sha256").update(salt + ":" + given).digest("hex");
+  return got === want;
+}
+
+async function claimPage(mac, ip, hostname, msg) {
+  const kids = await q(`SELECT id, name FROM children
+     WHERE kind IN ('child','guest-child') AND active ORDER BY name`);
+  const anyPin = (await q("SELECT count(*)::int n FROM children WHERE claim_pin IS NOT NULL"))[0]?.n > 0;
+  // The device's own name is a hint worth using: it makes the common case one
+  // tap. It is set by whoever holds the phone, so it is never the answer.
+  const h = (hostname || "").toLowerCase().replace(/[^a-z]/g, "");
+  const guess = kids.find(k => h.includes(k.name.toLowerCase())) || null;
+  const btn = k => `<button class="opt" name="child" value="${k.id}">${esc(k.name)}${
+    guess && guess.id === k.id ? ' <span class="hint">looks like you</span>' : ""}</button>`;
+  return page(`<div class="card">
+    <h1>Whose device is this?</h1>
+    <div class="who">This one is new here, so it has the internet switched off until
+      somebody says who it belongs to. Tap your name.</div>
+    ${msg ? `<div class="msg">${esc(msg)}</div>` : ""}
+    <form method="post" action="/claim-device">
+      <div class="opts">${kids.map(btn).join("")}</div>
+      ${anyPin ? `<label class="pin">Your PIN, if you have one
+        <input name="pin" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="optional"></label>` : ""}
+    </form>
+    <div class="foot">${esc(hostname || "this device")} is asking. If that is not your
+      device, leave it alone and tell a grown-up.</div>
+    ${helpFoot}</div>`);
+}
+
 const helpFoot = `<div class="foot">Need to talk to someone? Free, any time: call or text <b>1737</b>,
  or Youthline <b>0800 376 633</b>. These always work, even when your internet is off.</div>`;
 
@@ -469,7 +570,23 @@ const server = createServer(async (req, res) => {
     PREVIEW_OK = PREVIEW_TOKEN !== "" && url.searchParams.get("preview") === PREVIEW_TOKEN;
     const kid = await whoIs(ip, kidOverride);
     const send = html => { res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }); res.end(html); };
-    if (!kid) return send(page(`<div class="card"><h1>Hearth</h1><div class="msg">This device isn't recognised on the kids network yet. Ask Dad to add it.</div>${helpFoot}</div>`));
+    if (!kid) {
+      // Claiming is only offered when the household has switched it on. With
+      // it off, an unclaimed device has full internet anyway and a page asking
+      // who it is would be a lie about what happens next.
+      const [cs] = await q("SELECT mode FROM claim_settings");
+      if (cs && cs.mode !== "off") {
+        const [dev] = await q(`SELECT mac::text AS mac, hostname FROM devices
+           WHERE host(reserved_ip)=$1 LIMIT 1`, [ip]);
+        if (req.method === "POST" && url.pathname === "/claim-device") {
+          let b = ""; req.on("data", c => { if ((b += c).length > 2000) req.destroy(); });
+          await new Promise(r => req.on("end", r));
+          return send(await doClaim(dev, ip, new URLSearchParams(b)));
+        }
+        return send(await claimPage(dev?.mac, ip, dev?.hostname));
+      }
+      return send(page(`<div class="card"><h1>Hearth</h1><div class="msg">This device isn't recognised on the kids network yet. Ask Dad to add it.</div>${helpFoot}</div>`));
+    }
     if (req.method === "POST") {
       if (!kid.real && !DEMO) return send(page(`<div class="card"><div class="msg">Earning only works from your own device on the network.</div></div>`));
       if ((lastPost.get(kid.id) || 0) > Date.now() - 1500) return send(page(`<div class="card"><div class="msg">Slow down a wee bit.</div></div>`));
