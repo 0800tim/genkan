@@ -18,11 +18,16 @@ import { SERIES, METERED, GOAL_METRICS, fmt } from "./analytics.mjs";
 import { columns, legend, ranked, sparkline, meter, goalBar, table, esc } from "./charts.mjs";
 import { LIVE_CSS, LIVE_JS, livePage, liveStrip } from "./liveui.mjs";
 import { MANAGE_CSS, MANAGE_JS, family } from "./manage.mjs";
-import { HOUSEHOLD_CSS, HOUSEHOLD_JS, housePanel, assignOptions, roleTag, isKid } from "./household.mjs";
+import { HOUSEHOLD_CSS, HOUSEHOLD_JS, housePanel, assignOptions, roleTag, isKid,
+         SWEEPS, SWEEPABLE, TIERS } from "./household.mjs";
 // The System page: the health of the box itself. Its own module, like the live
 // wire and the manage area, so this file stays the shared shell plus the pages
 // that read the household database.
 import { SYS_CSS, SYS_JS, systemPage } from "./sysview.mjs";
+// Scheduled bedtimes. The panel and its API live in their own file for the
+// same reason the IoT policy does: the rules about who may lift a block are
+// subtle and belong next to each other, not scattered through the page code.
+import { SCHEDULE_CSS, SCHEDULE_JS, schedulePanel, bedtimeLine } from "./schedule.mjs";
 
 // ---------------------------------------------------------------------------
 // Style. One block, no external anything.
@@ -123,6 +128,10 @@ h3{font-size:16px;margin:0 0 2px;font-weight:600}
 .chip.on .dot{background:var(--ok)}
 .chip.off .dot{background:var(--crit)}
 .chip.off{border-color:rgba(208,59,59,.45)}
+/* The slow lane: a third state between on and off. Amber, because it is
+   neither a green light nor a red one. Nothing is cut, it is just a crawl. */
+.chip.slow .dot{background:var(--warn)}
+.chip.slow{border-color:rgba(250,178,25,.5)}
 .chip.mode.active{background:var(--ember-soft);border-color:transparent;color:var(--ember);font-weight:600}
 
 /* ---- time bar + meters ---- */
@@ -170,6 +179,27 @@ code{font-size:11.5px;color:var(--ink-muted);font-family:ui-monospace,SFMono-Reg
   flex-wrap:wrap;align-items:center}
 .alert .mini{margin-left:auto}
 .tag.warn{color:var(--warn,#c98a2b);border-color:currentColor}
+
+/* The two sweep tick boxes under a device. They have to survive a 430px
+   phone without turning the page into a wall of check boxes, so they wrap and
+   each one carries its own hit area rather than sitting in a table. */
+.dfoot{display:flex;gap:4px 16px;flex-wrap:wrap;align-items:center;margin-top:3px}
+.dfoot code{flex:0 1 auto}
+/* Push the ticks to the right so they line up down the list. Device names and
+   addresses are all different lengths, and a ragged column of check boxes is
+   the thing that makes a page like this hard to scan. */
+.dsweep{display:inline-flex;gap:4px 14px;flex-wrap:wrap;align-items:center;margin-left:auto}
+.dtier{margin-left:0}
+.tick{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;color:var(--ink-2);
+  cursor:pointer;line-height:1.3;min-height:30px}
+.tick input{width:16px;height:16px;flex:none;accent-color:var(--ember);margin:0;cursor:pointer}
+.tick .dflt{color:var(--ink-muted);font-size:11.5px}
+.dtier{display:inline-flex;gap:6px;align-items:center;font-size:12.5px;color:var(--ink-2)}
+.dtier select{font-family:inherit;font-size:12.5px;padding:2px 4px}
+.gnote{font-size:12.5px;color:var(--ink-muted);margin:0 0 8px;line-height:1.5}
+/* On a phone there is no room for a right-hand column, and pushing two check
+   boxes to the far edge just puts them further from the name they belong to. */
+@media (max-width:520px){.dfoot{gap:2px 12px}.tick{min-height:32px}.dsweep{margin-left:0}}
 
 /* The owner picker that folds out under a device on the Devices page. */
 .chg{padding:0 0 10px;border-bottom:1px solid var(--line)}
@@ -409,7 +439,7 @@ async function assign(mac){const label=document.getElementById('lbl_'+mac).value
   if(!who){say('Pick who this device belongs to first.');return;}
   /* "Smart home device" and "Infrastructure" are not people, so they take the
      other road: file the device by class instead of handing it to somebody. */
-  if(who==='__iot'||who==='__infra'||who==='__appliance')return assignClass(mac,who.slice(2));
+  if(who==='__iot'||who==='__infra'||who==='__appliance'||who==='__shared')return assignClass(mac,who.slice(2));
   say('assigning...');
   const {r,j}=await post('/api/assign',{mac,who,label});done(r,j,700);}
 /* Reveal the owner picker for a device that already belongs to somebody. */
@@ -516,11 +546,12 @@ const DEMO_BAR = DEMO ? `<div class="demobar" role="note">
 
 export function shell({ tab, body, title = "Hearth" }) {
   const nav = [["/", "Home"], ["/live", "Right now"], ["/week", "Week"], ["/trends", "Trends"],
-    ["/earn", "Learn to earn"], ["/devices", "Devices"], ["/family", "Family"], ["/system", "System"]];
+    ["/earn", "Learn to earn"], ["/devices", "Devices"], ["/family", "Family"],
+    ["/notify", "Notifications"], ["/system", "System"]];
   return `<!doctype html><html lang="en-NZ"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<title>${esc(title)}</title><style>${CSS}${POLISH}${LIVE_CSS}${MANAGE_CSS}${HOUSEHOLD_CSS}${SYS_CSS}${DEMO_CSS}</style></head><body>
+<title>${esc(title)}</title><style>${CSS}${POLISH}${LIVE_CSS}${MANAGE_CSS}${HOUSEHOLD_CSS}${SYS_CSS}${SCHEDULE_CSS}${DEMO_CSS}</style></head><body>
 <div class="top"><div class="brand"><span class="porch"></span><b>Hearth</b>
   <span>the house with the porch light on</span></div>
   <button class="tbtn" onclick="toggleTheme()" aria-label="Switch light or dark">Theme</button></div>
@@ -528,30 +559,70 @@ export function shell({ tab, body, title = "Hearth" }) {
 <div class="msg" id="msg" role="status" aria-live="polite"></div>
 ${DEMO_BAR}${body}
 <div id="tip" role="tooltip" aria-hidden="true"></div>
-<script>${JS}${MANAGE_JS}${HOUSEHOLD_JS}${LIVE_JS}${SYS_JS}</script></body></html>`;
+<script>${JS}${MANAGE_JS}${HOUSEHOLD_JS}${LIVE_JS}${SYS_JS}${SCHEDULE_JS}</script></body></html>`;
 }
 
 // ---------------------------------------------------------------------------
 // Shared pieces
 // ---------------------------------------------------------------------------
-function kidState(k, cats) {
+// "Off at 9, back at 7", in the same words the kid portal uses. A child who can
+// see the times is being treated fairly; one who just gets cut off is being
+// punished by a machine, and a parent should be able to read the schedule off
+// the same page they set it on.
+function bedtimeChip(k, s) {
+  const n = (s.bedtimes || {})[k.id];
+  if (!n) return "";
+  return `<div class="btnow">${n.in_window ? "&#127769; " : ""}${esc(bedtimeLine(n))}${
+    n.extended ? " &middot; extra time tonight" : ""}${
+    n.override ? ` &middot; ${esc(n.override)}` : ""}</div>`;
+}
+
+function kidState(k, cats, slow) {
   const blocked = new Set(cats.filter(x => x.kid === k.name).map(x => x.category));
   const inetOff = blocked.has("internet");
   const gameOff = blocked.has("gaming");
   const mediaOff = blocked.has("video") || blocked.has("social");
-  return { blocked, inetOff, gameOff, mediaOff, study: gameOff && mediaOff && !inetOff };
+  // The slow lane. A category is in exactly one of three states, and "off"
+  // always wins: a blocked category cannot also be slow, because a dropped
+  // packet is never policed. See config/db/schema-slow.sql.
+  const sl = new Set((slow || []).filter(x => x.kid === k.name).map(x => x.category));
+  const inetSlow = !inetOff && sl.has("internet");
+  const gameSlow = !gameOff && sl.has("gaming");
+  const mediaSlow = !mediaOff && (sl.has("video") || sl.has("social"));
+  return { blocked, inetOff, gameOff, mediaOff, inetSlow, gameSlow, mediaSlow,
+           study: gameOff && mediaOff && !inetOff };
 }
 
 // The control chips. Same commands, same endpoint, same semantics as before:
 // green when the thing is allowed, red when it is blocked, tap to toggle.
+// The control chips. Same endpoint and the same semantics as before, with a
+// third state added rather than a fourth control: tapping cycles
+// full -> slow -> off -> full.
+//
+// The slow lane sits between the two on purpose, because it is the step a
+// parent should reach for first. A block is a confrontation; a crawl is a
+// video that buffers until the child wanders off, which nobody has to argue
+// about. Amber, and it says SLOW, so nothing about it is a secret.
 function chips(k, st) {
-  const chip = (label, off, cmdOff, cmdOn) =>
-    `<button class="chip ${off ? "off" : "on"}" onclick="act('${off ? cmdOn : cmdOff}','${esc(k.name)}')">
-       <span class="dot"></span>${label}: <b>${off ? "OFF" : "ON"}</b></button>`;
+  const chip = (label, off, slow, cmdOff, cmdOn, cmdSlow) => {
+    const state = off ? "off" : slow ? "slow" : "on";
+    const word = off ? "OFF" : slow ? "SLOW" : "ON";
+    // full -> slow -> off -> full
+    const next = off ? cmdOn : slow ? cmdOff : cmdSlow;
+    const hint = off ? "Tap for full speed" : slow ? "Tap to switch it off" : "Tap for the slow lane";
+    // kidnet's grammar is <verb> <kid> [category], so a category is the third
+    // argument, never part of the verb: /api/act puts `who` straight after the
+    // verb words and everything in `arg` after that.
+    const call = Array.isArray(next)
+      ? `act('${next[0]}','${esc(k.name)}','${next[1]}')`
+      : `act('${next}','${esc(k.name)}')`;
+    return `<button class="chip ${state}" title="${hint}" onclick="${call}">
+       <span class="dot"></span>${label}: <b>${word}</b></button>`;
+  };
   return `<div class="chips">
-    ${chip("🌐 Internet", st.inetOff, "off", "on")}
-    ${chip("🎮 Gaming", st.gameOff, "game off", "game on")}
-    ${chip("📺 Media", st.mediaOff, "media off", "media on")}
+    ${chip("🌐 Internet", st.inetOff, st.inetSlow, "off", ["full", "internet"], ["slow", "internet"])}
+    ${chip("🎮 Gaming", st.gameOff, st.gameSlow, "game off", ["full", "gaming"], ["slow", "gaming"])}
+    ${chip("📺 Media", st.mediaOff, st.mediaSlow, "media off", ["full", "media"], ["slow", "media"])}
     <button class="chip mode ${st.study ? "active" : ""}" onclick="act('${st.study ? "study off" : "study on"}','${esc(k.name)}')">
       📚 Study mode ${st.study ? "(on)" : ""}</button>
   </div>`;
@@ -619,7 +690,7 @@ export function tonight(s, a) {
   // Adults, household or visiting, do not get a screen-time card: they have no
   // budget, nothing to earn, and no control on this page reaches them.
   const kids = s.children.filter(k => k.active !== false && isKid(k.kind || "child")).map(k => {
-    const st = kidState(k, s.cats);
+    const st = kidState(k, s.cats, s.slow);
     const an = kidsA.get(k.id);
     const t = (s.times || []).find(x => x.child_id === k.id) || {};
     const out = (t.remaining_min ?? 0) <= 0 && (t.used_min || 0) > 0;
@@ -629,6 +700,7 @@ export function tonight(s, a) {
         ${out ? '<span class="pill out">Out of time</span>' : ""}
         ${st.inetOff ? '<span class="pill">Internet off</span>' : ""}</div>
       ${chips(k, st)}
+      ${bedtimeChip(k, s)}
       ${timeBar(k, s.times)}
       ${catMeters(an)}
       ${an ? `<div class="tmeta"><span>Last 7 days: ${esc(fmt.min(an.totals.metered))} metered, `
@@ -691,9 +763,13 @@ function deviceAssignRow(d, people, opts = {}) {
 // Devices
 // ---------------------------------------------------------------------------
 export function devices(s) {
+  // The order is the order a parent cares about them in: their kids' devices
+  // first, then the ones the whole family shares, then the household's own kit.
   const groups = [
-    ["personal", "People's devices", "Phones, tablets, laptops and consoles. These are filtered and metered by their owner's tier."],
+    ["personal", "People's devices", "Phones, tablets, laptops and consoles. Filtered and metered by their owner's tier."],
+    ["shared", "Shared family devices", "The lounge TV, the iPad everybody uses. Nobody's minutes pay for these, and each one has a filter level of its own."],
     ["iot", "Smart home", "Cameras, speakers, lights. Never assigned to a kid, never metered, and never cut by a family pause."],
+    ["appliance", "Unrestricted devices", "A media server, an SMS gateway. Full internet, no owner, no time limit, and no control reaches them."],
     ["infra", "Infrastructure", "The access point and the gateway itself. Not a client."],
   ];
   const unassigned = s.devices.filter(d => d.unassigned && d.category === "personal"
@@ -705,30 +781,86 @@ export function devices(s) {
   const randomNote = anyRandom ? `<div class="card"><h2>Phones with a random address</h2>
     <p class="sub">${esc(RANDOM_MAC_NOTE)}</p></div>` : "";
 
-  const naming = unassigned.length ? `<div class="card"><h2>🆕 New devices to name (${unassigned.length})</h2>
+  const naming = unassigned.length ? `<div class="card"><h2>\u{1F195} New devices to name (${unassigned.length})</h2>
     <p class="sub">Who owns what is deliberately manual. Only you know whose device is whose.</p>
     ${unassigned.map(d => deviceAssignRow(d, s.people)).join("")}</div>` : "";
+
+  // The two tick boxes. Shown only where they mean something: a camera, an
+  // appliance and the access point are in no sweep at all, and offering a box
+  // that does nothing would be a lie the parent only finds out at dinner.
+  // "(default)" is shown on a shared device and nowhere else. On a shared
+  // device it is the point: the parent has not answered yet, and the brief was
+  // that a shared device asks. On eleven of a family's own phones it is noise
+  // on every row, and noise on every row is how a page stops being read.
+  const ticks = (d, showDefault) => {
+    const key = esc(d.mac || "");
+    return `<span class="dsweep">` + SWEEPS.map(([v, label, note]) => {
+      const on = v === "dinner" ? d.in_dinner : d.in_house_off;
+      const dflt = v === "dinner" ? d.dinner_default : d.house_off_default;
+      return `<label class="tick" title="${esc(note)}">
+        <input type="checkbox" ${on ? "checked" : ""}
+               onchange="setSweep('${key}','${v}',this.checked)"
+               aria-label="${esc(label)} for ${esc(d.label || d.hostname || key)}">
+        <span>${esc(label)}${showDefault && dflt ? ' <span class="dflt">(default)</span>' : ""}</span></label>`;
+    }).join("") + `</span>`;
+  };
+
+  // A shared device's own filter level. A personal device has no picker here,
+  // because its level comes from whoever owns it and two places to set one
+  // thing is how they end up disagreeing.
+  const tierPicker = (d) => {
+    const key = esc(d.mac || "");
+    return `<label class="dtier" for="dtier_${key}">Filter
+      <select id="dtier_${key}" onchange="setDeviceTier('${key}')">
+        ${TIERS.map(([v, l, note]) => `<option value="${v}"${(d.device_tier || "standard") === v ? " selected" : ""}
+            title="${esc(note)}">${esc(l)}</option>`).join("")}
+      </select></label>`;
+  };
 
   const list = groups.map(([cat, title, note]) => {
     const rows = s.devices.filter(d => (d.category || "personal") === cat);
     if (!rows.length) return "";
+    const swept = SWEEPABLE.includes(cat);
     return `<div class="card"><h2>${esc(title)} (${rows.length})</h2><p class="sub">${esc(note)}</p>`
+      + (swept
+        ? `<p class="gnote">${cat === "shared"
+            ? "Ticked by default, and the tick is yours to change: untick the display that plays music through dinner."
+            : "Ticked means the dinner pause and the whole-house cut reach it. Untick anything that should stay online."}</p>`
+        : "")
       + rows.map(d => `<div class="row drow">
           <div class="dname">${d.online ? '<span class="dot-on"></span>' : ""}<b>${esc(d.label || d.hostname || "(unnamed)")}</b>
             ${cat === "personal" ? `<span class="tag">${esc(d.person || "unassigned")}${esc(roleTag(d.person_kind))}</span>` : ""}
+            ${cat === "shared" ? '<span class="tag">the household\u2019s</span>' : ""}
             ${cat === "personal" && randomMac(d.mac) ? '<span class="tag warn">random address</span>' : ""}
-            ${cat === "personal" ? `<button class="mini" onclick="showChange('${esc(d.mac || "")}')">Change owner</button>` : ""}</div>
-          <div class="dmeta"><code>${esc([d.device_kind, d.vendor, d.ip || "no reserved IP", d.mac].filter(Boolean).join(" · "))}</code></div>
+            ${cat === "personal" || cat === "shared" ? `<button class="mini" onclick="showChange('${esc(d.mac || "")}')">Change</button>` : ""}</div>
+          <div class="dfoot"><code>${esc([d.device_kind, d.vendor, d.ip || "no reserved IP", d.mac].filter(Boolean).join(" \u00b7 "))}</code>
+            ${swept ? ticks(d, cat === "shared") : ""}
+            ${cat === "shared" ? tierPicker(d) : ""}</div>
         </div>`
         // Hidden until asked for, because a page full of open pickers invites
         // the mis-click this whole change exists to prevent.
-        + (cat === "personal"
+        + (cat === "personal" || cat === "shared"
           ? `<div class="chg" id="chg_${esc(d.mac || "")}" hidden>${deviceAssignRow(d, s.people, { change: true })}</div>`
           : "")).join("")
       + `</div>`;
   }).join("");
 
-  return naming + randomNote + (list || '<div class="card"><div class="empty">No devices yet. They register as they join the kids network.</div></div>');
+  // What the one big button would do right now, said before it is pressed.
+  const h = s.house || {};
+  const houseCard = `<div class="card"><h2>The whole-house cut</h2>
+    <p class="sub">${h.is_off
+      ? `The house is off. ${esc(String(h.minutes_left || 0))} minute${h.minutes_left === 1 ? "" : "s"} left, then it comes back on by itself.`
+      : `One button, on the Home page. Right now it would take ${esc(String(h.devices_caught || 0))} device${h.devices_caught === 1 ? "" : "s"} off the internet.`}</p>
+    <p class="gnote">It never reaches the smart home, an appliance or the access point, and the help lines answer
+      on every device through it. It lifts itself when the time is up, so nothing stays cut off if nobody is home
+      to undo it. Untick a device above to leave it out.</p>
+    <div class="houserow">${h.is_off
+      ? `<button class="approve" type="button" onclick="houseOn()">Back on now</button>`
+      : `<span class="housebtns">${[30, 60, 120].map(m => `<button class="decline" type="button" onclick="houseOff(${m})">Off for ${m < 60 ? m + " min" : (m / 60) + "h"}</button>`).join("")}</span>`}</div>
+  </div>`;
+
+  return naming + randomNote + houseCard
+    + (list || '<div class="card"><div class="empty">No devices yet. They register as they join the kids network.</div></div>');
 }
 
 // ---------------------------------------------------------------------------
@@ -1241,7 +1373,7 @@ export function digestText(dg) {
 // ---------------------------------------------------------------------------
 export function kid(s, kd) {
   const c = kd.child;
-  const st = kidState(c, s.cats);
+  const st = kidState(c, s.cats, s.slow);
   const t = (s.times || []).find(x => x.child_id === c.id) || {};
   const out = (t.remaining_min ?? 0) <= 0 && (t.used_min || 0) > 0;
   const goalsMissing = kd.notes.some(n => n.startsWith("goals"));
@@ -1255,6 +1387,7 @@ export function kid(s, kd) {
       ${out ? '<span class="pill out">Out of time</span>' : ""}
       ${st.inetOff ? '<span class="pill">Internet off</span>' : ""}</div>
       ${chips(c, st)}
+      ${bedtimeChip(c, s)}
       ${timeBar(c, s.times)}
       ${catMeters(kd.kid)}
     </div>`;

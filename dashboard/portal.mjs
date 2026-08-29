@@ -113,6 +113,16 @@ async function loadDbBanks(force) {
       b.questions.push({ id: r.question_id, prompt: r.prompt, choices: r.choices,
         answer_index: r.answer_index, difficulty: r.difficulty ?? undefined, explanation: r.explanation || "" });
     }
+    // The read-first material an installed community package carries. Kept as
+    // a separate query on purpose: quiz_packages may simply not exist on an
+    // install that has not loaded schema-packages.sql, and a bank without a
+    // read-first is exactly as playable as it was before.
+    try {
+      for (const r of await q(`SELECT bank_id, read_first FROM quiz_packages WHERE read_first IS NOT NULL`)) {
+        const b = next.get(r.bank_id);
+        if (b) b.read_first = r.read_first;
+      }
+    } catch { /* no packages table: nothing to add */ }
     dbBanks = next;
     mergeBanks();
     console.log(`portal: ${banks.size} quiz banks on the list (${dbBanks.size} written on the dashboard)`);
@@ -177,6 +187,11 @@ async function whoIs(ip, override) {
 async function status(childId) {
   const [rem] = await q("SELECT * FROM time_remaining WHERE child_id=$1", [childId]);
   const cats = await q("SELECT category,set_by FROM category_state WHERE child_id=$1 AND blocked", [childId]);
+  // The slow lane, and how slow it is, so the page can say plainly what is
+  // happening. Caught rather than joined: a box that has not been given
+  // schema-slow.sql yet still serves the portal, it simply never mentions it.
+  const slow = await q("SELECT category,set_by FROM slow_lane_children WHERE child_id=$1", [childId]).catch(() => []);
+  const slowSet = await q("SELECT rate_kbit, on_timeout FROM slow_settings").catch(() => []);
   // The jobs THIS child is offered, at what THEY are paid for them. The view
   // works the rule out once (schema-tasks.sql) so the dashboard and the portal
   // can never disagree about what is on offer.
@@ -190,7 +205,14 @@ async function status(childId) {
   const lastPass = await q(`SELECT reason, max(ts) t FROM time_events
     WHERE child_id=$1 AND kind='earn' AND reason LIKE 'quiz:%' GROUP BY reason`, [childId]);
   const set = await earnSettings(childId);
-  return { rem, cats, tasks, claims, set, quizEarnedToday: Number(quizToday[0]?.m || 0),
+  // When the internet goes off tonight and when it comes back. A child who can
+  // see "off at nine, back at seven" is being treated fairly; one who just gets
+  // cut off is being punished by a machine. Guarded, because a box whose
+  // database has not been given schema-schedule.sql yet must still serve the
+  // portal, it simply has nothing to say about bedtime.
+  const [bed] = await q(`SELECT starts_at, ends_at, in_window, extended
+                           FROM schedule_next WHERE child_id=$1`, [childId]).catch(() => []);
+  return { rem, cats, slow, slowKbit: Number(slowSet[0]?.rate_kbit || 0), tasks, claims, set, bed, quizEarnedToday: Number(quizToday[0]?.m || 0),
            quiz: Object.fromEntries(quiz.map(r => [r.bank_id, r])),
            lastPassAt: Object.fromEntries(lastPass.map(r => [r.reason.slice(5), new Date(r.t).getTime()])) };
 }
@@ -215,8 +237,16 @@ async function credit(childId, minutes, reason) {
   // gateway's reconciler reopens the firewall within seconds.
   const [r] = await q("SELECT remaining_min FROM time_remaining WHERE child_id=$1", [childId]);
   if ((r?.remaining_min ?? 0) > 0) {
-    const upd = await pool.query(`UPDATE category_state SET blocked=false, since=now(), set_by='earned-back'
-      WHERE child_id=$1 AND category='internet' AND blocked AND set_by IN ('out-of-time','earned-back')`, [childId]);
+    // Lifts EITHER shape of "out of time": the hard cut, or the slow lane a
+    // household that chose the slope gets instead. Still only the state that
+    // running out of time put there, so a bedtime cannot be bought back. The
+    // fallback is for a box whose database has not been given schema-slow.sql.
+    const upd = await pool.query(`UPDATE category_state SET blocked=false, speed='full', since=now(), set_by='earned-back'
+      WHERE child_id=$1 AND category='internet' AND (blocked OR speed='slow')
+        AND set_by IN ('out-of-time','earned-back')`, [childId])
+      .catch(() => pool.query(`UPDATE category_state SET blocked=false, since=now(), set_by='earned-back'
+        WHERE child_id=$1 AND category='internet' AND blocked
+          AND set_by IN ('out-of-time','earned-back')`, [childId]));
     if (upd.rowCount > 0)
       await q("INSERT INTO block_events(target_type,target_ref,action,source,actor) VALUES('child',(SELECT name FROM children WHERE id=$1),'on','earn','portal')", [childId]);
   }
@@ -418,6 +448,13 @@ const STUDY_CSS = `
 .s-a{margin:0;display:inline-block;background:rgba(255,255,255,.20);
   border-radius:9px;padding:4px 11px;font-weight:700}
 .s-e{margin:7px 0 0;opacity:.85;line-height:1.5}
+.rf{margin:0 0 14px;padding:14px 16px;border-radius:14px;background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.16)}
+.rf h2{font-size:18px;margin:0 0 8px}
+.rf p{margin:0 0 9px;line-height:1.55}
+.rf p:last-child{margin-bottom:0}
+.rf .rf-l{font-size:13.5px;opacity:.9}
+.rf .rf-l a{color:#c4b5fd;margin-right:12px;display:inline-block}
 `;
 const page = body => `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
 <title>${DEMO ? "Hearth demo" : "Hearth"}</title><style>${CSS}${STUDY_CSS}</style><div class="wrap">${DEMO_NOTE}${body}</div>`;
@@ -534,6 +571,24 @@ async function claimPage(mac, ip, hostname, msg) {
 // not a substitute for going and reading properly, which is what the learn
 // allowlist is for, but it means a child who scored three out of ten has
 // somewhere to go that is not "try again and hope".
+// The optional short read a community package can carry
+// (config/db/schema-packages.sql, docs/CONTRIBUTING-CONTENT.md). Text and
+// links only, and the links can only point at the reading list, because a
+// child on the study page is usually a child who has run out of time and a
+// link to anywhere else would be a dead end at the worst moment.
+// Every field is escaped here exactly like a question prompt. It is a
+// stranger's text: tools/validate-package.mjs refuses markup on the way in,
+// and this refuses to trust that.
+function readFirstBlock(bank) {
+  const r = bank.read_first || (bank.package && bank.package.read_first);
+  if (!r || !Array.isArray(r.body) || !r.body.length) return "";
+  const links = Array.isArray(r.links) && r.links.length
+    ? `<p class="rf-l">${r.links.map(l => `<a href="${esc(l.url)}" rel="noreferrer noopener">${esc(l.label)}</a>`).join("")}</p>`
+    : "";
+  return `<div class="rf"><h2>${esc(r.title || "Read this first")}</h2>`
+    + r.body.map(t => `<p>${esc(t)}</p>`).join("") + links + `</div>`;
+}
+
 function studyPage(bank, kidQS) {
   const items = (bank.questions || []).map((q, i) => {
     const ans = (q.choices || [])[q.answer_index];
@@ -548,6 +603,7 @@ function studyPage(bank, kidQS) {
     <div class="who">Everything this quiz can ask, with the answers and why.
       Read it, then go and have a go. The questions come up in a different order
       every time, so there is nothing to memorise the shape of.</div>
+    ${readFirstBlock(bank)}
     <div class="study">${items}</div>
     <p><a class="back" href="/quiz/${esc(bank.id)}${kidQS}">I am ready, start a round</a></p>
     <p><a class="back" href="/${kidQS}">Back</a></p>
@@ -657,15 +713,66 @@ function badgesPage(kid, got, board, kidQS) {
     ${helpFoot}`);
 }
 
+// The time as a child reads a clock, not as a database prints one.
+const clock = ts => ts ? new Date(ts).toLocaleTimeString("en-NZ", { hour: "2-digit", minute: "2-digit" }) : "";
+
 function homePage(kid, st, kidQS) {
   const rem = st.rem?.remaining_min ?? 0;
   const unlimited = (st.rem?.budget_min || 0) >= 999;
   const inet = st.cats.find(c => c.category === "internet");
   const outOfTime = inet?.set_by === "out-of-time" || (rem <= 0 && (st.rem?.used_min ?? 0) > 0);
-  const head = inet
+  // Bedtime is its own reason and reads differently from running out of time:
+  // there is nothing to earn your way out of, and the important half is the
+  // hour it comes back.
+  const bedtimeNow = inet?.set_by === "bedtime";
+  const bed = st.bed;
+  // THE SLOW LANE, SAID OUT LOUD. A network that is slow on purpose and says
+  // nothing is just a broken network, and a child who thinks the wifi is broken
+  // goes and "fixes" it: reboots the router, changes their address, asks a
+  // friend for a hotspot. So the portal names it, names what is slow, and says
+  // it is deliberate. Honesty here is also the whole position of the product:
+  // Hearth never pretends the internet is faulty.
+  const slowInet = st.slow?.find(c => c.category === "internet");
+  const slowCats = (st.slow || []).filter(c => c.category !== "internet").map(c => c.category);
+  const slowOutOfTime = slowInet?.set_by === "out-of-time";
+  const head = slowInet && !inet
+    ? `<h1>🐢 Everything is slow right now</h1>
+       <div class="who">Hi ${esc(kid.name)}. Your internet is <b>not broken</b> and it is
+         <b>not switched off</b>. It has been turned down on purpose${
+         slowOutOfTime ? ", because today's time has run out" : ""}. Pages still load,
+         messages still work, and video will keep stopping to buffer.
+         ${slowOutOfTime ? "Earn some minutes below and it goes straight back to normal."
+                         : "It goes back to normal when Dad says so, or you can come and ask."}</div>`
+    : bedtimeNow && bed
+    ? `<h1>🌙 Goodnight</h1>
+       <div class="who">Hi ${esc(kid.name)}. The internet is off for the night. It comes back on
+         by itself at <b>${esc(clock(bed.ends_at))}</b>, so there is nothing you need to do.</div>`
+    : inet
     ? `<h1>${outOfTime ? "⏳ Time's up" : "⏸️ Internet paused"}</h1>
        <div class="who">Hi ${esc(kid.name)}. ${outOfTime ? "You've used today's time, but you can earn more below." : "Some things are switched off right now. You can still earn time for later."}</div>`
     : `<h1>👋 Kia ora ${esc(kid.name)}</h1><div class="who">Your time, your call. Earn more below whenever you like.</div>`;
+  // Said whether or not anything is switched off, because knowing when tonight
+  // ends is the whole point of saying it at all.
+  const bedLine = bed
+    ? `<div class="small" style="margin-top:8px">${bed.in_window
+        ? `🌙 Off for the night. Back at <b>${esc(clock(bed.ends_at))}</b>.`
+        : `🌙 Tonight: off at <b>${esc(clock(bed.starts_at))}</b>, back at <b>${esc(clock(bed.ends_at))}</b>.`}${
+        bed.extended ? " You have extra time tonight." : ""}</div>`
+    : "";
+  // Said whenever anything is in the slow lane, including on top of the
+  // headline above, because "video is slow but everything else is fine" is
+  // exactly the thing a child would otherwise misread as a fault.
+  const catWord = { gaming: "games", video: "video", social: "social apps" };
+  const slowLine = slowCats.length
+    ? `<div class="small" style="margin-top:8px">🐢 Slow on purpose right now:
+        <b>${slowCats.map(c => esc(catWord[c] || c)).join(", ")}</b>. Not broken, not switched off,
+        just turned down${st.slowKbit ? ` to about ${st.slowKbit} kbit/s` : ""}. Everything else is
+        full speed, and help lines are never slowed.</div>`
+    : slowInet
+    ? `<div class="small" style="margin-top:8px">🐢 Everything is turned down${
+        st.slowKbit ? ` to about ${st.slowKbit} kbit/s` : ""} on purpose. Help lines are never
+        slowed, and this page is always full speed.</div>`
+    : "";
   const cap = st.set.quiz_daily_cap_min, bonus = st.set.mastery_bonus_min;
   const capLeft = Math.max(0, cap - st.quizEarnedToday);
   // Order by how well each bank suits this child's age, nearest first. The
@@ -721,6 +828,8 @@ function homePage(kid, st, kidQS) {
   return page(`
     <div class="card">${head}
       <div class="rem">${unlimited ? "∞" : Math.max(0, rem)}<small> ${unlimited ? "no daily limit" : "min left today"}</small></div>
+      ${bedLine}
+      ${slowLine}
       <a class="badge-teaser" href="/badges${kidQS}">🏅 My badges</a></div>
     <div class="card"><h2>🎓 Earn time: quizzes (instant)</h2>${quizCards
       || '<div class="small">No quizzes on your list right now. Ask Dad to switch one back on.</div>'}

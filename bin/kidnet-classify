@@ -8,7 +8,12 @@
 # locally-administered bit (randomised MAC = almost always a personal phone).
 # Curated, extend freely: many homes have the same handful of vendors.
 set -uo pipefail
-psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+# Connects as kids_agent, a role with no superuser, no DDL and no
+# COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB_NAME="${HEARTH_DB:-kids_network}"
+DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 
 # Reclassify anything still on defaults (category personal + kind unknown), plus
 # any device the parent has not overridden. Never touches infra or assigned ones.
@@ -78,9 +83,15 @@ n=0
 for line in "${_devs[@]}"; do
   [ -n "$line" ] || continue
   IFS='|' read -r id host mac <<< "$line"
-  [ -n "$id" ] || continue
+  # The id is read back out of the database and then interpolated, so it is
+  # checked rather than trusted. hostname and mac never reach SQL: they are
+  # only ever matched against the case arms above.
+  [[ "$id" =~ ^[0-9]{1,9}$ ]] || continue
   res=$(classify "$host" "$mac"); k=${res%%|*}; rest=${res#*|}; c=${rest%%|*}; v=${rest#*|}
-  vset=""; [ -n "$v" ] && vset=", vendor='$v'"
+  # kind, category and vendor all come from the case arms above, so they are
+  # this script's own literals. Quote-doubled anyway: one day somebody adds an
+  # arm that reads a vendor name out of the database.
+  vset=""; [ -n "$v" ] && vset=", vendor='$(printf '%s' "$v" | sed "s/'/''/g")'"
   psqll "UPDATE devices SET kind='$k', category='$c'$vset WHERE id=$id" >/dev/null
   n=$((n+1))
 done

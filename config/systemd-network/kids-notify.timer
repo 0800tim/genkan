@@ -1,0 +1,9 @@
+[Unit]
+Description=Hearth notifications (every two minutes)
+[Timer]
+OnBootSec=3min
+OnUnitActiveSec=2min
+# Nothing here is a second-by-second signal, and a two minute tick means a
+# route that is down is retried gently rather than sixty times an hour.
+[Install]
+WantedBy=timers.target

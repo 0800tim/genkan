@@ -12,7 +12,12 @@
 set -euo pipefail
 : "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}" "${ADGUARD_PASS:?set ADGUARD_PASS}"
 : "${PORTAL_IP:=192.168.60.1}"
-psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+# Connects as kids_agent, a role with no superuser, no DDL and no
+# COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB_NAME="${HEARTH_DB:-kids_network}"
+DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 
 render(){
   # Safety net first: these @@ exceptions must precede any block.

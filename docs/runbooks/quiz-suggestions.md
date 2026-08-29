@@ -233,6 +233,48 @@ fine. What Hearth ships is the evidence command and this runbook.
 If you do schedule it, keep it to one child per run and one suggestion
 per child. The point is a parent who reads it.
 
+## Step 8: before writing anything, check the shelf
+
+A bank you write from scratch is not always the right answer. Somebody
+may already have written it better, and it may already be sitting in
+this checkout.
+
+    bin/kidnet-pack list
+
+That prints two lists: the community learning packages installed on this
+box, and the ones sitting in `portal/quizzes/community/` that nobody has
+said yes to yet. A package is a quiz bank plus an author, a licence, a
+description of who it is for and sometimes a page to read first
+(`docs/CONTRIBUTING-CONTENT.md`).
+
+So the order of operations for an agent doing this job is:
+
+1. Run `bin/kidnet-quiz-suggest <child>` for the evidence.
+2. Run `bin/kidnet-pack list` for what is already available.
+3. If something on the shelf fits the child, **recommend that instead of
+   writing a bank.** Say which line of the briefing made you pick it,
+   and give the parent the exact command:
+   `bin/kidnet-pack install portal/quizzes/community/<id>.json`.
+4. Only write a new bank when nothing on the shelf fits.
+
+This matters more than it looks. The banks in `portal/quizzes` grew
+around school subjects, and the shelf is where the other half lives:
+painting, model aeroplanes, knots, bike repair, the things a child is
+often more interested in than the curriculum. A briefing full of
+Formula 1 lookups and a shelf with a model aeroplanes package on it is
+not a prompt to write anything.
+
+The same rule applies as everywhere else here: **you recommend, the
+parent installs.** Do not run `kidnet-pack install` yourself.
+
+This is also the honest answer to "the dashboard should alert a parent
+to packages that suit their child". That alert does not exist. The
+dashboard lists what is installed and what is on the shelf and says so.
+The suggesting is this runbook, run by an agent the parent chose, on the
+parent's own box, against the parent's own database. Hearth has no
+telemetry and calls no cloud, so it will never be a service that watches
+a family and recommends things to them.
+
 ## What this does not do yet
 
 Stated plainly, because half a feature described as a whole one is how
@@ -256,3 +298,8 @@ trust goes:
   agent writes goes in as a file through `kidnet-quiz install`, or it
   gets typed in question by question. Pasting a whole bank into the
   dashboard is not built.
+- **Nothing tells a parent about a package on its own.** Step 8 is a
+  thing an agent does when somebody runs it. There is no line on the
+  dashboard that says "this package would suit your daughter", and
+  building one means building the matching, not the plumbing: the
+  plumbing (`kidnet-quiz-suggest`, `kidnet-pack list`) is already here.

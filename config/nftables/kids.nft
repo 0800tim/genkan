@@ -67,12 +67,37 @@ table inet kids {
     set video_ips    { type ipv4_addr; flags interval; }
     set download_ips { type ipv4_addr; flags interval; }
 
+    # Social destinations. gaming, video and download learned theirs above;
+    # social never had one, because social is metered through the per-service
+    # sets rather than by destination. The slow lane needs somewhere to aim, so
+    # this set exists and is filled from the same category_ips table by the
+    # gateway's reconciler. It carries no counter and no metering rule, so it
+    # changes nothing about what is measured.
+    set social_ips   { type ipv4_addr; flags interval; }
+
     # Per-device byte counters, auto-populated: each island source that talks
     # to a category gets its own counter element. The meter reads these by
     # device IP to attribute active minutes to the right child.
     set gaming_dev   { type ipv4_addr; flags dynamic; counter; }
     set video_dev    { type ipv4_addr; flags dynamic; counter; }
     set download_dev { type ipv4_addr; flags dynamic; counter; }
+
+    # ---- The slow lane ------------------------------------------------------
+    # Island sources whose <category> has been put in the slow lane. A device in
+    # one of these is NOT cut off. It keeps DNS, the portal, the internet and
+    # every other category at full speed; the named category is simply policed
+    # down to SLOW_RATE, so a video buffers, a scroll stutters, and a page still
+    # loads. Nobody is told no, and the child drifts off on their own.
+    #
+    # Filled by the gateway from slow_lane_ips (config/db/schema-slow.sql),
+    # which only ever yields PERSONAL devices, so a camera, a smart lock or the
+    # access point can never end up in here.
+    set slow_gaming { type ipv4_addr; }
+    set slow_video  { type ipv4_addr; }
+    set slow_social { type ipv4_addr; }
+    # Everything this device does is slow. This is the "out of time" slope for
+    # a household that has chosen it over the cliff (kidnet slow-timeout slow).
+    set slow_all    { type ipv4_addr; }
 
     # Public Tor relay addresses. Populated by bin/kidnet-tor-sync (deploy plus
     # the daily kids-tor-sync.timer), which renders /var/lib/hearth/tor-nodes.nft
@@ -137,6 +162,71 @@ table inet kids {
         iifname $KIDS_IF ip daddr @gaming_ips   update @gaming_dev   { ip saddr }
         iifname $KIDS_IF ip daddr @video_ips    update @video_dev    { ip saddr }
         iifname $KIDS_IF ip daddr @download_ips update @download_dev { ip saddr }
+    }
+
+    # ---- The slow lane ------------------------------------------------------
+    # A hard block is a confrontation: the video stops, the child comes to find
+    # you, and you have the argument this product exists to avoid. A slow lane
+    # is a different lesson. The video still plays, it just buffers, and the
+    # child drifts off to something else on their own.
+    #
+    # Priority 20, so it runs AFTER the filter chain (0) and the metering chain
+    # (10) in the same hook: what is dropped is never policed, and what is
+    # policed is still counted. Policy accept, so a mistake here can only ever
+    # fail towards full speed.
+    #
+    # Both directions are policed, with a separate bucket each. Download is the
+    # one a child feels, but a limit that only capped the upload would barely
+    # change a stream at all.
+    #
+    # `meter` gives every DEVICE its own token bucket, keyed on the island
+    # address, rather than one shared bucket for the household. Two throttled
+    # children get a slow lane each; they do not fight over one.
+    #
+    # The gateway's own services are on the INPUT hook, not this one, so DHCP,
+    # DNS, the portal and the speed test are never slowed. A child who is being
+    # slowed can always load the page that explains why, at full speed.
+    #
+    # THE SPEED, and why 32 kbytes/second. That is 256 kbit/s. A chat message, a
+    # search result and a small page all still arrive; YouTube at its lowest
+    # quality wants more than that and Netflix wants twice it, so video cannot
+    # hold a stream and buffers instead. The 64 kbyte burst lets a small page
+    # come at full speed and only makes a sustained pull crawl. Measured, not
+    # guessed: see DECISIONS.md and the slow lane cases in test/firewall-test.sh.
+    #
+    # nftables variables cannot stand where the grammar wants a number, so the
+    # rate is written out here as a literal and this file holds the only copy of
+    # these rules. A household that wants a different number sets it with
+    # `kidnet slow-rate <kbit>`; it is stored in the database, and
+    # gateway/entrypoint.sh re-renders the block between the two sentinel
+    # comments below with the household's figure substituted in.
+    chain throttle {
+        type filter hook forward priority 20; policy accept;
+    # >>> slow lane rules
+        # THE SAFETY NET IS NEVER SLOWED. First, above everything, in both
+        # directions. A child in trouble reaching a help line over a
+        # deliberately crippled connection would be the worst failure this
+        # project could have. @kids_allow holds the help lines and the reading
+        # list; on the way back those addresses are the source, not the
+        # destination, so both matches are needed.
+        ip daddr @kids_allow accept
+        ip saddr @kids_allow accept
+
+        # The whole device is slow: the out-of-time slope, for a household that
+        # chose it. Sits above the per-category rules so it wins, and so a child
+        # on the slope is policed once rather than twice.
+        oifname $KIDS_IF ip daddr @slow_all meter slow_all_dn { ip daddr limit rate over 32 kbytes/second burst 64 kbytes } drop
+        iifname $KIDS_IF ip saddr @slow_all meter slow_all_up { ip saddr limit rate over 32 kbytes/second burst 64 kbytes } drop
+
+        # Per category. The destination sets are the same ones the meter uses,
+        # so the slow lane and the chart always agree about what "video" is.
+        oifname $KIDS_IF ip daddr @slow_video  ip saddr @video_ips  meter slow_video_dn  { ip daddr limit rate over 32 kbytes/second burst 64 kbytes } drop
+        iifname $KIDS_IF ip saddr @slow_video  ip daddr @video_ips  meter slow_video_up  { ip saddr limit rate over 32 kbytes/second burst 64 kbytes } drop
+        oifname $KIDS_IF ip daddr @slow_gaming ip saddr @gaming_ips meter slow_gaming_dn { ip daddr limit rate over 32 kbytes/second burst 64 kbytes } drop
+        iifname $KIDS_IF ip saddr @slow_gaming ip daddr @gaming_ips meter slow_gaming_up { ip saddr limit rate over 32 kbytes/second burst 64 kbytes } drop
+        oifname $KIDS_IF ip daddr @slow_social ip saddr @social_ips meter slow_social_dn { ip daddr limit rate over 32 kbytes/second burst 64 kbytes } drop
+        iifname $KIDS_IF ip saddr @slow_social ip daddr @social_ips meter slow_social_up { ip saddr limit rate over 32 kbytes/second burst 64 kbytes } drop
+    # <<< slow lane rules
     }
 
     chain forward {                    # traffic FROM the island THROUGH the Hearth box

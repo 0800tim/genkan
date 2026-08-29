@@ -4,24 +4,28 @@ Every command Hearth ships, what it takes, and what it actually does. Written
 from the scripts themselves, so if this file and a script disagree, the script
 is right and this file is a bug.
 
-There are seventeen executables in `bin/`. One of them, `kidnet`, is the control
+`bin/` holds every executable Hearth ships. One of them, `kidnet`, is the control
 surface a parent or an agent drives by hand. The rest are background workers
-that timers run, plus `kidnet-report`, `kidnet-quiz` and `kidnet-quiz-suggest`,
-which you run when you want to read something or to change what the kids can
-learn from.
+that timers run, plus `kidnet-report`, `kidnet-quiz`, `kidnet-quiz-suggest` and
+`kidnet-pack`, which you run when you want to read something or to change what
+the kids can learn from.
 
-`deploy.sh` installs fourteen of them into `/usr/local/bin`. `kidnet-report`,
-`kidnet-quiz` and `kidnet-quiz-suggest` are not among them: run those from the
-repo (`bin/kidnet-report`, `bin/kidnet-quiz`, `bin/kidnet-quiz-suggest`),
-because they read files that live there.
+`deploy.sh` installs sixteen of them into `/usr/local/bin`. `kidnet-report`,
+`kidnet-quiz`, `kidnet-quiz-suggest` and `kidnet-pack` are not among them: run
+those from the repo, because they read files that live there.
 
 | Command | Run by | What it is for |
 |---|---|---|
 | [`kidnet`](#kidnet) | you, or your agent | the control surface: on, off, categories, time, devices |
 | [`kidnet-report`](#kidnet-report) | you, weekly | the family digest, read only |
+| [`kidnet-health`](#kidnet-health) | you, any time | is the household's internet working and is Hearth doing its job. Read only |
+| [`kidnet-upgrade`](#kidnet-upgrade) | you | update Hearth: check, snapshot, apply, undo itself if it breaks |
+| [`kidnet-rollback`](#kidnet-rollback) | you | go back to a version that worked |
 | [`kidnet-quiz`](#kidnet-quiz) | you, or your agent | manage the learn-to-earn quiz banks |
 | [`kidnet-quiz-suggest`](#kidnet-quiz-suggest) | you, or your agent | brief an agent on what one child should be quizzed on next |
+| [`kidnet-pack`](#kidnet-pack) | you | install, list and remove learning packages other people wrote |
 | [`kidnet-meter`](#kidnet-meter) | `kids-meter.timer` | ticks a minute off each active child's daily budget |
+| [`kidnet-schedule`](#kidnet-schedule) | `kids-schedule.timer` | applies scheduled bedtimes, and lifts them in the morning |
 | [`kidnet-catmap`](#kidnet-catmap) | `kids-metering.timer` | learns which addresses are gaming, video or a download |
 | [`kidnet-catmeter`](#kidnet-catmeter) | `kids-metering.timer` | counts active category minutes, enforces category budgets |
 | [`kidnet-servicemap`](#kidnet-servicemap) | `kids-services.timer` | learns which addresses are YouTube, Netflix, Roblox and so on |
@@ -30,8 +34,9 @@ because they read files that live there.
 | [`kidnet-classify`](#kidnet-classify) | `kidnet-devicescan` | guesses personal, IoT or infrastructure for each device |
 | [`kidnet-dnslog`](#kidnet-dnslog) | `kids-dnslog.timer` | pulls AdGuard's query log into `dns_log` |
 | [`kidnet-alerts`](#kidnet-alerts) | `kids-dnslog.service` | raises alerts on flagged domains just ingested |
+| [`kidnet-notify`](#kidnet-notify) | `kids-notify.timer` | sends unacknowledged alerts to the phone routes a household set up |
 | [`kidnet-adguard`](#kidnet-adguard) | `kidnet`, on every change | renders category blocks into AdGuard's rule list |
-| [`kidnet-adguard-clients`](#kidnet-adguard-clients) | `kidnet assign` | points each child's AdGuard client at their real device IPs |
+| [`kidnet-adguard-clients`](#kidnet-adguard-clients) | `kidnet assign` | points each child's AdGuard client at their real device IPs, and gives each shared family device one of its own |
 | [`kidnet-tor-sync`](#kidnet-tor-sync) | `kids-tor-sync.timer` | fetches the public Tor relay list for the firewall |
 | [`kidnet-iot-policy`](#kidnet-iot-policy) | `kids-iot-policy.timer` (installed, off by default) | generates the household IoT security policy from the database |
 
@@ -64,7 +69,9 @@ Most commands take a person's name. They also accept a group:
 - `adults` every grown-up, household and visiting
 - `household` everyone who lives here, no visitors
 - `all` everyone except the adults, plus any personal device nobody has claimed
-  yet. This is what `dinner` and bedtime use.
+  yet. This is what bedtime uses.
+- `dinner` the same people as `all`, plus every shared family device ticked for
+  dinner. This is what `dinner` uses.
 - `everyone` literally every personal device, adults included
 
 `all` is deliberately not `everyone`: a control aimed at the kids must never
@@ -75,9 +82,15 @@ Which group somebody falls in is decided by their role (`child`, `guest-child`,
 `guest-adult`, `adult`), and the answer lives in the database, in
 `people_in_scope()`. See [HOUSEHOLD-ROLES.md](HOUSEHOLD-ROLES.md).
 
-**Groups only ever touch devices classified `personal`.** Cameras, locks,
-speakers and other IoT are never cut by `kidnet off all` or by `dinner`. See
+**Groups only ever touch devices classified `personal` or `shared`.** Cameras,
+locks, speakers and other IoT, appliances and the access point are never cut by
+`kidnet off all`, by `dinner` or by `kidnet house off`. See
 [device classification](#kidnet-classify).
+
+There is one more scope, `house-off`, which is every device ticked for the
+whole-house cut and no people at all. It is deliberately not in the list above,
+so `kidnet off house-off` is refused. The only door to it is `kidnet house off`,
+which also sets the clock that makes the cut lift itself.
 
 ### Internet on and off
 
@@ -89,8 +102,48 @@ set and records it in `category_state`. A blocked device keeps DHCP, DNS, the
 captive portal and the safety net: it does not fall off the network, it lands
 on the "time's up" page.
 
-    kidnet dinner        # kidnet off all, with a nicer message
-    kidnet resume        # kidnet on all
+    kidnet dinner        # everyone but the adults, plus the shared devices
+                         # ticked for dinner
+    kidnet resume        # and back on again
+
+### The whole-house cut
+
+    kidnet house off [minutes]     one button: everything ticked for it goes off
+    kidnet house on                end it now
+    kidnet house status            is it running, and what would it catch
+
+`minutes` defaults to 60 and is capped at 1440. **The cut lifts itself when the
+time is up.** No rows are written against any device: `house_state` holds one
+timestamp, the `blocked_device_ips` view reads the clock, and the gateway's
+fifteen-second reconcile drops the addresses when it passes. That is deliberate.
+A cut you have to undo by hand is a cut that can outlive the reason for it, and
+the person who pressed it is often the person who has left the house.
+
+It never touches a smart home device, an appliance or the access point, and the
+safety net still answers on every device. `kidnet house on` takes out only the
+addresses nothing else still says should be blocked, so ending a house cut
+cannot hand the internet back to a child who is out of time.
+
+### Shared family devices, and the two tick boxes
+
+    kidnet shared <mac|ip> [label] [tier]        file it as the household's
+    kidnet sweep  <mac|ip> dinner|house on|off|default
+
+A shared family device is the lounge television or the iPad every kid uses. It
+belongs to the household rather than to one child, so nobody's minutes pay for
+it, and it carries its own filter level (Standard unless you say otherwise)
+because a device with no level falls through to the household catch-all, which
+blocks ads and malware and nothing else.
+
+`sweep` sets one tick box: whether this device is caught by the dinner pause,
+and whether it is caught by the whole-house cut. `default` clears your answer
+and puts the device back to whatever its class does by default, which is: a
+personal or shared device is in both, and a smart home device, an appliance or
+the access point is in neither, always. Ticking a box on one of those three is
+refused, because the answer is computed in the `device_sweeps` view and is not
+the tick box's to give.
+
+    kidnet sweep 192.168.60.72 dinner off    # the display that plays music
 
 ### Categories
 
@@ -102,6 +155,60 @@ All three write `category_state` and then call `kidnet-adguard apply`, which
 answers that category's domains with the portal address for that child only.
 `study on` is exactly `game off` plus `media off`; `study off` clears all three.
 
+Turning a category back **on** also returns it to full speed, so a category
+that was slowed, then switched off, then switched on again cannot come back
+still crawling with nothing on screen to say why.
+
+### The slow lane
+
+    kidnet slow <kid> <gaming|video|social|media|internet>   turn it down, do not cut it
+    kidnet full <kid> <gaming|video|social|media|internet>   back to full speed
+    kidnet slow-rate [kbit]                                  how slow the slow lane is
+    kidnet slow-timeout [cut|slow]                           what running out of time does
+    kidnet slow-status                                       who is slowed, and the settings
+
+A third state between on and off. Instead of cutting a category dead, the
+gateway polices it down to a few hundred kilobits: the video still plays, it
+just buffers, and the child drifts off to something else on their own. Nobody
+was told no, so there is nothing to argue about. See
+[DECISIONS.md](../DECISIONS.md) for why that is a better lesson than a wall.
+
+Each category is in exactly one of three states, and they all live on the one
+`category_state` row, so there is one place to read and nothing to keep in
+step:
+
+| State | Row | What the child gets |
+|---|---|---|
+| off | `blocked = true` | cut, portal explains, safety net still answers |
+| slow | `blocked = false`, `speed = 'slow'` | works, policed down to the household rate |
+| full | `blocked = false`, `speed = 'full'` | normal, and the default |
+
+Choosing `slow` or `full` always lifts a block, because that is what a parent
+means when they pick one. `media` is video and social together, exactly as it
+is for `kidnet media off`.
+
+`slow-rate` takes 32 to 9999 kbit/s and defaults to **256**. It is stored in
+`slow_settings`, and the gateway re-renders the firewall's throttle chain with
+it on its next reconcile, so it is live within fifteen seconds. It is not
+applied by this command directly: the database is the desired state, the
+firewall follows.
+
+`slow-timeout` decides what running out of time does. `cut` is the default and
+is what Hearth has always done: the internet goes off and the captive portal
+explains. `slow` drops the child into the slow lane instead, so the evening
+tails off rather than ending mid-sentence. Some families want the cliff and
+some want the slope; neither is assumed, and an upgrade never changes it.
+
+Earning time back lifts either shape of out-of-time, and only that shape, the
+same way `reopen` always has: a bedtime still cannot be bought back.
+
+**The safety net is never slowed.** The help lines and the reading list sit
+above every throttle rule in the firewall, in both directions, and
+`test/firewall-test.sh` proves it on an address that is otherwise inside a
+throttled category. **Smart home, appliances and infrastructure are never
+slowed either**: the view the gateway reads (`slow_lane_ips`) can only ever
+return a personal device, and `test/schema-test.sh` proves that too.
+
 ### Time
 
     kidnet time    [kid]                    minutes left today, or everybody
@@ -109,11 +216,26 @@ answers that category's domains with the portal address for that child only.
     kidnet grant   <kid> <gaming|video> <min>   grant minutes to ONE category
     kidnet earn    <kid> <task|min>         credit a named task's minutes, or a raw number
     kidnet penalty <kid> <min> [why]        dock minutes
-    kidnet spend   <kid> <min>              consume minutes; blocks the internet at zero
+    kidnet spend   <kid> <min>              consume minutes; at zero, cuts or slows
+
+    kidnet reopen  <kid>                    lift an out-of-time block, and nothing else
 
 `bonus`, `earn` and `penalty` all write `time_ledger.bonus_min` and an audit row
-in `time_events`. `bonus` and `earn` turn the internet back on if the child now
-has minutes left.
+in `time_events`. `bonus` and `earn` reopen the internet if the child now has
+minutes left, through `reopen`.
+
+What `spend` does at zero depends on `kidnet slow-timeout`. By default it cuts
+the internet and stamps `set_by='out-of-time'`. Set to `slow`, it puts the
+child in the slow lane instead and cuts nothing; a row that is already blocked
+for another reason, a bedtime say, is left completely alone.
+
+`reopen` is narrow on purpose. It clears an internet block **only** where
+`set_by` is `out-of-time` or `earned-back`, and marks it `earned-back`. It will
+not touch a block a parent set by hand, a category over its budget, or a
+scheduled bedtime. Until this existed, `bonus` and `earn` called `kidnet on`,
+which stamps `set_by='agent'` over whatever was in the row, so a chore approved
+at half past ten cancelled that child's bedtime. Time can be earned; bedtime
+cannot be bought. The dashboard's chore approval calls this same verb.
 
 `grant` is the per-category equivalent: it raises `category_budgets.daily_min`
 for gaming or video by that many minutes and clears an over-budget block for
@@ -131,6 +253,13 @@ A child on the teen tier has no daily budget. That is stored as 999 in
 `kidnet time` with no name reports the whole house: one line per active child
 and guest child, in name order. It used to die with a raw bash parameter error,
 which reached the dashboard verbatim.
+
+### Bedtimes
+
+    kidnet schedule <anything>   passed straight through to kidnet-schedule
+
+The times a child's internet goes off and comes back are their own script, the
+same way the household IoT policy is. See [kidnet-schedule](#kidnet-schedule).
 
 ### The safety net, and the reading list
 
@@ -180,6 +309,7 @@ camera, lock, speaker and vacuum is allowed to talk to. Read
     kidnet unassigned                   devices with no owner set yet
     kidnet leases                       current DHCP leases
     kidnet assign <mac|ip> <person> <label> [reserved-ip]
+    kidnet shared <mac|ip> [label] [tier]   file it as a shared family device
     kidnet infra <mac>                  mark a device as infrastructure (an AP, a switch)
     kidnet person add <name> <child|guest-child|guest-adult|adult> [tier]
     kidnet person list                  who is in the house, by role
@@ -256,13 +386,39 @@ attack it:
 - free text (reasons, labels): letters, digits and `_ : + . , -` and spaces, at
   most 80 characters
 
-A row limit is not exempt from that, and used not to be gated. `kidnet recent`
-and `kidnet topsites` interpolated their `[n]` straight into SQL, both are on
-the dashboard's HTTP allowlist, and `psql -c` will happily run a second
+Four more gates sit beside those three: a signed number (a penalty is minutes
+with a minus in front), a row id, a MAC-or-IPv4 address, and an IPv4 address on
+its own.
+
+A row limit is not exempt from any of it, and used not to be gated. `kidnet
+recent` and `kidnet topsites` interpolated their `[n]` straight into SQL, both
+are on the dashboard's HTTP allowlist, and `psql -c` will happily run a second
 statement, as the Postgres superuser. It was proven end to end before it was
 fixed. Both now run their argument through `ck_int` like everything else.
 Adding a verb to this script means gating every argument it takes, including
 the ones that are obviously numbers.
+
+Two rules learned the hard way, worth following when you add a verb:
+
+- **An id read back out of the database is still an argument.** Most of the
+  values that reach a `WHERE` here came from Postgres rather than from a
+  parent's typing, and that is exactly the assumption that turns one bad write
+  into a second injection. They go through `ck_id` too.
+- **Gate before you query.** `kidnet assign` used to check its optional
+  reservation next to the statement that used it, which sat after the person
+  lookup, so whether a bad reservation was refused depended on whether the
+  person existed. Check every argument before the first connection is opened.
+
+### Which database role it connects as
+
+`kidnet` and every `kidnet-*` worker connect as **`kids_agent`**, not as the
+Postgres superuser, and not as the `kids_app` role the dashboard and portal
+use. `kids_agent` cannot run `COPY ... TO PROGRAM`, read a server file, drop or
+truncate a table, delete a child or a day of history, or escalate itself. Its
+grants are one line per table in `config/db/grants.sql`, and adding a verb that
+touches a new table means adding a line there or the verb answers `permission
+denied`. `test/db-role-test.sh` proves the fence, and `docs/DATABASE.md`
+explains the three places that are still on the superuser path on purpose.
 
 ### Environment
 
@@ -271,6 +427,9 @@ the ones that are obviously numbers.
 | `GW_CONTAINER` | `hearth-gw` | which container holds the island's namespace |
 | `NFT_DIRECT` | unset | set to `1` to run `nft` on the host instead (the no-Docker variant) |
 | `NFT` | `/usr/sbin/nft` | the `nft` binary, when `NFT_DIRECT=1` |
+| `PG_CONTAINER` | `postgres` | the container Postgres runs in |
+| `HEARTH_DB` | `kids_network` | the database to talk to |
+| `HEARTH_DB_ROLE` | `kids_agent` | the Postgres role to connect as |
 | `ADGUARD_PASS` | unset | without it, the DNS layer is skipped silently and the database stays the source of truth |
 
 ---
@@ -305,6 +464,95 @@ block a quiz can lift.
 
 This is the whole-internet minute meter. Per-category minutes are counted
 separately by `kidnet-catmeter`.
+
+---
+
+## kidnet-schedule
+
+    kidnet-schedule [apply]                          apply the schedules (what the timer runs)
+    kidnet-schedule show [kid]                       what is set, what is in force, when it lifts
+    kidnet-schedule set <kid> <days> <HH:MM> <HH:MM> [categories]
+    kidnet-schedule clear <kid>                      remove that child's bedtimes
+    kidnet-schedule enable|disable <kid>             keep the times, stop or start them firing
+    kidnet-schedule extend <kid> <min>               tonight only, no schedule edited
+    kidnet-schedule holiday <from> <to> [name]       no bedtimes between those dates
+    kidnet-schedule holiday late <from> <to> <min> [name]
+    kidnet-schedule holiday clear                    end every override window now
+
+Run every minute by `kids-schedule.timer`, and reachable as `kidnet schedule
+...`. The dashboard's Family page sets the same rows through `/api/schedule`.
+
+`<days>` is `school` (Sunday to Thursday nights), `weekend` (Friday and
+Saturday nights), `every`, or a list like `0,1,2,3,4` where 0 is Sunday. The
+days are the nights the window **starts** on, which is what makes a Friday
+night different from a Tuesday night. An end time earlier than the start time
+means the window crosses midnight, which every bedtime does; there is no flag
+for it.
+
+`[categories]` is a comma list from `internet`, `gaming`, `video`, `social`.
+It defaults to `internet`, the whole thing. The safety net and the reading list
+survive a bedtime exactly as they survive every other cut.
+
+### What it does each minute
+
+Three statements, in this order, and the order is the design:
+
+1. **Releases.** If a parent turned something back on during a window the
+   worker had already asserted, that is recorded against the window
+   (`schedule_state.released_key`) so step 2 leaves it alone. It runs first, or
+   a parent's override would live for one minute.
+2. **Assert.** Block what the window calls for, marking it `set_by='bedtime'`,
+   but never over a block somebody else owns and never in a window a parent has
+   released.
+3. **Lift.** Anything still blocked with `set_by='bedtime'` that no window in
+   force calls for. Driven off `category_state` rather than off the `schedules`
+   table on purpose: a schedule deleted, disabled or edited mid-window would
+   otherwise leave a child blocked with nothing left to lift it.
+
+Nothing here touches nftables. The database is the desired state and the
+gateway container reconciles the firewall from it every 15 seconds, which is
+also why a reboot mid-bedtime comes back blocked: the block is a row, not a
+rule somebody has to remember to re-add. The DNS layer is pushed with
+`kidnet-adguard apply` when a change actually happened, because
+`gaming`, `video` and `social` bedtimes are enforced there.
+
+### The set_by rules
+
+A schedule owns **only** the blocks it applied. The full precedence table is in
+DECISIONS.md; the short version:
+
+| `set_by` | who set it | may a schedule lift it? |
+|---|---|---|
+| `agent` | a parent, by hand or on the dashboard | never |
+| `out-of-time` | `kidnet-meter`, at zero minutes | never |
+| `over-budget` | `kidnet-catmeter`, a category over its cap | never |
+| `bedtime` | this worker | yes, and only this worker |
+| `schedule-lifted` | this worker, in the morning | n/a, it is not a block |
+
+And in the other direction: a parent's `kidnet on` during a bedtime holds until
+the next window boundary, not for one minute; earning time back cannot lift a
+bedtime (see `kidnet reopen`); and an empty `schedule_state` means assert, so a
+restored backup or a fresh state table fails towards the bedtime being in force
+rather than towards the child being online.
+
+### Time and place
+
+Every date and time is worked out in the database's own timezone, which
+`deploy.sh` pins to `HEARTH_TZ`. That is the same clock the daily budget rolls
+over on, so a bedtime and a day boundary can never disagree.
+
+The maths lives in one SQL function, `schedule_windows(at timestamptz)`, which
+takes the moment as an argument instead of reading the clock. That is what
+lets `test/schedule-test.sh` prove a Tuesday, a Friday and a Saturday morning
+without waiting for any of them. Two views read it: `schedule_next` (one row per
+child, the window running now or the next one due) and `schedule_holding` (what
+is off right now because of a bedtime rather than because of a parent).
+
+### Environment
+
+Same three overrides as `bin/kidnet`: `PG_CONTAINER`, `HEARTH_DB` and
+`HEARTH_DB_ROLE`. It connects as `kids_agent`. `ADGUARD_PASS` is optional; with
+it unset the DNS push is skipped and the database is still the truth.
 
 ---
 
@@ -486,24 +734,27 @@ manual step: only the parent knows whose phone is whose.
 
 No arguments. Normally run by `kidnet-devicescan`; safe to run by hand.
 
-Every device sits in one of four classes, which decides how it is treated:
+Every device sits in one of five classes, which decides how it is treated:
 
 | Class | What it is | How Hearth treats it |
 |---|---|---|
-| `personal` | a phone, tablet, laptop, console, TV | assignable to a person, filtered and metered by their tier |
-| `iot` | cameras, locks, speakers, vacuums, lights, plugs, thermostats, appliances | never assigned, never metered, **never cut** by `kidnet off all` or `dinner` |
-| `appliance` | an SMS gateway, a build agent, a media server: nobody's device, but not smart-home kit either | full internet, no owner, no time limits, never caught by a kids control |
+| `personal` | a phone, tablet, laptop, console | assignable to a person, filtered and metered by their tier |
+| `shared` | the lounge TV, the iPad every kid uses | the household's, not one child's. Its own filter level, nobody's minutes, and swept by `dinner` or `kidnet house off` only where the parent has ticked it |
+| `iot` | cameras, locks, speakers, vacuums, lights, plugs, thermostats | never assigned, never metered, **never cut** by `kidnet off all`, `dinner` or `kidnet house off` |
+| `appliance` | an SMS gateway, a build agent, a media server: nobody's device, but not smart-home kit either | full internet, no owner, no time limits, never caught by any control |
 | `infra` | the access point, switches, the gateway itself | not a client at all |
 
 The `iot` row is the one worth saying out loud: your smart lock, your doorbell
 and your security camera stay online when you pause the kids at bedtime,
-because the group commands only ever touch `personal` devices. Nobody's front
-door goes offline because a fourteen year old ran out of time.
+because the group commands only ever touch `personal` and `shared` devices.
+Nobody's front door goes offline because a fourteen year old ran out of time.
 
-`appliance` (`config/db/schema-appliance.sql`) is a parent's decision, made in
-the owner picker on the dashboard's Devices page. The classifier never guesses
-it, because the difference between "a server" and "somebody's laptop" is not
-visible from a hostname or a MAC prefix.
+`shared` (`config/db/schema-shared.sql`) and `appliance`
+(`config/db/schema-appliance.sql`) are both a parent's decision, made in the
+owner picker on the dashboard's Devices page or with `kidnet shared`. The
+classifier never guesses either, because the difference between "a server" and
+"somebody's laptop", or between "the family TV" and "the eldest's monitor", is
+not visible from a hostname or a MAC prefix.
 
 It guesses in three passes, most reliable first:
 
@@ -570,6 +821,64 @@ category is a care signal and never routes a child to a blocking page.
 
 ---
 
+## kidnet-notify
+
+    kidnet-notify run                     send what is owed (the timer runs this)
+    kidnet-notify pending                 what would go next, without sending it
+    kidnet-notify list                    the routes, their state and their last result
+    kidnet-notify test <route>            send a harmless test message now
+    kidnet-notify log [n]                 the last n attempts, good and bad
+    kidnet-notify add <kind> <name> [options]
+    kidnet-notify set <name> [options]
+    kidnet-notify on <name> | off <name> | remove <name>
+
+Puts Hearth's alerts on a parent's phone. Reads unacknowledged `alerts` rows and
+POSTs the ones a household asked for, to an address the household typed in. It
+talks to no cloud and no vendor: with no routes configured it sends nothing to
+anybody and says so, which is what a fresh install does.
+
+Kinds that are **built and tested**: `ntfy`, `webhook`. Kinds that are
+**documented extension points and refused**: `email`, `homeassistant`. A route
+it cannot send on is refused at creation, rather than accepted and left silently
+broken.
+
+Options for `add` and `set`:
+
+| Option | What it does |
+|---|---|
+| `--target URL` | where to send. Leave it off and you are prompted, which keeps the URL out of your shell history and out of `ps`. |
+| `--token TOKEN` | optional bearer token, for a protected ntfy or webhook |
+| `--severity S` | `info` (everything), `warn` (the default), `urgent` (only those) |
+| `--categories a,b` | only these alert categories. Left off, all of them. |
+| `--quiet HH:MM-HH:MM` | quiet hours, or `off`. May cross midnight. |
+| `--quiet-urgent yes|no` | whether urgent still goes through during quiet hours. Default yes. |
+| `--detail yes|no` | may this route carry an alert's own text? Default no, and it can never widen past what `notify_wording.detail_ok` allows. |
+| `--rate N` | most ordinary messages an hour. Default 6. |
+
+**For an ntfy route the topic name is the password.** Make it long and random,
+and prefer your own ntfy server. The target and the token live only in the
+database and are never written to a file, a log line or a command line.
+
+The four things it promises: never the same alert to the same route twice
+(a database constraint, not a code path); a burst collapses into one message
+(twelve unknown devices is one notification saying "12 devices"); routine alerts
+are quiet by default and quiet hours hold everything but the urgent; and a route
+that is down loses nothing, breaks nothing and exits 0, leaving the alert
+unacknowledged so it goes next time.
+
+A notification says that something needs your eyes and where to look. The detail
+stays on the dashboard, at home. The self-harm alert in particular names no
+child, quotes no site and does not say what it is about, because it is read on a
+lock screen wherever the phone happens to be. The whole reasoning, and the exact
+words, are in [NOTIFICATIONS.md](NOTIFICATIONS.md).
+
+| Variable | Default |
+|---|---|
+| `NOTIFY_MAX_AGE` | `12 hours`, the horizon past which an unsent alert is retired rather than fired at a phone |
+| `NOTIFY_TIMEOUT` | `10` seconds per HTTP attempt |
+
+---
+
 ## kidnet-adguard
 
     kidnet-adguard [apply|render]
@@ -616,6 +925,13 @@ bug this tool exists to fix. The guest catch-all client is never touched.
 If a child has no matching AdGuard client, the tool says so and moves on rather
 than creating one: client objects carry policy, and creating them silently
 would hide a misconfiguration.
+
+A **shared family device** gets a client of its own too, named after the device,
+on the level in `devices.policy_tier`. It belongs to nobody, so no person's tier
+can carry it, and without one it falls through to the household catch-all, which
+blocks ads and malware and nothing else. Clear its level and the client is
+removed. A shared device whose label is also a person's name is skipped, because
+AdGuard keys clients by name and building it would overwrite that person's.
 
 ---
 
@@ -780,6 +1096,68 @@ instead of reloading it.
 
 ---
 
+## kidnet-pack
+
+    kidnet-pack list                      what is installed, and what is on the shelf
+    kidnet-pack validate <file>...        check a package without installing it
+    kidnet-pack install <file> [--force]  validate, then install it for the kids
+    kidnet-pack remove <id> [--off]       remove it, or just take it off the list
+
+Community learning packages. A package is one JSON file: a quiz bank, plus who
+wrote it, what licence it carries, who it is for, and optionally a short piece
+to read first. It is the bank format with one optional block added: forty-one of
+the forty-two banks that ship with Hearth pass every package check unchanged,
+manifest aside. `docs/CONTRIBUTING-CONTENT.md` is the guide for writing one,
+written for somebody who is not a programmer.
+
+**Why this is not `kidnet-quiz install`.** That command copies a bank file into
+`portal/quizzes`, which is tracked in git: a `git pull` would delete a family's
+installed content and a repo update would overwrite it. A package goes into the
+**database** instead, alongside the banks a parent writes on the dashboard
+(`config/db/schema-packages.sql`). Updating Hearth cannot touch it, removing it
+is one row, and the children's earned minutes stay earned either way, because
+`quiz_rounds` has no foreign key to the bank.
+
+`validate` and `install` are both strict: a package a household installs has to
+say who wrote it and under what licence. To check a plain bank that has no
+manifest yet, call the validator directly with
+`node tools/validate-package.mjs <file>`.
+
+Install refuses three things before anything reaches the database: a package
+that fails `tools/validate-package.mjs --strict`, an id that a file bank in
+`portal/quizzes` already owns (a file bank wins on the portal, so the package
+would install and never be seen), and an id that is already installed unless you
+pass `--force`. Re-installing replaces every question, which is how a package
+takes an update.
+
+`remove` will only ever touch a bank that arrived as a package, so it cannot
+delete a bank a parent wrote on the dashboard whatever id is handed to it.
+`--off` takes it off the kids' list without removing it.
+
+The whole package goes into Postgres as one `jsonb` value, through
+`install_quiz_package()`, so the install is a single transaction and there is
+one string to quote rather than hundreds. That function is `SECURITY DEFINER`,
+which is what lets `kids_agent` install a package without being granted write
+access to every quiz bank in the house.
+
+**It touches no network.** There is no package registry, no download, no update
+check and no telemetry. A package arrives as a file, put there by a person. The
+portal notices an installed package within about half a minute, because it polls
+the database shelf, so nothing needs restarting.
+
+| Variable | Default | Effect |
+|---|---|---|
+| `HEARTH_REPO` | the repo above `bin/` | where to find the validator and the shelf |
+| `PACK_SHELF` | `$HEARTH_REPO/portal/quizzes/community` | the shelf `list` reads |
+| `HEARTH_DB` | `kids_network` | the database to install into |
+| `HEARTH_DB_ROLE` | `kids_agent` | the Postgres role to connect as |
+
+`test/package-test.sh` (31 checks) is the suite behind this: it builds fourteen
+hostile packages, proves each is refused, then forces one into the database by
+hand and proves the portal still renders it inert.
+
+---
+
 ## kidnet-quiz-suggest
 
     kidnet-quiz-suggest                     the children it can brief on
@@ -867,9 +1245,134 @@ with a matching `hearth-snapshot.service` of `Type=oneshot` running
 `tools/worktree-snapshot.sh save`. This is a developer safety net, not part of
 what a family runs.
 
+---
+
+## kidnet-health
+
+```
+kidnet-health [--json] [--details] [--quiet] [--wait <seconds>] [--write <file>]
+```
+
+Answers one question: is this household's internet working, and is Hearth doing
+its job. It is the command a parent runs at 9pm when a child says the internet
+is broken, and it is what `kidnet-upgrade` trusts when it decides whether an
+upgrade worked.
+
+**Read only.** It writes nothing except the optional JSON cache. That is a rule
+rather than a habit: it gets run when things are already going wrong, and a
+diagnostic that changes state can make things worse. It needs no root.
+
+What it checks, in this order:
+
+| Check | Fails when |
+|---|---|
+| the gateway container | `hearth-gw` is not running, so nobody has internet |
+| the filter and address server | `hearth-adguard` is not running, so nothing resolves and no device gets an address |
+| the children's page | `hearth-portal` is not running |
+| the speed test | `hearth-speedtest` is not running. A note, never a failure: it is optional |
+| the firewall | table `inet kids` is missing, or any of the chains `input`, `forward`, `metering`, `prerouting`, `postrouting`, or the sets `kids_block`, `kids_allow`, `kids_known` |
+| name lookups | a real DNS question, put on the wire to the resolver inside the island, gets no usable answer |
+| the children's page answers | an HTTP request to the portal on the island does not come back 200 |
+| the network card | `kids0` is not present inside the gateway, so there is no island at all |
+| the records | the database cannot be read as `kids_agent` |
+| the safety net | `always_allow` has no `scope='safety'` rows, **or** the live `kids_allow` set is empty. Both, because a row in the database and an address in the firewall are two different facts and only the second one saves anybody |
+| the background jobs | any enabled `kids-*.timer` has stopped, so time silently stops being counted |
+| the Tor relay list | it is more than seven days old. A note, never a failure |
+
+The DNS and portal probes run inside the gateway's network namespace, because
+from the host there is no route to either. They use `python3`, which is already
+in the gateway image.
+
+Exit code 0 when nothing a household depends on is broken (notes are allowed),
+1 otherwise. That binary answer is deliberate: an upgrade has to decide.
+
+`--wait <seconds>` re-checks until it passes or the time runs out, which is how
+`kidnet-upgrade` gives containers a moment to come up after a deploy.
+`--json` prints the same thing as JSON, which is what the dashboard footer
+reads. `--details` spells out what each line actually checked.
+
+What it cannot tell you: that your broadband is up, that a child's laptop is on
+the right wifi, or that the filtering caught everything. It says so in its own
+output.
+
+---
+
+## kidnet-upgrade
+
+```
+kidnet-upgrade [check]
+sudo kidnet-upgrade apply [--to <ref>] [--yes] [--dry-run] [--allow-dirty]
+                          [--no-auto-rollback] [--wait <seconds>]
+kidnet-upgrade status
+```
+
+Updates Hearth. `check` (the default) changes nothing: it fetches, says what is
+available, lists what changed, and calls out separately if the release touches
+the database.
+
+`apply` does this, stopping at the first failure:
+
+1. Checks the **new** version in a throwaway git worktree, while the household
+   carries on: `nft -c` on the new ruleset, `test/schema-test.sh` on the new
+   schema, `bash -n` on every new script. A failure here means nothing is
+   changed and the household never notices.
+2. Snapshots into `/var/lib/hearth/releases/<timestamp>/`: a `pg_dump` of the
+   database, a `manifest.env` naming the commit to come back to, and a copy of
+   `kidnet-rollback`, `kidnet-health` and the shared library. The undo tool
+   travels with the thing it undoes, because a version broken enough to fail
+   its health check cannot be trusted to roll itself back.
+3. Switches the checkout over and runs `deploy.sh`.
+4. Runs `kidnet-health --wait`. If it fails, it calls the snapshot's own copy
+   of `kidnet-rollback` and puts the old version back, unasked.
+
+Follows release tags (`v[0-9]*`), not branches, so a household never receives
+the tip of main unless somebody types `--to origin/main`.
+
+Safe to run twice: an upgrade to the version already installed says so and does
+nothing. Safe to interrupt: a killed run leaves `/var/lib/hearth/releases/in-progress`,
+and the next run finishes that job or rolls it back rather than starting a new one.
+
+Refuses to run over uncommitted edits unless `--allow-dirty`, and snapshots them
+with `tools/worktree-snapshot.sh` either way.
+
+`status` prints the version, the snapshots available, and the last ten rows of
+the release log.
+
+Overridable for testing, which is how `test/release-test.sh` drives the whole
+path without going near a live household: `HEARTH_ROOT`, `HEARTH_STATE_DIR`,
+`HEARTH_DB`, `PG_CONTAINER`, `HEARTH_APPLY_CMD`, `HEARTH_HEALTH_FILE`,
+`HEARTH_KEEP_SNAPSHOTS`.
+
+---
+
+## kidnet-rollback
+
+```
+kidnet-rollback list
+kidnet-rollback show <id>
+sudo kidnet-rollback to <id|previous> [--with-database] [--yes] [--dry-run]
+```
+
+Goes back to a version that worked, deliberately. `list` shows every snapshot,
+when it was taken, which version it goes back to, and whether it has a database
+backup.
+
+`to` puts the code back and re-runs `deploy.sh`, then checks the household. It
+leaves the database alone unless you pass `--with-database`, which replaces the
+database with the copy in the snapshot and makes you type `ROLLBACK` in full
+first. It takes a copy of what it is about to replace before it does.
+
+The limits are documented at length in [UPGRADING.md](UPGRADING.md) and in the
+script's own header. The short version: a restore is a restore, so everything
+since the snapshot is gone, including minutes children earned. A rollback
+cannot undo a dropped database column on its own, and a release that drops one
+needs `--with-database` on the way back.
+
+---
+
 ## The test suites
 
-Not in `bin/`, but part of the same surface. All eight need the stack or at
+Not in `bin/`, but part of the same surface. All nine need the stack or at
 least Postgres, and five of them need root because they build throwaway
 network namespaces.
 
@@ -887,15 +1390,17 @@ were doing exactly that on any machine without netcat. See DECISIONS.md.
     sudo test/iot-policy-test.sh      39 checks: the household IoT policy, real packets, six namespaces
     sudo test/meter-test.sh            8 checks: category minutes, budget enforcement, grant
     sudo test/service-meter-test.sh    6 checks: per-service bytes, active minutes, idle ignored
-    sudo test/roles-test.sh           51 checks: the household roles, who each scope reaches, and the 11pm scenario
-    test/schema-test.sh               35 checks: a fresh install, every schema file into an empty database
+    sudo test/roles-test.sh           99 checks: the household roles, who each scope reaches, and the 11pm scenario
+    test/schema-test.sh               88 checks: a fresh install, every schema file into an empty database
+    test/schedule-test.sh             57 checks: bedtimes, the morning restore, and who may lift what
     ADGUARD_PASS=... test/adguard-test.sh    9 checks: the DNS layer, via AdGuard's own check_host API
 
 `container-test.sh` skips one containment check when the interim
 `hearth-share-gateway` service is running, because that service adds host NAT
 for the island subnet on purpose.
 
-`schema-test.sh` and `adguard-test.sh` are the two that do not need root.
+`schema-test.sh`, `schedule-test.sh` and `adguard-test.sh` are the three that do
+not need root.
 `adguard-test.sh` is the only one that needs the island profile up.
 
 `schema-test.sh` creates a throwaway database, loads every file through
@@ -906,6 +1411,14 @@ built up over months, so none of them would ever catch a documented load order
 that no longer works. That had already happened: a stranger's first install
 failed on the first two files.
 
+`schedule-test.sh` never touches the household database. It creates its own,
+loads the real schema files into it, invents a family, and points
+`bin/kidnet-schedule` and `bin/kidnet` at that database with `HEARTH_DB`. The
+firewall is pointed at a container that does not exist, so nothing in it can
+reach nftables either. It proves the time maths at fixed moments, then drives
+the worker through a bedtime, a parent override, a restart mid-bedtime and a
+morning restore.
+
 `roles-test.sh` needs root only for a network namespace: it builds its own copy
 of the `kids_block` set in there rather than writing to the live gateway, so it
 is safe to run on a household that is in use. It creates its own people and
@@ -915,3 +1428,12 @@ exactly as it found them.
 After any change to `config/nftables/kids.nft`, `gateway/` or `bin/kidnet`, run
 the firewall and container suites. Both must pass fully. After any change to
 `config/db/`, run the schema suite.
+
+`release-test.sh` proves the upgrade and rollback path without touching
+anything real. It clones the repo into a temp directory, invents two releases
+in it, points `HEARTH_ROOT`, `HEARTH_STATE_DIR`, `HEARTH_DB`,
+`HEARTH_HEALTH_FILE` and `HEARTH_APPLY_CMD` at throwaways, then upgrades,
+breaks the health check on purpose and checks that the tooling put the old
+version back by itself. Run it with sudo: without root, `kidnet-upgrade`
+refuses to apply anything, and that refusal is itself one of the things worth
+keeping. Run it before cutting any release.

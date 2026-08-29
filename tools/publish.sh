@@ -62,7 +62,7 @@ AUTHOR="${HEARTH_AUTHOR:-}"
 # The author's own row is excluded here because the placement check below
 # covers it properly. Matched on any word of AUTHOR, since the household row
 # is usually a first name while the LICENSE carries the full one.
-NAMES=$(docker exec -i postgres psql -U postgres -d kids_network -tAc \
+NAMES=$(docker exec -i postgres psql -U "${HEARTH_DB_ROLE:-kids_agent}" -d kids_network -tAc \
   "SELECT string_agg(name,'|') FROM children
     WHERE name !~ '^guest-'
       AND NOT (lower(name) = ANY (string_to_array(lower('${AUTHOR:-__none__}'), ' ')))" 2>/dev/null)

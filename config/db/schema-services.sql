@@ -84,7 +84,54 @@ INSERT INTO services (name,label,category,emoji,metered) VALUES
  ('battlenet','Battle.net','gaming','❄️',true),
  ('applemusic','Apple Music','audio','🍎',false),
  ('soundcloud','SoundCloud','audio','🔊',false),
- ('duolingo','Duolingo','schoolwork','🦉',false)
+ ('duolingo','Duolingo','schoolwork','🦉',false),
+ -- Regional catch-up, streaming, sport and music services (2026-08-30).
+ -- The seed was very American: no New Zealand, Australian, UK, Canadian or
+ -- Irish household could meter its own catch-up TV. Every domain below was
+ -- checked with `getent ahostsv4` before it went in. See docs/SERVICES.md
+ -- for how a household adds the next one.
+ --
+ -- New Zealand
+ ('tvnzplus','TVNZ+','video','📺',true),
+ ('threenow','ThreeNow','video','📺',true),
+ ('neon','Neon','video','🎬',true),
+ ('skygonz','Sky Go (NZ)','video','🏉',true),
+ ('skysportnow','Sky Sport Now','video','🏏',true),
+ ('maoritv','Māori Television','video','🎬',true),
+ ('rnz','RNZ','audio','📻',false),
+ -- Australia
+ ('abciview','ABC iview','video','📺',true),
+ ('sbsondemand','SBS On Demand','video','📺',true),
+ ('ninenow','9Now','video','📺',true),
+ ('sevenplus','7plus','video','📺',true),
+ ('tenplay','10 play','video','📺',true),
+ ('stan','Stan','video','🎬',true),
+ ('kayosports','Kayo Sports','video','🏉',true),
+ ('binge','Binge','video','🎬',true),
+ ('foxtel','Foxtel','video','📡',true),
+ -- United Kingdom
+ ('bbciplayer','BBC iPlayer','video','📺',true),
+ ('itvx','ITVX','video','📺',true),
+ ('channel4','Channel 4','video','📺',true),
+ ('my5','My5','video','📺',true),
+ ('nowtv','NOW','video','🎬',true),
+ ('skygouk','Sky Go (UK)','video','🎬',true),
+ ('tntsports','TNT Sports','video','🏉',true),
+ -- Canada
+ ('cbcgem','CBC Gem','video','📺',true),
+ ('crave','Crave','video','🎬',true),
+ ('citytv','Citytv','video','📺',true),
+ ('globaltv','Global TV','video','📺',true),
+ ('tsn','TSN','video','🏒',true),
+ ('sportsnet','Sportsnet','video','🏒',true),
+ -- Ireland
+ ('rteplayer','RTÉ Player','video','📺',true),
+ ('virginmediaplay','Virgin Media Play','video','📺',true),
+ -- Genuinely global gaps: a gaming platform and two music services with no
+ -- US-centric equivalent already in the seed.
+ ('hoyoverse','HoYoverse','gaming','⚔️',true),
+ ('amazonmusic','Amazon Music','audio','🎧',false),
+ ('deezer','Deezer','audio','🎧',false)
 ON CONFLICT (name) DO NOTHING;
 
 INSERT INTO service_domains (service_id, domain)
@@ -136,7 +183,84 @@ SELECT s.id, d.domain FROM (VALUES
  ('battlenet','battle.net'),('battlenet','blizzard.com'),('battlenet','activision.com'),
  ('applemusic','music.apple.com'),
  ('soundcloud','soundcloud.com'),('soundcloud','sndcdn.com'),
- ('duolingo','duolingo.com')
+ ('duolingo','duolingo.com'),
+ -- Regional additions (2026-08-30). Where a service's own domain also
+ -- carries a broadcaster's general news site, that is noted per country
+ -- below rather than repeated on every line.
+ --
+ -- New Zealand. tvnz.co.nz and threenow.co.nz are already video domains in
+ -- category_domains; this just names the service they belong to.
+ ('tvnzplus','tvnz.co.nz'),
+ ('threenow','threenow.co.nz'),
+ -- 3now.co.nz, tv3.co.nz, choicetv.co.nz, hgtv.co.nz and amshow.co.nz are
+ -- the other channel brands Warner Bros Discovery NZ streams through the
+ -- same ThreeNow catalogue. newshub.co.nz is deliberately left out: it is
+ -- Warner Bros Discovery NZ's news site, not video.
+ ('threenow','3now.co.nz'),('threenow','tv3.co.nz'),('threenow','choicetv.co.nz'),
+ ('threenow','hgtv.co.nz'),('threenow','amshow.co.nz'),
+ -- Neon and Lightbox (its previous name) share the same Sky-owned backend.
+ ('neon','neontv.co.nz'),('neon','api.neontv.co.nz'),('neon','lightbox.co.nz'),
+ -- Sky Go (NZ) and Sky Sport Now share Sky's account domain (sky.co.nz) and
+ -- an Akamai-hosted video path under skygo.co.nz; dashvod/hlsvod are the
+ -- actual video bytes, sky.co.nz is mostly login and EPG.
+ ('skygonz','skygo.co.nz'),('skygonz','sky.co.nz'),('skygonz','dashvod.skygo.co.nz'),
+ ('skygonz','hlsvod.skygo.co.nz'),('skygonz','prod.dashlive.skygo.co.nz'),
+ ('skygonz','prod-ak.ws.skygo.co.nz'),
+ ('skysportnow','skysportnow.co.nz'),('skysportnow','skysport.co.nz'),
+ ('maoritv','maoritelevision.com'),('maoritv','whakaatamaori.co.nz'),
+ ('rnz','rnz.co.nz'),
+ -- Australia. abc.net.au and sbs.com.au are each a full news broadcaster's
+ -- site, not a video domain, so only the dedicated iview/on-demand hosts
+ -- are named here; the bare apex is deliberately left out.
+ ('abciview','iview.abc.net.au'),('abciview','streaming.c3.abc.net.au'),
+ ('sbsondemand','sbsondemand.com'),
+ ('ninenow','9now.com.au'),
+ ('sevenplus','7plus.com.au'),
+ ('tenplay','10play.com.au'),
+ ('stan','stan.com.au'),('stan','api.stan.com.au'),
+ ('kayosports','kayosports.com.au'),
+ ('binge','binge.com.au'),
+ -- streamotion.com.au is the Foxtel Group's shared login/playback backend
+ -- for Kayo, Binge and Foxtel: one company's own infrastructure, not a
+ -- third-party CDN, so it is named here rather than left out, but a Kayo or
+ -- Binge session can show up counted as Foxtel.
+ ('foxtel','foxtel.com.au'),('foxtel','streamotion.com.au'),('foxtel','auth.streamotion.com.au'),
+ -- United Kingdom. bbc.co.uk and bbc.com carry BBC News, Sport and Weather
+ -- as well as iPlayer; BBC Sounds uses the same domain too, so (like
+ -- YouTube Music counting as YouTube) BBC Sounds listening counts as
+ -- iPlayer video, not audio. itv.com and channel4.com are the same
+ -- broadcaster-does-everything shape.
+ ('bbciplayer','bbc.co.uk'),('bbciplayer','bbc.com'),('bbciplayer','bbci.co.uk'),
+ ('bbciplayer','open.live.bbc.co.uk'),
+ ('itvx','itv.com'),('itvx','itvx.com'),('itvx','hls.itvstatic.com'),
+ ('channel4','channel4.com'),
+ ('my5','my5.tv'),
+ ('nowtv','nowtv.com'),('nowtv','nowtv.co.uk'),
+ -- Sky UK is a different company from Sky NZ (they have shared a brand
+ -- name since a historical licence, not a shared network); no dedicated
+ -- video CDN host for Sky Go UK was confirmed, so only the account domain
+ -- is named. bt.com is BT's whole broadband/mobile corporate site and is
+ -- deliberately left out; tntsports.co.uk and its legacy btsport.com name
+ -- are TNT Sports' own dedicated streaming domains.
+ ('skygouk','sky.com'),
+ ('tntsports','tntsports.co.uk'),('tntsports','btsport.com'),
+ -- Canada. cbc.ca is CBC's whole news site, so only its dedicated video
+ -- subdomain is named. globalnews.ca (Global's news site) is a separate
+ -- domain from globaltv.com and is correctly not listed here.
+ ('cbcgem','gem.cbc.ca'),
+ ('crave','crave.ca'),
+ ('citytv','citytv.com'),
+ ('globaltv','globaltv.com'),
+ ('tsn','tsn.ca'),
+ ('sportsnet','sportsnet.ca'),
+ -- Ireland. rte.ie is RTÉ's whole news site, so only the dedicated player
+ -- domain is named.
+ ('rteplayer','rteplayer.ie'),
+ ('virginmediaplay','virginmediatelevision.ie'),
+ -- Genuinely global gaps.
+ ('hoyoverse','hoyoverse.com'),('hoyoverse','mihoyo.com'),
+ ('amazonmusic','music.amazon.com'),
+ ('deezer','deezer.com')
 ) AS d(sname,domain) JOIN services s ON s.name=d.sname
 ON CONFLICT DO NOTHING;
 

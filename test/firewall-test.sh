@@ -84,6 +84,19 @@ def serve(p):
     s.bind(('0.0.0.0',p)); s.listen(8)
     while True:
         c,_=s.accept(); c.sendall(b'FAR'); c.close()
+# A bulk stream, for the slow lane. Nothing else uses 8080, so no other check
+# can be changed by it being here.
+def bulk(c):
+    buf=b'x'*65536
+    try:
+        while True: c.sendall(buf)
+    except Exception: pass
+def bulkserve():
+    s=socket.socket(); s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
+    s.bind(('0.0.0.0',8080)); s.listen(8)
+    while True:
+        c,_=s.accept(); threading.Thread(target=bulk,args=(c,),daemon=True).start()
+threading.Thread(target=bulkserve,daemon=True).start()
 for p in (80,443,853): threading.Thread(target=serve,args=(p,),daemon=True).start()
 import time; time.sleep(600)" >/dev/null 2>&1 &
 pids="$pids $!"
@@ -121,6 +134,37 @@ check(){ # check <description> <want: yes|no> <host> <port>
 elem(){ # elem <description> <set> <address>: is the address in the nft set?
   if $GW $NFT list set inet kids "$2" 2>/dev/null | grep -q "$3"; then pass=$((pass+1)); printf '  \033[32mPASS\033[0m  %s\n' "$1"
   else fail=$((fail+1)); printf '  \033[31mFAIL\033[0m  %s (%s not in @%s)\n' "$1" "$3" "$2"; fi; }
+
+# How fast, in kilobytes per second, the kid can pull from a bulk stream. This
+# is what makes the slow lane testable at all: a policer does not change
+# whether a connection works, only how much comes down it, so "reachable" can
+# never prove or disprove it. 0 means the connection failed outright.
+rate(){ # rate <host> <port> <seconds>
+  $KID timeout $(( $3 + 4 )) python3 -c "
+import socket,time,sys
+try: s=socket.create_connection((sys.argv[1],int(sys.argv[2])),3)
+except Exception: print(0); raise SystemExit
+s.settimeout(1.0); t0=time.time(); n=0
+while time.time()-t0 < float(sys.argv[3]):
+    try: b=s.recv(65536)
+    except socket.timeout: continue
+    except Exception: break
+    if not b: break
+    n+=len(b)
+try: s.close()
+except Exception: pass
+print(int(n/(time.time()-t0)/1024))
+" "$1" "$2" "$3" 2>/dev/null || echo 0; }
+# speed <description> <floor kB/s> <ceiling kB/s> <host> <port> <seconds>
+# A window, not a number: the floor proves traffic still flows, the ceiling
+# proves it is genuinely being held back. These namespaces are veth pairs, so
+# unthrottled runs in the millions of kB/s and the two windows cannot overlap.
+speed(){ local got; got=$(rate "$4" "$5" "$6"); got=${got:-0}
+  if [ "$got" -ge "$2" ] && [ "$got" -le "$3" ]; then
+    pass=$((pass+1)); printf '  \033[32mPASS\033[0m  %s (%s kB/s)\n' "$1" "$got"
+  else
+    fail=$((fail+1)); printf '  \033[31mFAIL\033[0m  %s (wanted %s-%s kB/s, got %s)\n' "$1" "$2" "$3" "$got"
+  fi; }
 
 blockkid(){ $GW $NFT add element inet kids kids_block "{ 192.168.60.50 }"; }
 unblockkid(){ $GW $NFT delete element inet kids kids_block "{ 192.168.60.50 }" 2>/dev/null; }
@@ -162,6 +206,57 @@ echo
 echo "Back on"
 unblockkid
 check "internet returns"                              yes 203.0.113.2 443
+
+echo
+echo "The slow lane (Firewalla calls it 'disturb'; the point is the same)"
+# A slow lane is not a block, and the difference is the whole feature: the
+# video still plays, it just buffers, and the child drifts off on their own
+# rather than coming to argue about a wall. So what is tested is throughput,
+# not reachability. 203.0.113.2:8080 is a bulk stream on the far side.
+#
+# The numbers: the shipped rate is 32 kbytes/second with a 64 kbyte burst, so a
+# 4 second pull should land somewhere near 48 kB/s. The window is deliberately
+# generous at both ends, because what matters is the ORDER of magnitude: these
+# are veth pairs and full speed here is millions of kB/s, so a throttled
+# reading and an untouched one cannot be confused for each other.
+SLOW_CEIL=800        # a throttled pull must be under this
+FAST_FLOOR=2000      # an untouched pull must be over this
+speed "full speed first, so the rest means something" "$FAST_FLOOR" 99999999 203.0.113.2 8080 3
+$GW $NFT add element inet kids video_ips  "{ 203.0.113.2 }"
+$GW $NFT add element inet kids slow_video "{ 192.168.60.50 }"
+speed "a video address in the slow lane STILL PASSES TRAFFIC" 1 "$SLOW_CEIL" 203.0.113.2 8080 4
+# The same address, still throttled, still a working connection: a slow lane
+# must never look like a block to the kid or to their software.
+check "and the connection itself still opens"        yes 203.0.113.2 8080
+# Nothing else is touched. .3 is not in @video_ips, so it is a different
+# category as far as the firewall is concerned and must run at full speed.
+$NET ip addr add 203.0.113.3/24 dev n-eth0
+speed "an address OUTSIDE the slow lane is unaffected" "$FAST_FLOOR" 99999999 203.0.113.3 8080 3
+# THE ONE THAT MATTERS MOST. A child in trouble reaching a help line over a
+# deliberately crippled connection would be the worst failure this project
+# could have, so the safety net sits above every throttle rule in both
+# directions. Proven here on an address that IS in the slow lane's category.
+allow 203.0.113.2
+speed "THE SAFETY NET IS NEVER SLOWED, even inside a throttled category" "$FAST_FLOOR" 99999999 203.0.113.2 8080 3
+unallow
+speed "and it goes back to a crawl once it is not a help line" 1 "$SLOW_CEIL" 203.0.113.2 8080 4
+# The whole-device lane: the out-of-time slope, for a household that chose it.
+$GW $NFT flush set inet kids slow_video
+$GW $NFT add element inet kids slow_all "{ 192.168.60.50 }"
+speed "the whole-device slow lane holds every destination down" 1 "$SLOW_CEIL" 203.0.113.3 8080 4
+allow 203.0.113.3
+speed "and the safety net is not slowed by that one either" "$FAST_FLOOR" 99999999 203.0.113.3 8080 3
+unallow
+# A device nobody has put in a slow lane is never policed, whatever anyone
+# else's state is. The buckets are per device, not one for the household.
+$GW $NFT flush set inet kids slow_all
+$GW $NFT flush set inet kids video_ips
+speed "out of the slow lane, full speed comes straight back" "$FAST_FLOOR" 99999999 203.0.113.2 8080 3
+# Being cut off still means cut off. The slow lane is a third state, not a
+# softening of the second one.
+blockkid
+check "a CUT OFF kid is still cut off, slow lane or not" no 203.0.113.2 8080
+unblockkid
 
 echo
 echo "Tor and the darknet (the IP layer)"

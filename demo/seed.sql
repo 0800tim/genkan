@@ -58,12 +58,27 @@ INSERT INTO devices (child_id, label, mac, reserved_ip, kind, category, vendor, 
  ((SELECT id FROM children WHERE name='Dorothy'), 'Dorothy''s iPad',     '02:00:00:11:07:01', '192.168.60.62', 'tablet',  'personal', 'Apple',    'dorothy-ipad', true, now()-interval '2 days',   now()-interval '1 minute',   now()-interval '1 minute'),
  -- Nobody has claimed this one yet: it is what the naming queue is for.
  (NULL,                                           'Unknown tablet',      '02:00:00:11:09:01', '192.168.60.88', 'tablet',  'personal', 'Lenovo',   'android-4a91', true, now()-interval '2 hours',  now()-interval '5 minutes',  now()-interval '5 minutes'),
+ -- Shared family devices. The household's, not one child's: nobody's minutes
+ -- pay for the family film, and each one carries a filter level of its own.
+ (NULL, 'Lounge TV',        '02:00:00:55:01:01', '192.168.60.70',  'tv',      'shared',    'LG',         'lounge-tv',      true, now()-interval '520 days', now()-interval '2 minutes', now()-interval '2 minutes'),
+ (NULL, 'Family iPad',      '02:00:00:55:01:02', '192.168.60.71',  'tablet',  'shared',    'Apple',      'family-ipad',    true, now()-interval '330 days', now()-interval '1 minute',  now()-interval '1 minute'),
+ (NULL, 'Kitchen display',  '02:00:00:55:01:03', '192.168.60.72',  'tablet',  'shared',    'Google',     'kitchen-hub',    true, now()-interval '240 days', now()-interval '5 minutes', now()-interval '5 minutes'),
  -- Smart home. Never assigned to a person, never metered, never cut at bedtime.
  (NULL, 'Lounge speaker',   '02:00:00:22:01:01', '192.168.60.101', 'speaker', 'iot',       'Sonos',      'lounge-speaker', true, now()-interval '500 days', now()-interval '1 minute',  now()-interval '1 minute'),
  (NULL, 'Front door camera','02:00:00:22:01:02', '192.168.60.102', 'camera',  'iot',       'Reolink',    'door-cam',       true, now()-interval '420 days', now()-interval '30 seconds',now()-interval '30 seconds'),
  (NULL, 'Robot vacuum',     '02:00:00:22:01:03', '192.168.60.103', 'vacuum',  'iot',       'Roborock',   'vacuum',         true, now()-interval '300 days', now()-interval '4 hours',   now()-interval '4 hours'),
  (NULL, 'Media server',     '02:00:00:33:01:01', '192.168.60.150', 'other',   'appliance', 'Intel',      'media-server',   true, now()-interval '600 days', now()-interval '1 minute',  now()-interval '1 minute'),
  (NULL, 'Living room AP',   '02:00:00:44:01:01', '192.168.60.2',   'ap',      'infra',     'Ubiquiti',   'kids-ap',        true, now()-interval '600 days', now()-interval '20 seconds',now()-interval '20 seconds');
+
+-- The shared devices' own filter levels, and the two sweep tick boxes. The
+-- kitchen display is the one the owner described: it plays music through
+-- dinner, so it is deliberately ticked OUT of the dinner pause while staying
+-- in the whole-house cut. The other two are left on their defaults, which is
+-- why the Devices page shows them as "(default)" rather than as a choice
+-- somebody made.
+UPDATE devices SET policy_tier='teen'     WHERE label='Lounge TV';
+UPDATE devices SET policy_tier='standard' WHERE label='Family iPad';
+UPDATE devices SET policy_tier='standard', caught_by_dinner=false WHERE label='Kitchen display';
 
 -- Active leases, for the devices that are actually in the house right now.
 INSERT INTO dhcp_leases (ip, mac, hostname, device_id, starts, ends, active)
@@ -388,6 +403,25 @@ CROSS JOIN LATERAL (
   ORDER BY -ln(random()) / weight LIMIT 1
 ) dm;
 
+-- ---------------------------------------------------------------------------
+-- Bedtimes. A fourteen-year-old and a seven-year-old do not go to bed at the
+-- same time, and a Friday night is not a Tuesday night, so the demo shows both
+-- shapes rather than one bedtime for everybody. `days` is 0=Sunday and is the
+-- night the window STARTS on, so school nights are Sunday through Thursday.
+-- Nova has none on purpose: a household where only some children have a
+-- bedtime is the ordinary case, and the page has to read sensibly for a child
+-- whose internet nothing switches off.
+INSERT INTO schedules (child_id, name, days, start_min, end_min, action, enabled, categories, set_by) VALUES
+ ((SELECT id FROM children WHERE name='Piper'), 'school-night bedtime', ARRAY[0,1,2,3,4], 1290, 420, 'block', true, ARRAY['internet'], 'demo'),
+ ((SELECT id FROM children WHERE name='Piper'), 'weekend bedtime',      ARRAY[5,6],       1380, 510, 'block', true, ARRAY['internet'], 'demo'),
+ ((SELECT id FROM children WHERE name='Rangi'), 'school-night bedtime', ARRAY[0,1,2,3,4], 1200, 420, 'block', true, ARRAY['internet'], 'demo'),
+ ((SELECT id FROM children WHERE name='Rangi'), 'weekend bedtime',      ARRAY[5,6],       1290, 480, 'block', true, ARRAY['internet'], 'demo');
+
+-- The school holidays, coming up. Nothing has to be edited and nothing has to
+-- be edited back: bedtimes simply do not run inside the dates.
+INSERT INTO schedule_overrides (child_id, name, starts, ends, mode, set_by) VALUES
+ (NULL, 'term break', CURRENT_DATE + 24, CURRENT_DATE + 38, 'off', 'demo');
+
 -- Which domains define a blockable category, for the "risky lookups" count.
 INSERT INTO category_domains (category, domain) VALUES
  ('proxy-vpn','nordvpn.com'), ('proxy-vpn','protonvpn.com'),
@@ -409,4 +443,5 @@ SELECT (SELECT count(*) FROM children)       AS people,
        (SELECT count(*) FROM service_usage)  AS service_rows,
        (SELECT count(*) FROM time_events)    AS earn_events,
        (SELECT count(*) FROM quiz_rounds)    AS quiz_rounds,
-       (SELECT count(*) FROM dns_log)        AS dns_rows;
+       (SELECT count(*) FROM dns_log)        AS dns_rows,
+       (SELECT count(*) FROM schedules)      AS bedtimes;

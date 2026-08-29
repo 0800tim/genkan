@@ -111,6 +111,50 @@ export function refreshBanks() {
 refreshBanks();
 
 // ---------------------------------------------------------------------------
+// The community shelf: packages that ship with the repo but are NOT installed.
+// ---------------------------------------------------------------------------
+// portal/quizzes/community holds learning packages other people wrote. Nothing
+// in there is live: the portal only reads *.json at the top of portal/quizzes,
+// so a package on the shelf is an offer, not content. A parent installs one
+// deliberately with `bin/kidnet-pack install`, and it lands in the database
+// where a repo update cannot touch it. See docs/CONTRIBUTING-CONTENT.md.
+//
+// Metadata only. No question, no answer and no read-first text from an
+// uninstalled package ever reaches a browser from here.
+const SHELF_DIR = process.env.PACK_SHELF || path.join(QUIZ_DIR, "community");
+let shelfSig = "";
+let shelf = [];
+export function refreshShelf() {
+  let files = [], sig = "";
+  try {
+    files = readdirSync(SHELF_DIR).filter(f => f.endsWith(".json")).sort();
+    sig = files.map(f => `${f}:${statSync(path.join(SHELF_DIR, f)).mtimeMs}`).join("|");
+  } catch { return (shelf = []); }        // no shelf directory is not a fault
+  if (sig === shelfSig) return shelf;
+  shelfSig = sig;
+  const next = [];
+  for (const f of files) {
+    try {
+      const b = JSON.parse(readFileSync(path.join(SHELF_DIR, f), "utf8"));
+      if (!b.id || !Array.isArray(b.questions)) continue;
+      const m = b.package || {};
+      next.push({
+        id: String(b.id), title: String(b.title || b.id), emoji: b.emoji || "\u{1F4E6}",
+        questions: b.questions.length, age_min: b.suggested_age_min || null,
+        author: String(m.author || "unattributed"),
+        licence: String(m.licence || m.license || "not stated"),
+        description: String(m.description || ""),
+        tags: Array.isArray(m.tags) ? m.tags.map(String) : [],
+        has_read_first: !!m.read_first,
+        file: path.join(SHELF_DIR, f),
+      });
+    } catch (e) { console.error(`earn: package ${f}: ${e.message}`); }
+  }
+  next.sort((a, b) => a.title.localeCompare(b.title));
+  return (shelf = next);
+}
+
+// ---------------------------------------------------------------------------
 // Reading
 // ---------------------------------------------------------------------------
 // A query that must not take the page down with it. The bank editor and the
@@ -124,8 +168,9 @@ const soft = (q, sql, fallback = []) => q(sql).catch(e => {
 
 export async function earnData(q) {
   refreshBanks();
+  refreshShelf();
   const [children, tasks, eff, quizPrefs, quizStats, claims, recent, totals,
-         dbBanks, dbQuestions, bankPerf, questionPerf, settings] = await Promise.all([
+         dbBanks, dbQuestions, bankPerf, questionPerf, settings, packages] = await Promise.all([
     // The household's own kids. A guest is not given a chore list, and a
     // person who has left the house keeps their history but leaves the screen.
     q("SELECT id,name,age FROM children WHERE kind='child' AND active ORDER BY age"),
@@ -179,6 +224,12 @@ export async function earnData(q) {
               GROUP BY 1,2 HAVING count(*) >= ${PERF_MIN_ASKED}`),
     soft(q, `SELECT child_id, quiz_cooldown_min, quiz_daily_cap_min, mastery_bonus_min,
                     default_minutes_per_pass FROM earn_settings`),
+    // Community packages installed on this box (config/db/schema-packages.sql).
+    // soft, because an install that has not loaded that file must still get the
+    // rest of this screen.
+    soft(q, `SELECT bank_id, title, emoji, author, licence, description, tags, questions,
+                    live, active, has_read_first, installed_ts, installed_by, updated_on
+               FROM quiz_package_summary ORDER BY installed_ts DESC`),
   ]);
   // One shelf out of two. A file bank and a database bank cannot share an id
   // (the create API refuses it), and if one ever did, the portal keeps the
@@ -209,7 +260,8 @@ export async function earnData(q) {
     boardEnabled(q),
   ]);
   return { children, tasks, eff, quizPrefs, quizStats, claims, recent, totals,
-           banks: allBanks, dbQuestions, bankPerf, questionPerf, settings, badges, boardOn };
+           banks: allBanks, dbQuestions, bankPerf, questionPerf, settings, badges, boardOn,
+           packages, shelf };
 }
 
 // ---------------------------------------------------------------------------
@@ -588,7 +640,11 @@ export async function decideClaim(q, runKidnet, id, decision) {
   const [r] = await q("SELECT remaining_min FROM time_remaining WHERE child_id=$1", [cl.child_id]);
   const left = r?.remaining_min ?? 0;
   // Same tail as `kidnet earn`: back online the moment they are in credit.
-  if (left > 0) await runKidnet(["on", e.child]);
+  // `reopen`, not `on`: it lifts an out-of-time block and nothing else. `on`
+  // stamps set_by='agent' over whatever was in the row, so approving a chore at
+  // half past ten used to cancel that child's bedtime, which is not something
+  // a chore is allowed to buy. See DECISIONS.md on set_by precedence.
+  if (left > 0) await runKidnet(["reopen", e.child]);
   return `${e.child} earned +${e.minutes} min for ${e.name} (now ${left} left)`;
 }
 
@@ -1020,6 +1076,84 @@ export function earnPage(d) {
       Want a whole bank written for you? <code>docs/runbooks/quiz-suggestions.md</code> tells your own AI agent how,
       and <code>bin/kidnet-quiz-suggest &lt;child&gt;</code> gathers what it needs to know.</p></div>`;
 
+  // ---- community packages -------------------------------------------------
+  // A package is a quiz bank somebody else wrote, in one file, with an author
+  // and a licence attached: config/db/schema-packages.sql and
+  // docs/CONTRIBUTING-CONTENT.md. Two lists, and the difference matters.
+  // INSTALLED means it is in this household's database and the kids can see
+  // it. ON THE SHELF means it came with the repo and nobody has said yes to it
+  // yet. Installing is a terminal command on purpose: it is a stranger's
+  // writing going in front of a child, so it takes a deliberate act by a
+  // person who has read it, not a button on a web page.
+  const installedIds = new Set(d.packages.map(p => p.bank_id));
+  const notInstalled = d.shelf.filter(p => !installedIds.has(p.id));
+
+  const packRow = p => `<details class="job${p.live ? "" : " off"}">
+    <summary><span class="e">${esc(p.emoji || "\u{1F4E6}")}</span><span class="nm">${esc(p.title)}</span>
+      <span class="badge mine">installed</span>
+      <span class="pill">${esc(p.licence)}</span>
+      <span class="tag">${esc(p.author)} \u00b7 ${p.questions} question${p.questions === 1 ? "" : "s"}${
+        p.live ? "" : " \u00b7 off the kids' list"}${p.has_read_first ? " \u00b7 has a read-first page" : ""}</span></summary>
+    <div class="jbody">
+      ${p.description ? `<p class="hint">${esc(p.description)}</p>` : ""}
+      <p class="hint">Installed ${esc(ago(p.installed_ts))}${p.installed_by ? ` by ${esc(p.installed_by)}` : ""}.
+        It lives in the database, so updating Hearth cannot delete it.
+        Switch it on or off per child in <b>Quizzes they can pass</b> above.
+        To take it out altogether: <code>bin/kidnet-pack remove ${esc(p.bank_id)}</code>.</p>
+    </div></details>`;
+
+  const shelfRow = p => `<details class="job off">
+    <summary><span class="e">${esc(p.emoji)}</span><span class="nm">${esc(p.title)}</span>
+      <span class="badge draft">not installed</span>
+      <span class="pill">${esc(p.licence)}</span>
+      <span class="tag">${esc(p.author)} \u00b7 ${p.questions} questions${
+        p.age_min ? ` \u00b7 about ${p.age_min} and up` : ""}</span></summary>
+    <div class="jbody">
+      ${p.description ? `<p class="hint">${esc(p.description)}</p>` : ""}
+      ${p.tags.length ? `<p class="hint">${p.tags.map(t => `<span class="tag">${esc(t)}</span>`).join(" ")}</p>` : ""}
+      <p class="hint">Read it first, then install it from a terminal:
+        <code>bin/kidnet-pack install ${esc(p.file)}</code>.
+        Nobody has checked a stranger's answers for you, and a wrong answer takes minutes off a child for being right.</p>
+    </div></details>`;
+
+  const packages = `<div class="card"><h2>\u{1F4E6} Community packages</h2>
+    <p class="sub">A learning package is one file: a quiz bank, plus who wrote it, what licence it carries,
+      who it is for, and sometimes a short piece to read first. Anyone can write one, and the good ones are
+      often nothing to do with school. How to mix paint. How to build a model aeroplane. How to tie a knot
+      that holds. Those count here exactly as much as long division does.</p>
+    ${d.packages.length
+      ? `<h2 style="margin-top:6px">Installed on this box</h2>${d.packages.map(packRow).join("")}`
+      : `<div class="empty">Nothing installed yet. Anything you install lands in the database, so a
+           Hearth update can never delete it.</div>`}
+    ${notInstalled.length
+      ? `<h2 style="margin-top:18px">On the shelf, not installed</h2>
+         <p class="sub">These came with Hearth. None of them is live until you say so.</p>
+         ${notInstalled.map(shelfRow).join("")}`
+      : ""}
+    <p class="hint">Writing one is the most useful thing anybody can do for this project and it needs no code:
+      <code>docs/CONTRIBUTING-CONTENT.md</code> is written for a person who is not a programmer, and
+      <code>portal/quizzes/community/</code> has a worked example to copy.
+      Check your own with <code>bin/kidnet-pack validate &lt;file&gt;</code>.</p>
+    <table class="helptab">
+      <tr><td>What is built</td><td>The format, the validator, and
+        <code>bin/kidnet-pack</code> to validate, install, list and remove. An installed package behaves like
+        any other bank: same grading on the server, same difficulty ramp, same cooldown, same daily cap.
+        A package can carry a short read-first page, which the kids see on the bank's <b>Read up</b> screen.</td></tr>
+      <tr><td>What is not built</td><td><b>Nothing suggests a package to you.</b> The plan is that a parent gets
+        told when a package would suit one of their children, based on what that child actually likes. That
+        does not exist. Hearth has no telemetry and talks to no cloud, so it will never be a service that
+        watches your family and recommends things. It will be an agent that YOU run, on your box, reading your
+        own database. The evidence half of that already works today:
+        <code>bin/kidnet-quiz-suggest &lt;child&gt;</code> prints what one child has been doing, and
+        <code>bin/kidnet-pack list</code> prints what is on the shelf. Paste both into your own AI agent and
+        it can tell you which package fits. <code>docs/runbooks/quiz-suggestions.md</code> has the recipe.
+        Turning that into a line on this page is a later job, and it is honest to say it is not here.</td></tr>
+      <tr><td>What is not supported</td><td>Pictures, audio and video. A package is text and links, and a link
+        may only point at the reading list, because those are the only sites a child who has run out of time
+        can open. A painting module cannot ship a photograph of a colour wheel yet.
+        <code>docs/CONTRIBUTING-CONTENT.md</code> says what that would take.</td></tr>
+    </table></div>`;
+
   // ---- the rules of earning ----------------------------------------------
   // The four numbers that used to be constants in portal.mjs. The household
   // row is the one most people will ever touch; the per child rows exist
@@ -1115,5 +1249,5 @@ export function earnPage(d) {
       the most, and it changes often, so it is not the same child every week. See <code>docs/GAMIFICATION.md</code>
       for the full reasoning, including the leaderboard designs that were tried and rejected.</p></div>`;
 
-  return `<style>${STYLE}</style>${hero}${claims}${jobs}${quizzes}${rulesCard}${badgesCard}${history}<script>${SCRIPT}</script>`;
+  return `<style>${STYLE}</style>${hero}${claims}${jobs}${quizzes}${packages}${rulesCard}${badgesCard}${history}<script>${SCRIPT}</script>`;
 }

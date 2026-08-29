@@ -24,11 +24,14 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 # which a parent cannot give a child a budget at all, and the always_allow
 # safety-net rows, without which a cut-off child cannot reach a help line. It
 # has to follow schema-safety.sql, which creates the table it fills.
-FILES=(schema schema-categories schema-time schema-safety schema-earn
-       schema-people schema-devices schema-flags schema-services
-       schema-voice schema-goals schema-policies schema-tasks
-       schema-quizresults schema-quizbanks schema-badges seed schema-presence schema-appliance schema-roles
-       schema-claim schema-learn schema-learn-intl)
+FILES=(schema schema-categories schema-time schema-safety
+       schema-earn schema-people schema-devices schema-flags
+       schema-services schema-voice schema-goals schema-policies
+       schema-tasks schema-quizresults schema-quizbanks schema-packages
+       schema-badges seed schema-presence schema-appliance
+       schema-roles schema-claim schema-shared schema-learn
+       schema-learn-intl schema-schedule schema-slow schema-notify
+       schema-release schema-retention)
 
 # The files end in GRANT ... TO kids_app, so the role has to exist first.
 docker exec -i "$PG" psql -U postgres -d "$DB" -qc \
@@ -41,5 +44,15 @@ for f in "${FILES[@]}"; do
   if [ -n "$err" ]; then printf '  FAILED  %-26s %s\n' "$f.sql" "$err"; fail=1
   else printf '  loaded  %s\n' "$f.sql"; fi
 done
+
+# grants.sql runs LAST, on its own, deliberately not in FILES: it hands the
+# least-privilege kids_agent role rights on tables every earlier file has to
+# have created first, and keeping it out of the array means a new schema file
+# appended to FILES cannot accidentally land after it. See the top of that
+# file for why bin/kidnet is not a superuser any more.
+err=$(docker exec -i "$PG" psql -U postgres -d "$DB" -q < "$HERE/grants.sql" 2>&1 | grep '^ERROR' | head -1 || true)
+if [ -n "$err" ]; then printf '  FAILED  %-26s %s\n' "grants.sql" "$err"; fail=1
+else printf '  loaded  %s\n' "grants.sql"; fi
+
 [ "$fail" = 0 ] || { echo "schema load FAILED"; exit 1; }
-echo "loaded ${#FILES[@]} schema files into $DB"
+echo "loaded $(( ${#FILES[@]} + 1 )) schema files into $DB"

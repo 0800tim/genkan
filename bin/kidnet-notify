@@ -1,0 +1,661 @@
+#!/usr/bin/env bash
+# hearth:summary=Send unacknowledged alerts to the phone routes a household set up.
+#
+# Hearth already knows the things a parent needs to hear. Until this worker they
+# only ever appeared on a dashboard, which meant a parent could learn on Saturday
+# that something concerning happened on Wednesday. This is the piece that puts
+# the safety signals on a phone.
+#
+# THE CONSTRAINT: Hearth has no telemetry and talks to no cloud, and that stays
+# true. Nothing here calls an Anthropic, Google or vendor service. It POSTs a
+# message the household worded, to an address the household typed in, from the
+# household's own box. With no routes configured it does nothing at all, which
+# is the shipped default and the one a family that wants none should keep.
+#
+# WHAT IT PROMISES
+#   Never twice.   notify_sent has UNIQUE(route_id, alert_id). Two overlapping
+#                  runs cannot both send the same alert, because the second
+#                  INSERT loses. A duplicate safety alert at 2am is how a parent
+#                  learns to ignore them.
+#   One buzz.      Twelve unknown devices joining at once is one notification.
+#                  Alerts are grouped by category; a run with several ordinary
+#                  categories pending collapses into a single summary message.
+#   Quiet.         Routes default to 'warn', so info-level housekeeping never
+#                  fires. Quiet hours hold everything except the urgent.
+#   Never lost.    Rows are written only AFTER a send succeeds. A route that is
+#                  down writes nothing, so the alert stays unacknowledged and
+#                  goes next time. A failing route can never eat an alert, and
+#                  can never fail anything else: this script exits 0 whatever
+#                  happens, and shouts into the journal instead.
+#
+# The long version, including the wording rules for what may appear on a lock
+# screen, is docs/NOTIFICATIONS.md.
+set -uo pipefail
+
+# Connects as kids_agent, a role with no superuser, no DDL and no
+# COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB_NAME="${HEARTH_DB:-kids_network}"
+DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
+psqlq(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -qc "$1" >/dev/null; }
+# Fields come back separated by 0x1f, the ASCII unit separator, NOT by a tab.
+# This is not fussiness. Bash treats space, tab and newline as "IFS whitespace"
+# even when IFS is set to exactly one of them, so two adjacent tabs collapse
+# into one and every column after an empty field silently shifts left. A route
+# with no token was reading its rate limits out of the wrong columns. 0x1f is
+# not IFS whitespace, so an empty field stays an empty field.
+FS=$'\x1f'
+psqlF(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tA -F "$FS" -c "$1"; }
+# Everything operator-supplied is checked to an alphabet before it reaches SQL,
+# and then still single-quote escaped. Two gates, because "an operator typed it"
+# has never been the thing keeping anybody safe.
+sq(){ printf '%s' "${1-}" | sed "s/'/''/g"; }
+
+# How far back a route will look when it first sees an alert. Anything older is
+# retired unsent. This is what stops a database restore, or a route added on a
+# Saturday, from firing a week of history at somebody's phone at once.
+MAX_AGE="${NOTIFY_MAX_AGE:-12 hours}"
+[[ "$MAX_AGE" =~ ^[0-9]{1,4}\ (second|minute|hour|day)s?$ ]] || {
+  echo "kidnet-notify: NOTIFY_MAX_AGE must look like '12 hours'" >&2; exit 1; }
+HTTP_TIMEOUT="${NOTIFY_TIMEOUT:-10}"
+[[ "$HTTP_TIMEOUT" =~ ^[0-9]{1,3}$ ]] || HTTP_TIMEOUT=10
+
+KINDS_BUILT="ntfy webhook"
+KINDS_ALL="ntfy webhook email homeassistant"
+
+# ---------------------------------------------------------------------------
+# The sender
+# ---------------------------------------------------------------------------
+# Python rather than curl for one reason that matters: the target URL and the
+# token are SECRETS, and a curl command line is visible to every user on the box
+# in `ps`. Here they arrive in the environment of a child process and are never
+# written to argv, to a file, or to any log line. The error strings it prints
+# are scrubbed of the target before they are returned, because urllib is happy
+# to put the whole URL in an exception message and that message ends up in the
+# journal and in notify_log.
+read -r -d '' PY_SEND <<'PY' || true
+import json, os, sys, urllib.request, urllib.error
+
+kind   = os.environ["N_KIND"]
+target = os.environ["N_TARGET"]
+token  = os.environ.get("N_TOKEN") or ""
+title  = os.environ.get("N_TITLE") or "Hearth"
+body   = os.environ.get("N_BODY") or ""
+prio   = os.environ.get("N_PRIORITY") or "3"
+tags   = os.environ.get("N_TAGS") or ""
+timeout = float(os.environ.get("N_TIMEOUT") or 10)
+
+def scrub(s):
+    # Never let the target or the token escape into a log line, whatever an
+    # exception decided to embed.
+    s = str(s)
+    for secret in (target, token):
+        if secret:
+            s = s.replace(secret, "<route target>")
+    # A bare host is still a leak. Drop anything that looks like a URL.
+    out = []
+    for word in s.split():
+        out.append("<url>" if "://" in word else word)
+    return " ".join(out)[:300]
+
+headers = {"User-Agent": "Hearth/1.0"}
+if kind == "ntfy":
+    data = body.encode("utf-8")
+    headers["Content-Type"] = "text/plain; charset=utf-8"
+    headers["Title"] = title.encode("utf-8").decode("latin-1", "replace")
+    headers["Priority"] = prio
+    if tags:
+        headers["Tags"] = tags
+    # ntfy would otherwise try to render the body as markdown links etc.
+    headers["Markdown"] = "no"
+elif kind == "webhook":
+    # A small, stable JSON shape. Note what is NOT in it: no child name and no
+    # domain unless the wording rules allowed them into the body, and never the
+    # raw alert row. A webhook is still a notification, and it may well end up
+    # on the same lock screen.
+    data = json.dumps({
+        "source": "hearth",
+        "title": title,
+        "body": body,
+        "severity": os.environ.get("N_SEVERITY") or "info",
+        "category": os.environ.get("N_CATEGORY") or "other",
+        "count": int(os.environ.get("N_COUNT") or 1),
+        "priority": int(prio),
+    }).encode("utf-8")
+    headers["Content-Type"] = "application/json"
+else:
+    # An extension point, not a silent no-op. See docs/NOTIFICATIONS.md.
+    print(f"ERR 0 the '{kind}' route is documented but not built yet")
+    sys.exit(1)
+
+if token:
+    headers["Authorization"] = "Bearer " + token
+
+req = urllib.request.Request(target, data=data, headers=headers, method="POST")
+try:
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        print(f"OK {r.status} sent")
+except urllib.error.HTTPError as e:
+    print(f"ERR {e.code} the route answered {e.code} {scrub(e.reason)}")
+    sys.exit(1)
+except Exception as e:
+    print(f"ERR 0 {type(e).__name__}: {scrub(e)}")
+    sys.exit(1)
+PY
+
+# send_message <kind> <target> <token> <title> <body> <priority> <tags> <sev> <cat> <count>
+# Prints the sender's one-line result. Returns non-zero on failure. Never
+# touches the database: the caller decides what to record, because "did it
+# send" and "did we remember that it sent" must not be the same step.
+send_message(){
+  N_KIND="$1" N_TARGET="$2" N_TOKEN="$3" N_TITLE="$4" N_BODY="$5" \
+  N_PRIORITY="$6" N_TAGS="$7" N_SEVERITY="$8" N_CATEGORY="$9" N_COUNT="${10}" \
+  N_TIMEOUT="$HTTP_TIMEOUT" python3 -c "$PY_SEND" 2>&1
+}
+
+# ---------------------------------------------------------------------------
+# Wording
+# ---------------------------------------------------------------------------
+# The words live in notify_wording, as data, so a household can change them
+# without editing this file and a reviewer can read the whole set in one query.
+# Two columns are the actual safety mechanism:
+#
+#   name_ok    may this message name a child?
+#   detail_ok  may it carry the alert's own text, which can contain a domain?
+#
+# Both are false for every sensitive category, and a route's include_detail can
+# only widen as far as detail_ok already allows. So no route setting, and no
+# mistake in this script, can put a child's browsing or a child's name on a lock
+# screen for the categories where that would be wrong. When a category has no
+# wording row at all we fall back to '@fallback', which says the least it can:
+# a new alert type is never assumed harmless enough to quote.
+#
+# compose <category> <count> <who> <detail> <route_include_detail>
+# Sets: W_TITLE W_BODY W_PRIORITY W_TAGS
+compose(){
+  local cat="$1" n="$2" who="$3" det="$4" want_detail="$5" row
+  row=$(psqlF "SELECT title, body_one, body_many, name_ok, detail_ok, priority, tags
+                 FROM notify_wording WHERE category = '$(sq "$cat")'")
+  [ -z "$row" ] && row=$(psqlF "SELECT title, body_one, body_many, name_ok, detail_ok, priority, tags
+                                  FROM notify_wording WHERE category = '@fallback'")
+  [ -z "$row" ] && { W_TITLE="Hearth"; W_BODY="Something needs your attention. The detail is on the Hearth dashboard at home."
+                     W_PRIORITY=3; W_TAGS="house"; return 0; }
+  local t b1 bm nameok detok pri tags
+  IFS="$FS" read -r t b1 bm nameok detok pri tags <<<"$row"
+  W_TITLE="$t"; W_PRIORITY="$pri"; W_TAGS="$tags"
+  local body; [ "$n" -gt 1 ] && body="$bm" || body="$b1"
+  # {who}: a name only where the wording row allows one. Where it does not, or
+  # where the alert has no child on it, the message says "somebody" and means it.
+  local names="somebody"
+  if [ "$nameok" = t ] && [ -n "$who" ]; then names="$who"; fi
+  body="${body//\{n\}/$n}"
+  body="${body//\{who\}/$names}"
+  # {what}: the alert's own detail. Needs BOTH the category's permission and the
+  # route asking for it. A body with no placeholder gets it appended, so a
+  # household can turn detail on without rewriting every row.
+  if [ "$detok" = t ] && [ "$want_detail" = t ] && [ -n "$det" ]; then
+    det="${det:0:160}"
+    if [[ "$body" == *"{what}"* ]]; then body="${body//\{what\}/$det}"
+    else body="$body ($det)"; fi
+  else
+    body="${body//\{what\}/}"
+  fi
+  # Tidy the whitespace an empty placeholder leaves behind.
+  body="$(printf '%s' "$body" | tr -s ' ' | sed 's/ \+\([.,)]\)/\1/g; s/^ //; s/ $//')"
+  W_BODY="${body:0:500}"
+}
+
+# record_log <route_id> <name> <kind> <ok:t|f> <status> <n> <urgent:t|f> <title> <detail> [is_test]
+# A test send is marked as one, so it never eats a real alert's allowance in the
+# hourly rate window. Testing your setup must not be the reason the next alert
+# is held back.
+record_log(){
+  psqlq "INSERT INTO notify_log(route_id, route_name, kind, ok, http_status, n_alerts, urgent, title, detail, is_test)
+         VALUES ($1, '$(sq "$2")', '$(sq "$3")', $([ "$4" = t ] && echo true || echo false),
+                 $5, $6, $([ "$7" = t ] && echo true || echo false),
+                 '$(sq "$8")', '$(sq "$9")', $([ "${10:-f}" = t ] && echo true || echo false))" 2>/dev/null || true
+}
+
+# ---------------------------------------------------------------------------
+# run: the timer's entry point
+# ---------------------------------------------------------------------------
+cmd_run(){
+  local dry="${1:-}"
+  local routes route
+  mapfile -t routes < <(psqlF "
+    SELECT id, name, kind, target, coalesce(token,''), include_detail, quiet_urgent,
+           in_quiet, sent_last_hour, urgent_last_hour, max_per_hour, max_urgent_per_hour,
+           (last_sent_at IS NULL OR now() - last_sent_at > (min_gap_sec || ' seconds')::interval),
+           retry_ok
+      FROM notify_route_state WHERE enabled ORDER BY id" 2>/dev/null)
+  if [ "${#routes[@]}" = 0 ]; then
+    echo "kidnet-notify: no routes configured, so nothing is sent anywhere."
+    return 0
+  fi
+  # A month of attempts is plenty to debug a route with, and this is the only
+  # table here that would otherwise grow without limit.
+  [ "$dry" = dry ] || psqlq "DELETE FROM notify_log WHERE ts < now() - interval '30 days'" 2>/dev/null || true
+  local total_sent=0 total_held=0 total_failed=0
+  for route in "${routes[@]}"; do
+    [ -z "$route" ] && continue
+    local id name kind target token inc_detail q_urgent in_quiet sent_hr urg_hr \
+          max_hr max_urg gap_ok retry_ok
+    IFS="$FS" read -r id name kind target token inc_detail q_urgent in_quiet \
+                      sent_hr urg_hr max_hr max_urg gap_ok retry_ok <<<"$route"
+
+    # A route that just failed is left alone for a moment. Nothing is lost:
+    # every alert stays unacknowledged and unsent, and goes the instant the
+    # route answers again. The point is to stop a dead endpoint being re-POSTed
+    # every minute forever and filling the log with the same line.
+    if [ "$retry_ok" != t ] && [ "$dry" != dry ]; then
+      echo "kidnet-notify: $name: last attempt failed, waiting before the next try"
+      total_held=$((total_held + 1)); continue
+    fi
+
+    # 1. Retire anything older than the horizon, unsent. Recorded as 'stale' so
+    #    it can never come back and fire at 3am after a restore.
+    if [ "$dry" != dry ]; then
+      local stale
+      stale=$(psqll "INSERT INTO notify_sent(route_id, alert_id, batch_key, status)
+                     SELECT route_id, alert_id, 'stale', 'stale' FROM notify_pending
+                      WHERE route_id = $id AND ts < now() - interval '$MAX_AGE'
+                     ON CONFLICT DO NOTHING RETURNING 1" 2>/dev/null | grep -c '^1$' || true)
+      # ^1$ and not just 1: psql -tAc prints the returned rows AND the command
+      # tag, so "INSERT 0 1" is a second line with a 1 in it and a loose grep
+      # reports double what actually happened.
+      [ "${stale:-0}" -gt 0 ] && echo "kidnet-notify: $name: retired ${stale} alert(s) older than $MAX_AGE unsent"
+    fi
+
+    # 2. What is left, grouped by category. This is the burst collapse: twelve
+    #    unknown devices are one row here, not twelve.
+    local groups g
+    mapfile -t groups < <(psqlF "
+      SELECT category,
+             max(CASE severity WHEN 'urgent' THEN 3 WHEN 'warn' THEN 2 ELSE 1 END),
+             count(*),
+             coalesce(string_agg(DISTINCT child, ', '), ''),
+             string_agg(alert_id::text, ','),
+             coalesce(max(detail), '')
+        FROM notify_pending
+       WHERE route_id = $id AND ts >= now() - interval '$MAX_AGE'
+       GROUP BY category
+       ORDER BY 2 DESC, 3 DESC" 2>/dev/null)
+    [ "${#groups[@]}" = 0 ] && continue
+    [ -z "${groups[0]}" ] && continue
+
+    # 3. Plan the messages. Two levels of collapsing, and the line between them
+    #    is severity, because that is the line between a signal and a chore.
+    #
+    #    urgent and warn  get their own message, with their own words. A safety
+    #                     signal buried inside "4 things need a look" is a
+    #                     safety signal nobody reads.
+    #    info             is the routine pile: unclaimed devices, out of time,
+    #                     a job waiting for a yes. One info category keeps its
+    #                     own words; two or more become one summary message,
+    #                     because none of them is worth a second buzz.
+    #
+    #    The grouping above has already turned twelve unknown devices into one
+    #    row, so twelve devices joining at once is one line here, never twelve.
+    local -a plans=()
+    local -a routine=()
+    local rt_n=0 rt_ids=""
+    for g in "${groups[@]}"; do
+      [ -z "$g" ] && continue
+      local cat sev n who ids det
+      IFS="$FS" read -r cat sev n who ids det <<<"$g"
+      if [ "$sev" = 3 ]; then
+        plans+=("urgent$FS""$cat""$FS""$n""$FS""$who""$FS""$ids""$FS""$det")
+      elif [ "$sev" = 2 ]; then
+        plans+=("warn$FS""$cat""$FS""$n""$FS""$who""$FS""$ids""$FS""$det")
+      else
+        routine+=("$cat""$FS""$n""$FS""$who""$FS""$ids""$FS""$det")
+        rt_n=$((rt_n + n))
+        rt_ids="${rt_ids:+$rt_ids,}$ids"
+      fi
+    done
+    if [ "${#routine[@]}" = 1 ]; then
+      local cat n who ids det
+      IFS="$FS" read -r cat n who ids det <<<"${routine[0]}"
+      plans+=("info$FS""$cat""$FS""$n""$FS""$who""$FS""$ids""$FS""$det")
+    elif [ "${#routine[@]}" -gt 1 ]; then
+      plans+=("info$FS""@summary""$FS""$rt_n""$FS""""$FS""$rt_ids""$FS""")
+    fi
+
+    # 4. Send what the gates allow. The counters are local as well as read from
+    #    the database, so one run cannot blow through the hourly cap by itself.
+    local p
+    for p in "${plans[@]}"; do
+      local sev_word cat n who ids det
+      IFS="$FS" read -r sev_word cat n who ids det <<<"$p"
+      local is_urgent=f; [ "$sev_word" = urgent ] && is_urgent=t
+
+      # Quiet hours. Ordinary messages wait. Urgent goes through unless the
+      # household turned that off, and docs/NOTIFICATIONS.md is blunt about
+      # what turning it off means.
+      if [ "$in_quiet" = t ]; then
+        if [ "$is_urgent" != t ] || [ "$q_urgent" != t ]; then
+          echo "kidnet-notify: $name: holding $cat ($n) until quiet hours end"
+          total_held=$((total_held + 1)); continue
+        fi
+      fi
+      # Rate limits. Holding, not dropping: nothing is written, so it goes next
+      # run. Urgent has its own allowance and ignores the minimum gap.
+      if [ "$is_urgent" = t ]; then
+        if [ "$urg_hr" -ge "$max_urg" ]; then
+          echo "kidnet-notify: $name: urgent rate limit reached ($urg_hr/$max_urg this hour), holding $cat"
+          total_held=$((total_held + 1)); continue
+        fi
+      else
+        if [ "$sent_hr" -ge "$max_hr" ]; then
+          echo "kidnet-notify: $name: rate limit reached ($sent_hr/$max_hr this hour), holding $cat"
+          total_held=$((total_held + 1)); continue
+        fi
+        if [ "$gap_ok" != t ]; then
+          echo "kidnet-notify: $name: too soon after the last message, holding $cat"
+          total_held=$((total_held + 1)); continue
+        fi
+      fi
+
+      compose "$cat" "$n" "$who" "$det" "$inc_detail"
+
+      if [ "$dry" = dry ]; then
+        printf '  %-14s %-12s x%-3s %s\n      %s\n' "$name" "$cat" "$n" "$W_TITLE" "$W_BODY"
+        continue
+      fi
+
+      local out rc status
+      out=$(send_message "$kind" "$target" "$token" "$W_TITLE" "$W_BODY" \
+                         "$W_PRIORITY" "$W_TAGS" "$sev_word" "$cat" "$n"); rc=$?
+      status=$(printf '%s' "$out" | awk '{print $2}'); [[ "$status" =~ ^[0-9]+$ ]] || status=0
+      if [ "$rc" = 0 ]; then
+        # Remember it ONLY now. The unique constraint makes this the single
+        # point where "sent twice" becomes impossible.
+        psqlq "INSERT INTO notify_sent(route_id, alert_id, batch_key, status)
+               SELECT $id, x, '$(sq "$id-$cat-$(date -u +%Y%m%dT%H%M%SZ)")', 'sent'
+                 FROM unnest(ARRAY[$ids]::bigint[]) x
+               ON CONFLICT DO NOTHING" 2>/dev/null || true
+        record_log "$id" "$name" "$kind" t "$status" "$n" "$is_urgent" "$W_TITLE" "sent"
+        psqlq "UPDATE notify_routes SET last_ok_at = now(), last_error = NULL, last_error_at = NULL
+                WHERE id = $id" 2>/dev/null || true
+        echo "kidnet-notify: $name: sent $cat ($n alert(s))"
+        total_sent=$((total_sent + 1))
+        if [ "$is_urgent" = t ]; then urg_hr=$((urg_hr + 1)); else sent_hr=$((sent_hr + 1)); gap_ok=f; fi
+      else
+        # Loudly to the log, silently to the parent, and nothing recorded, so
+        # the alert stays unacknowledged and unsent and goes next time. A route
+        # that is down must never lose an alert and must never break anything.
+        local msg; msg=$(printf '%s' "$out" | cut -c1-240)
+        echo "kidnet-notify: $name ($kind): FAILED to send $cat: $msg" >&2
+        record_log "$id" "$name" "$kind" f "$status" "$n" "$is_urgent" "$W_TITLE" "$msg"
+        psqlq "UPDATE notify_routes SET last_error = '$(sq "$msg")', last_error_at = now()
+                WHERE id = $id" 2>/dev/null || true
+        total_failed=$((total_failed + 1))
+      fi
+    done
+  done
+  [ "$dry" = dry ] && return 0
+  if [ "$total_sent" = 0 ] && [ "$total_held" = 0 ] && [ "$total_failed" = 0 ]; then
+    echo "kidnet-notify: nothing new to send"
+  else
+    echo "kidnet-notify: $total_sent message(s) sent, $total_held held, $total_failed failed"
+  fi
+  return 0
+}
+
+# ---------------------------------------------------------------------------
+# Managing routes
+# ---------------------------------------------------------------------------
+ck_name(){ [[ "$1" =~ ^[A-Za-z0-9_-]{1,32}$ ]] || {
+  echo "kidnet-notify: a route name is letters, numbers, - and _, up to 32 characters" >&2; exit 1; }; }
+ck_kind(){ case " $KINDS_ALL " in *" $1 "*) ;; *)
+  echo "kidnet-notify: kind must be one of: $KINDS_ALL" >&2; exit 1;; esac
+  case " $KINDS_BUILT " in *" $1 "*) ;; *)
+  echo "kidnet-notify: the '$1' route is documented but not built yet."
+  echo "               Built and tested: $KINDS_BUILT."
+  echo "               See docs/NOTIFICATIONS.md, 'Extension points'." >&2; exit 1;; esac; }
+# A target is a URL and nothing else. No whitespace, no quotes, no control
+# characters, and http(s) only: a route is not a place to smuggle a shell.
+ck_target(){ case "$1" in http://*|https://*) ;; *)
+  echo "kidnet-notify: a target must be an http:// or https:// URL" >&2; exit 1;; esac
+  [[ "$1" =~ ^[A-Za-z0-9:/?#@!$\&*+,\;=._~%-]{8,400}$ ]] || {
+  echo "kidnet-notify: that URL has characters a URL cannot have" >&2; exit 1; }; }
+ck_sev(){ case "$1" in info|warn|urgent) ;; *)
+  echo "kidnet-notify: severity must be info, warn or urgent" >&2; exit 1;; esac; }
+ck_cats(){ [ -z "$1" ] && return 0
+  [[ "$1" =~ ^[a-z0-9@_-]+(,[a-z0-9@_-]+)*$ ]] || {
+  echo "kidnet-notify: categories are lower-case names separated by commas" >&2; exit 1; }; }
+# 'HH:MM-HH:MM' into two minute counts. 'off' clears quiet hours.
+QS=""; QE=""
+ck_quiet(){
+  if [ "$1" = off ] || [ -z "$1" ]; then QS=NULL; QE=NULL; return 0; fi
+  [[ "$1" =~ ^([0-9]{1,2}):([0-9]{2})-([0-9]{1,2}):([0-9]{2})$ ]] || {
+    echo "kidnet-notify: quiet hours look like 21:30-07:00, or 'off'" >&2; exit 1; }
+  local h1=${BASH_REMATCH[1]} m1=${BASH_REMATCH[2]} h2=${BASH_REMATCH[3]} m2=${BASH_REMATCH[4]}
+  { [ "$h1" -le 23 ] && [ "$h2" -le 23 ] && [ "$m1" -le 59 ] && [ "$m2" -le 59 ]; } || {
+    echo "kidnet-notify: that is not a time of day" >&2; exit 1; }
+  QS=$((10#$h1 * 60 + 10#$m1)); QE=$((10#$h2 * 60 + 10#$m2))
+}
+# Reads a secret without putting it in argv, where every user on the box can
+# read it out of `ps`, or in the shell history file.
+read_secret(){
+  local prompt="$1" v=""
+  if [ -t 0 ]; then read -r -s -p "$prompt" v; echo >&2; else read -r v || true; fi
+  printf '%s' "$v"
+}
+
+cmd_add(){
+  local kind="${1:-}" name="${2:-}"; shift 2 2>/dev/null || true
+  [ -z "$kind" ] || [ -z "$name" ] && { usage; exit 1; }
+  ck_kind "$kind"; ck_name "$name"
+  local target="" token="" sev=warn cats="" detail=false quiet="" qurgent=true rate=6
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --target)     target="${2:-}"; shift 2;;
+      --token)      token="${2:-}"; shift 2;;
+      --severity)   sev="${2:-}"; shift 2;;
+      --categories) cats="${2:-}"; shift 2;;
+      --quiet)      quiet="${2:-}"; shift 2;;
+      --quiet-urgent) case "${2:-}" in yes) qurgent=true;; no) qurgent=false;;
+                      *) echo "kidnet-notify: --quiet-urgent takes yes or no" >&2; exit 1;; esac; shift 2;;
+      --rate)       [[ "${2:-}" =~ ^[0-9]{1,3}$ ]] && [ "${2}" -ge 1 ] && [ "${2}" -le 120 ] \
+                      || { echo "kidnet-notify: --rate is 1 to 120 messages an hour" >&2; exit 1; }
+                    rate="$2"; shift 2;;
+      --detail)     detail=true; shift;;
+      *) echo "kidnet-notify: no such option: $1" >&2; exit 1;;
+    esac
+  done
+  if [ -n "$target" ]; then
+    echo "kidnet-notify: note, a --target on the command line lands in your shell" >&2
+    echo "               history and in ps. Leave it off to be prompted instead." >&2
+  else
+    target=$(read_secret "Target URL (an ntfy topic URL, or a webhook URL): ")
+  fi
+  ck_target "$target"; ck_sev "$sev"; ck_cats "$cats"; ck_quiet "$quiet"
+  local catsql="'{}'"
+  [ -n "$cats" ] && catsql="string_to_array('$(sq "$cats")', ',')"
+  local toksql=NULL
+  [ -n "$token" ] && toksql="'$(sq "$token")'"
+  psqll "INSERT INTO notify_routes(name, kind, target, token, min_severity, categories,
+                                   quiet_start_min, quiet_end_min, quiet_urgent,
+                                   include_detail, max_per_hour)
+         VALUES ('$(sq "$name")', '$(sq "$kind")', '$(sq "$target")', $toksql,
+                 '$(sq "$sev")', $catsql, $QS, $QE, $qurgent, $detail, $rate)
+         RETURNING id" >/dev/null || { echo "kidnet-notify: could not add that route (is the name taken?)" >&2; exit 1; }
+  echo "kidnet-notify: added route '$name' ($kind, $sev and above)."
+  echo "               Nothing is proven until you test it: kidnet-notify test $name"
+}
+
+cmd_set(){
+  local name="${1:-}"; shift 2>/dev/null || true
+  [ -z "$name" ] && { usage; exit 1; }
+  ck_name "$name"
+  local -a sets=()
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      --severity)   ck_sev "${2:-}"; sets+=("min_severity = '$(sq "$2")'"); shift 2;;
+      --categories) ck_cats "${2:-}"
+                    if [ -z "${2:-}" ] || [ "${2:-}" = all ]; then sets+=("categories = '{}'")
+                    else sets+=("categories = string_to_array('$(sq "$2")', ',')"); fi; shift 2;;
+      --quiet)      ck_quiet "${2:-}"; sets+=("quiet_start_min = $QS" "quiet_end_min = $QE"); shift 2;;
+      --quiet-urgent) case "${2:-}" in yes) sets+=("quiet_urgent = true");; no) sets+=("quiet_urgent = false");;
+                      *) echo "kidnet-notify: --quiet-urgent takes yes or no" >&2; exit 1;; esac; shift 2;;
+      --detail)     case "${2:-}" in yes) sets+=("include_detail = true");; no) sets+=("include_detail = false");;
+                    *) echo "kidnet-notify: --detail takes yes or no" >&2; exit 1;; esac; shift 2;;
+      --rate)       [[ "${2:-}" =~ ^[0-9]{1,3}$ ]] || { echo "kidnet-notify: --rate is a number of messages an hour" >&2; exit 1; }
+                    sets+=("max_per_hour = $2"); shift 2;;
+      --target)     ck_target "${2:-}"; sets+=("target = '$(sq "$2")'"); shift 2;;
+      --token)      if [ -z "${2:-}" ]; then sets+=("token = NULL"); else sets+=("token = '$(sq "$2")'"); fi; shift 2;;
+      *) echo "kidnet-notify: no such option: $1" >&2; exit 1;;
+    esac
+  done
+  [ "${#sets[@]}" = 0 ] && { echo "kidnet-notify: nothing to change" >&2; exit 1; }
+  local n; n=$(psqll "UPDATE notify_routes SET $(IFS=,; echo "${sets[*]}")
+                       WHERE name = '$(sq "$name")' RETURNING 1" | grep -c '^1$' || true)
+  [ "${n:-0}" = 0 ] && { echo "kidnet-notify: no route called '$name'" >&2; exit 1; }
+  echo "kidnet-notify: updated '$name'."
+}
+
+cmd_toggle(){
+  local on="$1" name="${2:-}"
+  [ -z "$name" ] && { usage; exit 1; }; ck_name "$name"
+  local n; n=$(psqll "UPDATE notify_routes SET enabled = $on WHERE name = '$(sq "$name")' RETURNING 1" | grep -c '^1$' || true)
+  [ "${n:-0}" = 0 ] && { echo "kidnet-notify: no route called '$name'" >&2; exit 1; }
+  [ "$on" = true ] && echo "kidnet-notify: '$name' is on." || echo "kidnet-notify: '$name' is off. Nothing will be sent to it."
+}
+
+cmd_remove(){
+  local name="${1:-}"; [ -z "$name" ] && { usage; exit 1; }; ck_name "$name"
+  local n; n=$(psqll "DELETE FROM notify_routes WHERE name = '$(sq "$name")' RETURNING 1" | grep -c '^1$' || true)
+  [ "${n:-0}" = 0 ] && { echo "kidnet-notify: no route called '$name'" >&2; exit 1; }
+  echo "kidnet-notify: removed '$name', and everything Hearth remembered about sending to it."
+}
+
+cmd_list(){
+  echo
+  echo "Notification routes"
+  local out
+  out=$(psqll "
+    SELECT '  ' || rpad(name, 16) || rpad(kind, 10) || rpad(min_severity, 8)
+           || rpad(CASE WHEN NOT enabled THEN 'OFF'
+                        WHEN in_quiet THEN 'quiet now' ELSE 'on' END, 11)
+           || rpad(CASE WHEN quiet_start_min IS NULL THEN 'no quiet hours'
+                        ELSE to_char((quiet_start_min || ' minutes')::interval, 'HH24:MI')
+                             || '-' || to_char((quiet_end_min || ' minutes')::interval, 'HH24:MI') END, 16)
+           || CASE WHEN last_error IS NOT NULL AND (last_ok_at IS NULL OR last_error_at > last_ok_at)
+                     THEN 'FAILING: ' || left(last_error, 60)
+                   WHEN last_ok_at IS NULL THEN 'never sent anything yet'
+                   ELSE 'last sent ' || to_char(last_ok_at, 'Dy HH24:MI') END
+      FROM notify_route_state ORDER BY name")
+  if [ -z "$out" ]; then
+    echo "  None. Hearth is sending nothing to anybody, which is the default."
+    echo "  Add one:  kidnet-notify add ntfy dad-phone"
+  else
+    printf '  %-16s%-10s%-8s%-11s%-16s%s\n' NAME KIND SENDS STATE QUIET LAST
+    printf '%s\n' "$out"
+  fi
+  echo
+}
+
+cmd_pending(){
+  echo
+  echo "What each route would send on the next run"
+  cmd_run dry
+  echo
+  echo "Everything still waiting, per route:"
+  psqll "SELECT '  ' || rpad(route, 16) || rpad(severity, 8) || rpad(category, 14)
+                || count(*) || ' waiting, oldest ' || to_char(min(ts), 'Dy HH24:MI')
+           FROM notify_pending GROUP BY route, severity, category ORDER BY route, severity DESC" \
+    || echo "  (nothing)"
+  echo
+}
+
+cmd_test(){
+  local name="${1:-}"; [ -z "$name" ] && { usage; exit 1; }; ck_name "$name"
+  local row
+  row=$(psqlF "SELECT id, name, kind, target, coalesce(token,'') FROM notify_routes
+                WHERE name = '$(sq "$name")'")
+  [ -z "$row" ] && { echo "kidnet-notify: no route called '$name'" >&2; exit 1; }
+  local id rname kind target token
+  IFS="$FS" read -r id rname kind target token <<<"$row"
+  # A test ignores quiet hours, the rate limit and the dedupe ledger, because
+  # the whole point is to prove the pipe works right now, and it carries no
+  # alert with it so there is nothing to deduplicate.
+  compose "@test" 1 "" "" f
+  local out rc status
+  out=$(send_message "$kind" "$target" "$token" "$W_TITLE" "$W_BODY" "$W_PRIORITY" "$W_TAGS" info "@test" 1); rc=$?
+  status=$(printf '%s' "$out" | awk '{print $2}'); [[ "$status" =~ ^[0-9]+$ ]] || status=0
+  if [ "$rc" = 0 ]; then
+    record_log "$id" "$rname" "$kind" t "$status" 0 f "$W_TITLE" "test" t
+    psqlq "UPDATE notify_routes SET last_ok_at = now(), last_error = NULL, last_error_at = NULL WHERE id = $id" 2>/dev/null || true
+    echo "kidnet-notify: test sent to '$rname'. Check the phone: it should say \"$W_TITLE\"."
+  else
+    local msg; msg=$(printf '%s' "$out" | cut -c1-240)
+    record_log "$id" "$rname" "$kind" f "$status" 0 f "$W_TITLE" "test: $msg" t
+    psqlq "UPDATE notify_routes SET last_error = '$(sq "$msg")', last_error_at = now() WHERE id = $id" 2>/dev/null || true
+    echo "kidnet-notify: test FAILED for '$rname': $msg" >&2
+    exit 1
+  fi
+}
+
+cmd_log(){
+  local n="${1:-20}"; [[ "$n" =~ ^[0-9]{1,4}$ ]] || n=20
+  echo
+  echo "The last $n notification attempts (no targets, no tokens, ever)"
+  psqll "SELECT '  ' || to_char(ts, 'Dy HH24:MI') || '  ' || rpad(coalesce(route_name,'?'), 16)
+                || rpad(coalesce(kind,''), 10) || rpad(CASE WHEN ok THEN 'ok' ELSE 'FAILED' END, 8)
+                || coalesce(title,'') || '  ' || coalesce(detail,'')
+           FROM notify_log ORDER BY ts DESC LIMIT $n" || true
+  echo
+}
+
+usage(){ cat <<'USAGE'
+kidnet-notify: put Hearth's alerts on a parent's phone.
+
+  kidnet-notify run                       send what is owed (the timer runs this)
+  kidnet-notify pending                   what would go next, without sending
+  kidnet-notify list                      the routes, their state and their last result
+  kidnet-notify test <route>              send a harmless test message now
+  kidnet-notify log [n]                   the last n attempts, good and bad
+
+  kidnet-notify add <kind> <name> [options]
+  kidnet-notify set <name> [options]
+  kidnet-notify on <name> | off <name> | remove <name>
+
+Kinds that are built and tested: ntfy, webhook.
+Kinds that are documented extension points, and refused: email, homeassistant.
+
+Options:
+  --target URL         where to send. Left off, you are prompted, which keeps it
+                       out of your shell history and out of ps.
+  --token TOKEN        optional bearer token for a protected ntfy or webhook
+  --severity S         info (everything), warn (the default), urgent (only those)
+  --categories a,b     only these alert categories. Left off, all of them.
+  --quiet HH:MM-HH:MM  quiet hours, or 'off'. May cross midnight.
+  --quiet-urgent yes|no
+                       whether urgent still goes through during quiet hours.
+                       Default yes, and 'no' means a safety alert waits until
+                       morning, which is exactly what it sounds like.
+  --detail yes|no      may this route carry an alert's own text? Default no, and
+                       it can never widen past what the wording allows.
+  --rate N             most ordinary messages an hour. Default 6.
+
+Nothing is ever sent anywhere until a household adds a route. Full notes,
+including what appears on a lock screen and why: docs/NOTIFICATIONS.md
+USAGE
+}
+
+case "${1:-run}" in
+  run)     shift 2>/dev/null || true; cmd_run;;
+  pending|dry) cmd_pending;;
+  list|status) cmd_list;;
+  add)     shift; cmd_add "$@";;
+  set)     shift; cmd_set "$@";;
+  on|enable)  shift; cmd_toggle true "${1:-}";;
+  off|disable) shift; cmd_toggle false "${1:-}";;
+  remove|rm|delete) shift; cmd_remove "${1:-}";;
+  test)    shift; cmd_test "${1:-}";;
+  log)     shift; cmd_log "${1:-20}";;
+  -h|--help|help) usage;;
+  *) echo "kidnet-notify: no such command: $1" >&2; usage; exit 1;;
+esac

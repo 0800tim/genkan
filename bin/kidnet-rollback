@@ -1,0 +1,264 @@
+#!/usr/bin/env bash
+# hearth:summary=Put an earlier version of Hearth back, deliberately, with a list of what is available.
+#
+#   kidnet-rollback list                what you can go back to
+#   kidnet-rollback show <id>           exactly what is in one snapshot
+#   sudo kidnet-rollback to previous    back to whatever was running before the last upgrade
+#   sudo kidnet-rollback to <id>        back to a specific point
+#
+# Options for `to`
+#   --with-database   ALSO restore the database as it was at that moment.
+#                     Off by default, and read the warning below before using it.
+#   --yes             do not ask
+#   --dry-run         print every step without doing any of it. No root needed.
+#
+# ---------------------------------------------------------------------------
+# WHAT A ROLLBACK CAN AND CANNOT UNDO
+#
+# CAN:
+#   - The code. Every file Hearth ships goes back to the exact commit that was
+#     running before, and deploy.sh runs again, so the containers, the
+#     firewall ruleset, the CLI in /usr/local/bin and the systemd units all go
+#     back with it.
+#   - The database, but only if you ask for it with --with-database, and only
+#     back to the moment the snapshot was taken.
+#
+# CANNOT:
+#   - Give you back BOTH the old database structure and the new data. A
+#     restore is a restore: it replaces what is in the database now with what
+#     was in it then. Everything that happened since is gone, and on a
+#     household gateway "everything since" means minutes children earned,
+#     quizzes they passed, devices that joined, and every domain the DNS log
+#     recorded. That is why it is off by default.
+#   - Undo a database change on its own. If an upgrade dropped a column and
+#     you roll the code back without the database, the old code will look for
+#     a column that no longer exists and will fail. If the release notes say a
+#     version changes the database structure, --with-database is not optional
+#     on the way back, and docs/UPGRADING.md says so per release.
+#   - Recover anything from before the OLDEST snapshot. Only the ten most
+#     recent are kept (HEARTH_KEEP_SNAPSHOTS).
+#   - Fix a problem that was never Hearth's. If the household broadband is
+#     down, or the access point has been reset, every version will look
+#     broken and none of them is the cause.
+#
+# This is not a time machine. It is a way back to a version that worked.
+# ---------------------------------------------------------------------------
+set -uo pipefail
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+[ -f "$HERE/kidnet-release-lib.sh" ] || { echo "kidnet-rollback: kidnet-release-lib.sh is missing from $HERE"; exit 2; }
+. "$HERE/kidnet-release-lib.sh"
+[ -n "$R" ] || { echo "kidnet-rollback: cannot find the Hearth checkout. Set HEARTH_ROOT, or run
+  sudo ./deploy.sh once from your copy so it can record where the code lives."; exit 2; }
+
+YES=0; DRY=0; WITH_DB=0; AUTO=0
+CMD="${1:-list}"; [ $# -gt 0 ] && shift
+case "$CMD" in list|show|to) ;; -h|--help) sed -n '3,50p' "$0" | sed 's/^# \{0,1\}//'; exit 0;;
+  *) echo "kidnet-rollback: unknown command '$CMD' (list, show, to)"; exit 2;; esac
+ARG=""
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --with-database) WITH_DB=1;;
+    --yes|-y) YES=1;;
+    --dry-run) DRY=1;;
+    --auto) AUTO=1; YES=1;;   # set only by kidnet-upgrade when it undoes itself
+    -*) echo "kidnet-rollback: unknown option '$1'"; exit 2;;
+    *) ARG="$1";;
+  esac
+  shift
+done
+
+say(){ printf '%s\n' "$*"; }
+step(){ printf '\n==> %s\n' "$*"; }
+die(){ printf '\nkidnet-rollback: %s\n' "$*" >&2; exit 1; }
+
+describe(){ # id
+  local id="$1" d; d="$(snapshot_dir "$id")"
+  local when fv fc tv db
+  when="$(snapshot_field "$id" date 2>/dev/null || echo '?')"
+  fv="$(snapshot_field "$id" from_version 2>/dev/null || echo '?')"
+  fc="$(snapshot_field "$id" from_commit 2>/dev/null || echo '')"
+  tv="$(snapshot_field "$id" to_version 2>/dev/null || echo '?')"
+  db="none"; [ -f "$d/db.sql.gz" ] && db="$(du -h "$d/db.sql.gz" 2>/dev/null | cut -f1)"
+  printf '  %s\n' "$id"
+  printf '      taken       %s\n' "$(date -d "$when" '+%a %-d %b %Y, %-I:%M %P' 2>/dev/null | sed 's/AM$/am/; s/PM$/pm/' || echo "$when")"
+  printf '      goes back to Hearth %s (%s)\n' "$fv" "${fc:0:12}"
+  printf '      taken when upgrading to Hearth %s\n' "$tv"
+  printf '      database backup  %s\n' "$db"
+  [ -f "$d/phase" ] && [ "$(cat "$d/phase")" != done ] \
+    && printf '      NOTE: that upgrade did not finish (%s)\n' "$(cat "$d/phase")"
+  return 0
+}
+
+# ---------------------------------------------------------------------------
+if [ "$CMD" = list ]; then
+  ids="$(snapshot_list)"
+  say ""
+  say "$(hearth_version_line)"
+  say ""
+  if [ -z "$ids" ]; then
+    say "There is nothing to roll back to. Snapshots are made by kidnet-upgrade,"
+    say "so this box has not been upgraded since the release tooling was installed."
+    say ""
+    exit 0
+  fi
+  say "You can go back to any of these (newest first):"
+  say ""
+  for id in $ids; do describe "$id"; say ""; done
+  say "  sudo kidnet-rollback to previous      the most recent one"
+  say "  sudo kidnet-rollback to <id>          a specific one"
+  say ""
+  exit 0
+fi
+
+if [ "$CMD" = show ]; then
+  [ -n "$ARG" ] || die "which snapshot? Try: kidnet-rollback list"
+  [ -d "$(snapshot_dir "$ARG")" ] || die "no snapshot called '$ARG'."
+  say ""
+  describe "$ARG"
+  say ""
+  say "  Everything in it:"
+  ls -la "$(snapshot_dir "$ARG")" | sed 's/^/    /'
+  say ""
+  say "  The manifest:"
+  sed 's/^/    /' "$(snapshot_dir "$ARG")/manifest.env"
+  say ""
+  exit 0
+fi
+
+# ---------------------------------------------------------------------------
+# to
+# ---------------------------------------------------------------------------
+[ -n "$ARG" ] || die "which snapshot? Try: kidnet-rollback list"
+if [ "$ARG" = previous ] || [ "$ARG" = last ]; then
+  ARG="$(snapshot_list | head -1)"
+  [ -n "$ARG" ] || die "there are no snapshots to go back to."
+fi
+SNAP="$(snapshot_dir "$ARG")"
+[ -d "$SNAP" ] || die "no snapshot called '$ARG'. Try: kidnet-rollback list"
+[ -f "$SNAP/manifest.env" ] || die "snapshot '$ARG' has no manifest, so it cannot be trusted to restore from."
+
+TO_COMMIT="$(snapshot_field "$ARG" from_commit)"
+TO_VERSION="$(snapshot_field "$ARG" from_version)"
+[ -n "$TO_COMMIT" ] || die "snapshot '$ARG' does not record which commit to go back to."
+NOW_VERSION="$(hearth_version)"
+NOW_COMMIT="$(git_ok && g rev-parse HEAD || echo "")"
+
+[ "$DRY" = 1 ] || [ "$(id -u)" = 0 ] || die "run with sudo (it restarts containers and writes to /usr/local/bin). Add --dry-run to see the steps without root."
+
+say ""
+say "  Running now:   Hearth $NOW_VERSION (${NOW_COMMIT:0:12})"
+say "  Going back to: Hearth $TO_VERSION (${TO_COMMIT:0:12})"
+if [ "$WITH_DB" = 1 ]; then
+  [ -f "$SNAP/db.sql.gz" ] || die "this snapshot has no database backup, so --with-database is not possible."
+  say ""
+  say "  --with-database was given. THE DATABASE WILL BE REPLACED with the copy"
+  say "  taken at $(snapshot_field "$ARG" date). Everything since then is lost:"
+  say "  minutes the children earned, quizzes they passed, devices that joined,"
+  say "  and the whole browsing log. This cannot be undone."
+else
+  say "  The database will be LEFT ALONE. Only the code goes back."
+  say "  If the release you are leaving changed the database structure, that is"
+  say "  not enough on its own: see docs/UPGRADING.md and use --with-database."
+fi
+
+if [ "$YES" = 0 ] && [ "$DRY" = 0 ]; then
+  say ""
+  if [ "$WITH_DB" = 1 ]; then
+    printf 'Type ROLLBACK to replace the code AND the database: '
+    read -r ans </dev/tty || ans=""
+    [ "$ans" = ROLLBACK ] || { say "Nothing was changed."; exit 0; }
+  else
+    printf 'Roll back to Hearth %s? [y/N] ' "$TO_VERSION"
+    read -r ans </dev/tty || ans=""
+    case "$ans" in y|Y|yes|YES) ;; *) say "Nothing was changed."; exit 0;; esac
+  fi
+fi
+
+# --- the code --------------------------------------------------------------
+step "Putting the code back"
+if [ "$DRY" = 1 ]; then
+  say "   would run: git checkout --force --detach $TO_COMMIT"
+else
+  git_ok || die "$R is not a git checkout, so the code cannot be put back automatically."
+  g rev-parse -q --verify "$TO_COMMIT^{commit}" >/dev/null 2>&1 \
+    || die "commit $TO_COMMIT is not in this copy any more, so the code cannot be put back automatically.
+The database backup is still at $SNAP/db.sql.gz. See docs/UPGRADING.md."
+  # --force, deliberately: the version being abandoned may have left files
+  # half written, and this is the path that has to work when everything else
+  # has not. Anything uncommitted was snapshotted by kidnet-upgrade before it
+  # started (tools/worktree-snapshot.sh list).
+  g -c advice.detachedHead=false checkout --force --detach "$TO_COMMIT" --quiet \
+    || die "could not put the code back. This needs a person: docs/UPGRADING.md."
+  say "   now on Hearth $TO_VERSION"
+  # From here on there is no upgrade in flight, whether or not the box turns
+  # out to be healthy. Leaving the marker would tell the next kidnet-upgrade
+  # run to "finish" the upgrade we have just undone, which would reinstall the
+  # version that broke the household. Clearing it here rather than at the end
+  # is deliberate: the marker is about the switchover, not about the outcome.
+  rm -f "$HEARTH_STATE_DIR/in-progress"
+fi
+
+# --- the database, only if asked -------------------------------------------
+if [ "$WITH_DB" = 1 ]; then
+  step "Putting the database back"
+  if [ "$DRY" = 1 ]; then
+    say "   would run: gunzip -c $SNAP/db.sql.gz | docker exec -i $PG_CONTAINER psql -U postgres -d $HEARTH_DB"
+  else
+    # A safety copy of what is about to be replaced, so that changing your
+    # mind is still possible for one more step. It costs a few seconds and it
+    # has to exist: a restore is the single most destructive thing Hearth can
+    # be asked to do.
+    pre="$SNAP/pre-restore-$(date +%Y%m%d-%H%M%S).sql.gz"
+    docker exec -i "$PG_CONTAINER" pg_dump --clean --if-exists -U postgres -d "$HEARTH_DB" 2>/dev/null \
+      | gzip -c > "$pre" && say "   the current database was copied to $pre first"
+    # SUPERUSER PATH, deliberately: restoring a dump recreates tables, views
+    # and grants, which is owner work that kids_agent cannot and must not do.
+    # Fixed command line, no operator-supplied values.
+    if gunzip -c "$SNAP/db.sql.gz" | docker exec -i "$PG_CONTAINER" psql -q -U postgres -d "$HEARTH_DB" >/dev/null 2>&1; then
+      say "   restored"
+    else
+      die "the database restore failed part way. The database may be in a mixed state.
+The backup is $SNAP/db.sql.gz and what was there beforehand is $pre.
+docs/UPGRADING.md has the by-hand steps. Do not run this again until you have read them."
+    fi
+  fi
+fi
+
+# --- put it live -----------------------------------------------------------
+step "Restarting Hearth on Hearth $TO_VERSION"
+if [ "$DRY" = 1 ]; then
+  say "   would run: ${HEARTH_APPLY_CMD:-bash $R/deploy.sh}"
+  say ""
+  say "   (dry run: nothing above was actually done)"
+  exit 0
+fi
+if [ -n "$HEARTH_APPLY_CMD" ]; then
+  ( cd "$R" && eval "$HEARTH_APPLY_CMD" ) || say "   the apply step reported a problem; the health check below decides."
+else
+  ( cd "$R" && bash "$R/deploy.sh" ) || say "   deploy reported a problem; the health check below decides."
+fi
+
+step "Checking the household's internet"
+HEALTH="$R/bin/kidnet-health"; [ -x "$HEALTH" ] || HEALTH="$HERE/kidnet-health"
+if "$HEALTH" --wait "$HEARTH_HEALTH_WAIT"; then
+  echo "rolled-back" > "$SNAP/phase"
+  release_record rollback "$NOW_VERSION" "$NOW_COMMIT" "$TO_VERSION" "$TO_COMMIT" "$ARG" true \
+    "$( [ "$WITH_DB" = 1 ] && echo 'code and database' || echo 'code only' )$( [ "$AUTO" = 1 ] && echo ', automatic after a failed upgrade' )"
+  step "Done"
+  say "   Hearth $TO_VERSION is back and the household is healthy."
+  [ "$WITH_DB" = 0 ] && say "   The database was not touched."
+  say ""
+  exit 0
+fi
+
+release_record rollback "$NOW_VERSION" "$NOW_COMMIT" "$TO_VERSION" "$TO_COMMIT" "$ARG" false "rolled back but the health check still fails"
+say ""
+say "  Hearth $TO_VERSION is back, but the health check STILL fails."
+say "  That usually means the problem was never the version. Check the FAIL lines"
+say "  above: broadband down, the access point reset, the USB network adapter out."
+say "  If the last upgrade changed the database structure, the old code cannot read"
+say "  the new database. Try again with:"
+say "      sudo kidnet-rollback to $ARG --with-database"
+say ""
+exit 1

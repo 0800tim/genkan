@@ -45,6 +45,7 @@ export const DEFAULT_TIER = { child: "standard", "guest-child": "standard", "gue
 
 export const CLASSES = [
   ["personal", "A person's device", "Phones, tablets, laptops, consoles. Filtered and metered by whoever owns it."],
+  ["shared", "Shared family device", "The lounge TV, the iPad everybody uses. Filtered at a level you pick, and nobody's minutes pay for it. Goes off at dinner and in a whole-house cut unless you untick it."],
   ["iot", "Smart home", "Cameras, speakers, lights, locks, the vacuum. Never assigned to a person, never metered, and never cut by a family pause."],
   ["appliance", "Unrestricted device", "An SMS gateway, a server, a media box. Full internet, no time limits, never caught by a kids control, but still protected and visible."],
   ["infra", "Network equipment", "The access point, a switch, the gateway itself. Not somebody's device at all."],
@@ -59,6 +60,20 @@ export const SCOPES = [
   ["guest-kids", "Guest kids", "Visiting children only."],
   ["all", "Everyone but the adults", "The kids, the visiting kids, and any device nobody has claimed yet."],
 ];
+
+// The two sweeps a parent can point at the house, and what each one means in
+// a sentence. One place, so the tick boxes, the confirm dialogs and the API
+// validation can never describe them differently.
+export const SWEEPS = [
+  ["dinner", "Off at dinner", "\u201ckidnet dinner\u201d and the Dinner button reach this device."],
+  ["house", "Off in a whole-house cut", "The one big button reaches this device."],
+];
+export const SWEEP_VALUES = SWEEPS.map(s => s[0]);
+// Which classes can be in a sweep at all. Smart home, appliances and network
+// equipment are in neither, always, and the database enforces that in
+// device_sweeps rather than trusting this list. This is only what the page
+// offers; the answer is not ours to give.
+export const SWEEPABLE = ["personal", "shared"];
 
 const MAC_RE = /^[0-9a-f:]{17}$/i;
 const LABEL_RE = /^[A-Za-z0-9_:+.,'’ -]{1,40}$/;
@@ -87,6 +102,7 @@ export function assignOptions(people = [], current = "") {
   return `<option value=""${current ? "" : " selected"} disabled>Choose an owner\u2026</option>`
     + ROLE_VALUES.map(grp).join("")
     + `<optgroup label="Not a person">`
+    + `<option value="__shared">Shared family device</option>`
     + `<option value="__iot">Smart home device</option>`
     + `<option value="__appliance">Unrestricted device</option>`
     + `<option value="__infra">Network equipment</option>`
@@ -142,12 +158,31 @@ export function housePanel(s) {
     </div>`).join("")}</div>
     <p class="mghint">${esc(SCOPES.map(x => `${x[1]}: ${x[2]}`).join("  "))}</p>`;
 
+  // The whole-house cut. Deliberately not styled like the scoped controls next
+  // to it: it is a different kind of thing, it names how long it lasts before
+  // you press it, and it says out loud what it will not touch.
+  const h = s.house || {};
+  const houseCard = `<div class="mgsec">Everything off</div>
+    <div class="houserow">
+      ${h.is_off
+        ? `<span class="housenow"><b>The house is off.</b> ${esc(String(h.minutes_left || 0))} minute${h.minutes_left === 1 ? "" : "s"} left,
+             then it comes back on by itself.</span>
+           <button class="approve" type="button" onclick="houseOn()">Back on now</button>`
+        : `<span class="housenote">${esc(String(h.devices_caught || 0))} device${h.devices_caught === 1 ? "" : "s"} would go off.
+             Never the smart home, the appliances or the access point, and never the help lines.</span>
+           <span class="housebtns">
+             ${[30, 60, 120].map(m => `<button class="decline" type="button" onclick="houseOff(${m})">Off for ${m < 60 ? m + " min" : (m / 60) + "h"}</button>`).join("")}
+           </span>`}
+    </div>
+    <p class="mghint">It lifts itself when the time is up, so nothing stays cut off if nobody is home to undo it.
+      Untick a device on the Devices page to leave it out.</p>`;
+
   return `<div class="card"><h2>Who is in the house</h2>
     <p class="sub">${guests.length
       ? `${guests.length} guest${guests.length > 1 ? "s" : ""} here right now. `
       : ""}A control aimed at the kids reaches every child under this roof and every visiting child.
       It never reaches a visiting grown-up.</p>
-    ${groups || '<div class="empty">Nobody yet.</div>'}${controls}${past}</div>`;
+    ${groups || '<div class="empty">Nobody yet.</div>'}${controls}${houseCard}${past}</div>`;
 }
 
 export const HOUSEHOLD_CSS = `
@@ -159,6 +194,10 @@ export const HOUSEHOLD_CSS = `
 .scopebar .sc{display:flex;gap:6px;align-items:center;border:1px solid var(--line);
   border-radius:12px;padding:7px 9px;background:var(--surface-2)}
 .scopebar .sc b{font-size:12.5px}
+.houserow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.housebtns{display:flex;gap:6px;flex-wrap:wrap}
+.housenote,.housenow{font-size:12.5px;color:var(--ink-muted);flex:1 1 240px;line-height:1.45}
+.housenow b{color:var(--crit)}
 `;
 
 export const HOUSEHOLD_JS = `
@@ -180,6 +219,27 @@ function guestBack(id){hhPost({op:'guest-back',id:id},'welcome back\\u2026');}
 function guestRemove(id,name){
   if(!confirm('Delete '+name+' from Hearth for good? Their devices go back to the unnamed list.'))return;
   hhPost({op:'guest-remove',id:id},'removing\\u2026');
+}
+/* The whole-house cut. The confirm spells out what it does NOT reach, because
+   the button says "everything off" and that is not literally true. */
+function houseOff(min){
+  if(!confirm('Turn the house off for '+min+' minutes?\n\n'
+    +'\u2022 Every device ticked for it loses the internet.\n'
+    +'\u2022 The smart home, the appliances and the access point are untouched.\n'
+    +'\u2022 The help lines still answer on every device.\n'
+    +'\u2022 It comes back on by itself after '+min+' minutes.'))return;
+  hhPost({op:'house',act:'off',minutes:min},'cutting the house\u2026');
+}
+function houseOn(){hhPost({op:'house',act:'on'},'bringing it back\u2026');}
+/* One tick box. Sent as it is clicked: there is no Save button on this page and
+   adding one for two check boxes would be worse. */
+function setSweep(mac,sweep,on){
+  hhPost({op:'device-sweep',mac:mac,sweep:sweep,on:!!on},'saving\u2026');
+}
+/* A shared device's own filter level. */
+function setDeviceTier(mac){
+  var t=document.getElementById('dtier_'+mac);if(!t)return;
+  hhPost({op:'device-tier',mac:mac,tier:t.value},'saving the filter level\u2026');
 }
 /* The naming queue can now answer "it is not a person at all". */
 async function assignClass(mac,cls){
@@ -209,14 +269,83 @@ export async function householdApi(b, ctx) {
     // Smart home and infrastructure belong to the household, never to a person,
     // so filing one here also takes it off whoever had it. That is the whole
     // point: it gets the smart lock out of the queue of things to hand a child.
+    // Smart home, infrastructure and a shared family device all belong to the
+    // household, never to a person, so filing one here also takes it off
+    // whoever had it. For the shared class that is the entire point: a family
+    // iPad that stays somebody's keeps eating that child's minutes.
+    //
+    // A shared device also gets a filter level of its own, defaulting to
+    // standard. Without one it falls through to the household catch-all, which
+    // blocks ads and malware and nothing else, and an unfiltered television in
+    // the lounge is a worse outcome than a wrongly billed one.
     await q(`UPDATE devices SET category=$2, label=COALESCE(NULLIF($3,''), label),
-             child_id=CASE WHEN $2='personal' THEN child_id ELSE NULL END WHERE id=$1`,
-      [d.id, cls, label]);
+             child_id=CASE WHEN $2='personal' THEN child_id ELSE NULL END,
+             policy_tier=CASE WHEN $2='shared' THEN COALESCE(policy_tier,'standard') ELSE NULL END,
+             caught_by_dinner=CASE WHEN $2=$4 THEN caught_by_dinner ELSE NULL END,
+             caught_by_house_off=CASE WHEN $2=$4 THEN caught_by_house_off ELSE NULL END
+             WHERE id=$1`,
+      [d.id, cls, label, d.category || "personal"]);
     const ag = await syncAdguard();
     const said = cls === "iot" ? "Filed as a smart home device. It is never metered, never assigned to a child, and never cut by a family pause."
       : cls === "infra" ? "Filed as infrastructure. Nothing Hearth does will ever touch it."
-        : "Back in the list of people's devices.";
+        : cls === "appliance" ? "Filed as an unrestricted device. No owner, no time limit, and no control reaches it."
+          : cls === "shared" ? "Filed as a shared family device on the Standard filter level. Nobody's minutes pay for it. It goes off at dinner and in a whole-house cut until you untick it."
+            : "Back in the list of people's devices.";
     return { code: 200, ok: true, out: `${said} ${ag.out || ""}`.trim() };
+  }
+
+  // One tick box. The database decides whether the tick means anything: a
+  // camera can carry caught_by_dinner=true all day and device_sweeps will
+  // still say it is in no sweep. This refuses it anyway, so a parent is told
+  // rather than left thinking they changed something.
+  if (op === "device-sweep") {
+    const mac = String(b.mac || "");
+    const sweep = String(b.sweep || "");
+    if (!MAC_RE.test(mac)) return bad("which device?");
+    if (!SWEEP_VALUES.includes(sweep)) return bad("That is not one of the sweeps.");
+    const on = b.on === null || b.on === undefined ? null : !!b.on;
+    const [d] = await q("SELECT id,label,hostname,category FROM devices WHERE mac::text=$1", [mac.toLowerCase()]);
+    if (!d) return bad("Hearth has not seen that device.");
+    if (!SWEEPABLE.includes(d.category || "personal")) {
+      const [, label] = CLASSES.find(c => c[0] === d.category) || [null, d.category];
+      return bad(`${label} is never caught by any control, so there is nothing to tick. That is deliberate: a bedtime must not darken the front door lock.`);
+    }
+    const col = sweep === "dinner" ? "caught_by_dinner" : "caught_by_house_off";
+    await q(`UPDATE devices SET ${col}=$2 WHERE id=$1`, [d.id, on]);
+    const name = d.label || d.hostname || "That device";
+    const what = sweep === "dinner" ? "the dinner pause" : "a whole-house cut";
+    return { code: 200, ok: true,
+      out: on === null ? `${name} is back to the default for its class.`
+        : on ? `${name} will go off in ${what}.`
+          : `${name} will stay online through ${what}.` };
+  }
+
+  // A shared device's filter level. A personal device gets its level from its
+  // owner, so this only ever applies to the shared class.
+  if (op === "device-tier") {
+    const mac = String(b.mac || "");
+    const tier = String(b.tier || "");
+    if (!MAC_RE.test(mac)) return bad("which device?");
+    if (!TIER_VALUES.includes(tier)) return bad("That is not one of the filter levels.");
+    const [d] = await q("SELECT id,label,hostname,category FROM devices WHERE mac::text=$1", [mac.toLowerCase()]);
+    if (!d) return bad("Hearth has not seen that device.");
+    if ((d.category || "personal") !== "shared")
+      return bad("Only a shared family device has a filter level of its own. A person's device takes their owner's.");
+    await q("UPDATE devices SET policy_tier=$2 WHERE id=$1", [d.id, tier]);
+    const ag = await syncAdguard();
+    return { code: 200, ok: true,
+      out: `${d.label || d.hostname || "That device"} is now on the ${tier} filter level. ${ag.out || ""}`.trim() };
+  }
+
+  // The whole-house cut. kidnet owns it, because the expiry, the audit trail
+  // and the firewall push all live there and there must not be a second copy.
+  if (op === "house") {
+    const act = String(b.act || "");
+    if (!["off", "on"].includes(act)) return bad("off or on?");
+    const min = Math.min(1440, Math.max(1, Math.round(Number(b.minutes) || 60)));
+    const r = await runKidnet(act === "off" ? ["house", "off", String(min)] : ["house", "on"]);
+    if (!r.ok) return { code: 500, ok: false, out: r.out.trim() || "could not reach the gateway" };
+    return { code: 200, ok: true, out: r.out.trim() };
   }
 
   const id = Number(b.id);

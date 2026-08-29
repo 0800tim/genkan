@@ -65,21 +65,103 @@ Devices carry a class, quite separately from any of this:
 
 - `personal` a phone, tablet, laptop, console. Assignable to a person, filtered
   and metered by whoever owns it.
+- `shared` the lounge television, the iPad every kid uses. The household's, not
+  one child's. Filtered at a level the parent picks, metered against nobody.
 - `iot` the smart lock, the camera, the speaker, the vacuum, the lights. The
   household's, never a person's.
+- `appliance` a media server, an SMS gateway, a build box. Nobody's, full
+  internet, no time limit.
 - `infra` the access point, a switch, the gateway itself.
 
-**No people-scoped control ever touches an `iot` or `infra` device.** Not
-bedtime, not dinner, not a total cut. You do not want the front door lock going
-dark at 9pm because a child was sent to bed, and you do not want the security
-camera off during dinner. That guard lives in exactly one place, the
-`ips_in_scope()` function in `config/db/schema-roles.sql`, and every path in
-`bin/kidnet` resolves its targets through it.
+**No people-scoped control ever touches an `iot`, `appliance` or `infra`
+device.** Not bedtime, not dinner, not a total cut. You do not want the front
+door lock going dark at 9pm because a child was sent to bed, and you do not want
+the security camera off during dinner. That guard lives in exactly one place,
+the `ips_in_scope()` function, and every path in `bin/kidnet` resolves its
+targets through it.
 
 This is also why the smart lock used to sit in the "assign this to a kid" queue
 with nothing sensible to pick: the queue only offered people. It now offers
-**Smart home device** and **Infrastructure** as well, on the Tonight page and
-the Devices page, and filing a device either way takes it off whoever had it.
+**Shared family device**, **Smart home device**, **Unrestricted device** and
+**Network equipment** as well, on the Tonight page and the Devices page, and
+filing a device any of those ways takes it off whoever had it.
+
+## The shared family device
+
+A television does not belong to one child, and Hearth identifies the device, not
+the person holding the remote. Before the `shared` class there were two places
+to put the family iPad and both were wrong. Give it to one child and that child
+pays for the family film out of their own minutes, and the parent finds out on
+Sunday when the digest says the seven year old watched four hours. Give it to
+nobody and it escapes every budget, every filter level and every control.
+
+A shared device:
+
+- **belongs to the household.** `child_id` is always NULL, so nothing about it
+  can reach a child's ledger. `people_devices`, `kidnet-meter` and the weekly
+  digest all filter on `category='personal'`, so it is invisible to every one of
+  them by construction rather than by remembering to exclude it.
+- **is still filtered.** It carries its own `policy_tier` and gets its own
+  AdGuard client, named after the device. Filing something as shared defaults it
+  to Standard, because a device with no level falls through to the household
+  catch-all, which blocks ads and malware and nothing else. An unfiltered
+  television in the lounge is a worse outcome than a wrongly billed one.
+- **is swept only where the parent has ticked it.** Two tick boxes, below.
+
+It is not metered and it has no time budget of its own. See "Two honest limits".
+
+## The two sweeps, and the tick boxes
+
+Two controls point at the house rather than at a person, and every device says
+for itself whether it is in each one.
+
+| Sweep | What it is | Column |
+|---|---|---|
+| Dinner | `kidnet dinner`, the Dinner button | `devices.caught_by_dinner` |
+| Whole-house cut | `kidnet house off`, the one big button | `devices.caught_by_house_off` |
+
+Both columns are nullable, and NULL means "whatever this class does by
+default". That is not laziness. It means re-filing a phone as a shared device
+picks up the shared defaults instead of dragging an answer about a phone across
+to a television, and it lets the Devices page say **(default)** honestly rather
+than claiming you chose something you never touched.
+
+The defaults, per class:
+
+| Class | Dinner | Whole-house cut | Why |
+|---|---|---|---|
+| `personal` | Yes | Yes | This is who both sweeps are for. |
+| `shared` | Yes | Yes | A dinner pause that leaves the television on is not a dinner pause, and a whole-house cut that leaves it streaming is not a whole-house cut. The page marks both as a default and invites you to change them: untick the kitchen display that plays music while you eat. |
+| `iot` | **Never** | **Never** | The lock, the camera, the vacuum. |
+| `appliance` | **Never** | **Never** | The media server, the SMS gateway. |
+| `infra` | **Never** | **Never** | The access point is not a client. |
+
+"Never" means never. The answer is computed in the `device_sweeps` view, which
+forces `false` for those three classes whatever the columns say, so a bad
+migration, a hand-edited row or a future bug in the dashboard cannot put the
+front door lock in a dinner pause. `test/schema-test.sh` proves it by forcing
+both columns on for one device of every class and checking the three that must
+never be cut are still in neither sweep.
+
+## The whole-house cut
+
+    kidnet house off [minutes]     default 60, maximum 1440
+    kidnet house on
+    kidnet house status
+
+One button: every device ticked for it loses the internet. It never touches the
+smart home, an appliance or the access point, and the safety net still answers
+on every device, because that sits in its own nftables set above the block rule.
+
+**It lifts itself.** The obvious way to build "all devices off" is to write a
+block against every device, and the obvious way that goes wrong is a parent
+pressing it on the way out the door with nobody home to press the other one. So
+no rows are written against any device at all. `house_state` holds a single
+timestamp, the `blocked_device_ips` view reads the clock, and when the moment
+passes the addresses simply stop being in the set on the gateway's next
+reconcile. Turning it back on early is the same single UPDATE, and ending a cut
+never hands the internet back to somebody who was already switched off for
+another reason.
 
 ## Scopes: who a control reaches
 
@@ -96,6 +178,12 @@ take either one person's name or one of these groups:
 | `household` | Everyone who lives here, no visitors |
 | `all` | Everyone except the adults, plus any personal device nobody has claimed yet |
 | `everyone` | Literally every personal device, adults included |
+| `dinner` | The same people as `all`, plus every shared family device ticked for dinner. What `kidnet dinner` uses. |
+
+There is one more, `house-off`, which is every device ticked for the whole-house
+cut and no people at all. It is deliberately not in `bin/kidnet`'s scope list,
+so `kidnet off house-off` is refused: the only door to it is `kidnet house off`,
+which sets the clock that makes the cut lift itself.
 
 Two notes worth reading twice:
 
@@ -202,11 +290,13 @@ the unnamed list rather than disappearing.
 | Piece | File |
 |---|---|
 | The roles, the scopes, and the IoT guard | `config/db/schema-roles.sql` |
-| The scoped controls | `bin/kidnet` (`ips_for`, `setcat`, `internet`) |
-| Which filter level each role gets in AdGuard | `bin/kidnet-adguard-clients` |
+| The shared class, the tick boxes, the whole-house cut | `config/db/schema-shared.sql` |
+| The scoped controls | `bin/kidnet` (`ips_for`, `setcat`, `internet`, `house`) |
+| What the firewall should be blocking, all of it | the `blocked_device_ips` view |
+| Which filter level each role and each shared device gets in AdGuard | `bin/kidnet-adguard-clients` |
 | Metering household children only | `bin/kidnet-meter` |
-| The roles on screen, the guest buttons, the device classes | `dashboard/household.mjs` |
-| The proof | `test/roles-test.sh` |
+| The roles on screen, the guest buttons, the device classes, the ticks | `dashboard/household.mjs` |
+| The proof | `test/roles-test.sh`, `test/schema-test.sh` |
 
 ## Two honest limits
 
@@ -219,3 +309,11 @@ the unnamed list rather than disappearing.
 - **The AdGuard guest level is a level, not a promise about content.** It turns
   on AdGuard's parental filter and safe browsing. That catches the obvious adult
   and malware domains. It is not a content classifier, and it never was.
+- **A shared device has no clock of its own.** It is filtered, it is swept, and
+  it costs nobody any minutes, but there is no daily allowance for the family
+  television and no "the iPad has had two hours today". Everything about time in
+  Hearth is keyed on a child, from `time_ledger` through `kidnet spend` to the
+  captive portal that explains what happened, and a device-level budget is a
+  second full metering path rather than a column. It is written up as a next
+  step in DECISIONS.md rather than half built, because a budget that silently
+  does not enforce is worse than no budget at all.

@@ -11,13 +11,26 @@ set -u
 GW_IP="${KIDS_GW_IP:-192.168.60.1}"
 GW_CIDR="${KIDS_GW_CIDR:-24}"
 KIDS_NET="${KIDS_SUBNET:-192.168.60.0/24}"
+# The gateway has never been a superuser. It connects with KIDS_DB_URL_DOCKER,
+# which is the kids_app role (secrets.env), over TCP from inside the container.
+# It stays there rather than moving to the CLI's kids_agent role, because
+# kids_agent has no password on purpose and so cannot authenticate over TCP at
+# all: it is reachable only over the local socket inside the postgres
+# container. See config/db/grants.sql.
 DB="${KIDS_DB_URL_DOCKER:-}"
+# The shipped ruleset, as baked into the image. A variable so the slow lane
+# renderer below can be exercised outside a container.
+KIDS_NFT="${KIDS_NFT:-/etc/kids.nft}"
 
 log(){ echo "[gateway] $(date -u +%FT%TZ) $*"; }
 
 # Alerts land in the same alerts table the dashboard and voice agent read.
 # Non-fatal by design: the firewall must not depend on the database being up.
 alert(){ local sev="$1" detail="$2" ack=false
+  # Severity is interpolated into SQL, so it is one of three words or nothing.
+  # The detail beside it is quote-doubled below; it can carry a tcpdump line or
+  # a device label, so it is the one that has always needed the care.
+  case "$sev" in info|warn|urgent) ;; *) sev=warn;; esac
   log "ALERT($sev): $detail"
   # Routine informational events (the island coming up) are worth keeping for
   # history but must not sit in a parent's alert queue. Anything worse than
@@ -83,8 +96,19 @@ RECONCILE_S="${RECONCILE_S:-15}"
 # comparison. Never fails silently: a stale allow-list means devices lose
 # internet, which is exactly the outage we are guarding against.
 reconcile_set(){
-  local setname="$1" query="$2" want current n
-  want=$( { timeout 10 psql "$DB" -tAc "$query" 2>/dev/null; printf '%s\n' ${EXTRA_IPS:-}; } \
+  local setname="$1" query="$2" want current n rows rc=0
+  # Ask, and keep the exit status. An empty answer and a FAILED query are not
+  # the same thing, and this could not tell them apart: a query that errored
+  # (a view this image expects but the database has not been given yet, say)
+  # produced no rows, which read as "nothing should be blocked", and the next
+  # line flushed @kids_block and handed every cut-off child the internet back.
+  # A failed query now changes nothing at all.
+  rows=$(timeout 10 psql "$DB" -tAc "$query" 2>/dev/null); rc=$?
+  if [ "$rc" != 0 ]; then
+    log "reconcile $setname: query failed (rc=$rc), keeping the existing set"
+    return 0
+  fi
+  want=$( { printf '%s\n' "$rows"; printf '%s\n' ${EXTRA_IPS:-}; } \
           | grep -E '^[0-9]+[.]' | sort -u | paste -sd,)
   if [ -z "$want" ] && ! timeout 5 psql "$DB" -tAc "SELECT 1" >/dev/null 2>&1; then
     log "reconcile $setname: database unreachable, keeping the existing set"
@@ -135,6 +159,47 @@ for L in (d.get('leases') or [])+(d.get('static_leases') or []):
 " 2>/dev/null
 }
 
+# How slow the slow lane is, in kilobytes per second, taken from the household's
+# setting. nftables variables cannot stand where the grammar wants a number, so
+# the rate is a literal inside the rules, and changing it means re-rendering
+# them. The rules themselves live in ONE place, config/nftables/kids.nft,
+# between the two sentinel comments; this lifts that block out of the shipped
+# file, substitutes the household's figure and reloads only the throttle chain.
+#
+# Fails towards FULL SPEED, deliberately. If the render or the reload goes
+# wrong the chain is left empty and nobody is throttled, which is the harmless
+# direction. The dangerous direction would be a half-applied ruleset that
+# slowed the safety net.
+slow_rate_installed(){
+  nft list chain inet kids throttle 2>/dev/null \
+    | sed -n 's/.*limit rate over \([0-9]\+\) kbytes\/second.*/\1/p' | head -1
+}
+apply_slow_rate(){
+  local kbit rate burst have
+  nft list chain inet kids throttle >/dev/null 2>&1 || return 0   # older ruleset, nothing to do
+  kbit=$(timeout 5 psql "$DB" -tAc "SELECT rate_kbit FROM slow_settings" 2>/dev/null | tr -dc '0-9')
+  [ -n "$kbit" ] || return 0                                      # no setting, keep what is loaded
+  [ "$kbit" -ge 32 ] 2>/dev/null || kbit=32
+  [ "$kbit" -le 100000 ] || kbit=100000
+  rate=$(( kbit / 8 )); [ "$rate" -ge 4 ] || rate=4
+  burst=$(( rate * 2 ))
+  have=$(slow_rate_installed)
+  [ "$have" = "$rate" ] && return 0
+  { echo "table inet kids {"
+    echo "  chain throttle {"
+    sed -n '/>>> slow lane rules/,/<<< slow lane rules/p' "$KIDS_NFT" \
+      | sed '1d;$d' \
+      | sed -e 's/\$KIDS_IF/"kids0"/g' \
+            -e "s|limit rate over [0-9]* kbytes/second burst [0-9]* kbytes|limit rate over $rate kbytes/second burst $burst kbytes|g"
+    echo "  }"
+    echo "}"; } > /tmp/slow-lane.nft
+  if nft flush chain inet kids throttle && nft -f /tmp/slow-lane.nft; then
+    log "slow lane: ${kbit} kbit/s (${rate} kbytes/s, burst ${burst} kbytes)"
+  else
+    alert warn "slow lane: could not apply ${kbit} kbit/s. The throttle chain is empty, so nothing is being slowed."
+  fi
+}
+
 sync_state(){
   [ -n "$DB" ] || return 0
   # KNOWN devices: every active reservation plus every current DHCP lease.
@@ -151,10 +216,38 @@ sync_state(){
   reconcile_set kids_unclaimed "SELECT ip FROM unclaimed_devices
      WHERE (SELECT mode FROM claim_settings) = 'enforce'"
 
-  # BLOCKED devices: the reservations of children whose internet is off.
-  reconcile_set kids_block "SELECT host(d.reserved_ip) FROM devices d
-     JOIN category_state cs ON cs.child_id=d.child_id
-     WHERE cs.category='internet' AND cs.blocked AND d.reserved_ip IS NOT NULL AND d.is_active"
+  # BLOCKED devices. Three reasons an address is in here and no others: its
+  # owner's internet is off, it is a shared family device cut in its own right,
+  # or the whole-house cut is running and this device is ticked for it. The
+  # query lives in the database now (blocked_device_ips, schema-shared.sql), so
+  # the firewall, bin/kidnet and the dashboard cannot disagree about who is cut.
+  #
+  # Two things that query does which the old one here did not. It requires
+  # category='personal' on the owner branch, so a camera that had somehow been
+  # handed to a child cannot go dark with them. And it reads the clock on the
+  # whole-house cut, so that cut expires on its own: nobody has to be home to
+  # undo it, and there is no state left behind to go stale.
+  reconcile_set kids_block "SELECT ip FROM blocked_device_ips"
+
+  # THE SLOW LANE. Same idea as the block above, and the same three guarantees:
+  # the database is the desired state, a failed query changes nothing, and the
+  # view it reads (slow_lane_ips, config/db/schema-slow.sql) yields PERSONAL
+  # devices only, so a camera or a smart lock can never be throttled.
+  #
+  # A set that is empty costs nothing: the rules in kids.nft match against it
+  # and fall straight through, so a household that has never asked for a slow
+  # lane pays nothing for it being there.
+  reconcile_set slow_gaming "SELECT ip FROM slow_lane_ips WHERE category='gaming'"
+  reconcile_set slow_video  "SELECT ip FROM slow_lane_ips WHERE category='video'"
+  reconcile_set slow_social "SELECT ip FROM slow_lane_ips WHERE category='social'"
+  reconcile_set slow_all    "SELECT ip FROM slow_lane_ips WHERE category='internet'"
+  # Where "social" is, learned from DNS answers exactly like gaming and video.
+  # kidnet-catmeter fills the other three destination sets on its own minute
+  # timer; social has no meter, so it is filled here.
+  reconcile_set social_ips "SELECT host(ip) FROM category_ips
+     WHERE category='social' AND seen > now() - interval '24 hours'"
+
+  apply_slow_rate
 }
 
 # Resolve the scope='safety' always_allow domains (NZ youth help lines,

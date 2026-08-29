@@ -47,7 +47,9 @@ done
 [[ "$TOP"  =~ ^[0-9]{1,3}$ ]] || { echo "kidnet-quiz-suggest: --top must be a whole number" >&2; exit 1; }
 command -v docker >/dev/null || { echo "kidnet-quiz-suggest: needs docker to reach Postgres" >&2; exit 1; }
 
-psqll(){ docker exec -i "$PG_CONTAINER" psql -U postgres -d "$DB" -tAF$'\t' -c "$1"; }
+# Read only, and as kids_agent rather than the superuser: see config/db/grants.sql.
+DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB" -tAF$'\t' -c "$1"; }
 # A section that says something friendly when there is nothing in it yet. An
 # empty section is the normal state of a new install, not a fault.
 # An empty section and a broken section are different things, and saying
@@ -94,6 +96,7 @@ fi
 [[ "$KID" =~ ^[A-Za-z0-9_-]{1,32}$ ]] || { echo "kidnet-quiz-suggest: bad name '$KID'" >&2; exit 1; }
 CID="$(psqll "SELECT id FROM children WHERE lower(name)=lower('$KID')" | head -1)"
 [ -n "$CID" ] || { echo "kidnet-quiz-suggest: unknown child '$KID'" >&2; exit 1; }
+[[ "$CID" =~ ^[0-9]{1,9}$ ]] || { echo "kidnet-quiz-suggest: bad id for '$KID'" >&2; exit 1; }
 WHO="$(psqll "SELECT name || COALESCE(', aged ' || age::text, '') || ', on the ' || policy_tier || ' filter level'
                 FROM children WHERE id=$CID" | head -1)"
 

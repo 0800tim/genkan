@@ -12,6 +12,26 @@ Every command here is real and runs against this repo. Where a command needs
 
 ## Is it healthy?
 
+One command, about five seconds, and it is the one to reach for first:
+
+    kidnet-health            # everything below, in plain language, with an exit code
+    kidnet-health --details  # and what each line actually checked
+
+It is read only and needs no root, so it is safe on a household in use and
+safe to run as often as you like. It checks the three containers, the firewall
+chains and sets, a real DNS query and a real HTTP request from inside the
+island, the database, the safety net in both the database and the live
+firewall, the background timers and the age of the Tor relay list. Exit 0 means
+nothing a household depends on is broken. See docs/CLI.md for the full list and
+for what it deliberately cannot tell you.
+
+The version is its first line, and the same line sits at the bottom of every
+dashboard page. If something broke after an update, docs/UPGRADING.md is the
+next thing to read.
+
+The four checks below are what `kidnet-health` automates, and they are still
+worth knowing by hand for the day it is the thing that is broken.
+
 Four checks, about thirty seconds.
 
     docker ps --filter name=hearth                 # gateway, adguard, portal, speedtest: all Up
@@ -153,7 +173,7 @@ raises a warning and starts the whole sequence again when it returns.
 
 ### The host-side units
 
-One service and six timers. That is the entire host footprint, besides the
+One service and seven timers. That is the entire host footprint, besides the
 `kidnet` scripts in `/usr/local/bin` and `/etc/kids-network/`.
 
 | Unit | Cadence | What it runs |
@@ -164,12 +184,45 @@ One service and six timers. That is the entire host footprint, besides the
 | `kids-services.timer` | every minute | `kidnet-servicemap` then `kidnet-servicemeter`: learn service addresses, count real bytes per service |
 | `kids-devicescan.timer` | every minute | `kidnet-devicescan`: DHCP leases into the devices table, then `kidnet-classify` |
 | `kids-dnslog.timer` | every 2 minutes | `kidnet-dnslog`, then `kidnet-alerts` as an `ExecStartPost` |
+| `kids-schedule.timer` | every minute | `kidnet-schedule apply`: puts scheduled bedtimes on, and lifts them in the morning |
 | `kids-tor-sync.timer` | daily, with up to 2h jitter | `kidnet-tor-sync sync`, then applies the snippet inside the gateway namespace |
 
-There is a seventh timer, `kids-iot-policy.timer`. `deploy.sh` installs it and
+There is an eighth timer, `kids-iot-policy.timer`. `deploy.sh` installs it and
 deliberately does **not** enable it, because the household IoT layer is switched
 on by hand after you have watched it in observe mode. See
 [HOUSEHOLD-SECURITY.md](HOUSEHOLD-SECURITY.md).
+
+`kids-schedule.timer` is installed **and** enabled, which is the opposite
+choice, and for a reason worth saying out loud: the switch there is the data,
+not the unit. With no rows in `schedules`, and a fresh install has none, the
+worker does nothing at all. The failure to avoid is a parent setting a bedtime
+on the dashboard and it silently never running because a timer they have never
+heard of was left off. `OnBootSec` is 45 seconds rather than the minutes the
+others use, because a box that rebooted at eleven at night has to reassert the
+bedtime promptly.
+
+`deploy.sh` applies `config/db/schema-schedule.sql` itself, before the grants,
+which is the only schema file it loads on its own. A timer it switches on has to
+have the tables it reads, or an existing household that pulled the repo and
+deployed would get a worker erroring into the journal every minute and a
+dashboard offering a bedtime form that saves nothing. The file is idempotent, so
+on a database that already has it this changes nothing. Every other schema file
+still goes through `config/db/load.sh`.
+
+On a box where the tables are genuinely missing, `kidnet schedule show` and the
+worker both say so in one sentence and exit 0 rather than printing a psql trace
+sixty times an hour.
+
+To stop bedtimes without uninstalling anything:
+
+    kidnet schedule disable <kid>        # one child, keeps their times
+    kidnet schedule holiday clear        # end every override window
+    sudo systemctl disable --now kids-schedule.timer   # the whole thing
+
+Disabling the timer leaves whatever is currently blocked blocked, because
+nothing is left to lift it. Turn the child back on by hand (`kidnet on <kid>`)
+before you disable it, or use `kidnet schedule clear <kid>`, which lifts what it
+was holding as it goes.
 
 The timers stagger their first run after boot (60s, 90s, 2min, 3min) so they do
 not all wake at once while the stack is still coming up.
@@ -581,6 +634,62 @@ That is bug bounty level 2, and it is worth telling the kid so.
 
 ---
 
+## "A child's internet did not come back this morning"
+
+The morning restore matters more than the bedtime, so this is the failure to
+check for first. In order:
+
+**1. Is anything actually blocked, and who put it there?**
+
+    kidnet status
+    docker exec -i postgres psql -U kids_agent -d kids_network -tAc \
+      "SELECT c.name, cs.category, cs.blocked, cs.set_by, cs.since
+         FROM category_state cs JOIN children c ON c.id=cs.child_id WHERE cs.blocked"
+
+`set_by` is the whole answer:
+
+- `bedtime` and it is the morning: the worker has not run. Check the timer.
+- `agent`: somebody turned it off by hand. A schedule will never lift that, by
+  design. `kidnet on <kid>`.
+- `out-of-time`: they have used the day's minutes. `kidnet bonus <kid> <min>`,
+  or they earn it back on the portal.
+- `over-budget` on one category: that category hit its daily cap.
+  `kidnet grant <kid> <gaming|video> <min>`.
+
+**2. Is the timer running?**
+
+    systemctl status kids-schedule.timer
+    journalctl -u kids-schedule.service --since "12 hours ago"
+
+The worker is quiet unless something changed, so an empty journal overnight
+means nothing needed doing, not that it did not run. `systemctl list-timers
+kids-schedule.timer` shows when it last fired.
+
+**3. What does it think tonight looks like?**
+
+    kidnet schedule show
+    kidnet schedule show <kid>
+
+That prints the bedtimes, what is in force right now, when it lifts, and any
+holiday window. If the times are right and the child is still blocked, run
+`kidnet-schedule apply` by hand and read what it says.
+
+**4. Is the database on the household's clock?**
+
+    docker exec -i postgres psql -U postgres -tAc "SHOW timezone" -d kids_network
+
+A bedtime is a local-time idea. If that says UTC, the day boundary and the
+bedtime are both twelve hours out. `deploy.sh` sets it from `HEARTH_TZ` in
+`config.env`.
+
+**5. Did the firewall follow?** The block is a row; the gateway rebuilds the
+firewall from it every 15 seconds. If the database says unblocked and the child
+is still off, that is a reconcile problem, not a schedule problem:
+
+    docker logs hearth-gw 2>&1 | grep reconcile | tail
+
+---
+
 ## Rotating the AdGuard password
 
 `deploy.sh` generates a real password on first deploy, writes the plaintext to
@@ -618,6 +727,59 @@ ever restore a backup onto different hardware.
 
 ---
 
+## "kidnet says permission denied for table ..."
+
+Since 2026-08-30 `bin/kidnet` and every `bin/kidnet-*` worker connect as
+`kids_agent`, a role with no superuser, no ownership and no DDL, instead of as
+the Postgres superuser. `permission denied for table X` means that role has not
+been granted what the command needs. Two causes, in order of likelihood.
+
+**The grants have not been applied to this database yet.** Run them. It is
+idempotent:
+
+    docker exec -i postgres psql -U postgres -d kids_network -q \
+      < config/db/grants.sql
+
+If it prints `ERROR: relation "..." does not exist`, this database is behind the
+schema in the repository: run `config/db/load.sh kids_network` first, then the
+grants again.
+
+**Somebody added a verb and forgot the grant.** Add one line to
+`config/db/grants.sql` naming the table, the narrowest verb list that works, and
+which script needs it. Then re-run the file and `bash test/db-role-test.sh`.
+
+To see what the role actually holds:
+
+    docker exec -i postgres psql -U postgres -d kids_network -tAc "
+      SELECT c.relname||' : '||string_agg(DISTINCT a.privilege_type,',' ORDER BY a.privilege_type)
+      FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+      JOIN LATERAL aclexplode(c.relacl) a ON a.grantee='kids_agent'::regrole::oid
+      WHERE n.nspname='public' GROUP BY c.relname ORDER BY 1"
+
+Do **not** fix this by putting a command back on `-U postgres`, and do not grant
+`kids_agent` anything wholesale. The whole point of the role is that a bad
+argument in a shell script cannot become `COPY ... TO PROGRAM`, which is command
+execution inside the database container on a server this box shares with
+unrelated projects. `docs/DATABASE.md` has the full picture, including the three
+places that are still on the superuser path on purpose.
+
+### If Hearth shares a Postgres server with other projects
+
+`kids_network` is closed to `PUBLIC`, so no other project's role can open the
+household's database. The other direction is not Hearth's to close: Postgres
+lets `PUBLIC` connect to a new database by default, so `kids_agent` can open any
+database on the server whose owner has not revoked that. It has no rights on any
+table anywhere else, so the most it could read is another database's catalogue,
+which is table names rather than data. If you want that closed too, it is one
+statement per database, and it is **their** database you are changing:
+
+    docker exec -i postgres psql -U postgres -c \
+      "REVOKE CONNECT ON DATABASE their_db FROM PUBLIC"
+
+Check first that their application connects as a named role and not as
+`PUBLIC`; the database's own owner keeps CONNECT either way. The cleanest
+answer, if you have the choice, is to give Hearth a Postgres of its own.
+
 ## Backing up and restoring
 
 There are three things worth keeping. Only the first is irreplaceable.
@@ -643,6 +805,16 @@ grants in the dump will apply:
 
     docker exec -i postgres psql -U postgres -c \
       "CREATE ROLE kids_app LOGIN PASSWORD 'the-one-in-secrets.env'"
+
+Then put the CLI's role back, or every `kidnet` command answers `permission
+denied`. This is idempotent and safe to run at any time:
+
+    docker exec -i postgres psql -U postgres -d kids_network -q \
+      < config/db/grants.sql
+
+`config/db/grants.sql` creates `kids_agent` if it is missing and re-grants
+everything, so it is also the repair for "somebody dropped a grant by hand".
+`sudo ./deploy.sh` runs it for you and prints any grant that did not apply.
 
 And re-pin the timezone, or the daily budget rolls over at UTC midnight instead
 of yours:
@@ -676,10 +848,29 @@ house without a good reason.
 
     sudo test/firewall-test.sh && sudo test/container-test.sh
 
-Both must pass fully before you commit. This is not ceremony: the two worst
-bugs this project has had were a ruleset that never parsed and a safety net that
-existed only in the database, and both were caught the day these tests were
-written.
+**After changing anything that talks to the database** (a schema file,
+`config/db/grants.sql`, or a `kidnet` verb that touches a new table):
+
+    bash test/schema-test.sh && bash test/db-role-test.sh
+
+`db-role-test.sh` builds a throwaway database and then attacks it: it proves
+`kids_agent` cannot run `COPY ... TO PROGRAM`, cannot read a server file,
+cannot drop or truncate a table, cannot make itself a superuser, and cannot be
+reached from off the box; and then that it can still do every read and write
+the CLI and the timers need. Both must pass fully before you commit. This is
+not ceremony: the two worst bugs this project has had were a ruleset that never
+parsed and a safety net that existed only in the database, and both were caught
+the day these tests were written.
+
+**One caution if Hearth shares a Postgres server with other projects.**
+`db-role-test.sh` and `schema-test.sh` each create a database, use it for a
+minute or so, and drop it. If a whole-instance backup enumerates the databases
+while one of those exists and then tries to dump it after it has gone,
+`pg_dump` fails on a database that no longer exists and the backup run can fail
+with it. That has happened on this box. Do not run these two suites during the
+backup window, or make the backup skip a database that vanished mid-run. It is
+not a Hearth bug and Hearth cannot fix it from here, but it is worth knowing
+before it costs somebody a night's backup.
 
 **After changing policy in the database** (a new always_allow row, a renamed
 child, a reassigned device):

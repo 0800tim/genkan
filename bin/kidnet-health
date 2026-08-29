@@ -1,0 +1,366 @@
+#!/usr/bin/env bash
+# hearth:summary=Is the household's internet working, and is Hearth doing its job?
+#
+# One question, answered honestly, in words somebody who has never heard of
+# nftables can read. This is the thing a parent runs at 9pm when a child says
+# "the internet is broken", and it is the thing bin/kidnet-upgrade trusts when
+# it decides whether an upgrade worked or has to be undone.
+#
+#   kidnet-health                 the plain-language report
+#   kidnet-health --json          the same thing as JSON, for the dashboard
+#   kidnet-health --quiet         say nothing, just set the exit code
+#   kidnet-health --details       spell out what each line actually checked
+#   kidnet-health --wait 120      keep re-checking for up to 120s before failing
+#   kidnet-health --write FILE    also write the JSON to FILE
+#
+# Exit code: 0 when everything a household depends on is working (warnings are
+# allowed and are still printed), 1 when something a household depends on is
+# broken. That binary answer is deliberate: an upgrade needs to decide, and a
+# maybe is not a decision.
+#
+# READ-ONLY. Nothing in this file changes anything: no writes to the database,
+# no nft rules, no containers restarted, no files touched except the optional
+# JSON cache. It is safe to run at any time, as often as you like, on a live
+# household gateway. That is a rule, not a habit: this is the one tool that
+# gets run when things are already going wrong, and a diagnostic that changes
+# state is a diagnostic that can make things worse.
+#
+# WHAT IT CANNOT TELL YOU
+# It checks that Hearth's own machinery is up and answering. It cannot tell
+# you the house's broadband is up (that is upstream of everything here), it
+# cannot tell you a child's laptop is actually on the island wifi, and it
+# cannot tell you the filtering is catching everything, because no filter
+# catches everything. See README.md for the honest limits of the whole
+# project. A green report means Hearth is doing its job, not that the internet
+# is perfect.
+set -uo pipefail   # deliberately NOT -e: every check must run, even after one fails
+
+HERE="$(cd "$(dirname "$0")" && pwd)"
+# The library works out where the code lives, because from /usr/local/bin the
+# answer is not "the directory above me". Health still runs without it: it
+# just cannot then name the version.
+[ -f "$HERE/kidnet-release-lib.sh" ] && . "$HERE/kidnet-release-lib.sh" 2>/dev/null || true
+ROOT="${HEARTH_ROOT:-}"
+[ -n "$ROOT" ] || ROOT="$(cd "$HERE/.." && pwd)"
+
+GW="${GW_CONTAINER:-hearth-gw}"
+AG="${ADGUARD_CONTAINER:-hearth-adguard}"
+PORTAL="${PORTAL_CONTAINER:-hearth-portal}"
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB_NAME="${HEARTH_DB:-kids_network}"
+DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+HEALTH_FILE="${HEARTH_HEALTH_FILE:-/var/lib/hearth/health.json}"
+TOR_NODES_FILE="${TOR_NODES_FILE:-/var/lib/hearth/tor-nodes.txt}"
+
+JSON=0; QUIET=0; WAIT=0; WRITE=""; DETAIL=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --json)  JSON=1;;
+    --quiet) QUIET=1;;
+    -v|--details) DETAIL=1;;
+    --wait)  WAIT="${2:-0}"; shift;;
+    --write) WRITE="${2:?--write needs a path}"; shift;;
+    -h|--help) sed -n '3,38p' "$0" | sed 's/^# \{0,1\}//'; exit 0;;
+    *) echo "kidnet-health: unknown option '$1' (try --help)" >&2; exit 2;;
+  esac
+  shift
+done
+case "$WAIT" in *[!0-9]*) echo "kidnet-health: --wait takes seconds" >&2; exit 2;; esac
+
+# --- the check register ----------------------------------------------------
+# Each check appends one record: severity | key | headline | detail.
+# Severity is "ok", "warn" or "fail". Only "fail" changes the exit code, so a
+# stale Tor list is reported without telling a parent at 9pm that their
+# household is broken when it is not.
+RESULTS=()
+FAILS=0; WARNS=0
+add(){ RESULTS+=("$1|$2|$3|${4:-}"); [ "$1" = fail ] && FAILS=$((FAILS+1)); [ "$1" = warn ] && WARNS=$((WARNS+1)); return 0; }
+
+running(){ [ "$(docker inspect -f '{{.State.Running}}' "$1" 2>/dev/null)" = true ]; }
+
+# One python process inside the gateway namespace does both wire tests. It has
+# to be in there: the island is a separate network namespace, so from the host
+# there is no route to the resolver or to the kids' page at all. python3 is in
+# the gateway image already (gateway/Dockerfile says why), so this adds no
+# dependency. The script only ever reads.
+probe_island(){
+  docker exec -i "$GW" python3 - <<'PY' 2>/dev/null
+import socket, struct, random
+def out(k, v): print("%s=%s" % (k, v))
+# A real DNS question, put on the wire, to the resolver the children use.
+try:
+    tid = random.randint(0, 65535)
+    name = "example.com"
+    pkt = (struct.pack('!HHHHHH', tid, 0x0100, 1, 0, 0, 0)
+           + b''.join(bytes([len(p)]) + p.encode() for p in name.split('.')) + b'\x00'
+           + struct.pack('!HH', 1, 1))
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.settimeout(5)
+    s.sendto(pkt, ('127.0.0.1', 53))
+    d, _ = s.recvfrom(2048)
+    out("dns_rcode", d[3] & 0x0f)
+    out("dns_answers", struct.unpack('!H', d[6:8])[0])
+except Exception as e:
+    out("dns_error", type(e).__name__)
+# The page a child lands on. A status line is all we need: if it answers, the
+# portal is serving.
+try:
+    s = socket.create_connection(('127.0.0.1', 80), 5); s.settimeout(5)
+    s.sendall(b'GET / HTTP/1.0\r\nHost: hearth\r\n\r\n')
+    first = s.recv(200).decode('utf8', 'replace').split('\r\n')[0]
+    s.close()
+    out("portal_status", first.split(' ')[1] if ' ' in first else "?")
+except Exception as e:
+    out("portal_error", type(e).__name__)
+PY
+}
+
+run_checks(){
+  RESULTS=(); FAILS=0; WARNS=0
+
+  if ! command -v docker >/dev/null 2>&1; then
+    add fail docker "Hearth cannot be checked from here" \
+      "Docker is not installed or not on this account's PATH, and everything Hearth runs is a container."
+    return
+  fi
+
+  # 1-3. The three containers a household's internet actually depends on.
+  running "$GW"     && add ok gateway "The gateway is running" \
+                        "Container $GW: it owns the kids' network card and the firewall." \
+                    || add fail gateway "The gateway is NOT running" \
+                        "Container $GW is down, so the children have no internet at all. Start it with: sudo docker compose -f $ROOT/compose.yaml --profile island up -d"
+  running "$AG"     && add ok filter "The filter and address server is running" \
+                        "Container $AG: it hands out addresses and answers name lookups." \
+                    || add fail filter "The filter and address server is NOT running" \
+                        "Container $AG is down. Devices will not get an address and nothing will resolve."
+  running "$PORTAL" && add ok portal "The children's page is running" \
+                        "Container $PORTAL: where a child sees their time and earns more." \
+                    || add fail portal "The children's page is NOT running" \
+                        "Container $PORTAL is down. Blocked children will see a browser error instead of an explanation."
+  running "${SPEED_CONTAINER:-hearth-speedtest}" \
+                    && add ok speedtest "The speed test is running" "Optional. Not needed for the internet to work." \
+                    || add warn speedtest "The speed test is not running" \
+                        "Optional: it only measures the wifi. Everything else works without it."
+
+  # 4. The firewall. Not just "a table exists": the chains that do the work,
+  #    and the two lists the iron rules depend on.
+  if running "$GW"; then
+    local rules; rules="$(docker exec "$GW" nft list table inet kids 2>/dev/null)"
+    if [ -z "$rules" ]; then
+      add fail firewall "The firewall is NOT loaded" \
+        "The gateway is up but has no rules, so nothing is being blocked or metered. Check: sudo docker logs $GW"
+    else
+      local missing=""
+      for c in input forward metering prerouting postrouting; do
+        printf '%s' "$rules" | grep -q "chain $c {" || missing="$missing $c"
+      done
+      for s in kids_block kids_allow kids_known; do
+        printf '%s' "$rules" | grep -q "set $s {" || missing="$missing $s"
+      done
+      if [ -n "$missing" ]; then
+        add fail firewall "The firewall is loaded but incomplete" \
+          "Missing:$missing. Some blocking or metering will silently not happen. Reload with: sudo docker restart $GW"
+      else
+        add ok firewall "The firewall is loaded and complete" \
+          "All five rule groups and all three device lists are present."
+      fi
+    fi
+  else
+    add fail firewall "The firewall cannot be checked" "The gateway container is down."
+  fi
+
+  # 5-6. The two things on the wire. A resolver that is "running" but not
+  #      answering looks identical from the outside to one that is fine, and
+  #      it is the single most common way a household's internet breaks.
+  if running "$GW"; then
+    local probe; probe="$(probe_island)"
+    local rcode ans pstat
+    rcode="$(printf '%s\n' "$probe" | sed -n 's/^dns_rcode=//p')"
+    ans="$(printf '%s\n' "$probe" | sed -n 's/^dns_answers=//p')"
+    pstat="$(printf '%s\n' "$probe" | sed -n 's/^portal_status=//p')"
+    if [ "$rcode" = 0 ] && [ "${ans:-0}" -gt 0 ] 2>/dev/null; then
+      add ok dns "Web addresses are being looked up correctly" \
+        "A real name lookup on the children's network came back with an answer."
+    elif [ -n "$rcode" ]; then
+      add fail dns "Name lookups are failing on the children's network" \
+        "The resolver answered but gave no address (code $rcode). Nothing will load for the children. Check: sudo docker logs $AG"
+    else
+      add fail dns "Nothing is answering name lookups" \
+        "The children's devices cannot turn a web address into a number, so no page will load. Check: sudo docker logs $AG"
+    fi
+    if [ "$pstat" = 200 ] || [ "$pstat" = 302 ] || [ "$pstat" = 303 ]; then
+      add ok portal_http "The children's page answers" "It replied $pstat when asked for its front page."
+    elif [ -n "$pstat" ]; then
+      add fail portal_http "The children's page is answering with an error" \
+        "It replied $pstat. A blocked child will see an error rather than how to earn more time."
+    else
+      add fail portal_http "The children's page is not answering" \
+        "Nothing replied on the island. Check: sudo docker logs $PORTAL"
+    fi
+  fi
+
+  # 7. The kids' network card. Without it there is no island: the wifi access
+  #    point is plugged into this and nothing else.
+  if running "$GW"; then
+    if docker exec "$GW" ip link show kids0 >/dev/null 2>&1; then
+      add ok nic "The children's network card is connected" "kids0 is present inside the gateway."
+    else
+      add fail nic "The children's network card is missing" \
+        "Either the USB network adapter has fallen out, or the safety guard refused to start because another router is still serving that cable. Check: sudo docker logs $GW | tail -20"
+    fi
+  fi
+
+  # 8. The database. Every budget, every earned minute, every device name.
+  if docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc 'SELECT 1' >/dev/null 2>&1; then
+    add ok database "Hearth's records are readable" \
+      "Time budgets, earned minutes and device names are all where they should be."
+  else
+    add fail database "Hearth's records cannot be read" \
+      "The database is unreachable, so budgets and earned time cannot be counted. The firewall keeps enforcing whatever it last had. Check: sudo docker ps | grep $PG_CONTAINER"
+  fi
+
+  # 9. The safety net. An iron rule: a child who is cut off must still be able
+  #    to reach a help line. This is checked in BOTH places, because the row
+  #    existing in the database and the address being in the live firewall are
+  #    two different facts and only the second one saves anybody.
+  local nsafe=""
+  nsafe="$(docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc \
+        "SELECT count(*) FROM always_allow WHERE scope='safety'" 2>/dev/null)"
+  local liveallow=0
+  if running "$GW"; then
+    liveallow="$(docker exec "$GW" nft list set inet kids kids_allow 2>/dev/null | tr ',' '\n' | grep -c '[0-9]\+\.[0-9]' || true)"
+  fi
+  if [ -n "$nsafe" ] && [ "${nsafe:-0}" -gt 0 ] 2>/dev/null; then
+    if [ "${liveallow:-0}" -gt 0 ] 2>/dev/null; then
+      add ok safety "The safety net is in place" \
+        "$nsafe help and support sites stay reachable for a child who is blocked or out of time, and the firewall is holding $liveallow addresses open for them."
+    else
+      add fail safety "The safety net is listed but NOT live" \
+        "$nsafe help sites are in the records, but the firewall has no addresses held open, so a blocked child could not reach a help line. Fix with: sudo kidnet allow-sync"
+    fi
+  elif [ -n "$nsafe" ]; then
+    add fail safety "The safety net is empty" \
+      "No help or support sites are marked always reachable. A child who is cut off would have no way to reach one. See config/db/seed.sql."
+  else
+    add warn safety "The safety net could not be checked" "The database was not readable."
+  fi
+
+  # 10. The timers that do the work between commands. A stopped meter is the
+  #     quiet failure: nothing looks broken, the budgets just stop counting.
+  if command -v systemctl >/dev/null 2>&1; then
+    local stopped=""
+    for t in kids-meter kids-dnslog kids-metering kids-devicescan kids-services kids-tor-sync kids-schedule; do
+      systemctl list-unit-files "$t.timer" >/dev/null 2>&1 || continue
+      systemctl is-enabled "$t.timer" >/dev/null 2>&1 || continue
+      systemctl is-active  "$t.timer" >/dev/null 2>&1 || stopped="$stopped $t"
+    done
+    if [ -n "$stopped" ]; then
+      add fail timers "Some of Hearth's background jobs have stopped" \
+        "Stopped:$stopped. Time will not be counted down and bedtimes may not fire. Restart with: sudo systemctl start$(printf ' %s.timer' $stopped)"
+    else
+      add ok timers "The background jobs are running" \
+        "Time counting, device scanning and bedtimes are all on their clocks."
+    fi
+  fi
+
+  # 11. The Tor relay list. A warning, never a failure: a stale list still
+  #     blocks the relays it knew about, and docs/tor-and-safety.md is honest
+  #     that this layer was never the real defence anyway.
+  if [ -f "$TOR_NODES_FILE" ]; then
+    local age; age=$(( ( $(date +%s) - $(stat -c %Y "$TOR_NODES_FILE" 2>/dev/null || echo 0) ) / 86400 ))
+    if [ "$age" -gt 7 ]; then
+      add warn tor "The Tor relay list is $age days old" \
+        "It still blocks what it knew about. The daily job may have failed: sudo systemctl status kids-tor-sync.service"
+    else
+      add ok tor "The Tor relay list is current" "Refreshed within the last $((age+1)) day(s)."
+    fi
+  fi
+}
+
+# --- output ----------------------------------------------------------------
+if [ -t 1 ] && [ -z "${NO_COLOR:-}" ]; then
+  C_OK=$'\033[32m'; C_WARN=$'\033[33m'; C_BAD=$'\033[31m'; C_DIM=$'\033[2m'; C_OFF=$'\033[0m'
+else C_OK=""; C_WARN=""; C_BAD=""; C_DIM=""; C_OFF=""; fi
+
+jesc(){ printf '%s' "$1" | sed 's/\\/\\\\/g; s/"/\\"/g' | tr -d '\n\r\t'; }
+
+to_json(){
+  local first=1
+  printf '{"version":"%s","version_line":"%s","commit":"%s","checked":"%s","healthy":%s,"failures":%s,"warnings":%s,"checks":[' \
+    "$(jesc "$VER")" "$(jesc "$VERLINE")" "$(jesc "$COMMIT")" "$(date -Is)" \
+    "$([ "$FAILS" = 0 ] && echo true || echo false)" "$FAILS" "$WARNS"
+  local r
+  for r in "${RESULTS[@]}"; do
+    IFS='|' read -r sev key head detail <<<"$r"
+    [ $first = 1 ] || printf ','
+    first=0
+    printf '{"status":"%s","key":"%s","headline":"%s","detail":"%s"}' \
+      "$(jesc "$sev")" "$(jesc "$key")" "$(jesc "$head")" "$(jesc "$detail")"
+  done
+  printf ']}\n'
+}
+
+to_text(){
+  echo
+  echo "$VERLINE"
+  echo "${C_DIM}Checked $(date '+%a %-d %b, %-I:%M %P' | sed 's/AM$/am/; s/PM$/pm/')${C_OFF}"
+  echo
+  local r
+  for r in "${RESULTS[@]}"; do
+    IFS='|' read -r sev key head detail <<<"$r"
+    case "$sev" in
+      ok)   printf '  %sOK  %s  %s\n' "$C_OK" "$C_OFF" "$head"
+            [ "$DETAIL" = 1 ] && [ -n "$detail" ] && printf '        %s%s%s\n' "$C_DIM" "$detail" "$C_OFF";;
+      warn) printf '  %sNOTE%s  %s\n' "$C_WARN" "$C_OFF" "$head"
+            [ -n "$detail" ] && printf '        %s%s%s\n' "$C_DIM" "$detail" "$C_OFF";;
+      fail) printf '  %sFAIL%s  %s\n' "$C_BAD" "$C_OFF" "$head"
+            [ -n "$detail" ] && printf '        %s\n' "$detail";;
+    esac
+  done
+  echo
+  if [ "$FAILS" = 0 ] && [ "$WARNS" = 0 ]; then
+    echo "  Everything is healthy. The children's internet is working and Hearth is"
+    echo "  doing its job."
+  elif [ "$FAILS" = 0 ]; then
+    echo "  The children's internet is working. $WARNS thing(s) worth a look when you"
+    echo "  have a moment, listed above. Nothing here needs you tonight."
+  else
+    echo "  ${C_BAD}$FAILS thing(s) are broken.${C_OFF} The lines marked FAIL say what to do."
+    echo "  If this started after an update, put the old version back with:"
+    echo "      sudo kidnet-rollback list"
+    echo "      sudo kidnet-rollback to previous"
+  fi
+  echo
+  echo "  ${C_DIM}This checks Hearth. It cannot tell you your broadband is up, or that a"
+  echo "  child's laptop is on the right wifi.${C_OFF}"
+  echo
+}
+
+VER="$( [ -f "$ROOT/VERSION" ] && tr -d ' \t\r\n' < "$ROOT/VERSION" || echo unknown )"
+if command -v git >/dev/null 2>&1 && git -C "$ROOT" rev-parse --git-dir >/dev/null 2>&1; then
+  COMMIT="$(git -C "$ROOT" rev-parse --short HEAD 2>/dev/null || echo "")"
+else COMMIT=""; fi
+if declare -F hearth_version_line >/dev/null 2>&1; then VERLINE="$(HEARTH_ROOT="$ROOT" hearth_version_line)"
+else VERLINE="Hearth $VER"; fi
+
+deadline=$(( $(date +%s) + WAIT ))
+while :; do
+  run_checks
+  [ "$FAILS" = 0 ] && break
+  [ "$(date +%s)" -ge "$deadline" ] && break
+  # Something is failing and we have been asked to wait. Containers coming up
+  # after a deploy are the normal reason, so give them a few seconds.
+  sleep 5
+done
+
+OUT_JSON="$(to_json)"
+# Best effort cache, so the dashboard has a recent answer without shelling out
+# on every page load. Never fatal: a household box where this is not writable
+# is a household box that still gets its answer on stdout.
+for f in $WRITE $( [ -w "$(dirname "$HEALTH_FILE")" ] 2>/dev/null && echo "$HEALTH_FILE" ); do
+  printf '%s' "$OUT_JSON" > "$f.tmp.$$" 2>/dev/null && mv -f "$f.tmp.$$" "$f" 2>/dev/null || rm -f "$f.tmp.$$" 2>/dev/null
+done
+
+if [ "$QUIET" = 0 ]; then
+  if [ "$JSON" = 1 ]; then printf '%s' "$OUT_JSON"; else to_text; fi
+fi
+[ "$FAILS" = 0 ]

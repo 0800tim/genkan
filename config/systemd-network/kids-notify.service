@@ -1,0 +1,11 @@
+[Unit]
+Description=Hearth notifications (send unacknowledged alerts to the household's own routes)
+After=docker.service
+[Service]
+Type=oneshot
+EnvironmentFile=/srv/projects/internal/kids-network/secrets.env
+# The worker exits 0 whatever happens, on purpose: a notification route that is
+# down must never mark a unit failed, never retry-storm, and never lose an
+# alert. Failures are written to notify_log and shouted into the journal, and
+# the alert stays unacknowledged so the next tick tries again.
+ExecStart=/usr/local/bin/kidnet-notify run

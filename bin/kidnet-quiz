@@ -28,7 +28,12 @@ QUIZ_DIR="${QUIZ_DIR:-$REPO/portal/quizzes}"
 VALIDATOR="${VALIDATOR:-$REPO/tools/validate-quizzes.mjs}"
 PORTAL_UNIT="${PORTAL_UNIT:-kids-portal.service}"
 PORTAL_CONTAINER="${PORTAL_CONTAINER:-hearth-portal}"
-psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+# Connects as kids_agent, a role with no superuser, no DDL and no
+# COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB_NAME="${HEARTH_DB:-kids_network}"
+DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 ck_id(){ [[ "$1" =~ ^[a-z0-9-]{1,40}$ ]] || { echo "kidnet-quiz: bad bank id '$1' (lowercase, digits and hyphens)" >&2; exit 1; }; }
 ck_name(){ [[ "$1" =~ ^[A-Za-z0-9_-]{1,32}$ ]] || { echo "kidnet-quiz: bad name '$1'" >&2; exit 1; }; }
 need_dir(){ [ -d "$QUIZ_DIR" ] || { echo "kidnet-quiz: no bank directory at $QUIZ_DIR (set HEARTH_REPO or QUIZ_DIR)" >&2; exit 1; }; }
@@ -42,7 +47,7 @@ import json,sys,os
 p=sys.argv[1]
 try: b=json.load(open(p,encoding="utf-8"))
 except Exception as e:
-    print("\t".join([os.path.basename(p),"UNREADABLE",str(e)[:40],"","","","",""])); raise SystemExit(0)
+    print("\x1f".join([os.path.basename(p),"UNREADABLE",str(e)[:40],"","","","",""])); raise SystemExit(0)
 qs=b.get("questions") or []
 lv=[0]*5
 for q in qs:
@@ -50,7 +55,7 @@ for q in qs:
     if isinstance(d,int) and 1<=d<=5: lv[d-1]+=1
 lab=sum(lv)
 ramp="/".join(str(x) for x in lv) if lab and lab*2>=len(qs) else "flat"
-print("\t".join([str(b.get("id","?")), str(b.get("title","?")), str(b.get("suggested_age_min","?")),
+print("\x1f".join([str(b.get("id","?")), str(b.get("title","?")), str(b.get("suggested_age_min","?")),
                  str(len(qs)), str(b.get("questions_per_round","?")), str(b.get("pass_mark","?")),
                  str(b.get("minutes_per_pass","?")), ramp]))
 PY
@@ -62,7 +67,11 @@ cmd_list(){ need_dir
   for f in "$QUIZ_DIR"/*.json; do
     [ -e "$f" ] || continue
     n=$((n+1))
-    IFS=$'\t' read -r id title age qn rnd pm min ramp < <(facts "$f")
+    # Unit separator, not tab. A tab is IFS whitespace even when IFS is set to
+    # a tab, so two adjacent tabs collapse and every column after an empty
+    # field shifts left. A bank with no suggested_age_min would have printed
+    # its question count under AGE and nobody would have noticed.
+    IFS=$'\x1f' read -r id title age qn rnd pm min ramp < <(facts "$f")
     printf '%-20s %-26.26s %4s %4s %6s %5s %5s  %s\n' "$id" "$title" "$age" "$qn" "$rnd" "$pm" "$min" "$ramp"
   done
   echo
@@ -129,6 +138,8 @@ cmd_stats(){
     local kid="$1"; ck_name "$kid"
     local cid; cid=$(psqll "SELECT id FROM children WHERE lower(name)=lower('$kid')")
     [ -n "$cid" ] || { echo "kidnet-quiz: unknown kid '$kid'" >&2; exit 1; }
+    # Read back out of the database and then interpolated, so checked.
+    [[ "$cid" =~ ^[0-9]{1,9}$ ]] || { echo "kidnet-quiz: bad id for '$kid'" >&2; exit 1; }
     echo "== $kid: quiz minutes earned (all time, from the time ledger)"
     show "SELECT '  '||rpad(replace(reason,'quiz:',''),22)||lpad(count(*)::text,3)||' passes, '||lpad(sum(minutes)::text,4)||' min, last '||to_char(max(ts),'YYYY-MM-DD')
           FROM time_events WHERE child_id=$cid AND kind='earn' AND reason LIKE 'quiz:%'

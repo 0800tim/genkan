@@ -108,6 +108,104 @@ now matches it.
 2. Firewall: drop flows to the gaming IP set.
 Precise: kills Roblox/Fortnite/Steam while chess, music and homework stay up.
 
+## Turning a category DOWN: the slow lane
+
+A third state, between on and off, and usually the better one to reach for.
+
+Off is a wall. The video stops, the child comes to find you, and you have the
+argument the whole product exists to avoid. The slow lane is a different
+lesson: the category is policed down to a few hundred kilobits, so the video
+still plays and simply buffers, a page still loads, a message still sends, and
+the child drifts off to something else on their own. Nobody was told no.
+
+    kidnet slow ben video      video crawls, everything else is untouched
+    kidnet full ben video      back to normal
+
+### How it is done
+
+In nftables, in the same ruleset as everything else, reconciled from the
+database on the same fifteen-second loop. No `tc`, no second enforcement plane
+to disagree with the first.
+
+`config/nftables/kids.nft` gains four membership sets (`slow_gaming`,
+`slow_video`, `slow_social`, `slow_all`) and a `throttle` chain on the forward
+hook at priority 20. That puts it after the filter chain (0), so what is
+dropped is never policed, and after the metering chain (10), so what is policed
+is still counted. Its policy is `accept`, so a mistake in it can only ever fail
+towards full speed.
+
+Each rule polices with a `meter` keyed on the island address, which gives every
+DEVICE its own token bucket rather than one shared bucket for the household.
+Two throttled children get a slow lane each; they do not fight over one. Both
+directions are policed, with a separate bucket each, because a limit that only
+capped the upload would barely change a stream at all.
+
+The destination sets are the same ones the meter uses, so the slow lane and the
+chart can never disagree about what "video" is. Social gained a destination set
+of its own (`social_ips`) for this, filled from `category_ips` by the gateway;
+it carries no counter and no metering rule, so nothing about what is measured
+has changed.
+
+### The speed, and why
+
+**256 kbit/s** by default, written in the ruleset as 32 kbytes/second with a 64
+kbyte burst. Measured in the test rig, not guessed: a sustained pull settles at
+250 kbit/s, and the burst lets a small page arrive at full speed before the
+policer bites.
+
+At that rate a chat message, a search result and a small page all still arrive.
+YouTube at its lowest quality wants more than it, and Netflix wants about twice
+it, so video cannot hold a stream and buffers instead. Gameplay is usually
+under 150 kbit/s, so a game mostly still plays while everything it wants to
+stream in stalls. That asymmetry is the point: small things work, big things
+are miserable.
+
+`kidnet slow-rate <kbit>` changes it, between 32 and 9999. It is stored in
+`slow_settings` and the gateway re-renders the throttle chain with it on the
+next reconcile.
+
+### Running out of time: the cliff or the slope
+
+`kidnet slow-timeout cut|slow`. `cut` is the default and is what Hearth has
+always done at zero. `slow` drops the child into the whole-device slow lane
+instead, so the evening tails off rather than ending mid-sentence, and earning
+minutes back puts them straight back to full speed. Some families want the
+cliff and some want the slope. Neither is assumed and an upgrade never changes
+it.
+
+`bin/kidnet-meter` stops spending minutes for a child already on the slope. It
+has to: they are not cut, so without that their ledger would sink further into
+the red every minute and earning ten minutes back would not lift them out.
+
+### What is never slowed
+
+- **The safety net.** `@kids_allow` is accepted at the top of the throttle
+  chain in both directions, above every policing rule. A child in trouble
+  reaching a help line over a deliberately crippled connection would be the
+  worst failure this project could have. `test/firewall-test.sh` proves it on
+  an address that is otherwise inside a throttled category.
+- **Smart home, appliances and infrastructure.** The view the gateway reads
+  (`slow_lane_ips`) filters on `devices.category = 'personal'`, so a camera, a
+  smart lock or the access point can never appear in a throttle set, even if
+  the device has somehow been handed to a child. `test/schema-test.sh` proves
+  that one.
+- **The portal, DNS, DHCP and the speed test.** They are on the input hook, not
+  the forward hook, so the page that explains the slow lane is always full
+  speed. A slow network that says nothing is just a broken network.
+
+### Honest limits of the slow lane
+
+- It polices by destination address, exactly like the meter, so it inherits
+  every limit in the list below: a VPN hides the destination and escapes it, a
+  service whose CDN is not in `category_domains` is never slowed, and a shared
+  front door is deliberately not throttled rather than wrongly throttled.
+- A **category over its budget** is still a hard block, not a slow lane. Only
+  the whole-day time budget has the cliff-or-slope choice so far.
+- A policer drops packets rather than queueing them, so a throttled connection
+  is lossy as well as slow. That is what makes video give up, and it is also
+  why the rate should not be set so low that TCP cannot make progress at all.
+  The floor of 32 kbit/s is there for that reason.
+
 ## Honest limits
 
 - **Shorts vs full YouTube**: same domains, can't split. Both count as video.

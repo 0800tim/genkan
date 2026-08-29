@@ -10,8 +10,18 @@
 # kid. The dashboard and the family agent surface these; what happens next is
 # a talk, not an automatic punishment.
 set -uo pipefail
-psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+# Connects as kids_agent, a role with no superuser, no DDL and no
+# COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB_NAME="${HEARTH_DB:-kids_network}"
+DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 LOOKBACK="${ALERT_LOOKBACK:-15 minutes}"
+# It is an interval, and it is interpolated into SQL, so it has to look like
+# one. Operator-supplied rather than kid-supplied, but the whole point of the
+# gates is that "who supplies it" is not the thing keeping us safe.
+[[ "$LOOKBACK" =~ ^[0-9]{1,4}\ (second|minute|hour|day)s?$ ]] || {
+  echo "kidnet-alerts: ALERT_LOOKBACK must be like '15 minutes'" >&2; exit 1; }
 
 # One alert per (child, pattern) per day, so a busy device does not spam.
 n=$(psqll "
@@ -38,7 +48,10 @@ WHERE NOT EXISTS (
     AND a.category = h.category
     AND a.ts::date = CURRENT_DATE
 )
-RETURNING 1" | grep -c 1 || true)
+  # ^1$ anchored, not a bare 1. psql -tAc prints the returned rows AND the
+  # command tag, so "INSERT 0 1" also contains a 1 and an unanchored grep
+  # counted it: one new alert was reported as two, every single time.
+RETURNING 1" | grep -c '^1$' || true)
 
 if [ "${n:-0}" -gt 0 ]; then
   echo "kidnet-alerts: raised $n new alert(s)"

@@ -8,13 +8,34 @@
 #   kidnet game off|on <scope>     gaming (Roblox/Fortnite/consoles)
 #   kidnet media off|on <scope>    video+social (YouTube/TikTok/Reels); Spotify stays
 #   kidnet study on|off <scope>    internet on, gaming+media off, schoolwork+audio ok
+#   kidnet slow <kid> <category>   the SLOW LANE: gaming|video|social|internet
+#                                  still works, just policed down to a crawl.
+#                                  Nobody is told no, the video simply buffers.
+#   kidnet full <kid> <category>   back to full speed (and unblocked)
+#   kidnet slow-rate [kbit]        how slow the slow lane is (default 256)
+#   kidnet slow-timeout [cut|slow] what running out of time does. 'cut' is the
+#                                  default and is what Hearth has always done.
+#   kidnet slow-status             who is in the slow lane, and the settings
 #   kidnet bonus <kid> <min> [why] grant extra general time (turns net back on)
 #   kidnet grant <kid> <cat> <min>  grant time to ONE category (clears its block)
 #   kidnet earn <kid> <task|min>   credit an earned task's minutes
 #   kidnet penalty <kid> <min>     dock time
 #   kidnet spend <kid> <min>       consume time (meter); auto-blocks at 0
+#   kidnet reopen <kid>            lift an OUT-OF-TIME block and nothing else.
+#                                  Never lifts a bedtime or a block you set.
 #   kidnet time <kid>              remaining time today
-#   kidnet dinner | resume         pause / restore ALL kids
+#   kidnet dinner | resume         pause / restore ALL kids, plus the shared
+#                                  family devices ticked for dinner
+#   kidnet schedule <set|show|extend|holiday|clear>  scheduled bedtimes: the
+#                                  times go off and come back on their own.
+#                                  See docs/CLI.md and bin/kidnet-schedule.
+#   kidnet house off [min]|on|status  the whole-house cut: every device ticked
+#                                  for it goes off, and it LIFTS ITSELF after
+#                                  min minutes (default 60) so nothing stays
+#                                  cut off when nobody is home to undo it
+#   kidnet shared <mac|ip> [label] [tier]  file a device as a shared family
+#                                  device: the household's, not one child's
+#   kidnet sweep <mac|ip> dinner|house on|off|default   the two tick boxes
 #   kidnet allow-sync              refresh the safety net (always_allow -> nft)
 #   kidnet iot <status|apply|learn|show|set|allow|mode>   household IoT security
 #                                  policy: what each camera, lock and gadget may
@@ -38,10 +59,28 @@
 #   household     everyone who lives here, no visitors
 #   all           everybody except adults, plus devices nobody has claimed yet
 #   everyone      literally every personal device, adults included
-# No scope ever touches a smart-home or infrastructure device: the front door
-# lock and the camera stay up through bedtime, dinner and a total cut.
+#   dinner        the same people as 'all', PLUS every shared family device
+#                 ticked for dinner. What `kidnet dinner` uses.
+# No scope ever touches a smart-home, appliance or infrastructure device: the
+# front door lock and the camera stay up through bedtime, dinner and a total
+# cut. That guard lives in the database, in ips_in_scope() and device_sweeps.
 set -euo pipefail
-psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+# LEAST PRIVILEGE. Every ordinary kidnet operation runs as kids_agent, a role
+# with no superuser, no ownership and no DDL: see config/db/grants.sql for the
+# exact list and for why. It matters because Postgres here is shared with
+# unrelated projects, and because a superuser connection turns any injection
+# below into COPY ... TO PROGRAM, which is command execution on the box. As
+# kids_agent that same injection can at worst scribble on Hearth's own rows.
+# The two operations that genuinely need more (creating the role, loading the
+# schema) live in config/db/load.sh and stay on the superuser path there.
+# The three overrides exist so the test suite can point at a throwaway database
+# without touching the household's. They are environment, not arguments: the
+# dashboard runs this script with execFile and a fixed argument list, so nothing
+# arriving over HTTP can reach them.
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB_NAME="${HEARTH_DB:-kids_network}"
+DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 TABLE="inet kids"; SET="kids_block"; ALLOWSET="kids_allow"
 # The firewall lives INSIDE the gateway container's network namespace, so
 # every nft call execs in there. Override GW_CONTAINER (or NFT_DIRECT=1 for
@@ -61,6 +100,20 @@ ck_int(){ [[ "$1" =~ ^[0-9]{1,4}$ ]] || { echo "kidnet: bad number '$1'" >&2; ex
 # was proven end to end before it was fixed. Adding a verb here means gating
 # every argument, including the ones that are obviously numbers.
 ck_text(){ [[ "$1" =~ ^[A-Za-z0-9_:+.,\ -]{0,80}$ ]] || { echo "kidnet: bad text" >&2; exit 1; }; }
+# A penalty is minutes with a minus in front, so the plain integer gate cannot
+# carry it. This one can, and nothing else about it is looser.
+ck_signed(){ [[ "$1" =~ ^-?[0-9]{1,4}$ ]] || { echo "kidnet: bad number '$1'" >&2; exit 1; }; }
+# A row id we read back out of the database. Gated anyway, because "it came
+# from the database" is exactly the assumption that turns one bad write into a
+# second injection, and because an empty id would otherwise build broken SQL.
+ck_id(){ [[ "$1" =~ ^[0-9]{1,9}$ ]] || { echo "kidnet: bad id '$1'" >&2; exit 1; }; }
+# A device, named the two ways a parent has it to hand: a MAC or an IPv4
+# address. Anything else is not an address and has no business in a WHERE.
+ck_addr(){ [[ "$1" =~ ^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$ ]] || \
+           [[ "$1" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || \
+           { echo "kidnet: '$1' is not a MAC or an IPv4 address" >&2; exit 1; }; }
+ck_ip(){ [[ "$1" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || { echo "kidnet: '$1' is not an IPv4 address" >&2; exit 1; }; }
+ck_bool(){ case "$1" in true|false) ;; *) echo "kidnet: bad boolean '$1'" >&2; exit 1;; esac; }
 tid(){ ck_name "$1"; psqll "SELECT id FROM children WHERE lower(name)=lower('$1')"; }
 # A person, by name or by database id. The dashboard has the id in hand and a
 # household can end up holding a person whose name ck_name will not pass (a
@@ -82,7 +135,7 @@ canon_role(){ case "$(echo "$1" | tr 'A-Z' 'a-z')" in
   guest-adult|guestadult|adult-guest|guest-grownup) echo guest-adult;;
   *) echo "kidnet: '$1' is not a role. Use child, guest-child, guest-adult or adult." >&2; exit 1;;
   esac; }
-SCOPES="all everyone kids guests guest-kids guest-adults adults household"
+SCOPES="all everyone kids guests guest-kids guest-adults adults household dinner"
 is_scope(){ case " $SCOPES " in *" $1 "*) return 0;; esac; return 1; }
 ck_scope(){ is_scope "$1" || ck_name "$1"; }
 # SAFETY: no scope ever touches anything but a PERSONAL device. IoT (cameras,
@@ -91,7 +144,12 @@ ck_scope(){ is_scope "$1" || ck_name "$1"; }
 # guard is inside ips_in_scope() in the database, in one place, and this is the
 # only way bin/kidnet ever resolves a target to addresses.
 ips_for(){ ck_scope "$1"; psqll "SELECT ip FROM ips_in_scope('$1')"; }
-audit(){ psqll "INSERT INTO block_events(target_type,target_ref,action,source,actor) VALUES('$1','$2','$3','${4:-agent}','the Hearth box')" >/dev/null; }
+# The audit trail. All four values are interpolated, so all four are gated:
+# every caller passes something that has already been through ck_name, ck_text
+# or a literal case arm, so ck_text here narrows nothing in practice and closes
+# the hole if a future verb forgets.
+audit(){ ck_text "$1"; ck_text "$2"; ck_text "$3"; ck_text "${4:-agent}"
+  psqll "INSERT INTO block_events(target_type,target_ref,action,source,actor) VALUES('$1','$2','$3','${4:-agent}','the Hearth box')" >/dev/null; }
 # Push category_state to AdGuard's DNS layer. Best-effort and non-fatal: if
 # AdGuard is down the DB is still the source of truth and the container
 # reconciler will catch up. Silent unless it fails.
@@ -103,7 +161,22 @@ adguard_sync(){ [ -n "${ADGUARD_PASS:-}" ] || return 0
 # trip through the shell. That matters: a household can hold a person called
 # "Guest (kid)", and splitting that on spaces would turn one control into two
 # failed lookups.
-setcat_id(){ psqll "INSERT INTO category_state(child_id,category,blocked,set_by) VALUES($1,'$2',$3,'agent')
+# Turning a category back ON also returns it to FULL SPEED. It has to: a
+# category that was slowed, then switched off, then switched back on would
+# otherwise come back still crawling, with nothing on screen to say why, which
+# is precisely the "the wifi is broken" failure the slow lane exists to avoid.
+# Switching something OFF leaves the speed column alone, because a dropped
+# packet is never policed and the value is meaningless while blocked.
+setcat_id(){ ck_id "$1"; ck_name "$2"; ck_bool "$3"
+  psqll "INSERT INTO category_state(child_id,category,blocked,speed,set_by) VALUES($1,'$2',$3,'full','agent')
+  ON CONFLICT (child_id,category) DO UPDATE SET blocked=$3, since=now(), set_by='agent',
+    speed=CASE WHEN $3 THEN category_state.speed ELSE 'full' END" >/dev/null 2>&1 && return 0
+  # A database that has not been given config/db/schema-slow.sql yet has no
+  # speed column. Fall back to exactly the statement that worked before the
+  # slow lane existed, so an upgraded script on a not-yet-upgraded database can
+  # still turn a child's gaming off. Turning things OFF is the one thing that
+  # must never wait for a schema load.
+  psqll "INSERT INTO category_state(child_id,category,blocked,set_by) VALUES($1,'$2',$3,'agent')
   ON CONFLICT (child_id,category) DO UPDATE SET blocked=$3, since=now(), set_by='agent'" >/dev/null; }
 setcat(){ local kid="$1" cat="$2" b="$3" cid id
   # A group expands to the people in it. Adult guests are not in 'kids', which
@@ -116,9 +189,72 @@ setcat(){ local kid="$1" cat="$2" b="$3" cid id
   ck_name "$kid"
   cid=$(tid "$kid"); [ -n "$cid" ] || { echo "unknown kid '$kid'"; exit 1; }
   setcat_id "$cid" "$cat" "$b"; }
+# --- The slow lane ---------------------------------------------------------
+# The third state, and the reason it is a column on category_state rather than
+# a table of its own: "slow" is not a different kind of control from "off", it
+# is the gentler setting of the same one. One row per child per category, one
+# place to read.
+#
+#   off    blocked = true                   the hard cut, unchanged
+#   slow   blocked = false, speed = 'slow'   policed down, never cut
+#   full   blocked = false, speed = 'full'   the default
+#
+# Choosing slow or full always lifts a block, because that is what a parent
+# means when they pick one. For the whole-internet category the firewall is
+# opened straight away through internet(), so nothing waits fifteen seconds.
+#
+# What a slow lane is for: a hard block is a confrontation. The video stops,
+# the child comes to find you, and you have the argument. A slow lane is a
+# quieter lesson. The video still plays, it just buffers, and they drift off to
+# something else on their own. See DECISIONS.md.
+# 'media' is the one the dashboard chip sends, because video and social are a
+# single control there, exactly as they are for `kidnet media off`.
+ck_slowcat(){ case "$1" in gaming|video|social|internet|media) return 0;; esac
+  echo "kidnet: a slow lane is for gaming, video, social, media or internet" >&2; exit 1; }
+ck_speed(){ case "$1" in full|slow) return 0;; esac
+  echo "kidnet: speed is 'full' or 'slow'" >&2; exit 1; }
+setspeed_id(){ ck_id "$1"; ck_slowcat "$2"; ck_speed "$3"
+  psqll "INSERT INTO category_state(child_id,category,blocked,speed,set_by)
+         VALUES($1,'$2',false,'$3','agent')
+  ON CONFLICT (child_id,category) DO UPDATE SET blocked=false, speed='$3', since=now(), set_by='agent'" >/dev/null; }
+need_slow_schema(){ psqll "SELECT 1 FROM slow_settings" >/dev/null 2>&1 && return 0
+  echo "kidnet: the slow lane needs config/db/schema-slow.sql loaded into this database first." >&2
+  echo "        config/db/load.sh, or just that one file, then try again." >&2; exit 1; }
+setspeed(){ local kid="$1" cat="$2" sp="$3" id c cats
+  ck_slowcat "$cat"; ck_speed "$sp"; need_slow_schema
+  # The whole-internet lane means the child must not also be cut. internet() is
+  # the only thing that takes addresses back out of @kids_block by hand, so the
+  # change is felt now rather than on the next reconcile.
+  [ "$cat" = internet ] && internet "$kid" on >/dev/null
+  cats="$cat"; [ "$cat" = media ] && cats="video social"
+  for c in $cats; do
+    if is_scope "$kid"; then
+      ck_scope "$kid"
+      for id in $(psqll "SELECT id FROM people_in_scope('$kid')"); do setspeed_id "$id" "$c" "$sp"; done
+    else
+      ck_name "$kid"; id=$(tid "$kid"); [ -n "$id" ] || { echo "unknown kid '$kid'"; exit 1; }
+      setspeed_id "$id" "$c" "$sp"
+    fi
+  done
+  audit child "$kid:$cat" "$sp"
+  adguard_sync; }
+
+# A shared family device belongs to the household, not to a child, so there is
+# no category_state row to carry its block. device_state is the same idea keyed
+# on the device, and the gateway reconciles the firewall from BOTH, which is
+# what stops a shared device coming back online fifteen seconds after it was
+# cut. Only the sweeps write here, and only for devices the parent has ticked.
+sweepdev(){ local sweep="$1" b="$2"
+  case "$sweep" in dinner) ;; *) return 0;; esac
+  psqll "INSERT INTO device_state(device_id,category,blocked,set_by)
+         SELECT w.device_id,'internet',$b,'$sweep' FROM device_sweeps w
+          WHERE w.category='shared' AND w.is_active AND w.in_dinner
+         ON CONFLICT (device_id,category)
+         DO UPDATE SET blocked=$b, since=now(), set_by='$sweep'" >/dev/null; }
 internet(){ local kid="$1" act="$2" b ip err=0 n=0; [ "$act" = off ] && b=true || b=false
   ck_scope "$kid"
   setcat "$kid" internet "$b"
+  sweepdev "$kid" "$b"
   if have_nft; then
     for ip in $(ips_for "$kid"); do
       n=$((n+1))
@@ -131,6 +267,51 @@ internet(){ local kid="$1" act="$2" b ip err=0 n=0; [ "$act" = off ] && b=true |
     echo "note: firewall not loaded (island not deployed yet); state recorded in DB only" >&2
   fi
   audit child "$kid" "$act"; }
+
+# --- The whole-house cut ---------------------------------------------------
+# One button, and the answer to "what if nobody is home to press the other
+# one". Nothing is written against any device: house_state holds a single
+# timestamp, blocked_device_ips reads the clock, and when the clock runs out
+# the addresses stop being in the set on the gateway's next reconcile. So a
+# whole-house cut cannot outlive the reason for it, and turning it back on
+# early is the same single UPDATE.
+#
+# It reaches every device ticked for it, personal and shared, and no further:
+# never the smart lock, never the camera, never the access point, and never
+# the safety net, which sits in its own nftables set above the block rule.
+house(){ local act="${1:-status}" min="${2:-60}" ip left
+  case "$act" in
+    off)
+      ck_int "$min"; [ "$min" -ge 1 ] 2>/dev/null || min=60
+      [ "$min" -le 1440 ] || min=1440     # a day is the most anyone means
+      psqll "UPDATE house_state SET off_until=now()+make_interval(mins=>$min),
+             off_since=now(), set_by='agent'" >/dev/null
+      if have_nft; then
+        for ip in $(ips_for house-off); do
+          nftx add element $TABLE $SET "{ $ip }" 2>/dev/null || true; done
+      else echo "note: firewall not loaded; state recorded in DB only" >&2; fi
+      audit household house-off "${min}min"
+      echo "HOUSE OFF: $(psqll "SELECT devices_caught FROM house_status") device(s) cut."
+      echo "It lifts itself in $min minute(s). 'kidnet house on' ends it now."
+      echo "Smart home, appliances and the access point are untouched, and the safety net still answers.";;
+    on)
+      psqll "UPDATE house_state SET off_until=NULL, off_since=NULL, set_by='agent'" >/dev/null
+      # Take out ONLY the addresses nothing else still says should be blocked,
+      # so ending a house cut cannot hand the internet back to a child who is
+      # out of time or who was already switched off.
+      if have_nft; then
+        for ip in $(psqll "SELECT ip FROM ips_in_scope('house-off')
+                           EXCEPT SELECT ip FROM blocked_device_ips"); do
+          nftx delete element $TABLE $SET "{ $ip }" 2>/dev/null || true; done
+      fi
+      audit household house-off on
+      echo "house back on. Anyone who was already blocked for another reason stays blocked.";;
+    status|"")
+      psqll "SELECT CASE WHEN is_off
+               THEN 'HOUSE OFF: '||devices_caught||' device(s), '||minutes_left||' minute(s) left'
+               ELSE 'house on ('||devices_caught||' device(s) would be cut)' END FROM house_status";;
+    *) echo "usage: kidnet house off [minutes] | kidnet house on | kidnet house status"; exit 1;;
+  esac; }
 
 # --- Safety net -------------------------------------------------------------
 # always_allow rows with scope='safety' (the NZ youth help lines and schoolwork)
@@ -172,16 +353,21 @@ allow_sync(){
 
 # School-night budget Mon-Fri, weekend budget Sat-Sun. NULL budget = teen
 # tier, no cap, stored as 999 which the meter treats as unlimited.
-ensure_day(){ psqll "INSERT INTO time_ledger(child_id,day,budget_min)
+ensure_day(){ ck_id "$1"; psqll "INSERT INTO time_ledger(child_id,day,budget_min)
   SELECT c.id,CURRENT_DATE,COALESCE(CASE WHEN EXTRACT(ISODOW FROM CURRENT_DATE) IN (6,7)
     THEN p.daily_budget_weekend_min ELSE p.daily_budget_school_min END,999)
   FROM children c JOIN policies p ON p.tier=c.policy_tier WHERE c.id=$1 ON CONFLICT DO NOTHING" >/dev/null; }
-remaining(){ psqll "SELECT remaining_min FROM time_remaining WHERE child_id=$1"; }
-addtime(){ ensure_day "$1"; psqll "UPDATE time_ledger SET bonus_min=bonus_min+$2 WHERE child_id=$1 AND day=CURRENT_DATE" >/dev/null
+remaining(){ ck_id "$1"; psqll "SELECT remaining_min FROM time_remaining WHERE child_id=$1"; }
+# Minutes, the kind of event, and the reason a parent typed. The minutes are
+# signed because a penalty is negative; the reason is free text a parent wrote,
+# so it goes through the text gate rather than the name one.
+addtime(){ ck_id "$1"; ck_signed "$2"; ck_name "$3"; ck_text "$4"
+  ensure_day "$1"; psqll "UPDATE time_ledger SET bonus_min=bonus_min+$2 WHERE child_id=$1 AND day=CURRENT_DATE" >/dev/null
   psqll "INSERT INTO time_events(child_id,minutes,kind,reason,by) VALUES($1,$2,'$3','$4','agent')" >/dev/null; }
 # Grant minutes to ONE metered category: raise its daily budget by N and, if it
 # was blocked for hitting the old budget, unblock it. gaming/video only.
 grantcat(){ local cid="$1" cat="$2" min="$3"
+  ck_id "$cid"; ck_int "$min"
   case "$cat" in gaming|video) ;; *) echo "kidnet: category must be gaming or video" >&2; exit 1;; esac
   psqll "INSERT INTO category_budgets(child_id,category,daily_min) VALUES($cid,'$cat',$min)
          ON CONFLICT (child_id,category) DO UPDATE SET daily_min=category_budgets.daily_min+$min" >/dev/null
@@ -191,18 +377,112 @@ grantcat(){ local cid="$1" cat="$2" min="$3"
   psqll "INSERT INTO time_events(child_id,minutes,kind,reason,by) VALUES($cid,$min,'grant','cat:$cat','agent')" >/dev/null
   adguard_sync; }
 
+# Earning time back reopens the internet, but ONLY the block that running out of
+# time put there. It used to call `internet on`, which stamps set_by='agent'
+# over whatever was in the row, so a child who passed a quiz at half past ten
+# walked straight through their bedtime. A bedtime is not a budget and cannot be
+# bought back: an 'out-of-time' block is the only kind earning may lift, exactly
+# as the portal has always done it (dashboard/portal.mjs credit()).
+#
+# The firewall follows the database within fifteen seconds either way, so the
+# address only comes out of @kids_block when the row actually changed. Nothing
+# here can open a child who is off for any other reason.
+reopen(){ local cid="$1" kid="$2" n ip
+  ck_id "$cid"; ck_name "$kid"
+  # Lifts EITHER kind of out-of-time state: the hard cut, or the slow lane a
+  # household that chose the slope gets instead. Still only the one that
+  # running out of time put there, so a bedtime cannot be bought back.
+  n=$(psqll "WITH u AS (UPDATE category_state SET blocked=false, speed='full', since=now(), set_by='earned-back'
+              WHERE child_id=$cid AND category='internet' AND (blocked OR speed='slow')
+                AND set_by IN ('out-of-time','earned-back') RETURNING 1) SELECT count(*) FROM u" 2>/dev/null) \
+    || n=$(psqll "WITH u AS (UPDATE category_state SET blocked=false, since=now(), set_by='earned-back'
+              WHERE child_id=$cid AND category='internet' AND blocked
+                AND set_by IN ('out-of-time','earned-back') RETURNING 1) SELECT count(*) FROM u")
+  [ "${n:-0}" != 0 ] || return 0
+  if have_nft; then
+    for ip in $(psqll "SELECT ip FROM people_devices WHERE person_id=$cid"); do
+      nftx delete element $TABLE $SET "{ $ip }" 2>/dev/null || true; done
+  fi
+  audit child "$kid" on earn; }
+
 case "${1:-}" in
   off) internet "${2:?kid|all}" off; echo "internet OFF: $2";;
   on)  internet "${2:?kid|all}" on;  echo "internet ON: $2";;
   game)  case "${2:-}" in off) setcat "${3:?kid}" gaming true;; on) setcat "${3:?kid}" gaming false;; *) echo "usage: kidnet game off|on <kid>"; exit 1;; esac; audit child "${3}:gaming" "$2"; adguard_sync; echo "gaming $2: ${3}";;
   media) for c in video social; do case "${2:-}" in off) setcat "${3:?kid}" $c true;; on) setcat "${3:?kid}" $c false;; *) echo "usage: kidnet media off|on <kid>"; exit 1;; esac; done; audit child "${3}:media" "$2"; adguard_sync; echo "media $2: ${3} [Spotify/audio stays]";;
   study) case "${2:-}" in on) for c in gaming video social; do setcat "${3:?kid}" $c true; done; echo "STUDY MODE on: ${3}";; off) for c in gaming video social; do setcat "${3:?kid}" $c false; done; echo "study off: ${3}";; *) echo "usage: kidnet study on|off <kid>"; exit 1;; esac; audit child "${3}:study" "${2}"; adguard_sync;;
-  bonus)  cid=$(tid "${2:?kid}"); ck_int "${3:?min}"; ck_text "${4:-}"; addtime "$cid" "${3}" grant "${4:-parent bonus}"; [ "$(remaining "$cid")" -gt 0 ] && internet "$2" on >/dev/null; echo "kidnet: +$3 min to $2 (now $(remaining "$cid") left)";;
-  grant)  cid=$(tid "${2:?kid}"); ck_name "${3:?category}"; ck_int "${4:?min}"; grantcat "$cid" "$3" "$4"; echo "kidnet: +$4 min $3 for $2 ($3 unblocked if it was capped)";;
-  earn)   cid=$(tid "${2:?kid}"); ck_text "${3:?task}"; mins=$(psqll "SELECT minutes FROM tasks WHERE name ILIKE '%${3}%' LIMIT 1"); mins=${mins:-$3}; ck_int "$mins"; addtime "$cid" "$mins" earn "task:${3}"; [ "$(remaining "$cid")" -gt 0 ] && internet "$2" on >/dev/null; echo "kidnet: $2 earned +$mins min (now $(remaining "$cid") left)";;
+  bonus)  cid=$(tid "${2:?kid}"); ck_int "${3:?min}"; ck_text "${4:-}"; addtime "$cid" "${3}" grant "${4:-parent bonus}"; [ "$(remaining "$cid")" -gt 0 ] && reopen "$cid" "$2"; echo "kidnet: +$3 min to $2 (now $(remaining "$cid") left)";;
+  # Used by the dashboard when a parent approves a chore. Same rule as `earn`:
+  # it reopens an out-of-time block and nothing else, so approving a job at
+  # eleven at night credits the minutes without cancelling bedtime.
+  reopen) cid=$(tid "${2:?kid}"); [ -n "$cid" ] || { echo "unknown kid '$2'"; exit 1; }
+          reopen "$cid" "$2"; echo "kidnet: $2 back on if they were out of time";;
+  grant)  cid=$(tid "${2:?kid}"); ck_id "$cid"; ck_name "${3:?category}"; ck_int "${4:?min}"; grantcat "$cid" "$3" "$4"; echo "kidnet: +$4 min $3 for $2 ($3 unblocked if it was capped)";;
+  earn)   cid=$(tid "${2:?kid}"); ck_text "${3:?task}"; mins=$(psqll "SELECT minutes FROM tasks WHERE name ILIKE '%${3}%' LIMIT 1"); mins=${mins:-$3}; ck_int "$mins"; addtime "$cid" "$mins" earn "task:${3}"; [ "$(remaining "$cid")" -gt 0 ] && reopen "$cid" "$2"; echo "kidnet: $2 earned +$mins min (now $(remaining "$cid") left)";;
   penalty) cid=$(tid "${2:?kid}"); ck_int "${3:?min}"; ck_text "${4:-}"; addtime "$cid" "-${3}" penalty "${4:-}"; echo "kidnet: -$3 min from $2 (now $(remaining "$cid") left)";;
-  spend)  cid=$(tid "${2:?kid}"); ck_int "${3:?min}"; ensure_day "$cid"; psqll "UPDATE time_ledger SET used_min=used_min+${3} WHERE child_id=$cid AND day=CURRENT_DATE" >/dev/null
-          if [ "$(remaining "$cid")" = 0 ]; then internet "$2" off >/dev/null; psqll "UPDATE category_state SET set_by='out-of-time' WHERE child_id=$cid AND category='internet'" >/dev/null; echo "kidnet: $2 OUT OF TIME (captive portal explains)"; else echo "kidnet: $2 spent $3 ($(remaining "$cid") left)"; fi;;
+  spend)  cid=$(tid "${2:?kid}"); ck_id "$cid"; ck_int "${3:?min}"; ensure_day "$cid"; psqll "UPDATE time_ledger SET used_min=used_min+${3} WHERE child_id=$cid AND day=CURRENT_DATE" >/dev/null
+          if [ "$(remaining "$cid")" = 0 ]; then
+            # The cliff or the slope. 'cut' is the default and is what Hearth
+            # has always done at zero; a household has to choose the other one,
+            # because changing what happens when time runs out without being
+            # asked would be somebody's evening changed by an upgrade.
+            if [ "$(psqll "SELECT on_timeout FROM slow_settings" 2>/dev/null)" = slow ]; then
+              # Nothing is cut. Everything this child does is policed down
+              # instead, and the portal says so in as many words.
+              # blocked and set_by are left alone if they are already set: a
+              # bedtime is not an out-of-time, and must not be relabelled.
+              psqll "INSERT INTO category_state(child_id,category,blocked,speed,set_by)
+                     VALUES($cid,'internet',false,'slow','out-of-time')
+                     ON CONFLICT (child_id,category) DO UPDATE SET
+                       speed =CASE WHEN category_state.blocked THEN category_state.speed  ELSE 'slow' END,
+                       since =CASE WHEN category_state.blocked THEN category_state.since  ELSE now()  END,
+                       set_by=CASE WHEN category_state.blocked THEN category_state.set_by ELSE 'out-of-time' END" >/dev/null
+              audit child "$2" slow out-of-time
+              echo "kidnet: $2 is OUT OF TIME and is now in the SLOW LANE (the portal explains why)"
+            else
+              internet "$2" off >/dev/null; psqll "UPDATE category_state SET set_by='out-of-time' WHERE child_id=$cid AND category='internet'" >/dev/null; echo "kidnet: $2 OUT OF TIME (captive portal explains)"
+            fi
+          else echo "kidnet: $2 spent $3 ($(remaining "$cid") left)"; fi;;
+  # --- the slow lane -------------------------------------------------------
+  slow)   setspeed "${2:?kid}" "${3:?category}" slow
+          echo "SLOW LANE: ${3} is now a crawl for ${2}, not switched off."
+          echo "  It still works. A video will buffer, a page will still load, and the"
+          echo "  portal tells them it is deliberate so nobody goes hunting for a fault.";;
+  full)   setspeed "${2:?kid}" "${3:?category}" full
+          echo "full speed: ${3} is back to normal for ${2}";;
+  # How slow the slow lane is. Stored in the database; the gateway re-renders
+  # the throttle chain with it on its next reconcile, within fifteen seconds.
+  slow-rate) if [ -z "${2:-}" ]; then
+               psqll "SELECT 'the slow lane runs at '||rate_kbit||' kbit/s' FROM slow_settings"
+             else
+               ck_int "$2"
+               { [ "$2" -ge 32 ] && [ "$2" -le 9999 ]; } 2>/dev/null \
+                 || { echo "kidnet: a slow lane is between 32 and 9999 kbit/s" >&2; exit 1; }
+               psqll "UPDATE slow_settings SET rate_kbit=$2, updated=now(), set_by='agent'" >/dev/null
+               audit household slow-rate "$2"
+               echo "kidnet: the slow lane now runs at $2 kbit/s. The gateway picks it up within 15 seconds."
+             fi;;
+  # What running out of time does. Default 'cut', which is today's behaviour.
+  slow-timeout) case "${2:-}" in
+      cut|slow) psqll "UPDATE slow_settings SET on_timeout='$2', updated=now(), set_by='agent'" >/dev/null
+        audit household slow-timeout "$2"
+        case "$2" in
+          cut)  echo "running out of time CUTS the internet, and the captive portal explains. This is the default.";;
+          slow) echo "running out of time drops them into the SLOW LANE instead. Nothing is cut:"
+                echo "  the evening tails off rather than ending mid-sentence, and earning time back"
+                echo "  puts them straight back to full speed.";;
+        esac;;
+      ""|status) psqll "SELECT 'running out of time: '||CASE WHEN on_timeout='slow'
+                          THEN 'the SLOW LANE (the slope)' ELSE 'the internet is cut (the cliff)' END
+                        FROM slow_settings";;
+      *) echo "usage: kidnet slow-timeout <cut|slow>"; exit 1;; esac;;
+  slow-status)
+    psqll "SELECT 'the slow lane runs at '||rate_kbit||' kbit/s, and running out of time '
+                  ||CASE WHEN on_timeout='slow' THEN 'drops a child into it' ELSE 'cuts the internet' END
+           FROM slow_settings"
+    psqll "SELECT c.name||': '||string_agg(s.category,', ' ORDER BY s.category)||' (set by '||coalesce(max(s.set_by),'?')||')'
+           FROM slow_lane_children s JOIN children c ON c.id=s.child_id GROUP BY c.name" | sed 's/^/  /' \
+      || echo "  (nobody is in the slow lane)";;
   # No name given means "how is everybody doing", which is what a parent
   # actually wants from a bare `kidnet time`. It used to die with a raw
   # bash parameter error, which reached the dashboard verbatim.
@@ -212,23 +492,87 @@ case "${1:-}" in
             done
             exit 0
           fi
-          cid=$(tid "$2"); ensure_day "$cid"
+          cid=$(tid "$2"); ck_id "$cid"; ensure_day "$cid"
           psqll "SELECT CASE
               WHEN budget_min >= 999 THEN name||': no daily limit (teen tier)'
               ELSE name||': '||remaining_min||' min left today (budget '||budget_min||' + bonus '||bonus_min||' - used '||used_min||')'
             END FROM time_remaining WHERE child_id=$cid";;
-  dinner) internet all off; echo "DINNER: all off";;
-  resume) internet all on;  echo "resumed: all on";;
+  # Scope 'dinner' is 'all' plus the shared family devices ticked for it, so
+  # the television goes off with the kids and the speaker playing music does
+  # not. Which is which is the parent's tick box, on the Devices page.
+  dinner) internet dinner off; echo "DINNER: everyone but the adults, plus the shared devices ticked for dinner";;
+  resume) internet dinner on;  echo "resumed: all on";;
+  house)  shift || true; house "${1:-status}" "${2:-60}";;
+  # File a device as the household's rather than one child's. It stops being
+  # anybody's, so it can never eat a child's minutes, and it gets a filter
+  # level of its own, because an unfiltered family television is worse than a
+  # wrongly billed one. 'standard' unless the parent says otherwise.
+  shared) key="${2:?mac-or-ip}"; ck_addr "$key"; ck_text "${3:-}"; tier="${4:-standard}"; ck_name "$tier"
+    [ -n "$(psqll "SELECT 1 FROM policies WHERE tier='$tier'")" ] || { echo "kidnet: no filter level called '$tier'"; exit 1; }
+    if echo "$key" | grep -q ':'; then col="mac::text='$key'"; else col="host(reserved_ip)='$key'"; fi
+    lblset=""; [ -n "${3:-}" ] && lblset=", label='$3'"
+    n=$(psqll "WITH u AS (UPDATE devices SET category='shared', child_id=NULL,
+                 policy_tier='$tier'$lblset WHERE $col RETURNING 1) SELECT count(*) FROM u")
+    [ "${n:-0}" = 0 ] && { echo "kidnet: no device matching '$key'"; exit 1; }
+    audit device "$key" shared agent
+    d="$(dirname "$0")/kidnet-adguard-clients"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
+    echo "kidnet: $n device(s) are now a shared family device on the '$tier' filter level."
+    echo "  Nobody's minutes pay for it. It goes off at dinner and in a whole-house cut"
+    echo "  unless you untick it: kidnet sweep $key dinner off";;
+  # The two tick boxes, from the command line. 'default' puts a device back to
+  # whatever its class does by default, rather than freezing today's answer.
+  sweep) key="${2:?mac-or-ip}"; ck_addr "$key"; which="${3:?dinner|house}"; val="${4:?on|off|default}"
+    case "$which" in dinner) col=caught_by_dinner;; house|house-off) col=caught_by_house_off;;
+      *) echo "kidnet: sweep is 'dinner' or 'house'"; exit 1;; esac
+    case "$val" in on) v=true;; off) v=false;; default) v=NULL;;
+      *) echo "kidnet: say on, off or default"; exit 1;; esac
+    # devices is matched on its own columns; device_roster carries the resolved
+    # answer and spells the address as `ip`, so it needs its own WHERE.
+    if echo "$key" | grep -q ':'; then col2="mac::text='$key'"; col3="mac='$key'"
+    else col2="host(reserved_ip)='$key'"; col3="ip='$key'"; fi
+    cls=$(psqll "SELECT category FROM devices WHERE $col2 LIMIT 1")
+    [ -n "$cls" ] || { echo "kidnet: no device matching '$key'"; exit 1; }
+    # A smart home device, an appliance and the access point are in no sweep
+    # ever, and that is decided in device_sweeps, not here. Refuse rather than
+    # accept a tick that would do nothing: a parent who thinks they have taken
+    # the camera out of a dinner pause has been told something untrue.
+    case "$cls" in personal|shared) ;;
+      iot)       echo "kidnet: that is a smart home device. It is never caught by any control, so there is nothing to tick."; exit 1;;
+      appliance) echo "kidnet: that is an unrestricted device. It is never caught by any control, so there is nothing to tick."; exit 1;;
+      infra)     echo "kidnet: that is network equipment. It is never caught by any control, so there is nothing to tick."; exit 1;;
+      *)         echo "kidnet: a '$cls' device is never caught by any control, so there is nothing to tick."; exit 1;; esac
+    n=$(psqll "WITH u AS (UPDATE devices SET $col=$v WHERE $col2 RETURNING 1) SELECT count(*) FROM u")
+    [ "${n:-0}" = 0 ] && { echo "kidnet: no device matching '$key'"; exit 1; }
+    psqll "SELECT coalesce(label,hostname,'device '||id)||': dinner '||CASE WHEN in_dinner THEN 'yes' ELSE 'no' END
+           ||CASE WHEN dinner_default THEN ' (default)' ELSE '' END
+           ||', whole-house cut '||CASE WHEN in_house_off THEN 'yes' ELSE 'no' END
+           ||CASE WHEN house_off_default THEN ' (default)' ELSE '' END
+           FROM device_roster WHERE $col3" | sed 's/^/  /';;
   allow-sync)   allow_sync;;
   # The household security layer lives in its own script, the same way the
   # meters do. Passed straight through so there is one control surface.
   iot) shift; exec "$(dirname "$0")/kidnet-iot-policy" "$@";;
+  # Bedtimes live in their own script, the same way the IoT policy does, and
+  # are passed straight through so there is one control surface.
+  schedule) shift; exec "$(dirname "$0")/kidnet-schedule" "$@";;
   allow-status) if have_nft; then nftx list set $TABLE $ALLOWSET | sed -n 's/.*elements = //p'; else echo "(firewall not loaded)"; fi;;
-  status) psqll "SELECT c.name||': '||string_agg(cs.category,', ' ORDER BY cs.category) FROM category_state cs JOIN children c ON c.id=cs.child_id WHERE cs.blocked GROUP BY c.name" | sed 's/^/  /' || echo "  (clean)";;
+  status) psqll "SELECT c.name||': '||string_agg(cs.category||CASE WHEN cs.blocked THEN '' ELSE ' (slow)' END,
+                        ', ' ORDER BY cs.category)
+                 FROM category_state cs JOIN children c ON c.id=cs.child_id
+                 WHERE cs.blocked OR cs.speed='slow' GROUP BY c.name" 2>/dev/null \
+          || psqll "SELECT c.name||': '||string_agg(cs.category,', ' ORDER BY cs.category)
+                    FROM category_state cs JOIN children c ON c.id=cs.child_id
+                    WHERE cs.blocked GROUP BY c.name" | sed 's/^/  /' || echo "  (clean)";;
   leases) psqll "SELECT host(ip)||'  '||coalesce(hostname,'?') FROM dhcp_leases WHERE active ORDER BY ip";;
   devices) psqll "
-    SELECT coalesce(label,hostname,'(unlabelled)')||'  ['||coalesce(person,'UNASSIGNED')||']  '
-           ||coalesce(ip,'-')||'  '||mac||CASE WHEN last_seen > now()-interval \$q\$5 min\$q\$ THEN '  online' ELSE '' END
+    SELECT coalesce(label,hostname,'(unlabelled)')||'  ['||CASE WHEN category='shared' THEN 'SHARED'
+             ELSE coalesce(person, upper(category)) END||']  '
+           ||coalesce(ip,'-')||'  '||mac
+           ||CASE WHEN category IN ('personal','shared')
+                  THEN '  ['||CASE WHEN in_dinner THEN 'dinner' ELSE 'no dinner' END
+                       ||', '||CASE WHEN in_house_off THEN 'house cut' ELSE 'no house cut' END||']'
+                  ELSE '' END
+           ||CASE WHEN last_seen > now()-interval \$q\$5 min\$q\$ THEN '  online' ELSE '' END
     FROM device_roster ORDER BY unassigned DESC, person, label" | sed 's/^/  /';;
   # The queue of things to hand to a person. Smart home and infrastructure are
   # nobody's, so they do not belong in it: a smart lock sitting in a list of
@@ -237,10 +581,19 @@ case "${1:-}" in
     SELECT coalesce(hostname,'(no name)')||'  '||coalesce(ip,'-')||'  '||mac
     FROM device_roster WHERE unassigned AND category='personal'
       AND device_kind NOT IN ('ap','infra','gateway') ORDER BY last_seen DESC NULLS LAST" | sed 's/^/  /' || echo "  (none)";;
-  assign) key="${2:?mac-or-ip}"; ck_name "${3:?person}"; ck_text "${4:?label}"
+  # The address, the label and the optional reservation all land in SQL, so all
+  # three are gated: a MAC or an IPv4 for the address, an IPv4 for the
+  # reservation, plain text for the label a parent typed.
+  assign) key="${2:?mac-or-ip}"; rip="${5:-}"
+    # Every argument is gated BEFORE the first query, not beside the statement
+    # that uses it. A bad reservation used to get as far as the person lookup,
+    # so whether it was refused depended on whether the person existed, and a
+    # gate whose answer depends on the data is not a gate.
+    ck_addr "$key"; ck_name "${3:?person}"; ck_text "${4:?label}"; [ -z "$rip" ] || ck_ip "$rip"
     pid=$(psqll "SELECT id FROM children WHERE lower(name)=lower('$3')"); [ -n "$pid" ] || { echo "unknown person '$3' (add: kidnet person add)"; exit 1; }
+    ck_id "$pid"
     if echo "$key" | grep -q ':'; then col="mac::text='$key'"; else col="host(reserved_ip)='$key' OR id IN (SELECT device_id FROM dhcp_leases WHERE host(ip)='$key' AND device_id IS NOT NULL)"; fi
-    rip="${5:-}"; if [ -n "$rip" ]; then ripset=", reserved_ip='$rip'"; else ripset=""; fi
+    if [ -n "$rip" ]; then ripset=", reserved_ip='$rip'"; else ripset=""; fi
     n=$(psqll "WITH u AS (UPDATE devices SET child_id=$pid, label='$4'$ripset WHERE $col RETURNING 1) SELECT count(*) FROM u")
     audit device "$4" assigned agent
     # AdGuard applies the age tier by client IP, so it has to follow the
@@ -248,7 +601,7 @@ case "${1:-}" in
     d="$(dirname "$0")/kidnet-adguard-clients"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
     adguard_sync
     echo "kidnet: assigned $n device(s) to $3 as '$4' (filtering tier applied)";;
-  infra) key="${2:?mac}"; psqll "UPDATE devices SET kind='ap', child_id=NULL, notes='infrastructure, do not assign or block' WHERE mac::text='$key'" >/dev/null; echo "kidnet: marked $key as infrastructure";;
+  infra) key="${2:?mac}"; ck_addr "$key"; psqll "UPDATE devices SET kind='ap', child_id=NULL, notes='infrastructure, do not assign or block' WHERE mac::text='$key'" >/dev/null; echo "kidnet: marked $key as infrastructure";;
   person) case "${2:-}" in
     add) ck_name "${3:?name}"; ck_name "${4:?role}"; tier="${5:-}"; role=$(canon_role "$4")
          # Default filter level from the role. A visiting child gets 'standard'
@@ -275,6 +628,7 @@ case "${1:-}" in
   # them back next weekend is one command rather than a re-setup.
   guest) case "${2:-}" in
     leave) cid=$(pid_of "${3:?name-or-id}"); [ -n "$cid" ] || { echo "kidnet: nobody called '$3'"; exit 1; }
+      ck_id "$cid"
       k=$(psqll "SELECT kind FROM children WHERE id=$cid")
       case "$k" in guest-*) ;; *) echo "kidnet: $3 is a $k, not a guest. Household members do not leave."; exit 1;; esac
       # Unblock FIRST, while we still know which addresses were theirs. Doing
@@ -294,6 +648,7 @@ case "${1:-}" in
       adguard_sync
       echo "kidnet: $(psqll "SELECT name FROM children WHERE id=$cid") has gone home. $n device(s) let go, nothing left blocked, filtering tier retired.";;
     back) cid=$(pid_of "${3:?name-or-id}"); [ -n "$cid" ] || { echo "kidnet: nobody called '$3'"; exit 1; }
+      ck_id "$cid"
       psqll "UPDATE children SET active=true, departed=NULL, arrived=now() WHERE id=$cid" >/dev/null
       # Their AdGuard client was removed when they left, so build it again.
       d="$(dirname "$0")/kidnet-adguard-clients"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true

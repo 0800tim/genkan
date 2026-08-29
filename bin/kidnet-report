@@ -15,10 +15,16 @@
 #
 # Output is plain text, fine on a terminal or piped into a message.
 set -euo pipefail
-psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+# Connects as kids_agent, a role with no superuser, no DDL and no
+# COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB_NAME="${HEARTH_DB:-kids_network}"
+DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 # Same input gates as kidnet: names and dates only, nothing else reaches SQL.
 ck_name(){ [[ "$1" =~ ^[A-Za-z0-9_-]{1,32}$ ]] || { echo "kidnet-report: bad name '$1'" >&2; exit 1; }; }
 ck_date(){ [[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || { echo "kidnet-report: bad week '$1' (use last, or YYYY-MM-DD)" >&2; exit 1; }; }
+ck_id(){ [[ "$1" =~ ^[0-9]{1,9}$ ]] || { echo "kidnet-report: bad id '$1'" >&2; exit 1; }; }
 tid(){ ck_name "$1"; psqll "SELECT id FROM children WHERE lower(name)=lower('$1')"; }
 hm(){ local m="${1:-0}"; if [ "$m" -lt 60 ]; then echo "${m} min"; else echo "$((m/60))h $((m%60))m"; fi; }
 
@@ -32,11 +38,15 @@ week_bounds(){ local ref
   esac
   W0=$(date -d "$ref -$(( $(date -d "$ref" +%u) - 1 )) days" +%F)
   W1=$(date -d "$W0 +7 days" +%F)
+  # Both bounds are interpolated into every query below, so both are checked
+  # here, once, rather than at eleven call sites.
+  ck_date "$W0"; ck_date "$W1"
 }
 
 report_one(){ local kid="$1" cid name total days busiest hrs gaming video
   local top blocked al fl qn qm qtopics ch tn tm any
   cid=$(tid "$kid"); [ -n "$cid" ] || { echo "kidnet-report: unknown child '$kid'" >&2; return 1; }
+  ck_id "$cid"
   name=$(psqll "SELECT name FROM children WHERE id=$cid")
 
   echo "HEARTH weekly digest: $name"
@@ -71,7 +81,7 @@ report_one(){ local kid="$1" cid name total days busiest hrs gaming video
   # --- Metered categories (gaming/video; music + schoolwork never metered) -
   echo "Metered categories"
   any=0
-  for cat in gaming video; do
+  for cat in gaming video; do   # this script's own literals, and nothing else
     m=$(psqll "SELECT COALESCE(sum(used_min),0) FROM category_usage
                WHERE child_id=$cid AND category='$cat' AND day >= '$W0' AND day < '$W1'")
     if [ "${m:-0}" -gt 0 ]; then

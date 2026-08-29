@@ -1,0 +1,576 @@
+{
+  "id": "paint-and-colour",
+  "title": "Paint and Colour Mixing",
+  "emoji": "🎨",
+  "suggested_age_min": 9,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "package": {
+    "format": 1,
+    "author": "The Hearth project",
+    "contact": "github.com/0800tim/hearth",
+    "licence": "CC-BY-4.0",
+    "description": "How paint actually behaves: the primaries, tints and shades, why mixes go muddy, what complementary colours do to each other, and how to not wreck a brush. Written for a child of about nine and up who has a paint set and wants their pictures to stop turning brown. No art class needed and nothing here is on a curriculum.",
+    "tags": [
+      "art",
+      "making",
+      "hands-on",
+      "outside the curriculum"
+    ],
+    "updated": "2026-08-30",
+    "sources": [
+      "https://simple.wikipedia.org/wiki/Color",
+      "https://en.wikipedia.org/wiki/Color_theory",
+      "https://en.wikipedia.org/wiki/Primary_color",
+      "https://www.britannica.com/science/color"
+    ],
+    "read_first": {
+      "title": "Why your paintings keep going brown",
+      "body": [
+        "Paint does not mix the way light mixes. A lamp adds light: shine red, green and blue lamps at the same spot and you get white. Paint does the opposite. Every pigment works by soaking up part of the light that lands on it and bouncing the rest back at you. Red paint is red because it has swallowed nearly everything except the red.",
+        "That is the whole reason mixes go muddy. Put two pigments together and between them they swallow more of the light. Put four or five together and there is almost nothing left to come back, so you get brown. Not because you did it wrong, but because that is what subtracting light looks like.",
+        "So the trick is to use fewer colours, not more. Almost anything can be mixed from red, yellow and blue plus white. Red and yellow make orange, blue and yellow make green, red and blue make purple. Those three mixes are called the secondary colours, and they are the whole colour wheel in one line.",
+        "White makes a colour lighter and paler, and the result is called a tint. Black makes it darker, and that is a shade. Be careful with black: a little goes a long way and it flattens everything it touches. Most painters get better darks by mixing two colours from opposite sides of the wheel instead.",
+        "Opposite sides is worth knowing. Red is opposite green, blue is opposite orange, yellow is opposite purple. Side by side, a pair like that makes both colours look brighter. Mixed together, they cancel each other out and go grey. Both facts are useful: one for making something sing, one for calming a colour down without darkening it.",
+        "Last thing, and it is the one that costs money. Never leave a brush standing on its bristles in the water jar. The bristles bend and they stay bent, and the brush is finished. Lay it flat, wash it before the paint dries, and it will outlast you."
+      ],
+      "links": [
+        {
+          "label": "Colour, in Simple English",
+          "url": "https://simple.wikipedia.org/wiki/Color"
+        },
+        {
+          "label": "Colour theory, the longer read",
+          "url": "https://en.wikipedia.org/wiki/Color_theory"
+        },
+        {
+          "label": "The National Gallery, London",
+          "url": "https://www.nationalgallery.org.uk/"
+        }
+      ]
+    }
+  },
+  "questions": [
+    {
+      "id": "paint-001",
+      "prompt": "Which three colours are called the primary colours in paint?",
+      "choices": [
+        "Red, yellow and blue",
+        "Orange, green and purple",
+        "Black, white and grey",
+        "Pink, brown and gold"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Red, yellow and blue are called primary because you cannot mix them from anything else. Every other colour in the box starts with them."
+    },
+    {
+      "id": "paint-002",
+      "prompt": "You mix red and yellow. What colour do you get?",
+      "choices": [
+        "Orange",
+        "Green",
+        "Purple",
+        "Grey"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Red and yellow make orange, which sits between them on the colour wheel. More red gives a hotter orange, more yellow a lighter one."
+    },
+    {
+      "id": "paint-003",
+      "prompt": "You mix blue and yellow. What colour do you get?",
+      "choices": [
+        "Green",
+        "Purple",
+        "Brown",
+        "Orange"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Blue and yellow make green. Change how much of each you use and you can get anything from lime to deep bottle green."
+    },
+    {
+      "id": "paint-004",
+      "prompt": "You mix red and blue. What colour do you get?",
+      "choices": [
+        "Purple",
+        "Green",
+        "Orange",
+        "Black"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Red and blue make purple. It goes muddy easily, so add the red to the blue a little at a time rather than the other way round."
+    },
+    {
+      "id": "paint-005",
+      "prompt": "What happens to a colour when you mix white into it?",
+      "choices": [
+        "It gets lighter and paler",
+        "It gets darker",
+        "It turns grey",
+        "Nothing changes"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "White lightens a colour. A colour mixed with white is called a tint, which is how you get pink from red and sky blue from blue."
+    },
+    {
+      "id": "paint-006",
+      "prompt": "What is a palette?",
+      "choices": [
+        "The board or tray you mix your paint on",
+        "The stand that holds your painting up",
+        "The cloth you clean brushes with",
+        "The frame a canvas is stretched over"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "A palette is whatever you mix on: a wooden board, a plastic tray, an old plate. Mixing on the palette instead of the painting is the habit that keeps colours clean."
+    },
+    {
+      "id": "paint-007",
+      "prompt": "What is an easel for?",
+      "choices": [
+        "Holding your painting upright while you work",
+        "Mixing colours on",
+        "Storing brushes in",
+        "Stretching canvas over"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "An easel holds the work upright. It matters more than it sounds: paint looks different lying flat under a light than it does standing up the way it will be seen."
+    },
+    {
+      "id": "paint-008",
+      "prompt": "Orange, green and purple are known as what?",
+      "choices": [
+        "Secondary colours",
+        "Primary colours",
+        "Neutral colours",
+        "Tertiary colours"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "They are secondary colours, because each one is mixed from two primaries. Orange is red and yellow, green is blue and yellow, purple is red and blue."
+    },
+    {
+      "id": "paint-009",
+      "prompt": "What happens to a brush left standing on its bristles in a water jar?",
+      "choices": [
+        "The bristles bend and stay bent",
+        "The brush cleans itself",
+        "The paint mixes better next time",
+        "Nothing at all"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The bristles take on the bend and never come back to a point. Lay a brush flat, or hang it, and it will last for years."
+    },
+    {
+      "id": "paint-010",
+      "prompt": "Which of these is usually called a warm colour?",
+      "choices": [
+        "Red",
+        "Blue",
+        "Blue-green",
+        "Violet"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Reds, oranges and yellows are called warm because we link them to fire and sun. Warm colours tend to look like they are coming towards you in a painting."
+    },
+    {
+      "id": "paint-011",
+      "prompt": "Which of these is usually called a cool colour?",
+      "choices": [
+        "Blue",
+        "Orange",
+        "Red",
+        "Yellow"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Blues, greens and violets are called cool. Cool colours tend to sit back in a painting, which is why distant hills are so often painted blue."
+    },
+    {
+      "id": "paint-012",
+      "prompt": "What is the metal part of a brush that grips the bristles called?",
+      "choices": [
+        "The ferrule",
+        "The tang",
+        "The shank",
+        "The collar"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "It is the ferrule. If paint dries inside it the bristles splay out for good, which is why you wash right up to it and no further."
+    },
+    {
+      "id": "paint-013",
+      "prompt": "A colour mixed with white is called a tint. What is a colour mixed with black called?",
+      "choices": [
+        "A shade",
+        "A tone",
+        "A hue",
+        "A wash"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A colour plus black is a shade. Adding grey instead gives a tone, and the plain colour on its own is the hue."
+    },
+    {
+      "id": "paint-014",
+      "prompt": "On the colour wheel, which colour sits opposite red?",
+      "choices": [
+        "Green",
+        "Blue",
+        "Purple",
+        "Yellow"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Green is opposite red, so the two are complementary. Put them side by side and both look brighter; mix them and both get duller."
+    },
+    {
+      "id": "paint-015",
+      "prompt": "On the colour wheel, which colour sits opposite blue?",
+      "choices": [
+        "Orange",
+        "Green",
+        "Purple",
+        "Red"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Orange is opposite blue. That pairing is why a small patch of orange makes a blue sky look more blue than it really is."
+    },
+    {
+      "id": "paint-016",
+      "prompt": "On the colour wheel, which colour sits opposite yellow?",
+      "choices": [
+        "Purple",
+        "Green",
+        "Blue",
+        "Orange"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Purple is opposite yellow. Every complementary pair is one primary against the secondary mixed from the other two."
+    },
+    {
+      "id": "paint-017",
+      "prompt": "Why does a mix go muddy brown when you keep adding more colours to it?",
+      "choices": [
+        "Each pigment absorbs more light, so less is left to come back to your eye",
+        "The pigments break each other down chemically",
+        "The water in the paint dilutes the colour away",
+        "Brown pigment is hidden inside every other colour"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Every pigment works by soaking up part of the light. Pile enough of them together and almost nothing is reflected back, which we see as brown or grey."
+    },
+    {
+      "id": "paint-018",
+      "prompt": "What does it mean if a paint is opaque?",
+      "choices": [
+        "You cannot see what is underneath it",
+        "It dries with a shine",
+        "It can be thinned with water",
+        "It dries slowly"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Opaque means it covers. The opposite is transparent, which lets the layer underneath show through and is the whole point of a glaze."
+    },
+    {
+      "id": "paint-019",
+      "prompt": "In watercolour, how do you usually make a colour lighter?",
+      "choices": [
+        "Add more water and let the white paper show through",
+        "Add white paint",
+        "Add a little yellow",
+        "Paint it on more thickly"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "In watercolour the white comes from the paper, not from a tube. More water means a thinner layer, so more paper shows and the colour reads as lighter."
+    },
+    {
+      "id": "paint-020",
+      "prompt": "What is a wash?",
+      "choices": [
+        "A thin, watery layer of colour spread over an area",
+        "A brush cleaned in soapy water",
+        "A thick blob of paint left to dry",
+        "The white gap left around an edge"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A wash is a thin, even layer of watered-down paint. It is how most watercolours start: the big quiet areas first, the details on top once it is dry."
+    },
+    {
+      "id": "paint-021",
+      "prompt": "Why should acrylic brushes be washed before the paint dries on them?",
+      "choices": [
+        "Dry acrylic turns to plastic and will not come out",
+        "The colours would stain the handle",
+        "Wet acrylic damages the ferrule",
+        "The bristles would go soft"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Acrylic paint dries into a flexible plastic. Once it has set in the bristles no amount of water will shift it, so a rinse now saves the brush."
+    },
+    {
+      "id": "paint-022",
+      "prompt": "Mixing red, yellow and blue paint together gives a dark, muddy colour. Mixing red, green and blue LIGHT gives white. Why the difference?",
+      "choices": [
+        "Paint takes light away, while lamps add light together",
+        "Paint is thicker than light",
+        "Light has different primary colours because it moves faster",
+        "It is the same process, but paint is less pure"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Paint mixing is subtractive: each pigment subtracts part of the light falling on it. Mixing light is additive: each lamp adds more. Same colours, opposite direction."
+    },
+    {
+      "id": "paint-023",
+      "prompt": "You want to make a bright green look duller and more natural, without making it darker. What do you add?",
+      "choices": [
+        "A touch of red, its complementary colour",
+        "A touch of black",
+        "A touch of white",
+        "A touch of blue"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A tiny amount of the opposite colour knocks the life out of a colour while keeping it the same lightness. Black would darken it as well, which is usually not what a landscape needs."
+    },
+    {
+      "id": "paint-024",
+      "prompt": "What is a tertiary colour?",
+      "choices": [
+        "A primary mixed with the secondary next to it, such as red-orange",
+        "Any colour mixed from three different tubes",
+        "A colour mixed with grey",
+        "The third coat of paint on a surface"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Tertiary colours sit between a primary and a secondary on the wheel: red-orange, yellow-green, blue-violet and the rest. Naming them in that order tells you what is in them."
+    },
+    {
+      "id": "paint-025",
+      "prompt": "Why do painters usually put on two thin coats rather than one thick one?",
+      "choices": [
+        "Thin coats dry evenly and do not crack or run",
+        "Thin coats use less paint",
+        "Thick paint changes colour as it dries",
+        "Two coats dry faster than one"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A thick coat dries on the outside first and stays wet underneath, so it wrinkles, cracks or slides. Two thin coats dry all the way through and cover better."
+    },
+    {
+      "id": "paint-026",
+      "prompt": "What does a primer, or ground, do?",
+      "choices": [
+        "Seals the surface so paint sits on top instead of soaking in",
+        "Makes the finished painting shiny",
+        "Stops the colours fading in sunlight",
+        "Holds the canvas tight on its frame"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Unprimed canvas or bare wood drinks the paint straight in, so the colour goes dull and patchy. A ground seals it, and it is why most canvas is sold already white."
+    },
+    {
+      "id": "paint-027",
+      "prompt": "Two colours can look completely different and still have the same value. What does value mean?",
+      "choices": [
+        "How light or dark a colour is",
+        "How bright or dull a colour is",
+        "How warm or cool a colour is",
+        "How thickly the paint is laid on"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Value is lightness alone. Photograph a painting in black and white and what is left is its values, which is what makes a picture read from across the room."
+    },
+    {
+      "id": "paint-028",
+      "prompt": "Why do many painters keep a warm and a cool version of each primary on the palette?",
+      "choices": [
+        "A warm blue and a cool blue mix cleaner greens and purples than one blue can",
+        "Warm paint dries faster than cool paint",
+        "It is a tradition with no practical reason",
+        "One is for the sky and one is for water"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Each pigment leans one way already. A blue that leans green makes bright greens but muddy purples, so keeping one of each lets you pick the one that leans towards what you want."
+    },
+    {
+      "id": "paint-029",
+      "prompt": "What does it mean to paint wet on wet?",
+      "choices": [
+        "Adding fresh paint into a layer that is still wet, so the colours run together",
+        "Wetting the brush before every stroke",
+        "Painting outdoors in the rain",
+        "Two coats put on the same day"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Wet on wet lets the colours blend on the surface itself, which is how soft skies are done. It also means you cannot keep an edge sharp, so it is a choice rather than a shortcut."
+    },
+    {
+      "id": "paint-030",
+      "prompt": "Why do artists often turn a painting upside down while they are working on it?",
+      "choices": [
+        "It shows the shapes and values without the brain naming things",
+        "It stops the paint running downwards",
+        "It dries the top half faster",
+        "It is how the varnish is meant to be applied"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Once your brain has decided something is a face it stops seeing the actual shapes. Upside down it is just light and dark patches again, and mistakes jump out."
+    },
+    {
+      "id": "paint-031",
+      "prompt": "Ultramarine and cerulean are both blue. Which mixes the brighter green with yellow, and why?",
+      "choices": [
+        "Cerulean, because it leans towards green already",
+        "Ultramarine, because it is a stronger pigment",
+        "Cerulean, because it is more transparent",
+        "Ultramarine, because it is darker"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Cerulean leans green, so it is already heading the right way. Ultramarine leans towards violet, and that hint of red in the mix is what turns the green dull."
+    },
+    {
+      "id": "paint-032",
+      "prompt": "Many painters mix their darks from complementary colours instead of using black from the tube. What is the advantage?",
+      "choices": [
+        "The dark keeps a colour to it and sits in the painting better",
+        "It is cheaper than buying black",
+        "It dries much faster than black",
+        "Black paint fades in sunlight"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A mixed dark still leans warm or cool, so it belongs with everything around it. Tube black is flat and often kills the colours it touches."
+    },
+    {
+      "id": "paint-033",
+      "prompt": "In oil painting, what does the rule fat over lean mean?",
+      "choices": [
+        "Each layer should have a little more oil in it than the one below",
+        "Thick paint goes under thin paint",
+        "Light colours go on before dark ones",
+        "Use a big brush first and a small one last"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Oily layers stay flexible for longer. Put a lean, fast-drying layer over a fat one and the top skin sets while the paint below is still moving, so it cracks."
+    },
+    {
+      "id": "paint-034",
+      "prompt": "A white object sits in warm afternoon sunlight. What colour is its shadow likely to lean towards?",
+      "choices": [
+        "Cool blue, the opposite of the warm light",
+        "Warm orange, the same as the light",
+        "Pure grey with no colour in it",
+        "Green, because of the grass nearby"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Where the warm sun cannot reach, the light that does arrive is mostly blue sky. Warm light and cool shadow is one of the most useful habits a painter can pick up."
+    },
+    {
+      "id": "paint-035",
+      "prompt": "Titanium white and zinc white are both white. What is the main difference?",
+      "choices": [
+        "Titanium is far more opaque, zinc is more transparent",
+        "Titanium is warmer and zinc is cooler",
+        "Zinc dries much more slowly than titanium",
+        "Titanium can only be used in acrylics"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Titanium covers almost anything, which is why it is the default. Zinc is weaker and see-through, so it lightens a colour gently instead of swamping it."
+    },
+    {
+      "id": "paint-036",
+      "prompt": "What does chroma, or saturation, describe?",
+      "choices": [
+        "How pure and intense a colour is, away from grey",
+        "How light or dark a colour is",
+        "How thickly the paint is applied",
+        "How quickly a colour dries"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Chroma is distance from grey. A colour can be light and dull, or dark and intense: value and chroma are two separate dials, and mixing them up is behind a lot of muddy paintings."
+    },
+    {
+      "id": "paint-037",
+      "prompt": "A colour printer uses cyan, magenta and yellow rather than red, yellow and blue. Why do those work better?",
+      "choices": [
+        "Each one blocks exactly one third of the light, so together they cover the whole range",
+        "They are cheaper inks to manufacture",
+        "They dry faster on paper than red and blue do",
+        "Printers cannot physically make red or blue ink"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Cyan absorbs red light, magenta absorbs green, yellow absorbs blue. Between them they can subtract any part of the spectrum, which red, yellow and blue cannot quite do."
+    },
+    {
+      "id": "paint-038",
+      "prompt": "The same grey square looks darker on a white background than on a black one. What is this effect called?",
+      "choices": [
+        "Simultaneous contrast",
+        "Chromatic aberration",
+        "Additive mixing",
+        "Optical density"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Simultaneous contrast: your eye judges a colour against whatever is around it, not on its own. It is why a colour that looked right on the palette can look wrong on the painting."
+    },
+    {
+      "id": "paint-039",
+      "prompt": "In theory, mixing all three primaries in equal amounts should give black. Why does real paint give brown instead?",
+      "choices": [
+        "Real pigments are not perfectly pure, so some light still bounces back",
+        "The paints react chemically with each other",
+        "Brown pigment is added to every tube during manufacture",
+        "The water in the paint reflects the light"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "No pigment absorbs its share of the spectrum perfectly. What each one fails to soak up still comes back to your eye, and that leftover light is the brown you see."
+    },
+    {
+      "id": "paint-040",
+      "prompt": "What is glazing?",
+      "choices": [
+        "Brushing a transparent layer of colour over a dry layer to change it",
+        "Adding water until the paint runs freely",
+        "Sealing a finished painting with varnish",
+        "Scraping paint back with a flat blade"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "A glaze is see-through, so the colour underneath still shows and the two mix in the eye rather than on the palette. It gives depths that flat mixing cannot reach."
+    }
+  ]
+}

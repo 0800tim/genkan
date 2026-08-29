@@ -17,13 +17,27 @@ GW="${GW_CONTAINER:-hearth-gw}"
 nftx(){ if [ -n "${NFT_NS:-}" ]; then sudo ip netns exec "$NFT_NS" nft "$@"
         elif [ "${NFT_DIRECT:-0}" = 1 ]; then nft "$@"
         else docker exec -i "$GW" nft "$@"; fi; }
-psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+# Connects as kids_agent, a role with no superuser, no DDL and no
+# COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB_NAME="${HEARTH_DB:-kids_network}"
+DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 : "${SERVICE_ACTIVE_BYTES:=51200}"   # >50KB in a minute counts as active use
 
 nftx list table inet kids >/dev/null 2>&1 || { echo "kidnet-servicemeter: firewall not loaded"; exit 0; }
 
 SERVICES=$(psqll "SELECT name FROM services WHERE metered ORDER BY name")
 [ -n "$SERVICES" ] || exit 0
+# A service name becomes both an nft set name and part of a SQL string, so it
+# has to be a plain word in both grammars. A row that is not gets skipped
+# loudly rather than metered wrongly or, worse, interpolated.
+ck_svc(){ [[ "$1" =~ ^[a-z0-9_]{1,32}$ ]] || { echo "kidnet-servicemeter: skipping service '$1' (not a plain name)" >&2; return 1; }; }
+ck_ip4(){ [[ "$1" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || return 1; }
+ck_num(){ [[ "$1" =~ ^[0-9]{1,18}$ ]] || return 1; }
+_keep=""; for s in $SERVICES; do ck_svc "$s" && _keep="$_keep $s"; done
+SERVICES="$_keep"
+[ -n "${SERVICES// /}" ] || exit 0
 
 # 1. Ensure the sets and the counting chain exist, and refresh the address sets.
 #    The chain is only built when it is genuinely ABSENT. Re-adding it every
@@ -77,8 +91,9 @@ for b in d.get('nftables',[]):
   [ -n "$rows" ] || continue
   while IFS=$'\t' read -r ip bytes; do
     [ -n "${ip:-}" ] || continue
+    ck_ip4 "$ip" || continue; ck_num "$bytes" || continue
     cid=$(psqll "SELECT child_id FROM devices WHERE host(reserved_ip)='$ip' AND is_active LIMIT 1")
-    [ -n "$cid" ] || continue
+    [[ "$cid" =~ ^[0-9]{1,9}$ ]] || continue
     mins=0; [ "$bytes" -ge "$SERVICE_ACTIVE_BYTES" ] && mins=1
     psqll "INSERT INTO service_usage(child_id,day,service_id,bytes,used_min)
            SELECT $cid, CURRENT_DATE, id, $bytes, $mins FROM services WHERE name='$s'

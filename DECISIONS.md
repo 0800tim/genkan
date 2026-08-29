@@ -909,9 +909,11 @@ Four findings, and each one changed a rule rather than just a line.
 topsites` interpolated their row limit straight into SQL. Both are on the
 dashboard's HTTP allowlist, and `psql -c` will happily run a second statement,
 as the Postgres superuser. Proven end to end before it was fixed. Every argument
-now goes through one of the three gates, and the rule written next to them is
-that a limit is not exempt: it was the argument that was obviously a number that
-nobody thought to gate.
+now goes through one of the gates, and the rule written next to them is that a
+limit is not exempt: it was the argument that was obviously a number that nobody
+thought to gate. The command-line-only sites (`assign`, `infra`, the audit
+trail, the minutes and reasons, the ids read back out of the database) were left
+for a second pass; that pass is the next entry.
 
 **One DNS lookup could switch off every safety alert.** A DNS label may
 legitimately contain a dot, and AdGuard stores that as a literal backslash-dot.
@@ -974,3 +976,841 @@ snapshotting an unchanged tree costs almost nothing.
 whether it does at all, is not a household concern, and a family running Hearth
 does not need this at all. It is a development safeguard and `docs/CLI.md` says
 so.
+
+## Bedtimes ran themselves, and set_by decided who may lift what (2026-08-30)
+
+An outside reviewer called scheduled bedtimes the largest functional omission,
+and they were right. The `schedules` table had been in `schema.sql` since the
+first night and nothing read it. Every bedtime in this house was a parent
+typing `kidnet off kids` at nine and remembering to type `kidnet on kids` at
+seven. The remembering is the part that failed. **A child who wakes to a dead
+network because nothing lifted it has been punished by an oversight**, so the
+morning restore is the half that matters, not the bedtime.
+
+`bin/kidnet-schedule` runs every minute. What is new is not the timer, it is
+the precedence rules, because that is the part somebody will get wrong later.
+
+### The precedence table
+
+`category_state.set_by` already said who put a block there. It now decides who
+may take it away.
+
+| `set_by` | who set it | who may lift it |
+|---|---|---|
+| `agent` | a parent, by hand or on the dashboard | a parent |
+| `out-of-time` | `kidnet-meter`, at zero minutes | earning, and a parent |
+| `over-budget` | `kidnet-catmeter`, a category over its cap | `kidnet grant`, and a parent |
+| `bedtime` | `kidnet-schedule` | `kidnet-schedule`, and a parent |
+| `earned-back` | the portal or `kidnet reopen` | not a block |
+| `schedule-lifted` | `kidnet-schedule`, in the morning | not a block |
+
+Five rules fall out of it, and each one is a real failure that was possible
+before it:
+
+**A schedule never lifts a block it did not apply.** The morning lift is
+`UPDATE ... WHERE blocked AND set_by='bedtime'`. If Dad said no gaming today,
+the sun coming up does not undo it.
+
+**A parent always beats a schedule, and the override lasts until the next
+boundary.** Turning the internet back on at half past ten writes
+`set_by='agent'`, and the worker would have re-blocked it sixty seconds later.
+So the worker keeps one row per child, schedule and category
+(`schedule_state`) holding the key of the window it has taken responsibility
+for. Finding that window unblocked after it had asserted means a person did
+that, and it records a release against that same key. The key is the schedule
+id plus **the date the window started**, so the release cannot leak into
+tomorrow night and nothing has to clean it up.
+
+**Earning time cannot buy a way past bedtime.** This one was actually broken.
+`kidnet bonus` and `kidnet earn` ended with `internet <kid> on`, which stamps
+`set_by='agent'` over whatever was in the row, bedtime included. So did the
+dashboard's chore approval. A quiz passed at half past ten reopened the night.
+Both now call `kidnet reopen`, which clears an internet block only where
+`set_by` is `out-of-time` or `earned-back`. The portal had been doing exactly
+that since it was written; the CLI had not. **Time can be earned. Bedtime
+cannot be bought.**
+
+**A restart must not restore access.** Two halves. The block is a row in
+Postgres and the gateway reconciles the firewall from it every 15 seconds, so a
+reboot at eleven comes back blocked without the worker doing anything, and
+nothing in the boot path writes to `category_state`. The other half is the
+worker's own memory: **an empty `schedule_state` means assert.** A restored
+backup, or a fresh state table, cannot be told apart from a parent override
+unless the worker has a record of having asserted, so with no record it fails
+towards the bedtime being in force rather than towards the child being online.
+That direction is the whole point. A parent's release does survive a restart,
+because the release is a row too.
+
+**Nothing but the worker touches a block.** The dashboard's `/api/schedule`
+writes times, dates and extensions, and then asks the worker to run. The rules
+above live in one script and one schema file, not in three places that will
+drift.
+
+### Two smaller shapes worth keeping
+
+**The lift is driven off `category_state`, not off `schedules`.** "Anything
+still marked `bedtime` that no window in force calls for" survives a schedule
+being deleted, disabled or edited mid-window. Driving it off the schedules
+table would have left a child blocked by a bedtime that no longer existed, with
+nothing left to lift it. That is the shape of an outage nobody can diagnose.
+
+**The time maths takes the moment as an argument.** `schedule_windows(at
+timestamptz)` is a SQL function rather than logic in bash, so
+`test/schedule-test.sh` can prove a Tuesday, a Friday night and a Saturday
+morning at fixed timestamps instead of waiting for them, and so the worker, the
+dashboard and the kid portal read one answer rather than three
+implementations. It runs in the database's own timezone, which is the same
+clock the daily budget rolls over on, so a bedtime and a day boundary cannot
+disagree.
+
+`days` is the night the window **starts** on, and an end time earlier than the
+start means it crosses midnight. Both are the reading a parent already has:
+"Friday night, nine till seven" is one thing, not two.
+
+### Shipped enabled, unlike the IoT timer
+
+`kids-iot-policy.timer` is installed and deliberately left off. This one is
+installed and enabled, and the difference is worth stating because the two look
+like the same decision.
+
+The IoT policy does something the moment it runs. The scheduler does not: with
+no rows in `schedules`, and a fresh install has none, it is a no-op. **The
+switch is the data, not the unit.** So the failure to design against is not "a
+timer nobody asked for changed something", it is a parent setting a bedtime on
+the dashboard and it silently never firing because a unit they have never heard
+of was left disabled. A feature that fails silently is worse than one that is
+absent, and this one fails at nine at night with a child watching.
+
+### What it still cannot do
+
+The window is per child and per set of days. It cannot say "off at nine, but
+half an hour later if they finished their homework", and it has no idea whether
+anyone is asleep. A holiday window suspends bedtimes by date; it does not know
+about a term calendar and will not learn one. `late` moves the evening only and
+leaves the morning where it is, because a child locked out later than a parent
+meant is the failure worth avoiding and moving the far end is the only way to
+cause it.
+
+## The CLI stops being a superuser (2026-08-30)
+
+An external reviewer read the repo cold, as a cautious parent would, and made
+two points that were both right. Some command-line SQL interpolation was still
+ungated. And, more seriously: everything Hearth's CLI does ran as the Postgres
+**superuser**, on an instance this box shares with unrelated projects.
+
+The second one is the finding, and it is not really about injection.
+
+### Why superuser was the whole game
+
+`psqll()` was `docker exec -i postgres psql -U postgres -d kids_network -tAc`.
+A superuser connection can run `COPY ... TO PROGRAM`, which executes a shell
+command inside the database container, and it can read and write every other
+database on the server. So the distance between "a device label with a quote in
+it reached a WHERE clause" and "somebody owns the box" was one statement. The
+gates in `bin/kidnet` were the only thing in the way, and a gate is a thing that
+can be forgotten: the 2026-08-30 review found four sites that had been.
+
+`bin/kidnet`, every `bin/kidnet-*` worker and the two operator tools that read
+the database now connect as **`kids_agent`**, whose grants are one line per
+table in `config/db/grants.sql`, each with a comment naming the script that
+needs it. It is not a superuser, owns nothing, is a member of no role, and has
+no password, so it is reachable only over the local socket inside the Postgres
+container. `COPY ... TO PROGRAM` is refused. So is reading a server file,
+dropping or truncating a table, deleting a child or a day of history, and making
+itself a superuser. `test/db-role-test.sh` proves each of those by trying it.
+
+**Two roles, two jobs.** The obvious shortcut was to put the CLI on `kids_app`,
+which already existed. That was the wrong move: `kids_app` is the role the
+dashboard and the kid portal hold over HTTP, and the CLI needs writes the web
+surface has no business having. Widening the HTTP role to save creating a
+second one would have paid for a smaller attack surface in one place with a
+larger one somewhere worse.
+
+### Least privilege has to be found, not guessed
+
+The grant list was not written from reading the code. It was written by running
+the CLI as the restricted role against a throwaway database and fixing each
+`permission denied` with the narrowest grant that made that one command work.
+That is slower and it is the only way the list ends up honest: reading the code
+tells you what the scripts appear to touch, running them tells you what they do.
+
+A useful thing fell out of it. Views in this schema are owned by the loader, so
+a view runs with its owner's rights on the tables underneath: `SELECT` on
+`device_policy_effective` is enough, and `kids_agent` needs no rights at all on
+`device_class_policy` or `device_policy` to read it. Several tables stayed off
+the list entirely because of that.
+
+### What stays on the superuser path, and says so
+
+Creating the role and loading the schema (`config/db/load.sh`), pinning the
+database timezone and applying the grants (`deploy.sh`), rebuilding the public
+demo from nothing (`demo/reseed.sh`), and taking or restoring a dump
+(`kidnet-upgrade`, `kidnet-rollback --with-db`). Each is work a least-privilege
+role must not be able to do for itself, each is commented at the call site with
+the words SUPERUSER PATH and the reason, and the demo one only ever talks to a
+throwaway container with a made-up family in it. The convention is the point:
+a superuser connection in this tree has to justify itself in a comment, so the
+next one is a decision rather than a habit.
+
+### The database is also closed to the rest of the server
+
+Postgres lets `PUBLIC` connect to a new database by default, so any role on this
+shared instance could open `kids_network` and read the catalogue. Only
+`kids_app`, `kids_agent` and a superuser may now. The mirror of that, fencing
+`kids_agent` out of other projects' databases, is deliberately **not** done:
+that would mean editing an ACL Hearth does not own, on a server other people's
+production runs on. It is written down in `docs/OPERATIONS.md` as a one-line
+thing a household can choose to do, with the caveat attached.
+
+### And the rest of the interpolations
+
+Fifty-five argument sites are now gated that were not. Twenty-four in
+`bin/kidnet` alone: all four values in the audit trail, the id, category and
+boolean in `setcat_id`, the signed minutes and the reason in `addtime`, the
+child id in `ensure_day`, `remaining`, `spend`, `time`, `grant` and both guest
+verbs, and the MAC or address and the optional reservation in `assign` and
+`infra`. Then ten in `kidnet-iot-policy` (device ids, the vendor id, the vendor
+names that become nft set names, and the island subnet from `config.env`), six
+in `kidnet-catmeter` and four in `kidnet-servicemeter` (the category, the
+address off an nft counter, the byte count and the child id), three in
+`kidnet-report` (both week bounds and the child id), two in `kidnet-classify`,
+and one each in `kidnet-alerts` (the lookback window), `kidnet-devicescan` (the
+neighbour list), `kidnet-quiz`, `kidnet-quiz-suggest`, the gateway's `alert()`
+severity and `deploy.sh`'s timezone.
+
+Three rules came out of doing it.
+
+**An id from the database is still an argument.** Most of these values are read
+back out of Postgres, not typed by a parent, and the temptation is to trust
+them for that reason. That is the assumption that turns one bad write into a
+second injection, so `ck_id` is applied to every one of them.
+
+**Gate before you query, not beside the statement.** `kidnet assign` checked its
+optional reservation next to the statement that used it, which sat after the
+person lookup. So whether a bad reservation was refused depended on whether the
+person existed. A gate whose answer depends on the data is not a gate. Every
+argument is now checked before the first connection is opened.
+
+**Where a value cannot pass a gate, quote it, do not widen the gate.** The
+vendor names and alert details that legitimately carry spaces and brackets go
+through quote-doubling at the call site. Widening `ck_text` to admit them would
+have loosened it for the forty places that do not need it.
+
+## The family iPad had nowhere to live (2026-08-30)
+
+Tim: "I've got an iPad that basically all the kids use, and also the smart TVs
+in that category. We do want to have maybe tick boxes to say that these devices
+get killed during dinnertime. That can be a button that is just complete
+outage, all devices off. Obviously, if we've got some appliance devices they
+wouldn't get included, but kid devices would."
+
+An outside reviewer put the same thing more sharply: a television does not
+belong to one child, and Hearth identifies the device, not the person holding
+the remote.
+
+Until now that iPad had two homes and both were wrong. Give it to one child and
+that child pays for the family film out of their own minutes, and the parent
+finds out on Sunday when the digest says the seven year old watched four hours.
+Give it to nobody and it escapes every budget, every filter level and every
+control there is, which is the worse of the two.
+
+### A fifth class, not a flag on the fourth
+
+`shared` joins `personal`, `iot`, `appliance` and `infra`. It is a class rather
+than a boolean on `personal` because the three facts that follow from it are all
+different from a personal device's: no owner ever, a filter level of its own,
+and a sweep membership the parent chooses. A boolean would have meant every
+query that says `category='personal'` growing an `OR`, and there are eleven of
+them across `bin/` and `dashboard/`, each one a chance to forget.
+
+The shape falls out of that. `child_id` is always NULL on a shared device, so
+`people_devices`, `kidnet-meter`, `kidnet-adguard-clients` and the weekly digest
+skip it by construction rather than by remembering to exclude it. The one thing
+that had to be added rather than inherited is filtering: a device with no owner
+has no tier, and a device with no tier falls through to the AdGuard household
+catch-all, which blocks ads and malware and nothing else. So `devices` gained a
+`policy_tier` of its own, a shared device gets its own AdGuard client named
+after it, and filing something as shared defaults it to Standard. An unfiltered
+television in the lounge is a worse outcome than a wrongly billed one, and the
+unsafe answer should never be the one a parent gets by not choosing.
+
+### NULL means "the default for this class"
+
+The two tick boxes are `caught_by_dinner` and `caught_by_house_off`, and both
+are nullable rather than `NOT NULL DEFAULT true`. NULL means "whatever this
+class does by default".
+
+That buys two things. Re-filing a phone as a shared device picks up the shared
+defaults instead of dragging an answer about a phone across to a television. And
+the Devices page can say **(default)** honestly, rather than drawing a ticked
+box that claims the parent decided something they never touched. The brief asked
+for a shared device to default into the dinner pause *and ask the parent*; a
+tri-state column is what "and ask" looks like in a schema.
+
+Defaults per class: personal in both, shared in both, and `iot`, `appliance` and
+`infra` in neither, always. A whole-house cut that leaves the family television
+streaming is not a whole-house cut, so shared defaults into that one too, and
+the page marks it as a default and invites the change. The kitchen display that
+plays music through dinner is one untick.
+
+### The iron rule got a second home, and both are computed
+
+The existing guard was `ips_in_scope()`: only `personal` addresses come out of
+it, so no scope can reach a lock or a camera. Two tick-box columns are a new way
+to break that, because a row can now *say* the camera goes off at dinner.
+
+So the answer is not the column. `device_sweeps` computes it, and forces `false`
+for `iot`, `appliance` and `infra` whatever the columns hold. A hand-edited row,
+a bad migration or a future bug in the dashboard cannot put the front door lock
+in a dinner pause, because the value it would have to change is not stored
+anywhere. `test/schema-test.sh` proves it the only way worth proving it: it puts
+one device of every class on the wire, forces both columns ON for all of them,
+and checks the three that must never be cut are in neither sweep.
+
+The dashboard refuses the tick as well, so a parent is told rather than left
+thinking they changed something. That is a courtesy, not the guard.
+
+### The whole-house cut writes nothing, and lifts itself
+
+The obvious way to build "all devices off" is to write a block against every
+device. The obvious way that goes wrong is a parent pressing it on the way out
+the door with nobody home to press the other one, and Tim asked what happens
+then before he asked for anything else about it.
+
+So no rows are written against any device at all. `house_state` holds a single
+timestamp, `off_until`. The `blocked_device_ips` view reads the clock. When the
+moment passes the addresses simply stop being in the set on the gateway's next
+fifteen-second reconcile. There is no worker to fail, no timer to install, and
+nothing left behind to go stale: the cut cannot outlive the reason for it,
+because the reason for it *is* the clock. `kidnet house on` is the same single
+UPDATE. Default sixty minutes, capped at a day.
+
+Ending a cut early takes out only the addresses nothing else still says should
+be blocked, so `house on` cannot hand the internet back to a child who is out of
+time or who was switched off separately.
+
+`house-off` is a scope in `ips_in_scope()` but deliberately NOT in `bin/kidnet`'s
+scope list, so `kidnet off house-off` is refused. A whole-house cut with no
+expiry is exactly the foot-gun this design exists to remove, and leaving a second
+door to it open would have put it straight back.
+
+### A shared device needed block state the reconciler could see
+
+`category_state` is keyed on a child, and the gateway rebuilds `@kids_block`
+from it every fifteen seconds. A shared device has no child, so a block written
+straight into nftables would have been scrubbed on the next tick, and `kidnet
+dinner` would have turned the television off for fifteen seconds. `device_state`
+is the same idea keyed on the device.
+
+While moving that query into the database (`blocked_device_ips`) two things came
+out of the old one in `gateway/entrypoint.sh`. It joined on `child_id` alone
+with no class check, so a camera that had somehow been handed to a child would
+have gone dark with them; nothing in `bin/kidnet` can produce that row, but the
+iron rule should not depend on that staying true. And `reconcile_set` could not
+tell an empty answer from a failed query: a view the image expects but the
+database has not been given yet produced no rows, which read as "nothing should
+be blocked", and the next line flushed `@kids_block` and handed every cut-off
+child the internet back. A failed query now changes nothing.
+
+### What is not built: a shared budget
+
+A shared device has no clock of its own. It is filtered, it is swept, and it
+costs nobody any minutes, but there is no daily allowance for the family
+television and no "the iPad has had two hours today".
+
+That was offered as optional and it is genuinely a lot more work, so it is not
+half built. Everything about time in Hearth is keyed on a child: `time_ledger`
+and `time_remaining`, `kidnet spend` and `kidnet bonus`, `kidnet-meter` walking
+children rather than devices, `category_budgets`, the earn and quiz paths that
+add minutes back, and the captive portal that explains to a named child what
+happened and what they can do about it. A device-level budget is a second full
+metering path through every one of those, not a column, and it also has to
+answer questions a per-child budget never asks: does the television's hour reset
+at midnight or roll, can a child spend their own minutes on it, and who does the
+portal address when nobody owns the device it is showing.
+
+A budget that silently does not enforce is worse than no budget at all, so:
+
+**Next step, written down rather than done.** A `device_budgets` table mirroring
+`category_budgets`, a `device_usage` day ledger, a device branch in
+`kidnet-meter`, a `kidnet spend-device` verb, and a portal page for a device
+with no owner. Roughly the size of the metering work in METERING.md, and it
+should be done as one piece with tests, not bolted on.
+
+## Anyone should be able to teach something, and model aeroplanes count (2026-08-30)
+
+The ask was plain:
+
+> "Just make sure you build it in a way that's easy for other people to
+> contribute to, because there are all sorts of people that have got good things
+> to teach. It could just be how to make model aeroplanes and how to paint,
+> stuff that's outside the curriculum but still valuable life lessons."
+
+Two things had to change for that to be true. A bank was a bare JSON file of
+questions: no author, no licence, nothing about who it was for, and nothing a
+child could read before answering. And the only way to get one to a household
+was to put it in `portal/quizzes/`, which is tracked in git, so somebody else's
+content arrived by repository update and left the same way.
+
+### A package is a bank plus a manifest, in one file
+
+The format is the existing bank format with one optional `package` block on top:
+`author`, `licence`, `description`, `tags`, `sources`, and an optional
+`read_first` page. Nothing was renamed and nothing was moved, so forty-one of
+the forty-two banks that ship with Hearth pass every package check unchanged,
+manifest aside. The forty-second fails on an explanation of 404 characters, which is a real
+pre-existing bug rather than a format problem: the `quiz_bank_questions`
+constraint stops at 400, so that bank could never have been installed into the
+database anyway.
+
+**One file, because one file is the thing a person can actually send.** It can
+be emailed, attached to an issue, dropped in a folder, or put in a pull request
+by somebody who has never used git. Anything that needed a directory, a
+manifest file and an archive would have cut out most of the people this is for.
+
+Nesting the manifest under one key rather than adding six top-level fields is
+what makes the two formats the same format. A bank with no `package` block is a
+package with no manifest, and the validator says so as a note rather than an
+error unless you pass `--strict`.
+
+### Installed packages live in the database
+
+Same reasoning as the dashboard's own bank editor: `portal/quizzes` is tracked
+in git and a `git pull` would delete a family's content. So
+`bin/kidnet-pack install` writes to `quiz_banks`, `quiz_bank_questions` and a
+new `quiz_packages` manifest table, and `portal/quizzes/community/` becomes a
+**shelf** rather than a live directory. The portal reads only `*.json` at the
+top of `portal/quizzes`, so a package sitting on the shelf is invisible to every
+child until somebody says yes to it.
+
+Installing is a terminal command and not a dashboard button, on purpose. It is a
+stranger's writing going in front of a child, and that should take a deliberate
+act by somebody who has read it.
+
+### The whole package goes in as one jsonb value
+
+`install_quiz_package(jsonb, ...)` takes the entire package and does the work
+inside one transaction. Three reasons, in order of how much they mattered: a
+package can never land half in; there is one string to quote instead of
+hundreds, which is the difference between one quoting bug and forty; and the
+existing constraints in `schema-quizbanks.sql` apply to a stranger's content
+exactly as they apply to a bank a parent typed.
+
+It is `SECURITY DEFINER`, which arrived for a better reason than convenience.
+`config/db/grants.sql` had just moved the CLI onto `kids_agent`, a role with no
+DDL and no write access to the quiz tables. Installing a package as that role
+would otherwise have meant granting INSERT, UPDATE and DELETE on `quiz_banks`
+and `quiz_bank_questions`, which is far more than the job needs. One narrow
+audited function is less privilege, not more. `remove_quiz_package()` refuses
+any bank that did not arrive as a package, so it cannot delete a bank a parent
+wrote on the dashboard whatever id it is handed.
+
+### A package is hostile input, and that drove most of the design
+
+A stored cross-site scripting hole in the kid portal, arriving through a quiz in
+a pull request, would be the worst bug this product could ship: it would run in
+the portal's origin, on the island, on the machine a parent believes is the
+safest thing on their network. So there are two independent defences and
+`test/package-test.sh` proves them separately, which is the only way to know
+they are independent.
+
+`tools/validate-package.mjs` treats every string as hostile. The rule that does
+most of the work is deliberately one rule, so it can be explained to somebody
+who is not a programmer: **`<`, `>` and `&` have to stand on their own, with a
+space either side.** "7 < 8" is fine, "salt & pepper" is fine, and `<script>`,
+`<img`, `&amp;` and `&#60;` are all gone. On top of that: no invisible or
+right-to-left characters, no `javascript:` or `data:` URLs, no event handler
+names, sizes on every field that match the database columns, and links that must
+be https and must point at a domain already on the reading list.
+
+The reading list rule is not gatekeeping. A child on the Read up page is usually
+a child who has run out of time, and their device can reach the portal and about
+forty reference sites. Any other link is dead on arrival at the exact moment it
+was needed.
+
+One exception was earned by real content. The arrow `->` is how every chemistry
+bank in the repo writes a reaction, and four banks broke on it. Telling a
+science teacher to stop writing `2H2 + O2 -> 2H2O` would have been the rule
+making the product worse, so the arrow is removed before the test runs. It
+cannot close an HTML comment the rule will not let anybody open.
+
+The second defence is that the portal escapes everything anyway. Part 3 of the
+suite forces a payload straight into the database by hand, past the validator
+and past the CLI, then renders it with the `esc()` function lifted out of
+`dashboard/portal.mjs` at run time rather than copied, and asserts that no tag
+survives that the test did not write itself. Reading the function out of the
+real file is what makes the test fail if somebody ever weakens it.
+
+### Pictures are not supported, and saying so was the decision
+
+A painting module wants a colour wheel. A model aeroplane module wants a photo
+of a wing section. Neither can have one, and adding an `image` field that
+silently did nothing would have been worse than the gap.
+
+Three real obstacles. The portal builds HTML strings inside the island's netns
+and has no static file directory or asset pipeline. A link to an outside image
+fails to load for exactly the child who needs it, because they can only reach
+the reading list. And embedding images in the JSON turns a 60 KB package into
+several megabytes, which stops being a thing you can attach to an issue.
+
+What it would take is written down in `docs/CONTRIBUTING-CONTENT.md`: an asset
+directory served from inside the island, a per-package size budget, a type
+allowlist with file contents checked rather than trusted, a way to carry binary
+files through a pull request, and a rule for what happens to an installed
+package's images when it is removed. That is a piece of work, not a field.
+
+What can be done today is to write the picture in words and point at a diagram
+on the reading list. The worked example teaches colour mixing with no colour
+wheel on the screen at all, which is evidence that this survives better than it
+sounds.
+
+### The dashboard alert was deliberately not built
+
+The ask ended with parents getting alerts about packages an AI thinks would suit
+their children. Building a convincing fake of that would have been easy and
+wrong.
+
+What was built is the part that is real: the Learn to earn screen lists the
+packages installed on the box and the ones sitting on the shelf, with the author
+and the licence on each, and a table that says in plain words what is built,
+what is not, and what is not supported. The "not built" row names the missing
+piece rather than describing it in the present tense.
+
+The important half is the shape the missing piece has to take. **Hearth has no
+telemetry and calls no cloud**, so this will never be a service that watches a
+family and recommends things to them. The evidence half already exists and calls
+nothing: `bin/kidnet-quiz-suggest <child>` reads the household's own database
+and prints a briefing, `bin/kidnet-pack list` prints the shelf, and
+`docs/runbooks/quiz-suggestions.md` gained a step 8 telling an agent to check the
+shelf before writing anything and to recommend rather than install. The matching
+is done by an agent the parent runs, on the parent's box, with the parent
+pasting the briefing in. That is not a limitation to engineer away later. It is
+the design.
+
+## The slow lane: why turning it down beats turning it off
+
+Added 2026-08-30. The idea is borrowed honestly: Firewalla ships "disturb"
+rules, which degrade an addictive service instead of blocking it. It is the
+best idea in the competitive landscape and it fits Hearth better than it fits
+Firewalla, because Hearth's whole position is that the household should be able
+to explain every decision to the child it lands on.
+
+### The argument
+
+A hard block is a confrontation. The video stops dead, the child comes to find
+you, and you have the argument this product exists to avoid. You have also
+taught them very little: the lesson of a wall is that somebody else controls
+the wall, and the natural response is to look for a way around it.
+
+A slow lane is a different lesson. The video still plays, it just buffers.
+Scrolling stutters. Nothing announces itself as a punishment, and after a few
+minutes the child gets bored and goes and does something else. They stopped
+because it stopped being fun, which is exactly the judgement we want them to
+learn to make on their own. Nobody was told no, so there is nothing to resent
+and nothing to push against.
+
+It is also much harder to game. A block is a binary you can look for a bypass
+to. A slow lane just feels like a mediocre evening on the internet.
+
+### Why it is a state on `category_state`, not a table of its own
+
+"Slow" is not a different kind of control from "off". It is the gentler setting
+of the same one. So it is a `speed` column on the row the block already lives
+on, and a category is in exactly one of three states:
+
+    off    blocked = true                    the hard cut, unchanged
+    slow   blocked = false, speed = 'slow'   policed down, never cut
+    full   blocked = false, speed = 'full'   the default
+
+One row, one place to read, and the ordering falls out for free: a dropped
+packet is never policed, so "off" always wins over "slow" without any code
+having to say so. A parallel table would have needed a rule about which one
+won, and that rule would have been wrong somewhere.
+
+### Why nftables and not `tc`
+
+`tc` is the obvious tool and it was rejected. It would have meant a second
+enforcement plane, with its own state, its own reconciler and its own way of
+disagreeing with the firewall about who is being controlled right now. Hearth's
+whole architecture is that Postgres holds the desired state and the firewall is
+a projection of it, reconciled every fifteen seconds. Rate limiting in
+nftables lives in the same ruleset, is rebuilt by the same loop and is proven
+by the same test suite.
+
+It is policing rather than shaping, and that is a real trade: a policer drops
+packets instead of queueing them, so a throttled connection is lossy as well as
+slow. For this job that is a feature. Loss is what makes a video player give up
+and show the spinner, which is the whole effect we are after.
+
+Per device, not per household: each rule uses a `meter` keyed on the island
+address, so two throttled children get a slow lane each rather than fighting
+over one bucket.
+
+### 256 kbit/s, and why that number
+
+Measured in the test rig rather than guessed. At 32 kbytes/second with a 64
+kbyte burst, a sustained pull settles at 250 kbit/s, and the burst lets a small
+page arrive at full speed before the policer bites.
+
+At that speed a chat message, a search result and a small page all still
+arrive. YouTube at its lowest quality wants more; Netflix wants about twice it.
+So messaging and reading survive and video cannot hold a stream at any quality.
+Gameplay is usually under 150 kbit/s, so a game mostly still plays while
+everything it wants to stream in stalls. The asymmetry is the point: the small
+things you might genuinely need still work, and the things designed to hold you
+for three hours become miserable.
+
+It is settable (`kidnet slow-rate`, 32 to 9999 kbit/s) because households and
+connections differ. There is a floor because below about 32 kbit/s TCP struggles
+to make progress at all, and at that point it is a broken connection rather
+than a slow one, which is the failure the whole feature is trying to avoid.
+
+### The cliff or the slope, and why the default did not change
+
+Running out of time can now drop a child into the slow lane instead of cutting
+them off. The evening tails off rather than ending mid-sentence, and earning
+minutes back puts them straight back to full speed.
+
+It defaults to `cut`, which is what Hearth has always done. Changing what
+happens when a child's time runs out is a change to somebody's household
+routine, and shipping that as the side effect of an upgrade would be wrong. A
+household has to choose the slope: `kidnet slow-timeout slow`.
+
+### The child is told, in plain words
+
+A network that is slow on purpose and says nothing about it is just a broken
+network. A child who believes the wifi is broken will go and "fix" it: reboot
+the router, change their address, borrow a hotspot. That is worse than a block
+in every direction, and it is dishonest, which is the part that matters most.
+
+So the portal says it. It names the slow lane, names which categories are in
+it, says the number, and says it is deliberate. When it is the out-of-time
+slope it says so and points at the ways to earn minutes back. The page itself
+is served from the input hook rather than the forward hook, so it always loads
+at full speed: the explanation is never the thing that is slow.
+
+### The safety net is never slowed
+
+`@kids_allow` is accepted at the top of the throttle chain, in both directions,
+above every policing rule. A child in trouble reaching a help line over a
+deliberately crippled connection would be the worst failure this project could
+have, so it is proven by a test that throttles the exact category the help line
+sits in and then checks it still runs at full speed.
+
+Smart home, appliances and infrastructure are never slowed either. The view the
+gateway reads can only return a device filed as `personal`, so a camera or a
+smart lock cannot be throttled even if it has somehow been handed to a child.
+Same iron rule as the block sets, same guard, in the database rather than in a
+script.
+
+### What was deliberately not built
+
+A category that goes over its own budget is still a hard block. Only the
+whole-day time budget has the cliff-or-slope choice so far. Doing both would
+have meant two settings that look the same and behave differently, and there is
+no evidence yet about which one a household actually wants.
+
+## Version numbers are dates, and an upgrade undoes itself (2026-08-30)
+
+An outside review called Hearth "an impressive working prototype rather than a
+finished household appliance" and listed what was missing: a reliable
+installer, automated upgrades and rollback, a release process, compatibility
+documentation. Two of those are the same problem. There was no version number
+anywhere, so nobody could say what they were running, and there was no way
+back, so an update was a one way door.
+
+That second half is the serious one. This software sits between a household
+and the internet. A bad update does not mean a broken app. It means the
+children cannot do their homework and the parent cannot fix it, because the
+dashboard is down too. Rollback here is not a nice to have.
+
+### Dates, not semantic versioning
+
+`VERSION` holds `2026.09.0`: year, month, patch.
+
+Semantic versioning answers "will this break my code", which is the right
+question for a library with programmers downstream. Hearth has none. It is one
+repository, deployed one way, on one box, by a family. The question a household
+actually asks is "am I running something old", and a date answers that with no
+changelog, no comparison and no internet connection. A parent seeing
+`Hearth 2025.03.0` in 2026 has learned something. A parent seeing `Hearth 1.4.2`
+has learned nothing.
+
+The one change that genuinely breaks an upgrade is a database change, and a
+major version bump is far too blunt a way to say so. That gets said per release
+instead: `kidnet-upgrade check` calls it out before anybody agrees to anything,
+and docs/UPGRADING.md says what to do about it.
+
+Rejected: plain dates (no room for a fix inside the same month), build numbers
+(meaningless to a parent and to us), codenames (useless down the phone).
+
+The VERSION file names the release being prepared, not the last one shipped, so
+between releases a box is running something that is not either. The tooling
+says exactly that rather than pretending, because a version number that lies is
+worse than no version number.
+
+### The order of operations in an upgrade
+
+Not negotiable, and each step exists because of what it prevents:
+
+1. **Check the new version before switching to it.** The firewall ruleset has
+   to parse, the schema has to load into an empty database, every script has to
+   be valid shell. All three run against the new code in a throwaway git
+   worktree while the live box carries on. A bad release is caught with the
+   household still online and never noticing.
+2. **Snapshot before changing anything.** A `pg_dump`, the current commit, and
+   any uncommitted edits (via tools/worktree-snapshot.sh, which already
+   existed for exactly this reason and was reused rather than reinvented).
+3. **Apply, then ask the box whether it is working.**
+4. **Put the old one back automatically if it is not.**
+
+Step 4 is the point of the whole exercise. A parent at 9pm should not have to
+learn what a git commit is.
+
+### The undo tool travels inside the snapshot
+
+`kidnet-upgrade` copies `kidnet-rollback`, `kidnet-health` and the shared
+library into the snapshot directory before the switchover, and it is that copy
+which runs an automatic rollback. If the new version is broken enough to fail
+its health check, its own rollback script is the last thing that should be
+trusted to be the fix. This cost four lines and removes an entire class of
+"the recovery tool was part of the thing that broke".
+
+### The database is NOT restored automatically
+
+An automatic rollback puts the code back and leaves the database alone.
+
+The temptation was to restore both, because that is the cleaner mental model.
+It is also the wrong call. A restore is a restore: everything since the
+snapshot goes, and on a household gateway "everything since" means minutes the
+children earned, quizzes they passed, chores they claimed. Losing an evening of
+a child's earned time to fix a problem that was only ever in the code is its
+own harm, and it is a harm the child feels rather than the parent.
+
+So the code goes back on its own, and the database only ever goes back when a
+person deliberately asks with `--with-database` and types ROLLBACK in full.
+The cost of that choice is honest and documented: a release that drops a
+database column cannot be rolled back from with code alone, and the release
+notes have to say so. docs/UPGRADING.md carries that limit in the same plain
+language as everything else, rather than implying a time machine.
+
+### The health check is read only, and says what it cannot know
+
+`bin/kidnet-health` is what the upgrade trusts and what a worried parent runs.
+Those two audiences want the same thing: one honest answer. It puts real
+questions on the wire (a DNS query and an HTTP request from inside the island's
+network namespace, because from the host there is no route to either) rather
+than checking that processes exist, since a resolver that is running but not
+answering looks identical from the outside to one that is fine.
+
+It writes nothing. That is a rule and not a habit: it is the tool that gets run
+when things are already going wrong, and a diagnostic that changes state can
+make things worse.
+
+It also says out loud what it cannot tell you: that the broadband is up, that a
+child's laptop is on the right wifi, that the filtering caught everything. A
+green light that quietly overclaims is how somebody stops trusting the light.
+
+### The proof
+
+test/release-test.sh clones the repo into a temp directory, invents two
+releases, points every path at a throwaway, upgrades, breaks the health check
+on purpose, and asserts that the tooling put the old version back with nobody
+watching. The claim "your internet comes back by itself" is worth nothing
+untested, and it cannot be tested on a household's own gateway because the test
+is the outage.
+
+## Alerts nobody was looking at (2026-08-30)
+
+Hearth raised alerts and did nothing with them. A device nobody had claimed, a
+camera that was not actually restricted, a Tor or self-harm signal: all of them
+landed in a table and waited for somebody to open a dashboard. A parent could
+learn on Saturday that something concerning happened on Wednesday. Rival
+products push to a phone, and the ones that matter here are the safety signals.
+
+**The constraint came first.** Hearth has no telemetry and talks to no cloud,
+and notifications are exactly where a product like this starts leaking. So a
+route is the household's own box POSTing a message the household worded, to an
+address the household typed in, over a route the household can delete. There is
+no Hearth server, no account and no opt-out to find, because there is nothing to
+opt out of. With no routes, nothing is sent to anybody, and that is what a fresh
+install does.
+
+**Two routes properly, not four badly.** ntfy and a webhook ship with tests.
+Email and a first-class Home Assistant route are declared in the schema and
+**refused by the worker**, with a message saying where the code would go. A
+half-built route that accepts a configuration and then never sends anything is
+worse than no route, because a parent believes they are covered.
+
+### The wording is the feature
+
+A push notification is read out of context: on a lock screen, in a queue,
+possibly in front of the child it is about, possibly in front of somebody
+reading over a shoulder. So the rule is that **the notification says something
+needs your eyes and where to look, and the detail stays on the dashboard at
+home**. The self-harm alert is the one the design is bent around:
+
+> **Hearth: worth a quiet check in**
+> One thing today needs your eyes, and it is a care thing, not a trouble thing.
+> The detail is on the Hearth dashboard at home. Read it somewhere private.
+
+No child's name, because naming one is an accusation in front of whoever is
+standing there. No site, and not even the category, because "self-harm" on a
+lock screen tells a passer-by or a sibling something that is the child's to
+tell, and freezes a parent in public with nothing they can do. "A care thing,
+not a trouble thing", because the first ten seconds of that evening's
+conversation are set by the first thing the parent read, and
+`docs/tor-and-safety.md` has been clear from the start that the response is a
+conversation and never a punishment. And "read it somewhere private", which is
+the one instruction that actually matters.
+
+**The wording lives in the database, not in the script.** `notify_wording` has a
+row per category with `name_ok` and `detail_ok` columns, both false for every
+sensitive category, and a route's `include_detail` can only widen as far as
+`detail_ok` already allows. So the rule is enforced by a column rather than by
+remembering, a reviewer can read the whole set in one query, and a household can
+change the words without editing code. A category nobody has worded yet falls
+back to "something needs a look", which names nobody and quotes nothing: a new
+alert type is never assumed harmless enough to put on a lock screen.
+
+### The four promises, and where each one actually lives
+
+- **Never twice.** `notify_sent` has `UNIQUE (route_id, alert_id)`. The
+  constraint is the mechanism, not the code around it: two overlapping runs
+  cannot both send, because the second INSERT loses. A duplicate safety alert at
+  2am is how a parent learns to ignore them.
+- **One buzz.** Alerts group by category, so twelve unknown devices is one
+  message saying "12 devices". Then urgent and warn each keep their own message
+  and their own words, and only `info` collapses into a summary, because a
+  safety signal buried inside "4 things need a look" is a signal nobody reads.
+- **Quiet.** A new route defaults to `warn`, so a chore waiting for approval
+  never fires. Quiet hours hold the ordinary; urgent goes through unless a
+  household turns that off. A 12 hour horizon retires anything older unsent, so
+  a database restore, or a route added on a Saturday, cannot fire a week of
+  history at somebody's phone.
+- **Never lost.** Rows are written to `notify_sent` only *after* a send
+  succeeds, so a route that is down writes nothing and the alert stays
+  unacknowledged and goes next time. The worker exits 0 whatever happens.
+
+### Three things the build itself taught us
+
+**A tab is IFS whitespace.** Every other worker in `bin/` reads psql output with
+`IFS=$'\t' read`. Bash treats space, tab and newline as IFS whitespace *even when
+IFS is set to exactly one of them*, so two adjacent tabs collapse into one and
+every column after an empty field shifts left. A route with no token was reading
+its rate limits out of the wrong columns and comparing an integer to `f`. The
+fix is 0x1f, the ASCII unit separator, which is not IFS whitespace.
+
+**`psql -tAc` prints the rows and the command tag.** A statement with
+`RETURNING 1` returns `1` on one line and `INSERT 0 1` on the next, so the
+`| grep -c 1` idiom this repo uses in several places reports double what
+actually happened. `grep -c '^1$'` is the fix. Worth knowing: `bin/kidnet-alerts`
+has the same idiom, and its "raised N new alert(s)" line has been overcounting.
+
+**Secrets do not belong on a command line.** An ntfy topic name *is* the
+password. The sender is Python rather than curl for exactly that reason: the
+target and the token arrive in a child process's environment and never in
+`argv`, where every user on the box can read them out of `ps`. The sender also
+scrubs both out of any error string before returning it, because urllib puts the
+whole URL in an exception message and that message ends up in the journal and in
+`notify_log`. The dashboard shows a route's host and never its path.

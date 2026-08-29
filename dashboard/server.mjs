@@ -14,6 +14,8 @@
 //                          (including writing and editing your own), the rules
 //                          of earning, and the earning history
 //   /devices   Devices  - the roster and the naming queue
+//   /notify    Notifications - the phone routes a household set up, what each
+//                          one sends, and the exact words that reach a phone
 //   /system    System   - the health of the box Hearth itself runs on: CPU,
 //                          memory, disk, load, uptime, its containers and the
 //                          throughput of its own network cards
@@ -27,14 +29,24 @@ import { createServer, request as httpRequest } from "node:http";
 import { execFile } from "node:child_process";
 import pg from "pg";
 import { analytics, digest, kidDetail, GOAL_METRICS } from "./analytics.mjs";
-import { shell, tonight, trends, devices as devicesView, week as weekView, kid as kidView } from "./views.mjs";
+import { shell as pageShell, tonight, trends, devices as devicesView, week as weekView, kid as kidView } from "./views.mjs";
 import { systemPage } from "./views.mjs";
 import { livePage, family as familyView } from "./views.mjs";
 import { LiveWire } from "./live.mjs";
 import { SysMonitor } from "./sysmon.mjs";
 import { householdApi } from "./household.mjs";
+import { notifyData, notifyPage, notifyApi } from "./notify.mjs";
 import { earnData, earnPage, taskApi, quizApi, bankApi, earnSettingsApi, boardApi, decideClaim } from "./earn.mjs";
+import { scheduleData, scheduleApi } from "./schedule.mjs";
 import { dirname, join } from "node:path";
+import { versionFooter } from "./version.mjs";
+
+// Every page carries the same quiet line at the bottom: what version this
+// household is running and whether it is working. Wrapping shell() rather than
+// editing views.mjs keeps it to one file, and means a page that forgets to ask
+// for it cannot exist. See dashboard/version.mjs for why it never blocks a
+// render.
+const shell = o => pageShell({ ...o, body: (o.body || "") + versionFooter() });
 
 const BIND = process.env.BIND || "127.0.0.1";
 const PORT = Number(process.env.PORT || 8899);
@@ -101,7 +113,9 @@ const LABEL_RE = /^[A-Za-z0-9_:+.,'’ -]{1,40}$/;
 const KINDS = ["child", "guest-child", "guest-adult", "adult"];
 let TIERS = ["young", "standard", "teen", "guest", "adult"];
 q("SELECT tier FROM policies").then(r => { if (r.length) TIERS = r.map(x => x.tier); }).catch(() => {});
-const CLASSES = ["personal", "iot", "infra"];
+// The device classes /api/device will accept. 'shared' is a family device: the
+// household's, not one child's, so it can never eat a child's minutes.
+const CLASSES = ["personal", "shared", "iot", "appliance", "infra"];
 const BUDGET_CATS = ["gaming", "video", "social"];
 // "" / null / undefined mean "no limit"; anything else must be a sane count of
 // minutes. Returns undefined for "leave this alone".
@@ -117,12 +131,16 @@ async function state() {
   // alerts held the people list, times held block_events and claims held the
   // time ledger. With almost no data in the tables nothing looked wrong; with
   // real rows every one of those panels showed the wrong thing.
-  const [children, devices, people, household, alerts, alertsAck, cats, events, times, claims] = await Promise.all([
+  const [children, devices, people, household, alerts, alertsAck, cats, events, times, claims, house] = await Promise.all([
     // Every person, with the role flags, so a page can say "the kids" (which
     // now includes a visiting child) without a second query.
     q(`SELECT id,name,age,policy_tier,kind,active,is_kid,is_guest,is_adult,is_household_child
        FROM people ORDER BY kind,age,name`),
+    // in_dinner / in_house_off are the RESOLVED answers, worked out in
+    // device_sweeps: a camera reads false there whatever its columns say, so
+    // the page cannot draw a ticked box next to something that is in no sweep.
     q(`SELECT id,label,hostname,mac,ip,device_kind,category,vendor,person,person_kind,unassigned,
+         device_tier,in_dinner,in_house_off,dinner_default,house_off_default,
          (last_seen > now()-interval '5 minutes') AS online
        FROM device_roster ORDER BY unassigned DESC, online DESC, person NULLS LAST, label`),
     q("SELECT name,kind FROM people WHERE active ORDER BY kind,name"),
@@ -143,8 +161,27 @@ async function state() {
     q(`SELECT ec.id, c.name kid, t.name task, t.minutes, ec.ts FROM earn_claims ec
        JOIN children c ON c.id=ec.child_id JOIN tasks t ON t.id=ec.task_id
        WHERE ec.status='pending' ORDER BY ec.ts`),
+    // The whole-house cut: whether it is running, how long it has left, and how
+    // many devices it would take with it. One row.
+    q("SELECT is_off,off_until,minutes_left,devices_caught FROM house_status"),
   ]);
-  return { children, devices, alerts, alertsAck, cats, events, times, claims, people , household }
+  // When tonight's bedtime starts and when it lifts, per child, for the one
+  // line Home and the kid page show. Caught rather than joined to the list
+  // above on purpose: a box whose database has not been given
+  // schema-schedule.sql yet still has a working dashboard, it simply does not
+  // mention bedtimes.
+  const bedtimes = {};
+  for (const b of await q(`SELECT child_id, starts_at, ends_at, in_window, override, extended
+                             FROM schedule_next`).catch(() => []))
+    bedtimes[b.child_id] = b;
+  // The slow lane, caught for the same reason as the bedtimes above: a box that
+  // has not been given schema-slow.sql yet still has a working dashboard, its
+  // chips simply never show the third state.
+  const slow = await q(`SELECT c.name kid, s.category, s.set_by
+                          FROM slow_lane_children s JOIN children c ON c.id=s.child_id`)
+                 .catch(() => []);
+  return { children, devices, alerts, alertsAck, cats, slow, events, times, claims, people, household, bedtimes,
+           house: house[0] || { is_off: false, minutes_left: 0, devices_caught: 0 } }
 }
 
 const authed = req => !DASH_TOKEN || (req.headers["x-dash-token"] === DASH_TOKEN);
@@ -256,7 +293,7 @@ const server = createServer(async (req, res) => {
 
     if (req.method === "POST" && ["/api/claim", "/api/act", "/api/assign", "/api/ack", "/api/goal",
       "/api/child", "/api/tier", "/api/device", "/api/household", "/api/task", "/api/quiz",
-      "/api/bank", "/api/earnsettings", "/api/board"].includes(req.url) && !authed(req)) {
+      "/api/bank", "/api/earnsettings", "/api/board", "/api/schedule"].includes(req.url) && !authed(req)) {
       res.writeHead(403, { "content-type": "application/json" }); res.end('{"out":"forbidden"}'); return; }
     if (req.method === "POST" && req.url === "/api/assign") {
       let b = ""; req.on("data", c => b += c); await new Promise(r => req.on("end", r));
@@ -293,6 +330,20 @@ const server = createServer(async (req, res) => {
         else if (req.url === "/api/board") await boardApi(q, body, res);
         else await earnSettingsApi(q, body, res);
       } catch (e) {
+        res.writeHead(400, { "content-type": "application/json" });
+        res.end(JSON.stringify({ ok: false, out: `That did not save: ${e.message}` }));
+      }
+      return;
+    }
+    // Scheduled bedtimes. Rows only: this writes what the times are, and
+    // bin/kidnet-schedule is the only thing that ever touches a block, so the
+    // set_by precedence rules live in exactly one place. The nudge at the end
+    // of each op runs that same worker, so a change a parent just made is in
+    // force now rather than up to a minute from now.
+    if (req.method === "POST" && req.url === "/api/schedule") {
+      const body = await readJson(req);
+      try { await scheduleApi(q, body, res, runKidnet); }
+      catch (e) {
         res.writeHead(400, { "content-type": "application/json" });
         res.end(JSON.stringify({ ok: false, out: `That did not save: ${e.message}` }));
       }
@@ -362,12 +413,22 @@ const server = createServer(async (req, res) => {
       // topsites/devices) are safe to expose; the mutating ones are the
       // parent's own controls. Anything not listed here is refused outright.
       if (!["off","on","game","media","study","dinner","resume","bonus","earn","penalty","grant",
+            "slow","full","slow-rate","slow-timeout","slow-status",
             "status","time","recent","topsites","devices","unassigned","allow-status"].includes(args[0])) {
         res.writeHead(400).end('{"out":"bad command"}'); return; }
       res.writeHead(200, { "content-type": "application/json" }); res.end(JSON.stringify(await runKidnet(args))); return;
     }
     // ---- household roles: guests arriving and leaving, and filing a device
     // as smart home or infrastructure. See dashboard/household.mjs.
+    // ---- notifications ----------------------------------------------------
+    // Adding a phone is a parent's decision and belongs on the page. Everything
+    // except "send a test" is a database write; the test shells out to
+    // bin/kidnet-notify so the page and the timer prove the SAME code path.
+    if (req.method === "POST" && req.url === "/api/notify") {
+      const r = await notifyApi(q, await readJson(req), { runTool });
+      res.writeHead(r.ok ? 200 : 400, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ok: r.ok, out: r.out })); return;
+    }
     if (req.method === "POST" && req.url === "/api/household") {
       const r = await householdApi(await readJson(req), { q, runKidnet, syncAdguard });
       res.writeHead(r.code, { "content-type": "application/json" });
@@ -483,11 +544,21 @@ const server = createServer(async (req, res) => {
       // Only a person's own device can belong to a person. Smart home kit and
       // infrastructure are the household's, never a child's, so moving a device
       // into either class also takes it off whoever had it.
-      if (cls !== "personal" && person) return send(400, "Smart home and infrastructure devices are the household's, so they cannot be assigned to a person.");
+      if (cls !== "personal" && person) return send(400, "Only a person's own device can belong to a person. A shared family device, smart home kit and infrastructure are the household's.");
       let out = [];
       if (cls !== (d.category || "personal")) {
-        await q("UPDATE devices SET category=$2 WHERE id=$1", [id, cls]);
-        out.push(cls === "iot" ? "Moved to smart home." : cls === "infra" ? "Moved to infrastructure." : "Moved back to people's devices.");
+        // Changing class also resets the two sweep ticks to that class's
+        // default, and gives a shared device a filter level of its own. A tick
+        // carried over from when the device was somebody's phone is not an
+        // answer about the family television.
+        await q(`UPDATE devices SET category=$2, child_id=CASE WHEN $2='personal' THEN child_id ELSE NULL END,
+                 policy_tier=CASE WHEN $2='shared' THEN COALESCE(policy_tier,'standard') ELSE NULL END,
+                 caught_by_dinner=NULL, caught_by_house_off=NULL WHERE id=$1`, [id, cls]);
+        out.push(cls === "iot" ? "Moved to smart home."
+          : cls === "infra" ? "Moved to infrastructure."
+            : cls === "appliance" ? "Moved to unrestricted devices."
+              : cls === "shared" ? "Now a shared family device on the Standard filter level. Nobody's minutes pay for it."
+                : "Moved back to people's devices.");
       }
       if (person) {
         const [p] = await q("SELECT id FROM children WHERE lower(name)=lower($1)", [person]);
@@ -568,6 +639,8 @@ const server = createServer(async (req, res) => {
       const kd = await kidDetail(q, name, days);
       if (!kd) { res.writeHead(404, { "content-type": "text/plain" }); res.end("no such child"); return; }
       html = shell({ tab: "/", title: `Hearth: ${kd.child.name}`, body: kidView(s, kd) });
+    } else if (url.pathname === "/notify") {
+      html = shell({ tab: "/notify", title: "Hearth notifications", body: notifyPage(await notifyData(q)) });
     } else if (url.pathname === "/trends") {
       const days = url.searchParams.get("days") === "30" ? 30 : 7;
       html = shell({ tab: "/trends", title: "Hearth trends", body: trends(s, await analytics(q, days)) });
@@ -577,12 +650,13 @@ const server = createServer(async (req, res) => {
       // Everything the manage area needs that the shared state() does not
       // already carry: the per-child category caps, how many devices each
       // person actually has, and the per-tier daily allowances.
-      const [budgets, counts, policies] = await Promise.all([
+      const [budgets, counts, policies, schedule] = await Promise.all([
         q("SELECT child_id, category, daily_min FROM category_budgets"),
         q("SELECT child_id, count(*)::int AS n FROM devices WHERE child_id IS NOT NULL GROUP BY child_id"),
         q("SELECT tier, description, daily_budget_school_min, daily_budget_weekend_min FROM policies"),
+        scheduleData(q),
       ]);
-      const mg = { policies, budgets: {}, deviceCounts: {} };
+      const mg = { policies, schedule, budgets: {}, deviceCounts: {} };
       for (const b of budgets) (mg.budgets[b.child_id] ||= {})[b.category] = b.daily_min;
       for (const c of counts) mg.deviceCounts[c.child_id] = c.n;
       html = shell({ tab: "/family", title: "Hearth family", body: familyView(s, mg) });

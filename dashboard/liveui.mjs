@@ -124,7 +124,7 @@ var isStrip=root.dataset.mode==='strip';
 var CATS=['other','gaming','video','social','download'];
 var LABELS={other:'Other online',gaming:'Gaming',video:'Video',social:'Social',
             download:'Downloads'};
-var CLS={personal:'person',iot:'smart home',infra:'infrastructure'};
+var CLS={personal:'person',shared:'shared',iot:'smart home',appliance:'appliance',infra:'infrastructure'};
 var people=[]; try{people=JSON.parse(root.dataset.people||'[]');}catch(e){}
 
 var hist=[], roster=new Map(), tickMs=1500, lastAt=0, connected=false, stale=false, totalsOn=false;
@@ -331,7 +331,7 @@ function scopeName(){
   var w='the whole house';
   if(who==='none')w='unassigned devices';
   else if(who!=='all'){var p=people.filter(function(x){return String(x.id)===who.slice(2);})[0];w=p?p.name+"'s devices":'one person';}
-  var c=cls==='all'?'':(cls==='personal'?', people only':cls==='iot'?', smart home only':', infrastructure only');
+  var c=cls==='all'?'':(', '+(CLS[cls]||cls)+' only');
   return w+c;
 }
 
@@ -623,6 +623,7 @@ export function livePage(s) {
   const clsOpts = [
     { val: "all", label: "All devices", on: true },
     { val: "personal", label: "People" },
+    { val: "shared", label: "Shared" },
     { val: "iot", label: "Smart home" },
     { val: "infra", label: "Infrastructure" },
   ];

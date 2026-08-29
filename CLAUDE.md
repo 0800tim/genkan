@@ -15,7 +15,13 @@ MIT, no telemetry, all data stays in the house. Sibling project: unrot.
 - PLAN.md: topology and the honest limits of network monitoring.
 - RECOMMENDATIONS.md, METERING.md, BUG-BOUNTY.md: policy, metering design,
   the household bug bounty.
+- category_state.set_by decides who may lift a block. The precedence table is
+  in DECISIONS.md ("Bedtimes ran themselves"). Read it before touching any
+  code that unblocks a child: a schedule lifts only set_by='bedtime', and
+  earning time lifts only set_by='out-of-time'.
 - docs/DATABASE.md: schema files and the order they must load in.
+- docs/UPGRADING.md, docs/RELEASING.md: the version scheme, how a release is
+  cut, how a household updates, and exactly what a rollback cannot undo.
   config/db/load.sh is the executable copy of that order and wins any argument.
 - LEARN-TO-EARN.md: the quizzes, the reading list, the economics, and the
   table of what is built and what is not. portal/quizzes/FORMAT.md is the
@@ -27,6 +33,9 @@ MIT, no telemetry, all data stays in the house. Sibling project: unrot.
 - docs/DEVICE-IDENTITY.md: device claiming, and why a child's claim grants
   nothing until a parent confirms it. Off by default.
 - docs/tor-and-safety.md: the Tor layer, and what it cannot do.
+- docs/NOTIFICATIONS.md: how alerts reach a parent's phone, the routes that
+  are built and the two that are not, and the exact words that land on a lock
+  screen. Read it before changing any alert wording.
 - docs/HOUSEHOLD-SECURITY.md: the IoT and household layer. What a camera,
   lock or vacuum may talk to, why cloud backup still works, and the limits.
 - research/: agent research (Omarchy, naming, AdGuard, curriculum, the
@@ -81,8 +90,12 @@ the kids_unclaimed nft set) are both OFF BY DEFAULT and must stay that way.
   is PUBLIC (github.com/0800tim/hearth), so assume anything you write here is
   read by strangers.
 - Never commit anything commercial; that lives outside this repo.
+- After ANY change to bin/kidnet-upgrade, bin/kidnet-rollback,
+  bin/kidnet-health or bin/kidnet-release-lib.sh: run sudo
+  test/release-test.sh (42 checks, throwaway clone and throwaway database).
+  NEVER test an upgrade or a rollback against the live gateway.
 - After ANY change to kids.nft, gateway/ or kidnet: run
-  sudo test/firewall-test.sh (36 checks) and sudo test/container-test.sh
+  sudo test/firewall-test.sh (46 checks) and sudo test/container-test.sh
   (26 checks). Both must pass 100% before commit. After ANY change to
   config/db/: test/schema-test.sh (35 checks, no root needed).
 - Never oversell. If a feature is half built, say which half. The project's

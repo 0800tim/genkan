@@ -23,9 +23,26 @@
 #                exactly what the catch-all already gives them.
 # People marked inactive (a guest who has gone home) are treated as having no
 # devices, so their tier stops applying the moment they leave.
+#
+# A SHARED FAMILY DEVICE gets a client of its own too, named after the device.
+# The family television belongs to nobody, so no person's tier can carry it,
+# and without a client of its own it falls through to the household catch-all,
+# which blocks ads and malware and nothing else. An unfiltered television in
+# the lounge is a worse outcome than a wrongly billed one, which is the whole
+# reason the shared class exists. Its level is devices.policy_tier, set by
+# `kidnet shared` or on the Devices page. Clear the level and the client is
+# removed, the same as for a guest who has gone home.
+#
+# A shared device whose label is also a person's name is skipped: AdGuard keys
+# clients by name, so building it would overwrite that person's client.
 set -uo pipefail
 : "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}" "${ADGUARD_PASS:?set ADGUARD_PASS}"
-psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+# Connects as kids_agent, a role with no superuser, no DDL and no
+# COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB_NAME="${HEARTH_DB:-kids_network}"
+DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 
 MAP=$(psqll "
   SELECT c.name||'|'||c.policy_tier||'|'||c.kind||'|'
@@ -35,7 +52,15 @@ MAP=$(psqll "
   LEFT JOIN devices d ON d.child_id=c.id AND d.reserved_ip IS NOT NULL
         AND d.is_active AND d.category='personal' AND c.active
   WHERE c.kind IN ('child','guest-child','guest-adult')
-  GROUP BY c.name, c.policy_tier, c.kind, c.active")
+  GROUP BY c.name, c.policy_tier, c.kind, c.active
+  UNION ALL
+  SELECT d.label||'|'||coalesce(d.policy_tier,'standard')||'|shared-device|'
+         ||CASE WHEN d.policy_tier IS NULL THEN '0' ELSE '1' END||'|'
+         ||host(d.reserved_ip)
+  FROM devices d
+  WHERE d.category='shared' AND d.is_active AND d.reserved_ip IS NOT NULL
+    AND d.label IS NOT NULL AND d.label <> '' AND d.label NOT LIKE '%|%'
+    AND NOT EXISTS (SELECT 1 FROM children c WHERE lower(c.name)=lower(d.label))")
 [ -n "$MAP" ] || { echo "kidnet-adguard-clients: nobody who needs a client of their own"; exit 0; }
 
 ADGUARD_URL="$ADGUARD_URL" ADGUARD_USER="$ADGUARD_USER" ADGUARD_PASS="$ADGUARD_PASS" MAP="$MAP" python3 <<'PY'
@@ -117,7 +142,8 @@ def park_address(cur_ids):
 for name,(tier,role,active,ips) in want.items():
     c=clients.get(name)
     if not active:
-        # A guest who has gone home. Their client is deleted rather than parked:
+        # A guest who has gone home, or a shared device whose filter level has
+        # been cleared. Their client is deleted rather than parked:
         # AdGuard's client list is a list of the people in the house, and it
         # should not slowly fill with strangers. If they come back, the block
         # below builds it again from their level the moment they have a device.

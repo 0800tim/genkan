@@ -6,7 +6,12 @@
 set -euo pipefail
 : "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}" "${ADGUARD_PASS:?set ADGUARD_PASS}"
 PAGES="${DNSLOG_PAGES:-20}"
-DB_EXEC=(docker exec -i postgres psql -U postgres -d kids_network)
+# Connects as kids_agent, a role with no superuser, no DDL and no
+# COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB_NAME="${HEARTH_DB:-kids_network}"
+DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_EXEC=(docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME")
 SINCE=$("${DB_EXEC[@]}" -tAc "SELECT COALESCE(to_char(max(ts) AT TIME ZONE 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS'),'') FROM dns_log")
 
 TSV=$(ADGUARD_URL="$ADGUARD_URL" ADGUARD_USER="$ADGUARD_USER" ADGUARD_PASS="$ADGUARD_PASS" SINCE="$SINCE" PAGES="$PAGES" python3 <<'PY'

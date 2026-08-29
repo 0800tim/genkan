@@ -33,7 +33,9 @@ fi
 : "${HEARTH_TIMEOUT:=8}"
 : "${HEARTH_KIDS:=}"
 : "${HEARTH_ALERTS:=1}"
-: "${HEARTH_PSQL:=docker exec -i postgres psql -U postgres -d kids_network -tAc}"
+# Read only, and as the restricted kids_agent role rather than the superuser:
+# see config/db/grants.sql in the Hearth repo for what that role may touch.
+: "${HEARTH_PSQL:=docker exec -i postgres psql -U kids_agent -d kids_network -tAc}"
 
 fail() {
   echo "${0##*/}: $*" >&2

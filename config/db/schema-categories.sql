@@ -60,6 +60,41 @@ INSERT INTO category_domains (category, domain) VALUES
  ('video','crunchyroll.com'),('video','vrv.co'),
  ('video','tvnz.co.nz'),('video','threenow.co.nz'),
  ('video','dailymotion.com'),('video','dmcdn.net'),
+ -- ---- video: New Zealand, Australia, UK, Canada, Ireland (2026-08-30) ----
+ -- Added because a New Zealand household's children watch these and none of
+ -- them were in the seed; the same gap holds for AU/UK/CA/IE. Every domain
+ -- here was checked with `getent ahostsv4` first. Where a broadcaster's main
+ -- domain also carries its general news site (bbc.co.uk, itv.com,
+ -- channel4.com), it stays in because there is no separate video-only
+ -- domain to use instead; a short news read is a burst, not the sustained
+ -- throughput the active-minute threshold looks for, same protection RNZ
+ -- and TVNZ already rely on above. Where the news site is a genuinely
+ -- separate domain (ABC, SBS, CBC, RTÉ), the news domain is left out and
+ -- only the dedicated video domain is listed. See docs/SERVICES.md.
+ ('video','3now.co.nz'),('video','tv3.co.nz'),('video','choicetv.co.nz'),
+ ('video','hgtv.co.nz'),('video','amshow.co.nz'),
+ ('video','neontv.co.nz'),('video','api.neontv.co.nz'),('video','lightbox.co.nz'),
+ ('video','skygo.co.nz'),('video','sky.co.nz'),
+ ('video','dashvod.skygo.co.nz'),('video','hlsvod.skygo.co.nz'),
+ ('video','prod.dashlive.skygo.co.nz'),('video','prod-ak.ws.skygo.co.nz'),
+ ('video','skysportnow.co.nz'),('video','skysport.co.nz'),
+ ('video','maoritelevision.com'),('video','whakaatamaori.co.nz'),
+ ('video','iview.abc.net.au'),('video','streaming.c3.abc.net.au'),
+ ('video','sbsondemand.com'),
+ ('video','9now.com.au'),('video','7plus.com.au'),('video','10play.com.au'),
+ ('video','stan.com.au'),('video','api.stan.com.au'),
+ ('video','kayosports.com.au'),('video','binge.com.au'),
+ ('video','foxtel.com.au'),('video','streamotion.com.au'),('video','auth.streamotion.com.au'),
+ ('video','bbc.co.uk'),('video','bbc.com'),('video','bbci.co.uk'),('video','open.live.bbc.co.uk'),
+ ('video','itv.com'),('video','itvx.com'),('video','hls.itvstatic.com'),
+ ('video','channel4.com'),
+ ('video','my5.tv'),
+ ('video','nowtv.com'),('video','nowtv.co.uk'),
+ ('video','sky.com'),
+ ('video','tntsports.co.uk'),('video','btsport.com'),
+ ('video','gem.cbc.ca'),('video','crave.ca'),('video','citytv.com'),
+ ('video','globaltv.com'),('video','tsn.ca'),('video','sportsnet.ca'),
+ ('video','rteplayer.ie'),('video','virginmediatelevision.ie'),
  -- ---- social ----
  ('social','instagram.com'),('social','cdninstagram.com'),
  ('social','facebook.com'),('social','fbcdn.net'),('social','facebook.net'),('social','fb.com'),
@@ -85,6 +120,7 @@ INSERT INTO category_domains (category, domain) VALUES
  ('gaming','ubisoft.com'),('gaming','ubi.com'),
  ('gaming','supercell.com'),('gaming','supercellgames.com'),
  ('gaming','miniclip.com'),('gaming','poki.com'),('gaming','coolmathgames.com'),('gaming','crazygames.com'),
+ ('gaming','hoyoverse.com'),('gaming','mihoyo.com'),
  -- ---- download: bandwidth, never screen time ----
  ('download','steamcontent.com'),('download','cs.steampowered.com'),
  ('download','steamcdn-a.akamaihd.net'),('download','client-download.steamstatic.com'),
@@ -108,6 +144,11 @@ INSERT INTO category_domains (category, domain) VALUES
  ('audio','spotify.com'),('audio','scdn.co'),('audio','spotifycdn.com'),
  ('audio','music.apple.com'),('audio','audible.com'),('audio','audible.co.nz'),
  ('audio','soundcloud.com'),('audio','sndcdn.com'),
+ ('audio','music.amazon.com'),('audio','deezer.com'),
+ -- RNZ's site mixes text news with the radio stream; a news page load is a
+ -- burst, not the sustained bytes the active-minute threshold looks for, so
+ -- it is listed on the same basis as the video-side broadcaster sites above.
+ ('audio','rnz.co.nz'),
  -- ---- messaging: never metered ----
  ('messaging','whatsapp.com'),('messaging','whatsapp.net'),('messaging','messenger.com'),
  ('messaging','signal.org'),('messaging','telegram.org'),('messaging','t.me'),('messaging','telegram.me'),

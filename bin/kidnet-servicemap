@@ -11,7 +11,12 @@
 set -uo pipefail
 : "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}" "${ADGUARD_PASS:?set ADGUARD_PASS}"
 PAGES="${SERVICEMAP_PAGES:-15}"
-DB=(docker exec -i postgres psql -U postgres -d kids_network)
+# Connects as kids_agent, a role with no superuser, no DDL and no
+# COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB_NAME="${HEARTH_DB:-kids_network}"
+DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB=(docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME")
 
 MAP=$("${DB[@]}" -tAc "SELECT s.name||' '||d.domain FROM service_domains d JOIN services s ON s.id=d.service_id")
 [ -n "$MAP" ] || { echo "kidnet-servicemap: no service domains configured"; exit 0; }

@@ -128,6 +128,14 @@ computing lesson they will get all year.
 
 See BUG-BOUNTY.md. It is written to be handed straight to a kid.
 
+## Is that security finding still a problem?
+
+This repo ships its own adversarial audits in `research/`, which means a reader
+can quote a finding without checking whether it is still true. That has already
+happened. **[SECURITY-STATUS.md](SECURITY-STATUS.md) is the answer**: what is
+fixed, with the commit; what is genuinely still open, and why; and what this
+project can never do at all, no matter how much work goes in.
+
 ## What it honestly cannot do
 
 Every parental control product should have this section and almost none do.
@@ -233,12 +241,43 @@ Honest caveats, also stated in the UI: services sharing a CDN blur together,
 YouTube Music counts as YouTube, Shorts cannot be separated from YouTube, and a
 VPN defeats the categorisation entirely.
 
+### The slow lane: a third state between on and off
+
+Off is a confrontation. The video stops, the child comes to find you, and you
+have the argument. So each category also has a middle setting: **slow**. The
+gateway polices it down to 256 kbit/s, so the video still plays and simply
+buffers, a page still loads, a message still sends, and the child drifts off to
+something else on their own. Nobody was told no.
+
+    kidnet slow ben video       video crawls, everything else is untouched
+    kidnet full ben video       back to normal
+
+It is done with nftables' own rate limiting, in the same ruleset as everything
+else and reconciled from the database on the same fifteen-second loop, with a
+separate token bucket per device. The rate is settable (`kidnet slow-rate`),
+and running out of time can drop a child into the slow lane instead of cutting
+them off (`kidnet slow-timeout slow`), though it still cuts by default because
+changing that without a household asking would be wrong.
+
+The portal tells the child, in plain words, that things are slow on purpose and
+why. A network that is slow and says nothing is just a broken network, and a
+child who thinks the wifi is broken will go and "fix" it.
+
+**The safety net is never slowed**, and neither is anything that is not a
+personal device. Both are proven by tests.
+
 ## More than a kid monitor: the household layer
 
 The same box is a household gateway, and the smart home is the other half of
-the job. Every device is classed as personal, smart home or infrastructure, and
-each smart device gets a policy written in terms of **who may start the
-conversation**.
+the job. Every device is classed as personal, shared, smart home, an appliance
+or infrastructure, and each smart device gets a policy written in terms of
+**who may start the conversation**.
+
+Shared is the family's own: the lounge television, the iPad every kid uses. It
+belongs to the household rather than to one child, so no child's minutes pay for
+the family film, it carries a filter level of its own, and two tick boxes decide
+whether it goes off at dinner and in a whole-house cut. Smart home kit,
+appliances and the access point are in neither, always.
 
 The case that shapes it: a security camera must keep pushing video out to its
 manufacturer's cloud, because that is what makes a stolen camera still have
@@ -296,18 +335,19 @@ unless client isolation is on.
 
 ## Tests
 
-Eight suites, two hundred and ten checks, all packet-level or database-level,
-no mocks:
+Eight suites, three hundred and twenty-one checks, all packet-level or
+database-level, no mocks:
 
 ```bash
-sudo test/firewall-test.sh      # 36  the ruleset, in throwaway namespaces
+sudo test/firewall-test.sh      # 46  the ruleset, in throwaway namespaces
 sudo test/container-test.sh     # 26  the real image, containment proven
 sudo test/iot-policy-test.sh    # 39  the household IoT policy, real packets
 sudo test/meter-test.sh         #  8  time budgets and category enforcement
 sudo test/service-meter-test.sh #  6  per-service byte accounting
-sudo test/roles-test.sh         # 51  who each scoped control reaches, and who it does not
-test/schema-test.sh             # 35  a fresh install: the schema order, on an empty database
+sudo test/roles-test.sh         # 99  who each scoped control reaches, and who it does not
+test/schema-test.sh             # 88  a fresh install: the schema order, on an empty database
 ADGUARD_PASS=... test/adguard-test.sh   #  9  the DNS layer, against a live AdGuard
+sudo test/release-test.sh       # 42  upgrade and rollback, on a throwaway clone
 ```
 
 The container suite asserts, among other things, that a static IP outside its
@@ -318,11 +358,40 @@ stranger does, a fresh install, was the one thing nothing tested: it loads every
 schema file into an empty throwaway database in the documented order and proves
 it works.
 
+## Updating, and getting back
+
+Hearth is versioned by date, so you can tell how old yours is at a glance.
+`2026.09.0` is the first release of September 2026. The version is the first
+line of `kidnet-health` and sits at the bottom of every dashboard page.
+
+```bash
+kidnet-health                    # is my household working? Read only, no root needed
+kidnet-upgrade                   # is there anything new? Changes nothing
+sudo kidnet-upgrade apply        # install it
+sudo kidnet-rollback list        # what I can go back to
+```
+
+This software sits between a household and the internet, so an update that
+goes wrong does not mean a broken app: it means the children cannot do their
+homework and the dashboard is down too. So `kidnet-upgrade` checks the new
+version in a throwaway copy before switching to it (the firewall ruleset has
+to parse, the database has to load from empty, every script has to be valid),
+takes a database backup and records the commit it came from, and if the
+household is not healthy afterwards it puts the old version back on its own.
+Nobody has to know how.
+
+What a rollback cannot do is written down as plainly as what it can, in
+[docs/UPGRADING.md](docs/UPGRADING.md). The short version: it is a way back to
+a version that worked, not a time machine, and restoring the database means
+losing everything since the backup, including minutes the children earned.
+
 ## Documentation map
 
 | Read this | For |
 |---|---|
 | `CLAUDE.md` | what to point your AI agent at first |
+| `docs/UPGRADING.md` | how a household updates, and what to do when it goes wrong |
+| `docs/RELEASING.md` | the version scheme, and how a release is cut |
 | `docs/setup/` | platform guides: Omarchy, Debian, Raspberry Pi, generic |
 | `docs/AGENT.md` | the plain-sentence command surface |
 | `docs/CLI.md` | every command, its arguments and what it really does |

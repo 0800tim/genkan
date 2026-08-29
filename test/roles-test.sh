@@ -47,18 +47,29 @@ blockset(){ ip netns exec $NS /usr/sbin/nft list set inet kids kids_block 2>/dev
   | tr '\n' ' ' | sed -n 's/.*elements = { \(.*\) }.*/\1/p' | tr -d ','; }
 
 cleanup(){
+  psql "DELETE FROM device_state WHERE device_id IN
+        (SELECT id FROM devices WHERE mac::text LIKE 'fe:ed:%')" >/dev/null 2>&1
   psql "DELETE FROM devices WHERE mac::text LIKE 'fe:ed:%'" >/dev/null 2>&1
   psql "DELETE FROM children WHERE name LIKE 'rtest%'" >/dev/null 2>&1
+  # The whole-house cut, back exactly as it was found. It would expire on its
+  # own within the minute this test asks for, but a suite must not leave the
+  # house in a state it did not find it in even for that long.
+  [ -f "$HSNAP" ] && psql "$(cat "$HSNAP")" >/dev/null 2>&1
   # Put the family's category blocks back exactly as they were.
   [ -f "$SNAP" ] && psql "$(cat "$SNAP")" >/dev/null 2>&1
   ip netns del $NS 2>/dev/null
-  rm -f "$WRAP" "$SNAP"
+  rm -f "$WRAP" "$SNAP" "$HSNAP"
 }
-SNAP=$(mktemp)
+SNAP=$(mktemp); HSNAP=$(mktemp)
 trap cleanup EXIT
 [ "$(id -u)" = 0 ] || { echo "run with sudo (it needs a network namespace)"; exit 1; }
 
 # Snapshot every current block as one restoring statement, before we touch it.
+psql "SELECT 'UPDATE house_state SET off_until='||
+  coalesce(quote_literal(off_until::text)||'::timestamptz','NULL')||
+  ', off_since='||coalesce(quote_literal(off_since::text)||'::timestamptz','NULL')||';'
+  FROM house_state" > "$HSNAP"
+
 psql "SELECT coalesce(
   'UPDATE category_state SET blocked=false; '||string_agg(
     format('UPDATE category_state SET blocked=true WHERE child_id=%s AND category=%L;',
@@ -102,6 +113,24 @@ psql "INSERT INTO devices(mac,label,reserved_ip,kind,category,is_active,last_see
 psql "INSERT INTO devices(mac,label,reserved_ip,kind,category,is_active,last_seen)
       VALUES('fe:ed:00:11:00:07','rtest AP','192.168.60.217','ap','infra',true,now())
       ON CONFLICT (mac) DO UPDATE SET category='infra', reserved_ip='192.168.60.217'" >/dev/null
+# A media server. Nobody's, unrestricted, and in no sweep either.
+psql "INSERT INTO devices(mac,label,reserved_ip,kind,category,is_active,last_seen)
+      VALUES('fe:ed:00:11:00:08','rtest media server','192.168.60.218','other','appliance',true,now())
+      ON CONFLICT (mac) DO UPDATE SET category='appliance', reserved_ip='192.168.60.218'" >/dev/null
+# The shared family devices, and the exact pair the owner described: a lounge
+# television that should go off at dinner, and a speaker playing music that
+# should not. Both belong to the household, neither belongs to a child, and
+# neither can ever spend a child's minutes.
+psql "INSERT INTO devices(mac,label,reserved_ip,kind,category,policy_tier,is_active,last_seen,
+                          caught_by_dinner,caught_by_house_off)
+      VALUES('fe:ed:00:11:00:09','rtest lounge TV','192.168.60.219','tv','shared','teen',true,now(),NULL,NULL)
+      ON CONFLICT (mac) DO UPDATE SET category='shared', reserved_ip='192.168.60.219',
+        policy_tier='teen', caught_by_dinner=NULL, caught_by_house_off=NULL, child_id=NULL" >/dev/null
+psql "INSERT INTO devices(mac,label,reserved_ip,kind,category,policy_tier,is_active,last_seen,
+                          caught_by_dinner,caught_by_house_off)
+      VALUES('fe:ed:00:11:00:10','rtest kitchen speaker','192.168.60.220','speaker','shared','standard',true,now(),false,true)
+      ON CONFLICT (mac) DO UPDATE SET category='shared', reserved_ip='192.168.60.220',
+        policy_tier='standard', caught_by_dinner=false, caught_by_house_off=true, child_id=NULL" >/dev/null
 
 # --- 1. who each scope resolves to -----------------------------------------
 echo
@@ -116,18 +145,81 @@ want "household = the people who live here"       "rtestDad rtestKid rtestKid2" 
 # --- 2. the addresses a scope reaches --------------------------------------
 echo
 echo "2. Addresses: IoT and infrastructure are in no scope at all"
-ips(){ psql "SELECT string_agg(ip,' ' ORDER BY ip) FROM ips_in_scope('$1') WHERE ip LIKE '192.168.60.21%'"; }
+# Only ever this suite's own fixtures, which sit on .211 to .220. Never a real
+# address, so nothing here can assert anything about the actual household.
+ips(){ psql "SELECT string_agg(ip,' ' ORDER BY ip) FROM ips_in_scope('$1')
+             WHERE ip LIKE '192.168.60.21%' OR ip = '192.168.60.220'"; }
 KIDIPS=$(ips kids); ALLIPS=$(ips all); EVERY=$(ips everyone)
 has    "kids reaches the visiting kid"      192.168.60.213 "$KIDIPS"
 hasnt  "kids does not reach the visiting adult" 192.168.60.214 "$KIDIPS"
 hasnt  "kids does not reach the household adult" 192.168.60.215 "$KIDIPS"
-for s in all everyone kids guests adults household guest-kids guest-adults; do
+for s in all everyone kids guests adults household guest-kids guest-adults dinner house-off; do
   L=$(ips $s)
-  hasnt "the smart lock is not in scope '$s'"   192.168.60.216 "$L"
-  hasnt "the access point is not in scope '$s'" 192.168.60.217 "$L"
+  hasnt "the smart lock is not in scope '$s'"    192.168.60.216 "$L"
+  hasnt "the access point is not in scope '$s'"  192.168.60.217 "$L"
+  hasnt "the media server is not in scope '$s'"  192.168.60.218 "$L"
 done
 hasnt "'all' leaves the household adult alone"  192.168.60.215 "$ALLIPS"
 has   "'everyone' does reach the household adult" 192.168.60.215 "$EVERY"
+
+# --- 2b. shared family devices ---------------------------------------------
+echo
+echo "2b. Shared family devices: the household's, and swept only where ticked"
+DIN=$(ips dinner); HOFF=$(ips house-off)
+has   "dinner catches the lounge TV"                 192.168.60.219 "$DIN"
+hasnt "dinner leaves the speaker playing music"      192.168.60.220 "$DIN"
+has   "dinner still catches the household kid"       192.168.60.211 "$DIN"
+has   "dinner still catches the visiting kid"        192.168.60.213 "$DIN"
+hasnt "dinner leaves the visiting grandparent alone" 192.168.60.214 "$DIN"
+hasnt "dinner leaves the household adult alone"      192.168.60.215 "$DIN"
+has   "the whole-house cut catches the lounge TV"    192.168.60.219 "$HOFF"
+has   "the whole-house cut catches the speaker"      192.168.60.220 "$HOFF"
+has   "the whole-house cut catches the adult's phone" 192.168.60.215 "$HOFF"
+# The tick has the last word on a personal device too.
+psql "UPDATE devices SET caught_by_house_off=false WHERE mac::text='fe:ed:00:11:00:05'" >/dev/null
+hasnt "a phone unticked for the whole-house cut is left out" 192.168.60.215 "$(ips house-off)"
+psql "UPDATE devices SET caught_by_house_off=NULL WHERE mac::text='fe:ed:00:11:00:05'" >/dev/null
+# A shared device belongs to nobody, so nobody's minutes can pay for it.
+want  "the lounge TV has no owner" "" "$(psql "SELECT child_id FROM devices WHERE mac::text='fe:ed:00:11:00:09'")"
+want  "and it is not in anybody's people_devices" "0" \
+      "$(psql "SELECT count(*) FROM people_devices WHERE ip='192.168.60.219'")"
+want  "and the meter cannot see it" "0" \
+      "$(psql "SELECT count(*) FROM devices d JOIN children c ON c.id=d.child_id
+               WHERE d.mac::text='fe:ed:00:11:00:09'")"
+# It is filtered in its own right, which is the other half of the deal.
+want  "it carries its own filter level" "teen" \
+      "$(psql "SELECT policy_tier FROM devices WHERE mac::text='fe:ed:00:11:00:09'")"
+
+# --- 2c. the tick boxes from the command line ------------------------------
+echo
+echo "2c. The tick boxes: kidnet sweep, and what it refuses"
+kn sweep 192.168.60.219 dinner off >/dev/null 2>&1
+hasnt "unticking the TV takes it out of the dinner scope" 192.168.60.219 "$(ips dinner)"
+kn sweep 192.168.60.219 dinner default >/dev/null 2>&1
+has   "and 'default' puts it back where its class says"   192.168.60.219 "$(ips dinner)"
+kn sweep fe:ed:00:11:00:09 house off >/dev/null 2>&1
+hasnt "it can be untimed by MAC as well as by address"    192.168.60.219 "$(ips house-off)"
+kn sweep 192.168.60.219 house default >/dev/null 2>&1
+# The three classes that are in no sweep are refused rather than quietly
+# accepted, so a parent is never told they changed something they did not.
+for d in 192.168.60.216 192.168.60.217 192.168.60.218; do
+  if kn sweep "$d" dinner on >/dev/null 2>&1
+    then bad "kidnet sweep accepted a tick on $d, which is in no sweep"
+    else ok  "kidnet sweep refuses a tick on $d"; fi
+done
+# Filing a device as shared takes it off whoever had it, which is the whole
+# point: a family iPad that stays somebody's keeps eating that child's minutes.
+kn shared 192.168.60.212 'rtest family tablet' standard >/dev/null 2>&1
+want  "filing a device as shared takes it off its owner" "" \
+      "$(psql "SELECT child_id FROM devices WHERE mac::text='fe:ed:00:11:00:02'")"
+want  "and gives it a filter level of its own" "standard" \
+      "$(psql "SELECT policy_tier FROM devices WHERE mac::text='fe:ed:00:11:00:02'")"
+has   "and it is caught by dinner from then on" 192.168.60.212 "$(ips dinner)"
+# Put it back, so the sections after this still describe the household they say
+# they do.
+psql "UPDATE devices SET category='personal', policy_tier=NULL,
+      child_id=(SELECT id FROM children WHERE name='rtestKid2')
+      WHERE mac::text='fe:ed:00:11:00:02'" >/dev/null
 
 # --- 3. the 11pm scenario --------------------------------------------------
 echo
@@ -165,7 +257,54 @@ SET=$(blockset)
 has   "dinner cuts the visiting kid"           192.168.60.213 "$SET"
 hasnt "dinner leaves the grandparent alone"    192.168.60.214 "$SET"
 hasnt "dinner leaves the smart lock alone"     192.168.60.216 "$SET"
+hasnt "dinner leaves the media server alone"   192.168.60.218 "$SET"
+has   "dinner cuts the shared lounge TV"       192.168.60.219 "$SET"
+hasnt "dinner leaves the speaker playing"      192.168.60.220 "$SET"
+# The gateway rebuilds the firewall from the database every fifteen seconds, so
+# a block that is only in nftables is a block that lasts fifteen seconds. The
+# shared TV has no owner and so no category_state row: this proves its block is
+# recorded where the reconciler will find it.
+has   "the TV's cut is in the database, so the reconciler keeps it" \
+      192.168.60.219 "$(psql "SELECT string_agg(ip,' ') FROM blocked_device_ips")"
 kn resume >/dev/null 2>&1
+SET=$(blockset)
+hasnt "resume brings the lounge TV back"       192.168.60.219 "$SET"
+want  "and nothing is left cut in the database" "0" \
+      "$(psql "SELECT count(*) FROM blocked_device_ips WHERE ip='192.168.60.219'")"
+
+# --- 4b. the whole-house cut -----------------------------------------------
+echo
+echo "4b. The whole-house cut: one button, and it lifts itself"
+kn house off 1 >/dev/null 2>&1
+SET=$(blockset)
+has   "it cuts the household kid"              192.168.60.211 "$SET"
+has   "it cuts the household adult"            192.168.60.215 "$SET"
+has   "it cuts the shared TV"                  192.168.60.219 "$SET"
+has   "it cuts the speaker as well"            192.168.60.220 "$SET"
+hasnt "it leaves the smart lock alone"         192.168.60.216 "$SET"
+hasnt "it leaves the access point alone"       192.168.60.217 "$SET"
+hasnt "it leaves the media server alone"       192.168.60.218 "$SET"
+want  "the house says it is off"               "t" "$(psql "SELECT is_off FROM house_status")"
+# Nothing is written against any device, so there is nothing to go stale.
+want  "no device carries a house-off block of its own" "0" \
+      "$(psql "SELECT count(*) FROM device_state WHERE set_by='house-off'")"
+# The expiry is the point: a cut nobody is home to undo must undo itself.
+psql "UPDATE house_state SET off_until=now()-interval '1 second'" >/dev/null
+want  "when the clock runs out the house is on again" "f" "$(psql "SELECT is_off FROM house_status")"
+want  "and the firewall's desired state is empty again" "0" \
+      "$(psql "SELECT count(*) FROM blocked_device_ips")"
+kn house on >/dev/null 2>&1
+SET=$(blockset)
+hasnt "and 'house on' clears the addresses too" 192.168.60.211 "$SET"
+# Ending a house cut must not hand the internet back to somebody who was
+# already switched off for another reason.
+kn off rtestKid >/dev/null 2>&1
+kn house off 1 >/dev/null 2>&1
+kn house on >/dev/null 2>&1
+SET=$(blockset)
+has   "a kid who was already off stays off through a house cut and back"  192.168.60.211 "$SET"
+hasnt "while everybody else comes back"        192.168.60.215 "$SET"
+kn on rtestKid >/dev/null 2>&1
 
 # --- 5. the guest goes home ------------------------------------------------
 echo

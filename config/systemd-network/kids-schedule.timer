@@ -1,0 +1,11 @@
+# Every minute, because a bedtime a parent set for 21:00 should not start at
+# 21:14. OnBootSec is short on purpose: the reason this timer exists at all is
+# that nothing must be able to hand a child the night back, and a box that
+# rebooted at eleven has to reassert the bedtime as soon as it is up.
+[Unit]
+Description=Hearth scheduled bedtimes (every minute)
+[Timer]
+OnBootSec=45s
+OnUnitActiveSec=1min
+[Install]
+WantedBy=timers.target

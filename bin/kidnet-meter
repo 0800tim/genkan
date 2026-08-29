@@ -4,14 +4,19 @@
 # to the captive portal at 0. Bonus/earn adds minutes back and reopens.
 set -euo pipefail
 KN="$(command -v kidnet || echo "$(dirname "$0")/kidnet")"
-psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+# Connects as kids_agent, a role with no superuser, no DDL and no
+# COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB_NAME="${HEARTH_DB:-kids_network}"
+DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 # Active kids = have a device seen recently, not already internet-blocked,
 # and a real daily budget (teen 999 = effectively unlimited, skip).
 #
 # Household children only. A visiting child is filtered and can be turned off
 # with the rest of the kids, but they have no allowance of their own to spend,
 # and an adult, visiting or not, is never metered at all.
-for kid in $(psqll "
+BASE="
   SELECT DISTINCT c.name FROM children c
   JOIN devices d ON d.child_id=c.id
   JOIN time_ledger l ON l.child_id=c.id AND l.day=CURRENT_DATE
@@ -20,7 +25,19 @@ for kid in $(psqll "
     AND d.reserved_ip IS NOT NULL      -- only meter what we can enforce on
     AND d.category = 'personal'        -- never meter smart home or infrastructure
     AND l.budget_min < 999
-    AND NOT EXISTS (SELECT 1 FROM category_state cs WHERE cs.child_id=c.id AND cs.category='internet' AND cs.blocked)
-"); do
+    AND NOT EXISTS (SELECT 1 FROM category_state cs WHERE cs.child_id=c.id AND cs.category='internet' AND cs.blocked)"
+# ...and not already on the out-of-time SLOW LANE. A child on the slope is not
+# cut, so without this the meter would keep spending minutes they do not have,
+# their ledger would sink further into the red every minute, and earning ten
+# minutes back would not be enough to lift them out of it.
+#
+# Tried first, then dropped: a database that has not been given
+# config/db/schema-slow.sql yet has no slow_lane_children view, and a meter that
+# stopped metering the whole house over a missing view would be a far worse bug
+# than the one this clause fixes.
+SLOW="
+    AND NOT EXISTS (SELECT 1 FROM slow_lane_children s WHERE s.child_id=c.id AND s.category='internet')"
+kids=$(psqll "$BASE$SLOW" 2>/dev/null) || kids=$(psqll "$BASE")
+for kid in $kids; do
   bash "$KN" spend "$kid" 1 >/dev/null || true
 done

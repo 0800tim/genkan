@@ -15,7 +15,15 @@
 import { esc } from "./charts.mjs";
 // Who is in the house right now, grouped by role, with the group controls and
 // the one button a departing guest needs. See dashboard/household.mjs.
-import { housePanel } from "./household.mjs";
+// The device classes come from household.mjs rather than being written out
+// again here. There were two copies of that list and they were already drifting:
+// this page never offered "shared family device" at all, so the one page a
+// parent goes to to sort their devices out could not do the thing the class
+// exists for.
+import { housePanel, CLASSES } from "./household.mjs";
+// Bedtimes. The times a child goes off and comes back are a "who is on the
+// network" decision, so they belong on this page next to the daily limits.
+import { schedulePanel } from "./schedule.mjs";
 
 // Filter levels come from the policies table so this page cannot drift from
 // whatever the household actually has; these are only the plain-language names
@@ -37,12 +45,6 @@ const KINDS = [
   ["guest-child", "Visiting child"],
   ["guest-adult", "Visiting adult"],
   ["adult", "Adult who lives here"],
-];
-const CLASSES = [
-  ["personal", "A person's device", "Phones, tablets, laptops, consoles. Filtered and metered by whoever owns it."],
-  ["iot", "Smart home", "Cameras, speakers, lights, locks, the vacuum. Never assigned to a child, never metered, and never cut by a family pause."],
-  ["appliance", "Unrestricted device", "An SMS gateway, a server, a media box. Full internet, no time limits, never caught by a kids control, but still protected and visible."],
-  ["infra", "Network equipment", "The access point, a switch, the gateway itself. Not somebody's device at all."],
 ];
 // Only the categories that are actually metered can carry a budget. Audio,
 // schoolwork and messaging are never counted, so offering a box for them would
@@ -224,11 +226,16 @@ export function family(s, mg) {
       <p class="sub">Add a child or a guest, change what they can reach, and set how long each kind of
         thing lasts them in a day. Changes reach the filter straight away.</p>
       ${queue}${kids || '<div class="empty">Nobody yet. Add your first person below.</div>'}</div>
-    ${add}${tiers}
+    ${add}
+    ${schedulePanel(s, mg.schedule)}
+    ${tiers}
     <div class="card flat"><h2 style="margin-bottom:2px">Devices</h2>
-      <p class="sub">Rename anything, hand it to someone else, or move it out of the kids' world entirely
-        by marking it smart home or infrastructure. Smart home and infrastructure devices are never
-        assigned to a child, never metered, and never cut by a family pause.</p></div>
+      <p class="sub">Rename anything, hand it to someone else, or take it out of one child's hands entirely.
+        A <b>shared family device</b> is the lounge TV or the iPad everybody uses: nobody's minutes pay for it,
+        it has a filter level of its own, and you choose on the
+        <a href="/devices">Devices page</a> whether it goes off at dinner and in a whole-house cut.
+        Smart home kit, appliances and network equipment are never assigned to a child, never metered,
+        and never cut by any control at all.</p></div>
     ${devs || '<div class="card"><div class="empty">No devices yet. They appear here as they join the network.</div></div>'}`;
 }
 

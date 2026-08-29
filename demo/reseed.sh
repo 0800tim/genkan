@@ -10,6 +10,12 @@
 set -euo pipefail
 cd "$(dirname "$0")"
 DC=(docker compose -f compose.yaml)
+# SUPERUSER PATH, deliberately, and safely. This script drops and recreates the
+# public schema and reloads every schema file, which is owner work that the
+# household's restricted kids_agent role cannot and must not be able to do. It
+# is safe because the target is hearth-demo-db: a throwaway container, on its
+# own network, with its own volume, holding a made-up family. There is no route
+# from here to the household database, and no household value is ever passed in.
 PSQL=("${DC[@]}" exec -T demo-db psql -v ON_ERROR_STOP=1 -U postgres -d hearth_demo)
 
 # The order is load bearing and is documented in docs/DATABASE.md. Presence and
@@ -18,7 +24,7 @@ FILES=(schema schema-categories schema-time schema-safety schema-earn
        schema-people schema-devices schema-flags schema-services
        schema-voice schema-goals schema-policies schema-tasks
        schema-quizresults schema-quizbanks schema-badges seed schema-presence schema-appliance
-       schema-roles)
+       schema-roles schema-shared schema-schedule schema-slow schema-notify)
 
 echo "==> waiting for the demo database"
 for _ in $(seq 1 60); do

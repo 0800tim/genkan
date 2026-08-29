@@ -29,7 +29,19 @@ GW="${GW_CONTAINER:-hearth-gw}"
 nftx(){ if [ -n "${NFT_NS:-}" ]; then sudo ip netns exec "$NFT_NS" nft "$@"
         elif [ "${NFT_DIRECT:-0}" = 1 ]; then nft "$@"
         else docker exec -i "$GW" nft "$@"; fi; }
-psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+# Connects as kids_agent, a role with no superuser, no DDL and no
+# COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB_NAME="${HEARTH_DB:-kids_network}"
+DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
+# Every value here is interpolated, so every value is checked. The child id
+# comes back out of the database and the category is one of this script's own
+# three words, but neither is trusted on that basis: see config/db/grants.sql.
+ck_id(){ [[ "$1" =~ ^[0-9]{1,9}$ ]] || { echo "kidnet-catmeter: bad id '$1'" >&2; return 1; }; }
+ck_cat(){ case "$1" in gaming|video|download|social|audio|messaging) return 0;; esac
+          echo "kidnet-catmeter: bad category '$1'" >&2; return 1; }
+ck_ip4(){ [[ "$1" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || { echo "kidnet-catmeter: bad address '$1'" >&2; return 1; }; }
 # Bytes/minute that count as "actively using" (not idle keepalive).
 : "${GAMING_THRESH:=51200}"   # ~50 KB/min
 : "${VIDEO_THRESH:=256000}"   # ~250 KB/min, video is high bitrate
@@ -62,6 +74,7 @@ fi
 if [ "$(psqll "SELECT 1" 2>/dev/null)" = 1 ]; then
   for cat in gaming video download; do
     nftx list set inet kids "${cat}_ips" >/dev/null 2>&1 || continue
+    ck_cat "$cat" || continue
     ips=$(psqll "SELECT host(ip) FROM category_ips WHERE category='$cat' AND seen > now() - interval '24 hours'" | grep -E '^[0-9]' | paste -sd, || true)
     { echo "flush set inet kids ${cat}_ips"
       [ -n "$ips" ] && echo "add element inet kids ${cat}_ips { $ips }"
@@ -92,6 +105,7 @@ for blk in d.get('nftables',[]):
 "
 }
 count_minute(){ # <child id> <category>
+  ck_id "$1" || return 0; ck_cat "$2" || return 0
   psqll "INSERT INTO category_usage(child_id,day,category,used_min) VALUES($1,CURRENT_DATE,'$2',1)
          ON CONFLICT (child_id,day,category) DO UPDATE SET used_min=category_usage.used_min+1" >/dev/null
 }
@@ -106,6 +120,9 @@ for pair in "gaming $GAMING_THRESH gaming_dev" "video $VIDEO_THRESH video_dev" "
     book="$cat"
     if [ "$cat" = gaming ] && [ "$bytes" -ge "$DOWNLOAD_BYTES_PER_MIN" ]; then book=download; fi
     # attribute to the child owning this reserved IP
+    # The address comes out of an nft dynamic counter, so it has always been a
+    # well-formed IPv4. Checked anyway, because it is about to be a WHERE.
+    ck_ip4 "$ip" || continue
     cid=$(psqll "SELECT child_id FROM devices WHERE host(reserved_ip)='$ip' AND is_active LIMIT 1")
     [ -n "$cid" ] || continue
     count_minute "$cid" "$book"
@@ -120,6 +137,7 @@ done
 enforce=0
 while IFS='|' read -r cid cat used budget; do
   [ -n "$cid" ] || continue
+  ck_id "$cid" || continue; ck_cat "$cat" || continue
   if [ "$used" -ge "$budget" ]; then
     already=$(psqll "SELECT blocked FROM category_state WHERE child_id=$cid AND category='$cat'")
     if [ "$already" != "t" ]; then

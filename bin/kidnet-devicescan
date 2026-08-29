@@ -7,7 +7,12 @@
 # dashboard shows who is online. Runs on a short timer. Logs devices, not people.
 set -euo pipefail
 : "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}" "${ADGUARD_PASS:?set ADGUARD_PASS}"
-DB=(docker exec -i postgres psql -U postgres -d kids_network)
+# Connects as kids_agent, a role with no superuser, no DDL and no
+# COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB_NAME="${HEARTH_DB:-kids_network}"
+DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB=(docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME")
 
 TSV=$(ADGUARD_URL="$ADGUARD_URL" ADGUARD_USER="$ADGUARD_USER" ADGUARD_PASS="$ADGUARD_PASS" python3 <<'PY'
 import os,json,urllib.request,base64,sys,csv
@@ -62,6 +67,9 @@ UPDATE dhcp_leases SET active=false
 GW="${GW_CONTAINER:-hearth-gw}"
 PRESENT=$(docker exec "$GW" ip neigh show dev kids0 2>/dev/null \
   | grep -iE 'REACHABLE|STALE|DELAY|PROBE' | awk '{print $1}' | grep -E '^[0-9]' | paste -sd, || true)
+# PRESENT is interpolated into SQL, so it must be nothing but addresses and
+# commas. `ip neigh` has never produced anything else, and this makes it so.
+case "${PRESENT:-}" in *[!0-9.,]*) PRESENT="";; esac
 if [ -n "${PRESENT:-}" ]; then
   "${DB[@]}" -qc "UPDATE devices SET present_at = now()
                    WHERE host(reserved_ip) = ANY (string_to_array('$PRESENT', ','))" 2>/dev/null || true

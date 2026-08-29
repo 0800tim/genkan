@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# hearth:summary=Delete data past its retention. Nightly. See PRIVACY-CHARTER.md.
+#
+# Nothing pruned anything before this existed. The charter promises nothing
+# leaves the house; it never promised everything stays in it forever, and a
+# complete record of a child's adolescence sitting in a cupboard is not what a
+# parent agreed to even if it never leaves the cupboard.
+#
+#   kidnet-prune            delete what is past its retention
+#   kidnet-prune --dry-run  say what would go, delete nothing
+#   kidnet-prune --status   how much is held, and how old
+#
+# Retention lives in the `retention` table, one row per thing, editable by the
+# household. Adding a table here without adding a row is deliberately a no-op:
+# the table decides, not this script.
+set -euo pipefail
+PG="${PG_CONTAINER:-postgres}"
+DB="${KIDS_DB_NAME:-kids_network}"
+# < /dev/null matters. Both loops below read their table list from a process
+# substitution, and `docker exec -i` inherits and consumes stdin, so without
+# this the first query swallows the rest of the list and the loop runs exactly
+# once. It looked like the script working on a small database.
+psqll(){ docker exec -i "$PG" psql -U postgres -d "$DB" -tAc "$1" < /dev/null; }
+
+MODE=run
+case "${1:-}" in --dry-run|-n) MODE=dry;; --status|-s) MODE=status;; esac
+
+# what -> the column that carries its age. A table whose age column is not
+# listed here is never pruned, which is the safe direction to fail.
+tscol(){ case "$1" in
+  dns_log|alerts|block_events|time_events|device_claims) echo ts;;
+  quiz_rounds) echo ts;;
+  category_usage|service_usage) echo day;;
+  dhcp_leases) echo ends;;
+  *) echo "";; esac; }
+
+if [ "$MODE" = status ]; then
+  printf '  %-16s %8s  %-12s %s\n' table rows oldest keep
+  while IFS='|' read -r what days; do
+    [ -n "$what" ] || continue
+    col=$(tscol "$what"); [ -n "$col" ] || continue
+    read -r n oldest <<<"$(psqll "SELECT count(*)||' '||coalesce(min($col)::date::text,'-') FROM $what" 2>/dev/null || echo "- -")"
+    printf '  %-16s %8s  %-12s %s days\n' "$what" "$n" "$oldest" "$days"
+  done < <(psqll "SELECT what||'|'||keep_days FROM retention ORDER BY what")
+  exit 0
+fi
+
+total=0
+while IFS='|' read -r what days; do
+  [ -n "$what" ] || continue
+  col=$(tscol "$what")
+  if [ -z "$col" ]; then echo "kidnet-prune: no age column known for '$what', skipping" >&2; continue; fi
+  # Existence check first: a fresh install may not have every table yet, and a
+  # missing one must not abort the whole run and leave the rest unpruned.
+  [ "$(psqll "SELECT to_regclass('public.$what') IS NOT NULL")" = t ] || continue
+  n=$(psqll "SELECT count(*) FROM $what WHERE $col < now() - interval '$days days'" 2>/dev/null || echo 0)
+  [ "${n:-0}" -gt 0 ] || continue
+  if [ "$MODE" = dry ]; then
+    echo "  would delete $n row(s) from $what older than $days days"
+  else
+    psqll "DELETE FROM $what WHERE $col < now() - interval '$days days'" >/dev/null
+    echo "  deleted $n row(s) from $what older than $days days"
+  fi
+  total=$((total+n))
+done < <(psqll "SELECT what||'|'||keep_days FROM retention ORDER BY what")
+
+[ "$total" -gt 0 ] || echo "kidnet-prune: nothing past its retention"

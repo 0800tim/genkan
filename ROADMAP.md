@@ -60,8 +60,10 @@ the holes are.
   separately, proxied into the dashboard at `/speed`
 - Two public demos running the real code against an invented household:
   `hearth-demo.appspurt.dev` and `hearth-portal.appspurt.dev`
-- Eight test suites, 210 checks, including one that loads every schema file into
-  an empty database because a fresh install was the thing nothing tested
+- Nine test suites, including one that loads every schema file into an empty
+  database because a fresh install was the thing nothing tested, and one that
+  proves a Friday night, a morning restore and a restart mid-bedtime without
+  waiting for any of them
 - Household bug bounty
 
 ## Half built, and honest about it
@@ -69,7 +71,7 @@ the holes are.
 | Thing | State |
 |---|---|
 | Tor attempt alerts | The firewall counts attempts by IP but nothing reads the counters yet, so a parent is not told. The DNS side does alert. |
-| Scheduled bedtimes | The `schedules` table exists and nothing reads it. Bedtimes are manual. |
+| Scheduled bedtimes | Built (2026-08-30). Per child, separate school-night and weekend times, a holiday window, tonight's extension, and a morning restore that lifts only what the schedule itself applied. What it cannot do: it does not know about a term calendar, and it cannot make a bedtime conditional on anything (homework done, who is home). |
 | Voice assistant | Designed in detail (`voice/`), including the impersonation Easter egg, but not built. |
 | Weekly digest delivery | The page and the CLI exist; nothing emails or messages it to you yet. |
 | Social metering | `METERING.md` says social is not metered; the dashboard counts it. Needs a deliberate decision either way. |
@@ -111,8 +113,6 @@ These are real gaps, sized roughly, and each is genuinely useful.
 
 ### Medium
 
-- **Bedtime schedules.** The table is there, the CLI is there, nothing joins
-  them. A systemd timer reading `schedules` and calling `kidnet` would close it.
 - **Digest delivery.** Email, Matrix, Signal, ntfy, whatever you use. It should
   be a small pluggable sender, not a hardcoded one.
 - **Tor attempt alerting.** Read the `tor_dev` nft counters, raise an alert,

@@ -35,7 +35,12 @@ for rel in children devices people household_roster device_roster time_remaining
            category_state time_ledger earn_claims task_offer_effective \
            device_policy_effective quiz_settings alerts category_ips \
            quiz_banks quiz_bank_questions quiz_bank_summary earn_settings \
-           earn_settings_effective child_badges quiz_study_visits board_settings; do
+           quiz_packages quiz_package_summary \
+           earn_settings_effective child_badges quiz_study_visits board_settings \
+           schedules schedule_overrides schedule_extensions schedule_state \
+           schedule_next schedule_holding \
+           device_sweeps device_state house_state house_status blocked_device_ips \
+           notify_routes notify_wording notify_sent notify_log notify_pending notify_route_state; do
   [ "$(psql "SELECT to_regclass('public.$rel') IS NOT NULL")" = t ] \
     && ok "$rel exists" || bad "$rel is missing after a fresh load"
 done
@@ -55,6 +60,15 @@ for t in young standard teen guest adult; do
 done
 # The safety net is an iron rule: a cut-off child must still reach a help line.
 # The reading list: a child out of time can still go and learn something.
+# Nothing pruned anything until 2026-08-30. A child's whole browsing history
+# accumulating forever is not what a parent agreed to, even in their own house.
+n=$(psql "SELECT count(*) FROM retention")
+[ "${n:-0}" -ge 8 ] && ok "retention is defined for $n tables" \
+  || bad "only ${n:-0} retention rules, so something grows without limit"
+[ "$(psql "SELECT keep_days FROM retention WHERE what='dns_log'")" -le 90 ] \
+  && ok "the DNS log, the most sensitive table, is kept the shortest" \
+  || bad "dns_log retention is longer than 90 days"
+
 n=$(psql "SELECT count(*) FROM always_allow WHERE scope='learn'")
 [ "${n:-0}" -gt 5 ] && ok "the reading list is seeded ($n reference sites a blocked child can read)" \
   || bad "always_allow has ${n:-0} learn rows, so learn-to-earn is a memory test"
@@ -74,12 +88,151 @@ n=$(psql "SELECT count(*) FROM always_allow WHERE scope='safety'")
   || bad "always_allow has no safety rows, so a cut-off child could not reach a help line"
 n=$(psql "SELECT count(*) FROM vendor_clouds")
 [ "${n:-0}" -gt 10 ] && ok "smart-home vendor clouds are seeded ($n)" || bad "vendor_clouds has ${n:-0} rows"
+# Scheduled bedtimes. The time maths lives in a database function so it can be
+# proven without waiting for Friday night; test/schedule-test.sh does that. Here
+# we only prove the function loaded and that a fresh install schedules nothing.
+[ "$(psql "SELECT count(*) FROM pg_proc WHERE proname='schedule_windows'")" = 1 ] \
+  && ok "the schedule_windows() time function exists" \
+  || bad "schedule_windows() is missing, so bin/kidnet-schedule has nothing to read"
+n=$(psql "SELECT count(*) FROM schedules")
+[ "${n:-0}" = 0 ] && ok "a fresh install has no bedtimes set" \
+  || bad "a fresh install ships ${n:-0} schedule(s), and a bedtime nobody asked for is somebody's kid offline"
 # The comparison board is off until a parent turns it on: see the note at the
 # top of schema-badges.sql for why. A fresh install must not wake a sibling
 # rivalry nobody asked for.
+# Shared family devices and the two sweeps (schema-shared.sql). A fresh install
+# must have the house ON: an install that arrives mid-outage is somebody's whole
+# family offline for a reason nobody chose.
+[ "$(psql "SELECT is_off FROM house_status")" = f ] \
+  && ok "a fresh install has the house on, not cut off" \
+  || bad "a fresh install has the whole-house cut RUNNING, and nobody asked for that"
+# THE IRON RULE, proven rather than asserted. Put one device of every class on
+# the wire, force both tick boxes ON for all of them, and check that the three
+# classes that must never be cut are in neither sweep anyway. This is the guard
+# that stops a dinner pause darkening the front door lock, and a schema change
+# that quietly drops it would otherwise be invisible until somebody's camera
+# went out mid-evening.
+psql "INSERT INTO devices(mac,label,reserved_ip,kind,category,is_active,last_seen)
+      VALUES ('fe:ed:5a:00:00:01','st personal','192.168.60.241','phone','personal',true,now()),
+             ('fe:ed:5a:00:00:02','st shared','192.168.60.242','tv','shared',true,now()),
+             ('fe:ed:5a:00:00:03','st lock','192.168.60.243','lock','iot',true,now()),
+             ('fe:ed:5a:00:00:04','st server','192.168.60.244','other','appliance',true,now()),
+             ('fe:ed:5a:00:00:05','st ap','192.168.60.245','ap','infra',true,now())" >/dev/null
+psql "UPDATE devices SET caught_by_dinner=true, caught_by_house_off=true
+       WHERE mac::text LIKE 'fe:ed:5a:%'" >/dev/null
+for c in iot appliance infra; do
+  n=$(psql "SELECT count(*) FROM device_sweeps s JOIN devices d ON d.id=s.device_id
+            WHERE d.mac::text LIKE 'fe:ed:5a:%' AND d.category='$c'
+              AND (s.in_dinner OR s.in_house_off)")
+  [ "${n:-1}" = 0 ] && ok "a '$c' device is in no sweep even with both boxes forced on" \
+    || bad "a '$c' device is in a sweep; a dinner pause could darken the lock or the camera"
+done
+for c in personal shared; do
+  n=$(psql "SELECT count(*) FROM device_sweeps s JOIN devices d ON d.id=s.device_id
+            WHERE d.mac::text LIKE 'fe:ed:5a:%' AND d.category='$c' AND s.in_dinner AND s.in_house_off")
+  [ "${n:-0}" = 1 ] && ok "a '$c' device defaults into both sweeps" \
+    || bad "a '$c' device is not in both sweeps by default"
+done
+# And the same guard where it actually bites: the addresses a scope resolves to.
+for c in 192.168.60.243 192.168.60.244 192.168.60.245; do
+  n=$(psql "SELECT count(*) FROM ips_in_scope('house-off') WHERE ip='$c'")
+  [ "${n:-1}" = 0 ] && ok "$c is not in the whole-house cut" \
+    || bad "$c IS in the whole-house cut, and it must never be"
+done
+n=$(psql "SELECT count(*) FROM ips_in_scope('dinner') WHERE ip='192.168.60.242'")
+[ "${n:-0}" = 1 ] && ok "a shared family device is caught by the dinner scope" \
+  || bad "a shared family device is NOT caught by dinner, so the family TV stays on"
+psql "UPDATE devices SET caught_by_dinner=false WHERE mac::text='fe:ed:5a:00:00:02'" >/dev/null
+n=$(psql "SELECT count(*) FROM ips_in_scope('dinner') WHERE ip='192.168.60.242'")
+[ "${n:-1}" = 0 ] && ok "unticking a shared device takes it out of the dinner scope" \
+  || bad "a shared device unticked for dinner is still caught by it"
+psql "DELETE FROM devices WHERE mac::text LIKE 'fe:ed:5a:%'" >/dev/null
+
 n=$(psql "SELECT count(*) FROM board_settings WHERE enabled")
 [ "${n:-0}" = 0 ] && ok "the achievement board is off by default" \
   || bad "the achievement board is ON on a fresh install, and that was meant to need a parent's yes"
+
+# Community learning packages (config/db/schema-packages.sql). The two
+# functions are the ONLY way a package gets in or out, so a fresh install that
+# is missing them can list packages and never install one, which is the sort of
+# half-working that is worse than a clear failure.
+for fn in install_quiz_package remove_quiz_package; do
+  [ "$(psql "SELECT count(*)>0 FROM pg_proc WHERE proname='$fn'")" = t ] \
+    && ok "$fn() exists" || bad "$fn() is missing, so packages cannot be installed"
+done
+# SECURITY DEFINER is what lets the least-privilege kids_agent role install a
+# package without being handed write access to every quiz bank in the house.
+[ "$(psql "SELECT prosecdef FROM pg_proc WHERE proname='install_quiz_package'")" = t ] \
+  && ok "install_quiz_package() is SECURITY DEFINER" \
+  || bad "install_quiz_package() is not SECURITY DEFINER, so kids_agent would need write access to the quiz tables"
+# The licence allowlist is a real constraint, not a comment. A package with a
+# licence that does not let a household keep and change it is not shareable.
+out=$(psql "INSERT INTO quiz_banks(id,title) VALUES('lic-test','Licence test');
+            INSERT INTO quiz_packages(bank_id,author,licence) VALUES('lic-test','x','All rights reserved');")
+case "$out" in
+  *quiz_packages_licence_ck*) ok "an unshareable licence is refused" ;;
+  *) bad "quiz_packages accepted the licence 'All rights reserved'" ;;
+esac
+psql "DELETE FROM quiz_banks WHERE id='lic-test';" >/dev/null
+
+# The slow lane (config/db/schema-slow.sql). Three things have to be true on a
+# fresh install, and the last two are the ones that matter: the feature exists,
+# it changes nothing until a household asks for it, and it can never reach a
+# device that is not somebody's personal kit.
+[ "$(psql "SELECT count(*)>0 FROM information_schema.columns
+            WHERE table_name='category_state' AND column_name='speed'")" = t ] \
+  && ok "category_state carries the third state (speed)" \
+  || bad "category_state has no speed column, so the slow lane has nowhere to live"
+[ "$(psql "SELECT to_regclass('public.slow_lane_ips') IS NOT NULL")" = t ] \
+  && ok "slow_lane_ips exists, so the gateway has something to reconcile" \
+  || bad "slow_lane_ips is missing"
+n=$(psql "SELECT count(*) FROM category_state WHERE speed='slow'")
+[ "${n:-0}" = 0 ] && ok "a fresh install throttles nobody" \
+  || bad "a fresh install has ${n:-0} category in the slow lane, and a throttle nobody asked for is somebody's evening"
+[ "$(psql "SELECT on_timeout FROM slow_settings")" = cut ] \
+  && ok "running out of time still CUTS by default, as it always has" \
+  || bad "the out-of-time behaviour changed without a household choosing it"
+[ "$(psql "SELECT rate_kbit FROM slow_settings")" = 256 ] \
+  && ok "the slow lane defaults to 256 kbit/s" \
+  || bad "the slow lane default is not 256 kbit/s"
+# THE IRON RULE. slow_lane_ips must never be able to name a camera, a smart
+# lock or the access point. Proven, not asserted: put a non-personal device in
+# the slow lane by hand and check the view refuses to return it.
+psql "INSERT INTO children(name,kind,policy_tier,active) VALUES('slowtest','child','standard',true)
+      ON CONFLICT (name) DO NOTHING" >/dev/null
+cid=$(psql "SELECT id FROM children WHERE name='slowtest'")
+psql "INSERT INTO devices(mac,label,child_id,category,is_active,reserved_ip)
+      VALUES('02:00:00:00:00:01','a camera',$cid,'iot',true,'192.168.60.201')" >/dev/null
+psql "INSERT INTO devices(mac,label,child_id,category,is_active,reserved_ip)
+      VALUES('02:00:00:00:00:02','a phone',$cid,'personal',true,'192.168.60.202')" >/dev/null
+psql "INSERT INTO category_state(child_id,category,blocked,speed,set_by)
+      VALUES($cid,'video',false,'slow','schema-test')" >/dev/null
+[ "$(psql "SELECT count(*) FROM slow_lane_ips WHERE ip='192.168.60.201'")" = 0 ] \
+  && ok "an IoT device can NEVER be throttled, even when its owner is" \
+  || bad "slow_lane_ips returned a non-personal device; the iron rule is broken"
+[ "$(psql "SELECT count(*) FROM slow_lane_ips WHERE ip='192.168.60.202'")" = 1 ] \
+  && ok "and the child's own phone is in the slow lane, so the view does work" \
+  || bad "slow_lane_ips did not return the personal device, so nothing would be throttled"
+psql "DELETE FROM children WHERE name='slowtest'" >/dev/null
+
+# Notifications (schema-notify.sql). Two rules a fresh install has to arrive
+# with, because getting either wrong is how a parental controls product starts
+# leaking. test/notify-test.sh proves the behaviour; these prove the defaults.
+n=$(psql "SELECT count(*) FROM notify_routes")
+[ "${n:-0}" = 0 ] && ok "a fresh install has no notification routes, so nothing leaves the house" \
+  || bad "a fresh install ships ${n:-0} notification route(s), and nobody asked for that"
+# The wording rows are the safety mechanism: the sensitive categories may name
+# no child and quote no detail, so nothing private can reach a lock screen.
+for c in self-harm tor darknet drugs extreme proxy-vpn; do
+  [ "$(psql "SELECT count(*) FROM notify_wording WHERE category='$c' AND NOT name_ok AND NOT detail_ok")" = 1 ] \
+    && ok "the '$c' notification names no child and quotes no site" \
+    || bad "the '$c' notification could put a child's name or a site on a lock screen"
+done
+# The unworded case must fail towards saying less, never towards guessing that
+# a new alert type is harmless enough to quote.
+[ "$(psql "SELECT count(*) FROM notify_wording WHERE category='@fallback' AND NOT name_ok AND NOT detail_ok")" = 1 ] \
+  && ok "an alert category nobody has worded yet says the least it can" \
+  || bad "the fallback notification wording is missing or would quote an alert it knows nothing about"
 
 echo
 echo "passed $pass, failed $fail"

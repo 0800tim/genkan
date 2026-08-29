@@ -1,5 +1,17 @@
 # HEARTH security review, 2026-08-30
 
+> ## Status: read this before quoting any finding below
+>
+> This is a point-in-time audit, not a list of open problems. **Several of the
+> findings in it were fixed within hours of it being written**, and the fixes
+> are in the repository you are reading. A reviewer, human or AI, who quotes a
+> finding from here without checking the code will report a closed issue as
+> open, which has already happened once.
+>
+> Check `git log` and the code before believing anything below is still true.
+> Where a finding has been fixed, it is marked **FIXED** with the commit.
+>
+
 Second adversarial, read-only audit of the gateway at
 `/srv/projects/internal/kids-network`. Scope was the surface added since the
 2026-08-29 review (`research/security-review-2026-08-29.md`): the `/speed`
@@ -38,6 +50,10 @@ closed: the publish scanner prints a clean board when two of its checks did not
 run, `reconcile_set` cannot tell an empty query from a failed one, and the Tor
 blocking set is empty on the live box with nothing anywhere saying so.
 
+**FIXED on 2026-08-30: the serious finding in that paragraph is closed.** Every
+interpolation site in `bin/` is gated, and nothing in `bin/` connects as the
+superuser any more. See the note under C1 before quoting the sentence above.
+
 ## Severity count
 
 - Critical: 1
@@ -51,6 +67,8 @@ blocking set is empty on the live box with nothing anywhere saying so.
 1. Critical: `POST /api/act` with `topsites` or `recent` puts attacker text
    straight into a SQL string in `bin/kidnet`, and `psql -tAc` runs multiple
    statements from one string, as `postgres` on the shared box.
+   **FIXED on 2026-08-30, and so is the rest of C1: see the note there. The
+   argument is gated, and the connection is no longer a superuser one.**
 2. High: `tools/publish.sh` reported an all-green board on a test tree that
    held an SSID, a WAN address, a database password, an IPv6 tailnet address
    and a screenshot containing a child's name, a MAC and a tailnet address.
@@ -64,6 +82,37 @@ blocking set is empty on the live box with nothing anywhere saying so.
 ## Critical
 
 ### C1. SQL injection across `bin/kidnet`, one path reachable over HTTP
+
+> **FIXED on 2026-08-30. Closed in full, both halves.** Do not report any part
+> of this as open without reading `bin/kidnet` and `config/db/grants.sql`
+> first.
+>
+> - Fix 1 and 2 in the list below: done. Every argument in `bin/kidnet` that
+>   reaches a SQL string now passes a gate, and so does every one in the
+>   `bin/kidnet-*` workers. Fifty-five sites in all, including the ones this
+>   report named (`assign`'s `$key` and `$rip`, `infra`'s `$key`) and the ones
+>   it did not (all four values in `audit()`, the minutes and reason in
+>   `addtime()`, the category in `setcat_id()`, and every child id read back
+>   out of the database before it goes into a `WHERE`).
+> - Fix 4, which this report correctly called the one that stays fixed: done.
+>   `bin/kidnet` and every worker connect as **`kids_agent`**, not as the
+>   Postgres superuser. `COPY ... TO PROGRAM` is refused for that role, and so
+>   is reading a server file, dropping or truncating a table, deleting a child
+>   or a day of history, and self-escalation. `kids_network` is also closed to
+>   `PUBLIC`, so no other project's role on this shared server can open it.
+> - Fix 3 (bound parameters instead of string building) was **not** done, and
+>   the honest reason is that `psql -c` from a shell script has no good binding
+>   story. The gates plus the role are the two layers standing in its place,
+>   and both are tested rather than asserted.
+>
+> Proof, run on every change: `test/db-role-test.sh` fires this report's own
+> payload (`1; COPY (SELECT 1) TO PROGRAM 'touch ...'; --`) at twenty-one
+> `kidnet` verbs, requires each to refuse it before opening a connection, and
+> then checks the file the payload would have created is absent. It also proves
+> the role cannot do any of the things listed above. 77 checks, all passing.
+> See DECISIONS.md, "The CLI stops being a superuser (2026-08-30)", and
+> `docs/DATABASE.md`, "Roles".
+
 
 **Files:** `bin/kidnet` lines 191 (already gated), 229 to 233 (`assign`), 240
 (`infra`), 294 to 298 (`recent`), 299 to 304 (`topsites`).

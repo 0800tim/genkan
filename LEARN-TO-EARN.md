@@ -173,6 +173,30 @@ There is no bulk import into the database side, so a whole bank written as JSON
 cannot be pasted into the dashboard. It goes in as a file through
 `bin/kidnet-quiz install`, or it is typed in a question at a time.
 
+**As a package**, from somebody outside the house. A package is the same JSON
+bank with a short manifest on top: who wrote it, what licence it carries, who it
+is for, and optionally a page to read first that a child sees on the Read up
+screen. It installs into the database, so a Hearth update cannot delete it, and
+`bin/kidnet-pack` validates, installs, lists and removes them. Anybody can write
+one and it needs no code:
+[`docs/CONTRIBUTING-CONTENT.md`](docs/CONTRIBUTING-CONTENT.md) is the guide, and
+`portal/quizzes/community/` is the shelf, with one worked example to copy.
+
+That shelf exists because the curriculum is the narrow half of what is worth
+teaching a child. Mixing paint, trimming a balsa wing, tying a bowline and
+reading a tide chart are all things somebody knows properly and could teach in
+forty questions, and none of them is on a syllabus. A package about painting is
+a first-class contribution here, not a lesser one.
+
+Two honest limits on packages, both stated fully in that guide. A package is
+**text and links only**: no images, no audio, no video, because the portal has
+no asset pipeline and a link to an outside image would be a broken box for the
+child who has run out of time and can only reach the reading list. And
+**nothing suggests a package to a parent yet**. The evidence half works
+(`bin/kidnet-quiz-suggest` and `bin/kidnet-pack list`, both of which call
+nothing and print to a terminal), and the matching is a job for an agent the
+parent runs, never for a service Hearth calls.
+
 What makes a good bank, learned from writing a lot of them:
 
 - **Every question needs an explanation.** Not optional, whatever the format

@@ -75,7 +75,13 @@ CREATE TABLE IF NOT EXISTS quiz_bank_questions (
   CONSTRAINT quiz_bank_questions_prompt_ck CHECK (length(btrim(prompt)) BETWEEN 1 AND 400),
   CONSTRAINT quiz_bank_questions_ans_ck    CHECK (answer_index BETWEEN 0 AND 3),
   CONSTRAINT quiz_bank_questions_diff_ck   CHECK (difficulty IS NULL OR difficulty BETWEEN 1 AND 5),
-  CONSTRAINT quiz_bank_questions_expl_ck   CHECK (explanation IS NULL OR length(explanation) <= 400),
+  -- 400 was arbitrary and too tight. The explanation is what a child reads to
+  -- learn from a question they got wrong, and a good one for senior biology or
+  -- chemistry genuinely needs more room than a good one for times tables. The
+  -- shipped nz-ncea-biology bank could not be installed into the database at
+  -- all because one of its explanations is 404 characters. 800 leaves room to
+  -- teach without inviting an essay.
+  CONSTRAINT quiz_bank_questions_expl_ck   CHECK (explanation IS NULL OR length(explanation) <= 800),
   -- Exactly four choices, every one a non-empty string. The portal shuffles
   -- them per round and remaps answer_index, so the order stored here is only
   -- the order the parent typed.
