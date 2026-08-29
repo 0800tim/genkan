@@ -119,17 +119,50 @@ unattributed rather than spread around. See METERING.md for the limits.
 
 ## Who made this, and why
 
-Hearth is built by [Growth Spurt](https://growthspurt.agency), a New Zealand
-software agency, and it started as a personal problem rather than a product:
-three kids, ages 11, 14 and 16, and no parental-control tool that respected
-the family's privacy or the parents' judgement. It is run in the author's own
-home before anything is asked of anyone else's.
+I am Tim Thomas, and I have three kids, aged 11, 14 and 16.
 
-It is MIT licensed and there is nothing to buy. The agency pays for the time
-because a tool that shapes how children use the internet should not depend on
-a subscription, and because the only way to be sure nobody is monetising your
-kids' browsing is for the software to run on your hardware where you can read
-every line of it.
+This started the way most of these things start. The screens were winning. Not
+in a dramatic way, just the ordinary grind: the endless scroll, one more round,
+the argument at dinner. I went looking for something to help and did not like
+what I found. The good parental-control services want a subscription and, in
+return, a copy of everywhere your children go on the internet. The router apps
+are clumsy and treat every child the same. Almost all of it is built to watch
+kids rather than to help them.
 
-Sibling project: [unrot](https://github.com/0800tim/unrot), earn screen time
-by learning.
+So I built the thing I actually wanted: a box by the router that belongs to me,
+where the filtering is mine, the logs never leave the house, and my kids can
+earn their screen time by learning something rather than begging for it. It
+runs on my own family first. Every decision in here was made under the pressure
+of three real children who are smarter than the software and quite willing to
+prove it, which is why there is a bug bounty in the repo rather than a pretence
+that they cannot beat it.
+
+There is nothing to buy, and no company behind it looking for a return. It is
+MIT licensed because a tool that shapes how children use the internet should
+not depend on anyone's subscription staying current, and because the only
+honest answer to "how do I know you are not monetising my kids' browsing" is:
+read the code, it runs on your hardware, and it never sends anything anywhere.
+
+### Help me build it
+
+I would genuinely like company on this. It is a family problem dressed up as a
+networking problem, and it will get better fastest with people who know things
+I do not.
+
+Particularly welcome:
+
+- **Parents who self-host.** You already run things at home. Try it, tell me
+  where it is annoying, tell me what your kids did to get around it.
+- **Linux and distro people.** It is Docker and standard tooling underneath, so
+  it should run anywhere. Packaging, hardening and making the setup less fiddly
+  are all wide open.
+- **Teachers and tutors.** The quiz banks that kids earn time from are plain
+  JSON files. If you know how to teach a subject well, a good bank is worth
+  more than any feature I could write.
+- **Anyone who can break it.** Especially the filter bypasses. Found one? Open
+  an issue. That is the whole spirit of the household bug bounty, scaled up.
+
+Start with CONTRIBUTING.md, or just open an issue and say hello.
+
+Sibling project: [unrot](https://github.com/0800tim/unrot), earn screen time by
+learning.
