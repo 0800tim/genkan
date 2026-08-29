@@ -1,0 +1,713 @@
+{
+  "id": "ie-primary-secondary",
+  "title": "Ireland, Primary and Secondary",
+  "emoji": "🇮🇪",
+  "suggested_age_min": 8,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "questions": [
+    {
+      "id": "ie-001",
+      "prompt": "What is the capital city of Ireland?",
+      "choices": [
+        "Dublin",
+        "Cork",
+        "Galway",
+        "Limerick"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Dublin, on Ireland's east coast, is the capital and biggest city of the Republic of Ireland."
+    },
+    {
+      "id": "ie-002",
+      "prompt": "Ireland is traditionally divided into four provinces. Which of these is one of them?",
+      "choices": [
+        "Leinster",
+        "Kerry",
+        "Cork",
+        "Dublin"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Ireland's four traditional provinces are Leinster, Munster, Connacht and Ulster. Kerry, Cork and Dublin are counties or cities, not provinces."
+    },
+    {
+      "id": "ie-003",
+      "prompt": "How many of Ireland's traditional counties lie within Northern Ireland, which is part of the United Kingdom?",
+      "choices": [
+        "Six",
+        "Four",
+        "Nine",
+        "Twelve"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Ireland has 32 traditional counties in total. Six of them, in the province of Ulster, make up Northern Ireland."
+    },
+    {
+      "id": "ie-004",
+      "prompt": "How many counties are there across the whole island of Ireland?",
+      "choices": [
+        "32",
+        "26",
+        "20",
+        "40"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "There are 32 counties in total: 26 in the Republic of Ireland and 6 in Northern Ireland."
+    },
+    {
+      "id": "ie-005",
+      "prompt": "What is the longest river in Ireland?",
+      "choices": [
+        "The River Shannon",
+        "The River Liffey",
+        "The River Boyne",
+        "The River Barrow"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The River Shannon flows for about 360 kilometres, making it the longest river in Ireland or Britain."
+    },
+    {
+      "id": "ie-006",
+      "prompt": "Which river flows through the middle of Dublin?",
+      "choices": [
+        "The River Liffey",
+        "The River Shannon",
+        "The River Lee",
+        "The River Foyle"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The River Liffey flows through Dublin and out into the Irish Sea."
+    },
+    {
+      "id": "ie-007",
+      "prompt": "Ireland's highest mountain, found in County Kerry, is called what?",
+      "choices": [
+        "Carrauntoohil",
+        "Croagh Patrick",
+        "Slieve Donard",
+        "Mount Errigal"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Carrauntoohil, in the Macgillycuddy's Reeks range in County Kerry, is Ireland's highest peak."
+    },
+    {
+      "id": "ie-008",
+      "prompt": "Famous limestone cliffs on the west coast, in County Clare, are known as what?",
+      "choices": [
+        "The Cliffs of Moher",
+        "The White Cliffs",
+        "The Giant's Causeway",
+        "The Skellig Cliffs"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Cliffs of Moher rise steeply from the Atlantic Ocean in County Clare and are one of Ireland's best known landmarks."
+    },
+    {
+      "id": "ie-009",
+      "prompt": "Which sea separates Ireland from Great Britain?",
+      "choices": [
+        "The Irish Sea",
+        "The North Sea",
+        "The English Channel",
+        "The Celtic Sea"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Irish Sea lies between Ireland and Great Britain."
+    },
+    {
+      "id": "ie-010",
+      "prompt": "Ireland is often given which nickname, because of its green countryside?",
+      "choices": [
+        "The Emerald Isle",
+        "The Green Kingdom",
+        "The Isle of Mist",
+        "The Golden Isle"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Ireland is nicknamed the Emerald Isle for its lush, green landscape."
+    },
+    {
+      "id": "ie-011",
+      "prompt": "What is the second biggest city in the Republic of Ireland?",
+      "choices": [
+        "Cork",
+        "Galway",
+        "Limerick",
+        "Waterford"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Cork, in the south of Ireland, is the Republic's second biggest city after Dublin."
+    },
+    {
+      "id": "ie-012",
+      "prompt": "A striking formation of thousands of hexagonal rock columns on the coast of County Antrim is called what?",
+      "choices": [
+        "The Giant's Causeway",
+        "The Cliffs of Moher",
+        "Slieve League",
+        "The Burren"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Giant's Causeway, in Northern Ireland, was formed by an ancient volcanic eruption that left behind thousands of tightly packed rock columns."
+    },
+    {
+      "id": "ie-013",
+      "prompt": "A group of scenic lakes in County Kerry, popular with visitors, are known as what?",
+      "choices": [
+        "The Lakes of Killarney",
+        "Lough Neagh",
+        "The Shannon Lakes",
+        "Lough Corrib"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Lakes of Killarney, surrounded by mountains, are among Ireland's most visited natural landmarks."
+    },
+    {
+      "id": "ie-014",
+      "prompt": "Newgrange, a huge stone tomb in County Meath older than the pyramids of Egypt, was built by whom?",
+      "choices": [
+        "Neolithic farmers, thousands of years ago",
+        "Viking settlers",
+        "Norman lords",
+        "Medieval monks"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Newgrange was built by Neolithic farming communities around 5,000 years ago, making it older than both the pyramids and Stonehenge."
+    },
+    {
+      "id": "ie-015",
+      "prompt": "Who is traditionally credited with bringing Christianity to Ireland in the 5th century?",
+      "choices": [
+        "Saint Patrick",
+        "Saint Brigid",
+        "Saint Columba",
+        "Saint Kevin"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Saint Patrick is traditionally credited with spreading Christianity across Ireland in the 400s."
+    },
+    {
+      "id": "ie-016",
+      "prompt": "Saint Patrick's Day, Ireland's national day, is celebrated on which date?",
+      "choices": [
+        "17 March",
+        "1 May",
+        "25 December",
+        "12 July"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Saint Patrick's Day falls on 17 March every year and is celebrated by Irish communities around the world."
+    },
+    {
+      "id": "ie-017",
+      "prompt": "Early Irish monasteries became famous across Europe for producing what?",
+      "choices": [
+        "Beautifully decorated, illuminated manuscripts",
+        "Coins and metal currency",
+        "Maps of the known world",
+        "Printed newspapers"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Monks in early Irish monasteries hand copied and richly decorated religious texts, earning Ireland a reputation as a land of learning."
+    },
+    {
+      "id": "ie-018",
+      "prompt": "Which famous illuminated manuscript, made by monks over a thousand years ago, is on display in Dublin today?",
+      "choices": [
+        "The Book of Kells",
+        "The Book of Armagh",
+        "The Domesday Book",
+        "The Book of Hours"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Book of Kells, a richly decorated copy of the four Gospels, was created by monks around the year 800 and can be seen at Trinity College Dublin."
+    },
+    {
+      "id": "ie-019",
+      "prompt": "Vikings founded a trading settlement that grew into which Irish city, around the year 841?",
+      "choices": [
+        "Dublin",
+        "Cork",
+        "Belfast",
+        "Limerick"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Viking raiders and traders founded a settlement on the River Liffey that grew into the city of Dublin."
+    },
+    {
+      "id": "ie-020",
+      "prompt": "Anglo-Norman lords from England and Wales first invaded Ireland in which year?",
+      "choices": [
+        "1169",
+        "1066",
+        "1215",
+        "1400"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Anglo-Norman forces first landed in Ireland in 1169, beginning centuries of English involvement in Irish affairs."
+    },
+    {
+      "id": "ie-021",
+      "prompt": "The Plantation of Ulster, in the early 1600s, involved the English government doing what?",
+      "choices": [
+        "Settling English and Scottish colonists on land in Ulster",
+        "Building a new capital city",
+        "Signing a peace treaty with France",
+        "Introducing the potato to Ireland"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "During the Plantation of Ulster, land was taken from Irish landowners and given to settlers from England and Scotland."
+    },
+    {
+      "id": "ie-022",
+      "prompt": "What crop failure caused the Great Famine of the 1840s in Ireland?",
+      "choices": [
+        "The potato crop failed due to blight",
+        "The wheat crop failed due to drought",
+        "The oat crop failed due to flooding",
+        "The barley crop failed due to frost"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A fungus called potato blight repeatedly destroyed the potato harvest that most Irish families depended on for food."
+    },
+    {
+      "id": "ie-023",
+      "prompt": "Roughly how many people are thought to have died during the Great Famine of the 1840s?",
+      "choices": [
+        "About a million",
+        "About ten thousand",
+        "About a hundred thousand",
+        "About five million"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Historians estimate that roughly a million people died from starvation and disease during the Great Famine."
+    },
+    {
+      "id": "ie-024",
+      "prompt": "Besides the deaths it caused, what else did the Great Famine bring about on a huge scale?",
+      "choices": [
+        "Mass emigration, especially to the United States",
+        "A sudden population boom",
+        "The founding of new universities",
+        "A new system of counties"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Around a million more people left Ireland during and after the Famine, many of them emigrating to the United States, Britain and Australia."
+    },
+    {
+      "id": "ie-025",
+      "prompt": "The Easter Rising, a rebellion against British rule in Ireland, took place in which year?",
+      "choices": [
+        "1916",
+        "1798",
+        "1921",
+        "1949"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Easter Rising broke out in Dublin in 1916, during the First World War."
+    },
+    {
+      "id": "ie-026",
+      "prompt": "The Easter Rising of 1916 was centred on which Dublin building, used as the rebels' headquarters?",
+      "choices": [
+        "The General Post Office",
+        "Dublin Castle",
+        "Trinity College",
+        "Christ Church Cathedral"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Rebels took over the General Post Office on O'Connell Street and used it as their main base during the Easter Rising."
+    },
+    {
+      "id": "ie-027",
+      "prompt": "The Anglo-Irish Treaty of 1921 created which new, self-governing state?",
+      "choices": [
+        "The Irish Free State",
+        "The Kingdom of Ireland",
+        "The United Provinces of Ireland",
+        "The Commonwealth of Ireland"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Anglo-Irish Treaty, signed in 1921, created the Irish Free State, a self-governing dominion covering 26 of Ireland's 32 counties."
+    },
+    {
+      "id": "ie-028",
+      "prompt": "Under the 1921 settlement, six counties in the north-east of Ireland remained part of which country?",
+      "choices": [
+        "The United Kingdom",
+        "France",
+        "Canada",
+        "The United States"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Six counties in the north-east stayed part of the United Kingdom, forming Northern Ireland, while the rest of Ireland became self-governing."
+    },
+    {
+      "id": "ie-029",
+      "prompt": "What name was given to the six counties that remained part of the United Kingdom after partition in 1921?",
+      "choices": [
+        "Northern Ireland",
+        "Ulster Free State",
+        "The Irish Province",
+        "New Ireland"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Those six counties became known as Northern Ireland, while the other 26 counties eventually became the Republic of Ireland."
+    },
+    {
+      "id": "ie-030",
+      "prompt": "Ireland formally declared itself a republic, ending its last constitutional ties with the British Commonwealth, in which year?",
+      "choices": [
+        "1949",
+        "1921",
+        "1916",
+        "1973"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The Republic of Ireland Act came into force in 1949, formally declaring the state a republic."
+    },
+    {
+      "id": "ie-031",
+      "prompt": "The Irish language, also called Gaeilge, belongs to which family of languages?",
+      "choices": [
+        "Celtic",
+        "Germanic",
+        "Slavic",
+        "Romance"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Irish is a Celtic language, related to Scottish Gaelic and Welsh."
+    },
+    {
+      "id": "ie-032",
+      "prompt": "Along with English, what is Ireland's other official language?",
+      "choices": [
+        "Irish",
+        "French",
+        "Latin",
+        "Scots Gaelic"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Irish, also called Gaeilge, is an official language of Ireland alongside English."
+    },
+    {
+      "id": "ie-033",
+      "prompt": "What does the Irish greeting \"Dia duit\" mean?",
+      "choices": [
+        "Hello",
+        "Goodbye",
+        "Thank you",
+        "Please"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "\"Dia duit\", which literally means \"God be with you\", is a common way to say hello in Irish."
+    },
+    {
+      "id": "ie-034",
+      "prompt": "What does the Irish word \"Slán\" mean?",
+      "choices": [
+        "Goodbye",
+        "Hello",
+        "Yes",
+        "Sorry"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "\"Slán\" is the everyday Irish word for goodbye."
+    },
+    {
+      "id": "ie-035",
+      "prompt": "The Irish word \"Sláinte\", often said when raising a glass, roughly means what?",
+      "choices": [
+        "Good health, or cheers",
+        "Good morning",
+        "Well done",
+        "Goodnight"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "\"Sláinte\" literally means \"health\" and is used as a toast, much like \"cheers\"."
+    },
+    {
+      "id": "ie-036",
+      "prompt": "What alphabet is written Irish set out in?",
+      "choices": [
+        "The Latin alphabet, the same as English",
+        "A separate Gaelic alphabet with different letters",
+        "The Greek alphabet",
+        "The Cyrillic alphabet"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Modern written Irish uses the same Latin alphabet as English, though it once used a distinct Gaelic script for handwriting."
+    },
+    {
+      "id": "ie-037",
+      "prompt": "Regions where Irish is still the main everyday spoken language are known by what name?",
+      "choices": [
+        "The Gaeltacht",
+        "The Pale",
+        "The Ulster Plantation",
+        "The Provincia"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Gaeltacht refers to areas, mostly along the west coast, where Irish remains the community's everyday language."
+    },
+    {
+      "id": "ie-038",
+      "prompt": "The well known Irish phrase \"Céad míle fáilte\" means what?",
+      "choices": [
+        "A hundred thousand welcomes",
+        "Long live Ireland",
+        "Good luck to you",
+        "Safe travels home"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "\"Céad míle fáilte\" translates as \"a hundred thousand welcomes\" and is a traditional Irish greeting."
+    },
+    {
+      "id": "ie-039",
+      "prompt": "Which Irish writer wrote the novel \"Dracula\"?",
+      "choices": [
+        "Bram Stoker",
+        "Oscar Wilde",
+        "James Joyce",
+        "Jonathan Swift"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Bram Stoker, born in Dublin, wrote \"Dracula\" in 1897."
+    },
+    {
+      "id": "ie-040",
+      "prompt": "Which Irish writer wrote \"Gulliver's Travels\"?",
+      "choices": [
+        "Jonathan Swift",
+        "Bram Stoker",
+        "W. B. Yeats",
+        "George Bernard Shaw"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Jonathan Swift, a Dublin born writer, published \"Gulliver's Travels\" in 1726."
+    },
+    {
+      "id": "ie-041",
+      "prompt": "Which Irish writer wrote \"Ulysses\" and \"Dubliners\"?",
+      "choices": [
+        "James Joyce",
+        "Samuel Beckett",
+        "Oscar Wilde",
+        "Seamus Heaney"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "James Joyce, born in Dublin, wrote both \"Dubliners\" and the novel \"Ulysses\"."
+    },
+    {
+      "id": "ie-042",
+      "prompt": "Which Irish playwright wrote \"The Importance of Being Earnest\"?",
+      "choices": [
+        "Oscar Wilde",
+        "Jonathan Swift",
+        "Samuel Beckett",
+        "James Joyce"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Oscar Wilde, born in Dublin, wrote the comic play \"The Importance of Being Earnest\" in 1895."
+    },
+    {
+      "id": "ie-043",
+      "prompt": "Which Irish poet won the Nobel Prize in Literature in 1923?",
+      "choices": [
+        "W. B. Yeats",
+        "Seamus Heaney",
+        "Samuel Beckett",
+        "George Bernard Shaw"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "W. B. Yeats, a poet and one of the founders of the Abbey Theatre, won the Nobel Prize in Literature in 1923."
+    },
+    {
+      "id": "ie-044",
+      "prompt": "Which Dublin born writer wrote the play \"Waiting for Godot\" and won the Nobel Prize in Literature?",
+      "choices": [
+        "Samuel Beckett",
+        "W. B. Yeats",
+        "Bram Stoker",
+        "Jonathan Swift"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Samuel Beckett, born in Dublin, wrote \"Waiting for Godot\" and won the Nobel Prize in Literature in 1969."
+    },
+    {
+      "id": "ie-045",
+      "prompt": "Which Irish poet, from County Derry, won the Nobel Prize in Literature in 1995?",
+      "choices": [
+        "Seamus Heaney",
+        "W. B. Yeats",
+        "Samuel Beckett",
+        "James Joyce"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Seamus Heaney, born in County Derry, won the Nobel Prize in Literature in 1995."
+    },
+    {
+      "id": "ie-046",
+      "prompt": "Author C. S. Lewis, who wrote \"The Chronicles of Narnia\", was born in which Irish city?",
+      "choices": [
+        "Belfast",
+        "Dublin",
+        "Cork",
+        "Galway"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "C. S. Lewis was born in Belfast in 1898, before later moving to England."
+    },
+    {
+      "id": "ie-047",
+      "prompt": "What kind of government does the Republic of Ireland have?",
+      "choices": [
+        "A parliamentary republic",
+        "An absolute monarchy",
+        "A one-party state",
+        "A military government"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Ireland is a parliamentary republic: an elected parliament makes the laws, and the government answers to it."
+    },
+    {
+      "id": "ie-048",
+      "prompt": "What is the title of the head of government in Ireland, similar to a prime minister?",
+      "choices": [
+        "The Taoiseach",
+        "The Chancellor",
+        "The Governor General",
+        "The First Minister"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The head of the Irish government is called the Taoiseach, an Irish word meaning \"chief\" or \"leader\"."
+    },
+    {
+      "id": "ie-049",
+      "prompt": "What is Ireland's national parliament called?",
+      "choices": [
+        "The Oireachtas",
+        "The Dáil Council",
+        "The Senate",
+        "The Assembly"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The Oireachtas is the name for the Irish parliament as a whole, made up of the President and two houses."
+    },
+    {
+      "id": "ie-050",
+      "prompt": "Ireland's parliament has two houses. What are they called?",
+      "choices": [
+        "Dáil Éireann and Seanad Éireann",
+        "The Commons and the Lords",
+        "The Assembly and the Council",
+        "The Congress and the Senate"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Dáil is the main elected house, while the Seanad is a smaller upper house."
+    },
+    {
+      "id": "ie-051",
+      "prompt": "Who is Ireland's head of state, elected directly by the public but with mostly ceremonial powers?",
+      "choices": [
+        "The President",
+        "The Taoiseach",
+        "The Governor General",
+        "The Chief Justice"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Ireland's President is elected by the public and represents the state, while the Taoiseach runs the government day to day."
+    },
+    {
+      "id": "ie-052",
+      "prompt": "How long is a single term for Ireland's President?",
+      "choices": [
+        "Seven years",
+        "Four years",
+        "Ten years",
+        "Two years"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Ireland's President serves a seven year term and may be re-elected once."
+    },
+    {
+      "id": "ie-053",
+      "prompt": "What are the colours of the Irish tricolour flag, from the flagpole outward?",
+      "choices": [
+        "Green, white and orange",
+        "Green, white and gold",
+        "Orange, white and green",
+        "Green, gold and white"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Irish flag has three vertical stripes: green nearest the pole, then white, then orange."
+    },
+    {
+      "id": "ie-054",
+      "prompt": "The shamrock, a well known symbol of Ireland, is what kind of plant?",
+      "choices": [
+        "A small plant with three leaves",
+        "A tall flowering tree",
+        "A type of grass",
+        "A climbing vine"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The shamrock is a small, three leafed plant traditionally linked to Saint Patrick, who is said to have used it to explain the Holy Trinity."
+    }
+  ]
+}

@@ -1,0 +1,412 @@
+{
+  "id": "the-arts",
+  "title": "The Arts",
+  "emoji": "🎨",
+  "suggested_age_min": 9,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Covers craft and vocabulary a student is actually taught in music, visual art, drama and dance, not opinion about what is good.",
+  "questions": [
+    {
+      "id": "ar-001",
+      "prompt": "How many lines does a musical stave have?",
+      "choices": ["3", "4", "5", "6"],
+      "answer_index": 2,
+      "difficulty": 1,
+      "explanation": "A stave (or staff) has 5 lines and 4 spaces, and notes are written on and between them to show pitch."
+    },
+    {
+      "id": "ar-002",
+      "prompt": "Which three colours are the primary colours?",
+      "choices": ["Red, yellow and blue", "Red, green and blue", "Orange, green and purple", "Black, white and grey"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Red, yellow and blue are the primary colours. They cannot be made by mixing any other colours together."
+    },
+    {
+      "id": "ar-003",
+      "prompt": "What do you get when you mix red and yellow paint?",
+      "choices": ["Orange", "Green", "Purple", "Brown"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Red and yellow make orange, one of the three secondary colours."
+    },
+    {
+      "id": "ar-004",
+      "prompt": "What do you get when you mix blue and yellow paint?",
+      "choices": ["Purple", "Green", "Orange", "Grey"],
+      "answer_index": 1,
+      "difficulty": 1,
+      "explanation": "Blue and yellow make green."
+    },
+    {
+      "id": "ar-005",
+      "prompt": "In music, what does 'forte' tell a performer to do?",
+      "choices": ["Play loudly", "Play softly", "Play quickly", "Play slowly"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Forte means loud. Its opposite, piano, means soft."
+    },
+    {
+      "id": "ar-006",
+      "prompt": "In music, what does 'piano' (as a dynamic marking) tell a performer to do?",
+      "choices": ["Play loudly", "Play softly", "Speed up", "Slow down"],
+      "answer_index": 1,
+      "difficulty": 1,
+      "explanation": "As a dynamic marking, piano means soft or quiet. It is also, confusingly, the name of an instrument."
+    },
+    {
+      "id": "ar-007",
+      "prompt": "In a play, what is the protagonist?",
+      "choices": ["The main character the story follows", "The person who opposes the main character", "The person who writes the script", "The audience"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The protagonist is the main character. The character who opposes them is the antagonist."
+    },
+    {
+      "id": "ar-008",
+      "prompt": "What is a monologue?",
+      "choices": ["One character speaking alone at length", "A conversation between two characters", "A song with no words", "A dance with no music"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "A monologue is a long speech given by one character."
+    },
+    {
+      "id": "ar-009",
+      "prompt": "Which family of instruments does the violin belong to?",
+      "choices": ["Strings", "Woodwind", "Brass", "Percussion"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The violin is a string instrument, played with a bow across strings."
+    },
+    {
+      "id": "ar-010",
+      "prompt": "Which family of instruments does the trumpet belong to?",
+      "choices": ["Strings", "Woodwind", "Brass", "Percussion"],
+      "answer_index": 2,
+      "difficulty": 1,
+      "explanation": "The trumpet is a brass instrument."
+    },
+    {
+      "id": "ar-011",
+      "prompt": "What do you get when you mix red and blue paint?",
+      "choices": ["Purple", "Green", "Orange", "Brown"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Red and blue make purple (also called violet), another secondary colour."
+    },
+    {
+      "id": "ar-012",
+      "prompt": "Which colours are usually described as 'warm'?",
+      "choices": ["Reds, oranges and yellows", "Blues, greens and purples", "Black and white only", "Pastel colours only"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Reds, oranges and yellows are the warm colours. Blues, greens and purples are the cool ones."
+    },
+    {
+      "id": "ar-013",
+      "prompt": "Which colours are usually described as 'cool'?",
+      "choices": ["Reds, oranges and yellows", "Blues, greens and purples", "Only grey", "Only black"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "Blues, greens and purples are the cool colours."
+    },
+    {
+      "id": "ar-014",
+      "prompt": "In music, what does 'allegro' mean?",
+      "choices": ["Fast", "Slow", "Loud", "Soft"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Allegro tells a performer to play at a fast, lively tempo."
+    },
+    {
+      "id": "ar-015",
+      "prompt": "In music, what does 'largo' mean?",
+      "choices": ["Fast", "Broad and slow", "Getting louder", "Getting softer"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "Largo tells a performer to play slowly and broadly."
+    },
+    {
+      "id": "ar-016",
+      "prompt": "What does a crescendo ask a performer to do?",
+      "choices": ["Gradually get louder", "Gradually get softer", "Suddenly stop", "Play a higher note"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A crescendo is a gradual increase in volume."
+    },
+    {
+      "id": "ar-017",
+      "prompt": "What does a diminuendo (or decrescendo) ask a performer to do?",
+      "choices": ["Gradually get louder", "Gradually get softer", "Speed up", "Slow down"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "A diminuendo is a gradual decrease in volume, the opposite of a crescendo."
+    },
+    {
+      "id": "ar-018",
+      "prompt": "Which family of instruments does the flute belong to?",
+      "choices": ["Strings", "Woodwind", "Brass", "Percussion"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "The flute is a woodwind instrument, even though modern flutes are usually made of metal."
+    },
+    {
+      "id": "ar-019",
+      "prompt": "Which family of instruments does the xylophone belong to?",
+      "choices": ["Strings", "Woodwind", "Brass", "Percussion"],
+      "answer_index": 3,
+      "difficulty": 2,
+      "explanation": "The xylophone is a percussion instrument, played by striking its bars."
+    },
+    {
+      "id": "ar-020",
+      "prompt": "In a time signature of 4/4, how many beats are in each bar?",
+      "choices": ["Two", "Three", "Four", "Six"],
+      "answer_index": 2,
+      "difficulty": 2,
+      "explanation": "The top number of a time signature shows how many beats are in each bar. In 4/4, that is four."
+    },
+    {
+      "id": "ar-021",
+      "prompt": "In a time signature of 3/4, how many beats are in each bar?",
+      "choices": ["Two", "Three", "Four", "Eight"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "3/4 time has three beats in each bar, the rhythm behind a waltz."
+    },
+    {
+      "id": "ar-022",
+      "prompt": "What is a vanishing point used for in art?",
+      "choices": ["Showing where parallel lines appear to meet, to create perspective", "Mixing paint colours", "Naming a type of brush", "Framing a finished picture"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A vanishing point is where parallel lines seem to meet in the distance, which is how artists create the illusion of depth."
+    },
+    {
+      "id": "ar-023",
+      "prompt": "What is dialogue in a play?",
+      "choices": ["Conversation between two or more characters", "A single character's long speech", "The stage instructions", "The list of props"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Dialogue is the spoken conversation between characters, as opposed to a monologue spoken by one."
+    },
+    {
+      "id": "ar-024",
+      "prompt": "What does 'andante' mean in music?",
+      "choices": ["At a walking pace", "Very fast", "Very loud", "Very soft"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Andante asks for a moderate, walking pace, faster than largo but slower than allegro."
+    },
+    {
+      "id": "ar-025",
+      "prompt": "What does 'presto' mean in music?",
+      "choices": ["Very fast", "Very slow", "Very loud", "Very soft"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Presto asks for a very fast tempo, faster than allegro."
+    },
+    {
+      "id": "ar-026",
+      "prompt": "A semibreve (whole note) is usually worth how many beats in common time?",
+      "choices": ["One", "Two", "Four", "Eight"],
+      "answer_index": 2,
+      "difficulty": 3,
+      "explanation": "A semibreve, or whole note, is worth four beats, the longest common note value."
+    },
+    {
+      "id": "ar-027",
+      "prompt": "A crotchet (quarter note) is usually worth how many beats in common time?",
+      "choices": ["One", "Two", "Three", "Four"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A crotchet, or quarter note, is worth one beat."
+    },
+    {
+      "id": "ar-028",
+      "prompt": "A minim (half note) is usually worth how many beats in common time?",
+      "choices": ["One", "Two", "Three", "Four"],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "A minim, or half note, is worth two beats, twice as long as a crotchet."
+    },
+    {
+      "id": "ar-029",
+      "prompt": "A piece of music in a major key is usually described as sounding how?",
+      "choices": ["Bright or happy", "Sad or dark", "Silent", "Random"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Major keys are often described as sounding bright or happy, though composers can use either key to create any mood."
+    },
+    {
+      "id": "ar-030",
+      "prompt": "A piece of music in a minor key is usually described as sounding how?",
+      "choices": ["Bright or happy", "Sad or dark", "Extremely fast", "Silent"],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "Minor keys are often described as sounding sad, tense or dark, though this is a generalisation, not a rule."
+    },
+    {
+      "id": "ar-031",
+      "prompt": "In art, what does 'perspective' help an artist show?",
+      "choices": ["Depth and distance on a flat surface", "Which paint is most expensive", "How loud a colour is", "The name of a movement"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Perspective is a set of techniques for making a flat picture look like it has depth and distance."
+    },
+    {
+      "id": "ar-032",
+      "prompt": "Impressionism, a movement that began in France in the late 1800s, is best known for what?",
+      "choices": ["Capturing light and colour with visible brushstrokes", "Breaking subjects into geometric shapes", "Photorealistic detail", "Using only black and white"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Impressionist painters like Monet focused on capturing light and everyday scenes, often with loose, visible brushwork."
+    },
+    {
+      "id": "ar-033",
+      "prompt": "Cubism, a movement led by artists including Picasso, is known for what?",
+      "choices": ["Breaking subjects into geometric shapes and multiple viewpoints", "Painting only landscapes", "Using no colour at all", "Copying photographs exactly"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Cubist artists showed a subject from several angles at once, broken into geometric fragments."
+    },
+    {
+      "id": "ar-034",
+      "prompt": "In drama, what does 'upstage' mean?",
+      "choices": ["The part of the stage furthest from the audience", "The part of the stage closest to the audience", "Above the stage lights", "Backstage, out of sight"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Upstage is the area furthest from the audience. Downstage is closest to them."
+    },
+    {
+      "id": "ar-035",
+      "prompt": "In drama, what is improvisation?",
+      "choices": ["Acting without a prepared script", "Reading directly from a script", "Painting a stage backdrop", "Singing without music"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Improvisation is performing without a script, making up lines and actions on the spot."
+    },
+    {
+      "id": "ar-036",
+      "prompt": "On a treble clef stave, what note does the bottom line represent?",
+      "choices": ["E", "F", "G", "A"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The lines of the treble clef from bottom to top spell E, G, B, D, F, often remembered as 'Every Good Boy Deserves Football'."
+    },
+    {
+      "id": "ar-037",
+      "prompt": "On a treble clef stave, what do the spaces spell, bottom to top?",
+      "choices": ["F, A, C, E", "A, C, E, G", "C, E, G, B", "D, F, A, C"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The spaces of the treble clef spell FACE, an easy word to remember."
+    },
+    {
+      "id": "ar-038",
+      "prompt": "What is the Renaissance best known for in art history?",
+      "choices": ["A revival of realistic perspective, anatomy and classical ideas", "The invention of photography", "Abstract art with no recognisable subject", "Art made entirely from recycled materials"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Renaissance, roughly the 14th to 17th centuries in Europe, revived classical learning and produced much more realistic, three-dimensional looking art."
+    },
+    {
+      "id": "ar-039",
+      "prompt": "Pop Art, a movement from the mid-20th century, drew its imagery from where?",
+      "choices": ["Popular and consumer culture, like adverts and comic books", "Ancient mythology only", "Microscopic photography", "Handwritten letters"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Pop artists like Andy Warhol used images from advertising, packaging and mass media."
+    },
+    {
+      "id": "ar-040",
+      "prompt": "What is a soliloquy?",
+      "choices": ["A character speaking their thoughts aloud, often alone on stage", "A duet sung by two characters", "A stage direction telling an actor where to stand", "A type of paintbrush"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A soliloquy lets the audience hear a character's private thoughts, usually spoken when no other character is on stage."
+    },
+    {
+      "id": "ar-041",
+      "prompt": "In drama, a 'freeze frame' is used to do what?",
+      "choices": ["Capture a single, still moment on stage", "Speed up the whole scene", "Turn off the stage lights", "End the play early"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A freeze frame is a still, frozen image performers hold to emphasise a moment."
+    },
+    {
+      "id": "ar-042",
+      "prompt": "What technique does printmaking rely on?",
+      "choices": ["Transferring an image from a prepared surface onto another", "Carving a finished sculpture from marble", "Mixing only primary colours", "Painting directly onto glass"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Printmaking transfers ink from a prepared plate, block or screen onto paper or fabric, often making multiple copies."
+    },
+    {
+      "id": "ar-043",
+      "prompt": "In the elements of dance, what does 'space' refer to?",
+      "choices": ["Where the movement happens: level, direction and pathway", "How fast the movement is", "Which muscles are used", "The costume a dancer wears"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Space covers where a dancer moves: how high or low, which direction, and the pathway they trace."
+    },
+    {
+      "id": "ar-044",
+      "prompt": "In the elements of dance, what does 'energy' (or dynamics) refer to?",
+      "choices": ["How the movement is performed, such as sharp or smooth, strong or light", "Where on stage the dancer stands", "The story the dance is telling", "The colour of the costume"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Energy describes the quality of a movement: whether it is sharp or flowing, powerful or gentle."
+    },
+    {
+      "id": "ar-045",
+      "prompt": "What does watercolour paint rely on to create its typically light, transparent look?",
+      "choices": ["Being thinned and mixed with water", "Being mixed with sand", "Being heated before use", "Being applied only with a palette knife"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Watercolour pigment is diluted with water, which is what gives it its light, see-through quality compared with oil paint."
+    },
+    {
+      "id": "ar-046",
+      "prompt": "In drama, 'stage left' and 'stage right' are defined from whose point of view?",
+      "choices": ["The performer, facing the audience", "The audience, facing the stage", "The lighting technician", "The director, seated at the back"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Stage directions are given from the performer's point of view as they face the audience, which is the opposite of how it looks from the seats."
+    },
+    {
+      "id": "ar-047",
+      "prompt": "On a bass clef stave, the lines from bottom to top spell which notes?",
+      "choices": ["G, B, D, F, A", "F, A, C, E, G", "A, C, E, G, B", "C, E, G, B, D"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The bass clef lines spell G, B, D, F, A, often remembered as 'Good Boys Deserve Fruit Always'."
+    },
+    {
+      "id": "ar-048",
+      "prompt": "In the elements of dance (often taught as Body, Action, Space, Time and Energy), what does 'action' refer to?",
+      "choices": ["The actual movements themselves, such as travelling or turning", "The dancer's costume", "The lighting design", "The title of the dance"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Action is the movement itself: travelling steps, jumps, turns, or movements performed on the spot."
+    },
+    {
+      "id": "ar-049",
+      "prompt": "A cue in drama is best described as what?",
+      "choices": ["A signal, such as a line or sound, that tells a performer when to act", "The name for the final scene", "A type of stage lighting", "A written review of the play"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "A cue tells a performer exactly when to come in, move, or change something, often a specific word or sound."
+    },
+    {
+      "id": "ar-050",
+      "prompt": "What generally distinguishes oil paint from watercolour?",
+      "choices": ["Oil paint dries slowly and gives rich, opaque colour", "Oil paint dries instantly", "Oil paint cannot be mixed with other colours", "Oil paint is always used for sculpture"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Oil paint dries slowly, which lets artists blend it on the canvas, and it typically gives richer, more opaque colour than watercolour."
+    }
+  ]
+}

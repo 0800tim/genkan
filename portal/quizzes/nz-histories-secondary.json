@@ -1,0 +1,714 @@
+{
+  "id": "nz-histories-secondary",
+  "title": "Aotearoa New Zealand Histories, Years 7 to 10",
+  "emoji": "⚖️",
+  "suggested_age_min": 12,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Aotearoa New Zealand Histories became a compulsory strand of the New Zealand Curriculum in 2023. Facts checked against nzhistory.govt.nz and teara.govt.nz (Ministry for Culture and Heritage), 2026-08-30. Sticks to documented dates, places, figures and outcomes. Deliberately leaves out verdicts on motive, blame or justification, which a multiple choice quiz cannot hold responsibly, while stating raupatu, invasion and confiscation plainly where the record does.",
+  "questions": [
+    {
+      "id": "nzhs-001",
+      "prompt": "In what year was the Treaty of Waitangi first signed?",
+      "choices": [
+        "1840",
+        "1893",
+        "1901",
+        "1770"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Treaty of Waitangi was first signed on 6 February 1840, at Waitangi in the Bay of Islands."
+    },
+    {
+      "id": "nzhs-002",
+      "prompt": "What date is celebrated each year as Waitangi Day?",
+      "choices": [
+        "6 February",
+        "1 January",
+        "25 April",
+        "5 November"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Waitangi Day, 6 February, marks the anniversary of the Treaty's first signing in 1840."
+    },
+    {
+      "id": "nzhs-003",
+      "prompt": "In which year did New Zealand become the first self governing country in the world where women could vote in parliamentary elections?",
+      "choices": [
+        "1893",
+        "1901",
+        "1918",
+        "1945"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "New Zealand women won the right to vote in 1893, making the country the first self governing nation to grant women's suffrage."
+    },
+    {
+      "id": "nzhs-004",
+      "prompt": "Who was the campaigner most associated with leading the fight for New Zealand women's right to vote?",
+      "choices": [
+        "Kate Sheppard",
+        "Whina Cooper",
+        "Helen Clark",
+        "Jean Batten"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Kate Sheppard led the Women's Christian Temperance Union's campaign, gathering a huge petition that helped win the vote in 1893."
+    },
+    {
+      "id": "nzhs-005",
+      "prompt": "In which year did the most severe influenza pandemic of the twentieth century reach New Zealand, killing thousands within weeks?",
+      "choices": [
+        "1918",
+        "1901",
+        "1930",
+        "1945"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The 1918 influenza pandemic reached New Zealand in the closing months of the First World War and killed thousands of people within weeks."
+    },
+    {
+      "id": "nzhs-006",
+      "prompt": "New Zealand fought as part of the British Empire's forces in which two twentieth century wars?",
+      "choices": [
+        "The First World War and the Second World War",
+        "The Napoleonic Wars and the Crimean War",
+        "The Korean War and the Vietnam War only",
+        "New Zealand fought in neither war"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "New Zealand troops served in both the First World War (1914 to 1918) and the Second World War (1939 to 1945) alongside British and other Allied forces."
+    },
+    {
+      "id": "nzhs-007",
+      "prompt": "What day is commemorated each year as ANZAC Day?",
+      "choices": [
+        "25 April",
+        "6 February",
+        "5 November",
+        "11 November"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "ANZAC Day, 25 April, marks the anniversary of the 1915 Gallipoli landing by Australian and New Zealand troops."
+    },
+    {
+      "id": "nzhs-008",
+      "prompt": "Which decade saw a severe worldwide economic depression that also hit New Zealand hard, with widespread unemployment?",
+      "choices": [
+        "The 1930s",
+        "The 1950s",
+        "The 1970s",
+        "The 1990s"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Great Depression of the 1930s brought mass unemployment and hardship to New Zealand, alongside much of the rest of the world."
+    },
+    {
+      "id": "nzhs-009",
+      "prompt": "In 1935 which political party won power in New Zealand for the first time and went on to build the country's welfare state?",
+      "choices": [
+        "The Labour Party",
+        "The National Party",
+        "The Reform Party",
+        "The Green Party"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Labour's landslide win in 1935 brought Michael Joseph Savage to power, and his government built New Zealand's welfare state."
+    },
+    {
+      "id": "nzhs-010",
+      "prompt": "What is raupatu?",
+      "choices": [
+        "The confiscation of Māori land by the government",
+        "A type of traditional carving",
+        "A ceremonial cloak",
+        "A style of haka"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Raupatu means the confiscation of land. Large areas of Māori land were confiscated by the government during and after the New Zealand Wars."
+    },
+    {
+      "id": "nzhs-011",
+      "prompt": "In which year did New Zealand law declare the country a nuclear free zone?",
+      "choices": [
+        "1987",
+        "1945",
+        "1918",
+        "1893"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The New Zealand Nuclear Free Zone, Disarmament, and Arms Control Act became law in 1987, banning nuclear weapons and nuclear powered ships from New Zealand waters."
+    },
+    {
+      "id": "nzhs-012",
+      "prompt": "What were the two written languages of the Treaty of Waitangi?",
+      "choices": [
+        "English and Māori",
+        "English and French",
+        "Māori and Latin",
+        "Dutch and Māori"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Treaty exists as two texts, one in English and one in Māori, and the two do not say exactly the same thing."
+    },
+    {
+      "id": "nzhs-013",
+      "prompt": "What was the Kīngitanga?",
+      "choices": [
+        "The Māori King movement, formed to unite tribes under one leader",
+        "A British trading company",
+        "A type of waka",
+        "A style of meeting house"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Kīngitanga, or Māori King movement, began in 1858 to unite tribes under a single Māori monarch and help protect land from further sale."
+    },
+    {
+      "id": "nzhs-014",
+      "prompt": "Who was crowned as the first Māori King in 1858?",
+      "choices": [
+        "Pōtatau Te Wherowhero",
+        "Te Whiti o Rongomai",
+        "Hone Heke",
+        "Wiremu Tāmihana"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Waikato chief Pōtatau Te Wherowhero was declared the first Māori King at Ngāruawāhia in 1858."
+    },
+    {
+      "id": "nzhs-015",
+      "prompt": "What was the Chinese poll tax?",
+      "choices": [
+        "A special entry tax charged only to Chinese immigrants to New Zealand",
+        "A tax on all imported goods from China",
+        "A tax paid by every voter in New Zealand",
+        "A shipping fee charged equally to migrants from anywhere"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "From 1881 the government charged a poll tax on Chinese immigrants alone, a fee not charged to migrants from anywhere else."
+    },
+    {
+      "id": "nzhs-016",
+      "prompt": "In which year did the New Zealand government formally apologise for the Chinese poll tax?",
+      "choices": [
+        "2002",
+        "1934",
+        "1881",
+        "1951"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The poll tax itself was dropped in 1934, but it was not until 2002 that the government formally apologised for the hardship it had caused."
+    },
+    {
+      "id": "nzhs-017",
+      "prompt": "Roughly how much higher was the Māori death rate than the non Māori death rate during the 1918 influenza pandemic?",
+      "choices": [
+        "About seven times higher",
+        "About the same",
+        "About half as high",
+        "About twenty times lower"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Māori communities suffered a death rate roughly seven times that of non Māori New Zealanders during the 1918 pandemic."
+    },
+    {
+      "id": "nzhs-018",
+      "prompt": "What was the 28th Māori Battalion?",
+      "choices": [
+        "An infantry unit of Māori volunteers who fought in the Second World War",
+        "A group of Māori politicians in Parliament",
+        "A rugby team that toured Britain",
+        "A police unit formed in the 1950s"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The 28th Māori Battalion was made up entirely of Māori volunteers and fought in Greece, Crete, North Africa and Italy during the Second World War."
+    },
+    {
+      "id": "nzhs-019",
+      "prompt": "What did the Social Security Act 1938 establish in New Zealand?",
+      "choices": [
+        "A welfare state, with free health care and benefits for the old, sick and unemployed",
+        "A new voting system",
+        "A ban on nuclear weapons",
+        "New Zealand's first university"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Social Security Act 1938 built New Zealand's welfare state, including universal free health care and pensions."
+    },
+    {
+      "id": "nzhs-020",
+      "prompt": "What was the main issue behind the 1951 waterfront dispute?",
+      "choices": [
+        "A dispute over wages between waterside workers and their employers",
+        "A dispute over land ownership",
+        "A protest against a foreign sports tour",
+        "A disagreement about voting rights"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The 151 day dispute began as a fight over wages between waterside workers and shipping employers, and grew into the country's biggest ever industrial confrontation."
+    },
+    {
+      "id": "nzhs-021",
+      "prompt": "What was the Waitangi Tribunal, set up in 1975, given the job of doing?",
+      "choices": [
+        "Investigating and making recommendations on breaches of the Treaty of Waitangi",
+        "Running New Zealand's court system for all crimes",
+        "Deciding the results of general elections",
+        "Managing New Zealand's gold reserves"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Waitangi Tribunal was created by the Treaty of Waitangi Act 1975 to examine claims that the Crown had breached the Treaty."
+    },
+    {
+      "id": "nzhs-022",
+      "prompt": "What was the 1975 Land March?",
+      "choices": [
+        "A month long march the length of the North Island protesting the loss of Māori land",
+        "A protest against nuclear weapons",
+        "A strike by dock workers",
+        "A march celebrating the Treaty's signing"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "In 1975 marchers walked from Te Hāpua in the far north to Parliament in Wellington under the banner 'not one more acre of Māori land'."
+    },
+    {
+      "id": "nzhs-023",
+      "prompt": "What happened at Bastion Point in May 1978?",
+      "choices": [
+        "Police and army personnel evicted Māori land occupiers after more than 500 days",
+        "A gold rush began",
+        "A new Parliament building opened",
+        "A rugby tour was cancelled"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Ngāti Whātua had occupied the Bastion Point land for 506 days before police and army personnel evicted them in May 1978."
+    },
+    {
+      "id": "nzhs-024",
+      "prompt": "What was controversial about the 1981 Springbok rugby tour of New Zealand?",
+      "choices": [
+        "The Springboks came from South Africa, which enforced apartheid, a system of racial segregation",
+        "The team refused to play any matches",
+        "The tour was entirely funded by the government",
+        "No New Zealanders wanted to watch rugby that year"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Springboks represented apartheid era South Africa, and the tour split the country between those who protested and those who wanted the rugby to go ahead."
+    },
+    {
+      "id": "nzhs-025",
+      "prompt": "In the Treaty of Waitangi's English text, what did Māori cede to the Crown in Article 1?",
+      "choices": [
+        "Sovereignty",
+        "Their language",
+        "All personal property",
+        "Their fishing rights"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Article 1 of the English text has Māori ceding 'sovereignty' to the Crown, a term with no single matching word in Māori."
+    },
+    {
+      "id": "nzhs-026",
+      "prompt": "What Māori word did the Treaty's translators use in Article 1 instead of 'sovereignty'?",
+      "choices": [
+        "Kāwanatanga, meaning governance",
+        "Rangatiratanga, meaning chieftainship",
+        "Manaakitanga, meaning hospitality",
+        "Kotahitanga, meaning unity"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Translators used 'kāwanatanga', built from the word for governor, a narrower idea than the full sovereignty described in the English text."
+    },
+    {
+      "id": "nzhs-027",
+      "prompt": "What did Article 2 of the Treaty's Māori text guarantee to Māori?",
+      "choices": [
+        "Tino rangatiratanga, full authority, over their lands, forests, fisheries and other taonga",
+        "Ownership of the entire South Island only",
+        "A seat in the British Parliament",
+        "Free passage to Britain"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Article 2 promised rangatira and their people tino rangatiratanga over their lands, forests, fisheries and other taonga, treasures."
+    },
+    {
+      "id": "nzhs-028",
+      "prompt": "In which decade did the largest New Zealand Wars campaigns take place in the Waikato and Taranaki?",
+      "choices": [
+        "The 1860s",
+        "The 1840s",
+        "The 1880s",
+        "The 1900s"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Major campaigns, including the invasion of the Waikato and fighting in Taranaki, took place through the 1860s."
+    },
+    {
+      "id": "nzhs-029",
+      "prompt": "Roughly how much land was confiscated under the New Zealand Settlements Act 1863?",
+      "choices": [
+        "More than three million acres, across Waikato, Taranaki and other districts",
+        "A few hundred acres near Auckland only",
+        "No land at all, it was only ever proposed",
+        "All of the South Island"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "More than 3.4 million acres were confiscated under the Act, with the biggest confiscations in Waikato and Taranaki."
+    },
+    {
+      "id": "nzhs-030",
+      "prompt": "On what date in 1881 did an armed government force invade the peaceful Taranaki settlement of Parihaka?",
+      "choices": [
+        "5 November 1881",
+        "6 February 1840",
+        "25 April 1915",
+        "1 January 1901"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "On 5 November 1881, well over a thousand armed men entered Parihaka, whose people had chosen not to resist."
+    },
+    {
+      "id": "nzhs-031",
+      "prompt": "How did the people of Parihaka respond as the armed force entered their settlement in 1881?",
+      "choices": [
+        "They did not resist, and children sang while women offered food",
+        "They fought back and won the battle",
+        "They had already fled days earlier",
+        "They welcomed the soldiers as new residents"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Parihaka's leaders, Te Whiti o Rongomai and Tohu Kākahi, had urged peaceful resistance, and the invasion met no armed defence."
+    },
+    {
+      "id": "nzhs-032",
+      "prompt": "What happened to Parihaka's leaders, Te Whiti o Rongomai and Tohu Kākahi, after the 1881 invasion?",
+      "choices": [
+        "They were arrested and imprisoned without trial",
+        "They were made government ministers",
+        "They were paid compensation immediately",
+        "Nothing happened to them at all"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Both leaders were arrested and held without trial for well over a year following the invasion."
+    },
+    {
+      "id": "nzhs-033",
+      "prompt": "Why was the Kīngitanga formed in the 1850s?",
+      "choices": [
+        "To unite tribes under one leader and help protect Māori land from further sale",
+        "To create a new national rugby team",
+        "To build New Zealand's first railway",
+        "To organise the gold rush"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Growing settler demand for land, and Māori having no single unified voice, led some tribes to unite behind a Māori King from 1858."
+    },
+    {
+      "id": "nzhs-034",
+      "prompt": "In 1985, how was the Waitangi Tribunal's power changed?",
+      "choices": [
+        "It was allowed to investigate Treaty breaches all the way back to 1840",
+        "It was shut down completely",
+        "It was given power over general elections",
+        "Its findings were made legally binding for the first time"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "An amendment in 1985 let the Tribunal investigate breaches going right back to 1840, opening the door to many historical claims."
+    },
+    {
+      "id": "nzhs-035",
+      "prompt": "What did the 1975 Land March's slogan 'not one more acre' refer to?",
+      "choices": [
+        "Continuing loss of Māori land through sale and confiscation since 1900",
+        "A demand for more farmland for settlers",
+        "A protest against a foreign war",
+        "A call to build more houses"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The march protested the ongoing loss of Māori land, still shrinking through sale and confiscation well into the twentieth century."
+    },
+    {
+      "id": "nzhs-036",
+      "prompt": "What did Ngāti Whātua eventually gain after the Bastion Point occupation ended?",
+      "choices": [
+        "Compensation and legal recognition of their Treaty rights, following a Waitangi Tribunal claim",
+        "Nothing, the land issue was dropped forever",
+        "A seat in Parliament reserved for the hapū",
+        "Ownership of all of Auckland"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "After the 1978 eviction, Ngāti Whātua took their case to the Waitangi Tribunal, which led to compensation and recognition of their rights."
+    },
+    {
+      "id": "nzhs-037",
+      "prompt": "Roughly what share of Māori lived in cities by the mid 1970s, compared with before the Second World War?",
+      "choices": [
+        "About 80%, up from around 10%",
+        "About 10%, down from around 80%",
+        "Exactly the same share as before the war",
+        "100%, no Māori remained in rural areas at all"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Before the war roughly nine in ten Māori lived in rural communities. By the mid 1970s, roughly eight in ten lived in towns and cities."
+    },
+    {
+      "id": "nzhs-038",
+      "prompt": "What was one major reason for the rapid Māori migration to cities after the Second World War?",
+      "choices": [
+        "New manufacturing jobs and higher wages in towns, alongside limited opportunity in rural areas",
+        "A government ban on living in rural areas",
+        "A new law forcing relocation for all citizens",
+        "The moa had gone extinct"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Post war manufacturing jobs, higher wages, and pressure on rural resources drew many Māori families to New Zealand's growing towns and cities."
+    },
+    {
+      "id": "nzhs-039",
+      "prompt": "New Zealand's declaration of war on Germany in September 1939 differed from 1914 in what way?",
+      "choices": [
+        "New Zealand formally declared war in its own right, rather than automatically joining Britain's declaration",
+        "New Zealand refused to join the war at all",
+        "New Zealand declared war a year before Britain",
+        "New Zealand only sent food supplies, not soldiers"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "In 1939 New Zealand made its own formal declaration of war, unlike 1914, showing its growing sense of itself as independent within the Commonwealth."
+    },
+    {
+      "id": "nzhs-040",
+      "prompt": "New Zealand's worst single day death toll of the First World War came in a 1917 battle near which Belgian village?",
+      "choices": [
+        "Passchendaele",
+        "Gallipoli",
+        "Amiens",
+        "Ypres, in a separate and unrelated battle"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "On 12 October 1917, New Zealand lost 843 men in a matter of hours at Passchendaele, its worst single day death toll of the war."
+    },
+    {
+      "id": "nzhs-041",
+      "prompt": "About how many New Zealanders died on active service during the First World War?",
+      "choices": [
+        "Around 16,700",
+        "Around 1,600",
+        "Around 167,000",
+        "Around 160"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "New Zealand's official roll of honour lists close to 16,700 deaths on active service during the First World War, a huge toll for such a small country."
+    },
+    {
+      "id": "nzhs-042",
+      "prompt": "Where did the 28th Māori Battalion serve during the Second World War, besides North Africa?",
+      "choices": [
+        "Greece, Crete and Italy",
+        "Only within New Zealand",
+        "The Pacific Islands exclusively",
+        "Only in Britain"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "After early fighting in Greece and Crete, the battalion fought in North Africa and then spent its last two years of the war in Italy."
+    },
+    {
+      "id": "nzhs-043",
+      "prompt": "What action in 1985 badly damaged relations between New Zealand and France?",
+      "choices": [
+        "French agents bombed the Greenpeace ship Rainbow Warrior in Auckland Harbour",
+        "France invaded New Zealand's Pacific territories",
+        "New Zealand banned all French imports",
+        "A French warship was seized in Wellington"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "In July 1985 French secret service agents bombed and sank the Rainbow Warrior at its Auckland berth, killing a crew member, as it prepared to protest French nuclear testing."
+    },
+    {
+      "id": "nzhs-044",
+      "prompt": "What action by Prime Minister David Lange's government in 1985 strained New Zealand's alliance with the United States?",
+      "choices": [
+        "Refusing to allow a nuclear armed or powered American warship into New Zealand ports",
+        "Withdrawing all New Zealand troops from the Pacific",
+        "Ending trade with the United States entirely",
+        "Declaring New Zealand a republic"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "New Zealand's refusal to admit the USS Buchanan without confirmation it carried no nuclear weapons badly strained the ANZUS alliance with the United States."
+    },
+    {
+      "id": "nzhs-045",
+      "prompt": "What triggered the collapse of the 1981 Springbok tour match in Hamilton?",
+      "choices": [
+        "Protesters broke through security and occupied the playing field",
+        "The Springbok team refused to leave their hotel",
+        "A storm flooded the stadium",
+        "The referee cancelled the match for no reason"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "On 25 July 1981, hundreds of protesters got past police and onto the field at Rugby Park, forcing officials to abandon the match."
+    },
+    {
+      "id": "nzhs-046",
+      "prompt": "What was one relief measure the first Labour government introduced immediately on taking power in 1935?",
+      "choices": [
+        "A Christmas bonus for the unemployed and paid annual holidays for relief workers",
+        "A total ban on all imports",
+        "The abolition of Parliament",
+        "Compulsory military service for all adults"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Labour moved quickly in 1935, paying a Christmas bonus to the unemployed and giving relief workers paid annual leave."
+    },
+    {
+      "id": "nzhs-047",
+      "prompt": "Roughly how many marchers reached Parliament at the end of the 1975 Land March, having set out from Te Hāpua in Northland?",
+      "choices": [
+        "About 5,000",
+        "About 50",
+        "About 500,000",
+        "About 5"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The march grew as it travelled, and around 5,000 people arrived at Parliament, presenting a petition signed by 60,000 people."
+    },
+    {
+      "id": "nzhs-048",
+      "prompt": "Why is the term 'Second Taranaki War' avoided by some historians?",
+      "choices": [
+        "Because they see the 1863 to 1866 fighting as a continuation of the first Taranaki war rather than a separate one",
+        "Because no fighting happened in Taranaki after 1861",
+        "Because Taranaki was never involved in the New Zealand Wars",
+        "Because it happened in a completely different country"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Some historians treat the renewed fighting from 1863 as an extension of the earlier conflict rather than a war in its own right, so naming varies between accounts."
+    },
+    {
+      "id": "nzhs-049",
+      "prompt": "What was one key aim of the Social Security Act 1938, beyond the old age pension?",
+      "choices": [
+        "Universal free public health care",
+        "Free international travel for all citizens",
+        "The abolition of income tax",
+        "Compulsory unpaid labour for the unemployed"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "As well as pensions, the Act introduced universal free public health care, a major change for ordinary New Zealanders."
+    },
+    {
+      "id": "nzhs-050",
+      "prompt": "In the 1951 waterfront dispute, why did the union describe the situation as a lockout while employers called it a strike?",
+      "choices": [
+        "Workers refused only overtime, and were then barred from all work, rather than walking off the job entirely",
+        "Workers demanded a pay cut and employers refused",
+        "There was no disagreement, both sides used the same word",
+        "The dispute had nothing to do with pay or hours"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Workers had refused to work overtime in the pay dispute, and employers responded by refusing to employ them at all, which is why the two sides described the same events so differently."
+    },
+    {
+      "id": "nzhs-051",
+      "prompt": "Between the 1881 Act and a change in 1896, what happened to the Chinese poll tax?",
+      "choices": [
+        "It rose from 10 pounds to 100 pounds per person",
+        "It was abolished entirely",
+        "It was reduced to nothing",
+        "It was extended equally to all immigrants"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The poll tax began at 10 pounds under the 1881 Act and was raised to a steep 100 pounds in 1896, making entry far harder for Chinese migrants specifically."
+    },
+    {
+      "id": "nzhs-052",
+      "prompt": "What was distinctive about how the New Zealand Settlements Act 1863 justified confiscating Māori land?",
+      "choices": [
+        "It framed confiscation as a punishment for Māori it judged to be 'in rebellion' against the Crown",
+        "It only ever applied to land owned by British settlers",
+        "It required a unanimous vote of all iwi before any land could be taken",
+        "It offered full payment in gold for every acre confiscated"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The Act gave legal cover for taking land from Māori communities the government judged to be in rebellion, and used this to justify the very large confiscations that followed."
+    },
+    {
+      "id": "nzhs-053",
+      "prompt": "What long term outcome did the Waitangi Tribunal's 1985 change in powers eventually lead to?",
+      "choices": [
+        "A large and ongoing programme of Treaty settlements between iwi and the Crown",
+        "The complete abolition of Māori land ownership",
+        "An immediate end to all Treaty claims within a year",
+        "The transfer of all Crown land to private companies"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Being able to investigate claims back to 1840 opened the way for the long running programme of Treaty settlements between iwi and the Crown that continues today."
+    },
+    {
+      "id": "nzhs-054",
+      "prompt": "Why do some historians describe the Tauranga Campaign of 1863 to 1864 as connected to the Waikato War, rather than as a separate event?",
+      "choices": [
+        "Because Crown forces used Tauranga to cut off supply lines supporting Waikato tribes",
+        "Because they happened fifty years apart",
+        "Because they involved completely unrelated causes",
+        "Because the fighting took place in the South Island"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Tauranga sat within the wider Waikato campaign, since Crown forces fought there partly to cut off supply routes supporting Waikato tribes, so historians often describe the two together."
+    }
+  ]
+}

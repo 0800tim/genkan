@@ -1,0 +1,661 @@
+{
+  "id": "world-science-inventors",
+  "title": "Scientists and Inventions",
+  "emoji": "🔬",
+  "suggested_age_min": 10,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "questions": [
+    {
+      "id": "sci-001",
+      "prompt": "Isaac Newton described mathematically which force, explaining why planets orbit the sun and why objects fall to the ground?",
+      "choices": [
+        "Gravity",
+        "Magnetism",
+        "Friction",
+        "Electricity"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Newton's law of universal gravitation describes the pulling force between any two masses, from apples to planets."
+    },
+    {
+      "id": "sci-002",
+      "prompt": "Isaac Newton's three laws of motion describe the relationship between a force and what?",
+      "choices": [
+        "Motion",
+        "Temperature",
+        "Colour",
+        "Sound"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Newton's laws of motion explain how forces make objects speed up, slow down or change direction."
+    },
+    {
+      "id": "sci-003",
+      "prompt": "Galileo Galilei built improved versions of which instrument, using it to study the Moon, Jupiter's moons and sunspots?",
+      "choices": [
+        "The telescope",
+        "The microscope",
+        "The barometer",
+        "The compass"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Galileo built more powerful telescopes and used them to make careful observations of the night sky in the early 1600s."
+    },
+    {
+      "id": "sci-004",
+      "prompt": "Albert Einstein's theory of general relativity describes gravity as what?",
+      "choices": [
+        "A bending of space and time",
+        "A type of magnetism",
+        "A form of friction",
+        "A kind of sound wave"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "General relativity describes gravity not as a simple pulling force but as massive objects bending the space and time around them."
+    },
+    {
+      "id": "sci-005",
+      "prompt": "Einstein's famous equation, showing that mass and energy are related, is usually written as what?",
+      "choices": [
+        "E = mc²",
+        "F = ma",
+        "a² + b² = c²",
+        "V = IR"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "E = mc² shows that a small amount of mass can, in principle, be converted into a huge amount of energy."
+    },
+    {
+      "id": "sci-006",
+      "prompt": "Marie Curie became famous for studying elements that give off energy, a phenomenon she named what?",
+      "choices": [
+        "Radioactivity",
+        "Electricity",
+        "Combustion",
+        "Magnetism"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Marie Curie's research on radioactivity led to the discovery of two new elements, polonium and radium."
+    },
+    {
+      "id": "sci-007",
+      "prompt": "Marie Curie is the only person in history to have won Nobel Prizes in two different what?",
+      "choices": [
+        "Sciences",
+        "Countries",
+        "Decades",
+        "Languages"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Marie Curie won the Nobel Prize in Physics in 1903 and the Nobel Prize in Chemistry in 1911, a feat nobody else has matched."
+    },
+    {
+      "id": "sci-008",
+      "prompt": "In 1956, physicist Chien-Shiung Wu carried out a famous experiment that overturned a long-held assumption in physics called what?",
+      "choices": [
+        "Parity conservation",
+        "General relativity",
+        "Thermodynamics",
+        "Electromagnetism"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Wu's experiment showed that parity, the idea that physics should look the same in a mirror, does not always hold. Two theorists who predicted this, Lee and Yang, won the Nobel Prize for it."
+    },
+    {
+      "id": "sci-009",
+      "prompt": "Mathematician Emmy Noether proved a famous theorem linking symmetry in nature to which other idea in physics?",
+      "choices": [
+        "Conservation laws",
+        "Radioactivity",
+        "Magnetism",
+        "Optics"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Noether's theorem shows that every symmetry in physics, such as time passing the same way everywhere, corresponds to a quantity that is conserved, such as energy."
+    },
+    {
+      "id": "sci-010",
+      "prompt": "Michael Faraday's work on electricity and magnetism in the 1800s led directly to the invention of what?",
+      "choices": [
+        "The electric motor and generator",
+        "The steam engine",
+        "The telescope",
+        "The battery"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Faraday discovered that moving a magnet near a wire could generate electricity, the basic idea behind electric motors and generators."
+    },
+    {
+      "id": "sci-011",
+      "prompt": "James Clerk Maxwell's equations, published in the 1860s, showed that electricity, magnetism and which other thing were all connected?",
+      "choices": [
+        "Light",
+        "Sound",
+        "Gravity",
+        "Heat"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Maxwell's equations revealed that light itself is an electromagnetic wave, unifying three things that had seemed separate."
+    },
+    {
+      "id": "sci-012",
+      "prompt": "Dmitri Mendeleev is best known for organising all the known chemical elements into what?",
+      "choices": [
+        "The periodic table",
+        "The solar system model",
+        "The metric system",
+        "The genetic code"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Mendeleev arranged the elements by their properties in 1869, creating the periodic table still used today."
+    },
+    {
+      "id": "sci-013",
+      "prompt": "Mendeleev's periodic table was remarkable because he deliberately left gaps in it. Why?",
+      "choices": [
+        "He predicted undiscovered elements would fill them later",
+        "He ran out of space on the page",
+        "He was not sure the table was correct",
+        "Some elements were considered too dangerous to include"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Mendeleev left gaps for elements he believed existed but had not yet been found, and later discoveries proved him right."
+    },
+    {
+      "id": "sci-014",
+      "prompt": "Antoine Lavoisier, who helped identify oxygen and hydrogen as elements, is often called the father of modern what?",
+      "choices": [
+        "Chemistry",
+        "Physics",
+        "Biology",
+        "Astronomy"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Lavoisier's careful experiments in the late 1700s helped turn chemistry into a rigorous, measurement based science."
+    },
+    {
+      "id": "sci-015",
+      "prompt": "Lavoisier helped establish an important scientific law: that in a chemical reaction, mass is always what?",
+      "choices": [
+        "Conserved, neither created nor destroyed",
+        "Doubled",
+        "Turned into energy",
+        "Reduced to zero"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The law of conservation of mass says the total mass of substances before a reaction equals the total mass afterwards."
+    },
+    {
+      "id": "sci-016",
+      "prompt": "Marie Curie named one of the two new elements she discovered after her home country. Which country was that?",
+      "choices": [
+        "Poland",
+        "France",
+        "Russia",
+        "Germany"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Curie named the element polonium after Poland, the country of her birth, even though she carried out her research in France."
+    },
+    {
+      "id": "sci-017",
+      "prompt": "Rosalind Franklin's X-ray images of DNA, especially one known as Photo 51, were crucial evidence for working out what?",
+      "choices": [
+        "The double helix structure of DNA",
+        "The periodic table",
+        "The theory of evolution",
+        "The structure of the atom"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Franklin's carefully made X-ray diffraction images showed the helical, twisted shape of the DNA molecule."
+    },
+    {
+      "id": "sci-018",
+      "prompt": "Rosalind Franklin's DNA data was shown, without her knowledge, to which two scientists who went on to publish the double helix model?",
+      "choices": [
+        "James Watson and Francis Crick",
+        "Marie and Pierre Curie",
+        "Charles Darwin and Alfred Russel Wallace",
+        "Alexander Fleming and Louis Pasteur"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Watson and Crick used Franklin's unpublished X-ray data to help build their model. Franklin died before the Nobel Prize for the discovery was awarded, and Nobel Prizes are not given after death."
+    },
+    {
+      "id": "sci-019",
+      "prompt": "Charles Darwin proposed that species change over long periods of time through a process he called what?",
+      "choices": [
+        "Natural selection",
+        "Photosynthesis",
+        "Fermentation",
+        "Pasteurisation"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Natural selection is Darwin's idea that individuals best suited to their environment are more likely to survive and pass on their traits."
+    },
+    {
+      "id": "sci-020",
+      "prompt": "Charles Darwin's most famous book, published in 1859, laying out his theory of evolution, was called what?",
+      "choices": [
+        "\"On the Origin of Species\"",
+        "\"A Brief History of Time\"",
+        "\"The Double Helix\"",
+        "\"Silent Spring\""
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "\"On the Origin of Species\" set out Darwin's evidence and reasoning for evolution by natural selection."
+    },
+    {
+      "id": "sci-021",
+      "prompt": "Gregor Mendel's careful experiments breeding pea plants in a monastery garden laid the foundation for which science?",
+      "choices": [
+        "Genetics",
+        "Chemistry",
+        "Astronomy",
+        "Geology"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Mendel's pea plant experiments in the 1860s revealed patterns in how traits are passed from parents to offspring, founding the science of genetics."
+    },
+    {
+      "id": "sci-022",
+      "prompt": "Edward Jenner developed the world's first vaccine in 1796, protecting people against which disease?",
+      "choices": [
+        "Smallpox",
+        "Measles",
+        "Influenza",
+        "Tuberculosis"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Jenner noticed that milkmaids who caught the mild disease cowpox seemed protected from the deadly disease smallpox, and used that observation to create the first vaccine."
+    },
+    {
+      "id": "sci-023",
+      "prompt": "Alexander Fleming noticed in 1928 that mould had killed off bacteria growing in a laboratory dish, leading to the discovery of what?",
+      "choices": [
+        "Penicillin, the first widely used antibiotic",
+        "The first vaccine",
+        "The double helix",
+        "The periodic table"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Fleming's accidental discovery of penicillin gave doctors their first effective antibiotic, able to treat many bacterial infections."
+    },
+    {
+      "id": "sci-024",
+      "prompt": "Louis Pasteur showed that many diseases were caused by tiny living things, too small to see with the naked eye. What are they usually called?",
+      "choices": [
+        "Germs, or micro-organisms",
+        "Cells",
+        "Molecules",
+        "Enzymes"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Pasteur's germ theory of disease showed that micro-organisms, not \"bad air\" as many believed, caused many illnesses."
+    },
+    {
+      "id": "sci-025",
+      "prompt": "The heat treatment process named after Louis Pasteur, used to make milk and other foods safer to drink or eat, is called what?",
+      "choices": [
+        "Pasteurisation",
+        "Fermentation",
+        "Sterilisation",
+        "Distillation"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Pasteurisation heats food or drink just enough to kill harmful micro-organisms without ruining the taste."
+    },
+    {
+      "id": "sci-026",
+      "prompt": "Katherine Johnson, an American mathematician working at NASA, hand-calculated the flight path for which 1962 mission?",
+      "choices": [
+        "John Glenn's orbital spaceflight",
+        "The first Moon landing",
+        "The first space shuttle flight",
+        "The first Mars rover landing"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Katherine Johnson's calculations helped plot the path for John Glenn's orbit of the Earth in 1962, at a time when NASA's early computers were still new and not fully trusted."
+    },
+    {
+      "id": "sci-027",
+      "prompt": "Katherine Johnson also checked, by hand, the computer's calculations for which 1969 mission?",
+      "choices": [
+        "Apollo 11, the first crewed Moon landing",
+        "The first satellite launch",
+        "The first space station launch",
+        "The first shuttle flight"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Before Apollo 11 launched, Katherine Johnson verified the computer generated numbers that would guide the astronauts to the Moon and back."
+    },
+    {
+      "id": "sci-028",
+      "prompt": "The word \"algorithm\", meaning a set of step-by-step instructions, comes from the name of which mathematician?",
+      "choices": [
+        "Al-Khwarizmi",
+        "Pythagoras",
+        "Euclid",
+        "Newton"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Al-Khwarizmi was a mathematician working in Baghdad around 800 AD. His Latinised name, Algoritmi, gave us the word \"algorithm\"."
+    },
+    {
+      "id": "sci-029",
+      "prompt": "Al-Khwarizmi wrote an influential book that gave its name to which branch of mathematics?",
+      "choices": [
+        "Algebra",
+        "Geometry",
+        "Trigonometry",
+        "Calculus"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The word \"algebra\" comes from \"al-jabr\", a term in the title of Al-Khwarizmi's book on solving equations."
+    },
+    {
+      "id": "sci-030",
+      "prompt": "Which scientist, working around the year 1000, wrote the influential \"Book of Optics\" explaining how vision works?",
+      "choices": [
+        "Ibn al-Haytham, also called Alhazen",
+        "Al-Khwarizmi",
+        "Pythagoras",
+        "Archimedes"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Ibn al-Haytham's Book of Optics carefully explained how light and vision work, and is considered a landmark in the history of science."
+    },
+    {
+      "id": "sci-031",
+      "prompt": "Ibn al-Haytham's Book of Optics correctly argued that we see objects because of what?",
+      "choices": [
+        "Light travelling from objects into our eyes",
+        "Beams sent out from our eyes onto objects",
+        "Sound waves bouncing off objects",
+        "Heat given off by objects"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Ibn al-Haytham showed that vision works because light travels from objects into the eye, correcting an older Greek idea that the eye sent out rays of its own."
+    },
+    {
+      "id": "sci-032",
+      "prompt": "Ibn al-Haytham is often credited as an early pioneer of which general approach to studying the world, based on testing ideas with careful experiments?",
+      "choices": [
+        "The scientific method",
+        "The periodic table",
+        "Natural selection",
+        "The theory of relativity"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Ibn al-Haytham insisted on testing ideas through observation and experiment rather than accepting them on authority, an early example of the scientific method."
+    },
+    {
+      "id": "sci-033",
+      "prompt": "The theorem relating the three sides of a right angled triangle is usually named after which ancient Greek thinker?",
+      "choices": [
+        "Pythagoras",
+        "Archimedes",
+        "Euclid",
+        "Aristotle"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Pythagorean theorem states that in a right angled triangle, the square of the longest side equals the sum of the squares of the other two."
+    },
+    {
+      "id": "sci-034",
+      "prompt": "The mathematical relationship behind the Pythagorean theorem was actually known and used long before Pythagoras was born, by which earlier civilisation?",
+      "choices": [
+        "The Babylonians",
+        "The Romans",
+        "The Vikings",
+        "The Aztecs"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Clay tablets show that Babylonian mathematicians were using this relationship over a thousand years before Pythagoras, though his name stuck to it."
+    },
+    {
+      "id": "sci-035",
+      "prompt": "Mathematicians in which country developed the concept of zero as a number in its own right, along with a place value number system?",
+      "choices": [
+        "India",
+        "Egypt",
+        "Greece",
+        "Rome"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Indian mathematicians, including Brahmagupta, set out rules for using zero as a number, and the place value system they developed spread through the Arab world to Europe."
+    },
+    {
+      "id": "sci-036",
+      "prompt": "The numerals we use today, 0 to 9, ultimately trace back to which country before they spread through the Arab world to Europe?",
+      "choices": [
+        "India",
+        "Egypt",
+        "Greece",
+        "China"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "What are often called \"Arabic numerals\" in Europe actually originated in India and were carried west by Arab scholars and traders."
+    },
+    {
+      "id": "sci-037",
+      "prompt": "An ancient Chinese mathematics text called \"The Nine Chapters on the Mathematical Art\" included early methods for solving what?",
+      "choices": [
+        "Systems of linear equations",
+        "Calculus problems",
+        "Probability puzzles",
+        "Prime number tests"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "\"The Nine Chapters\", compiled over centuries and finished around 2,000 years ago, included a method for solving systems of equations similar to techniques taught today."
+    },
+    {
+      "id": "sci-038",
+      "prompt": "Ada Lovelace worked closely with which inventor on his design for an early mechanical computer, the Analytical Engine?",
+      "choices": [
+        "Charles Babbage",
+        "Alan Turing",
+        "Isaac Newton",
+        "James Clerk Maxwell"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Ada Lovelace studied and wrote about Charles Babbage's proposed Analytical Engine, a mechanical computer that was never fully built in his lifetime."
+    },
+    {
+      "id": "sci-039",
+      "prompt": "Ada Lovelace is often regarded as an early computer programmer because she wrote what?",
+      "choices": [
+        "A detailed set of instructions for the Analytical Engine to follow",
+        "The first working computer",
+        "The first electronic calculator",
+        "The first computer virus"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Lovelace's notes included a detailed method for the Analytical Engine to calculate a sequence of numbers, one of the first things resembling a computer program."
+    },
+    {
+      "id": "sci-040",
+      "prompt": "Papermaking, gunpowder, the compass and printing, four of history's most influential inventions, are all credited to which country?",
+      "choices": [
+        "China",
+        "Egypt",
+        "Greece",
+        "Persia"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "These four inventions are often called China's Four Great Inventions, developed over many centuries."
+    },
+    {
+      "id": "sci-041",
+      "prompt": "Cai Lun, working around 105 AD, is credited with improving the process for making what material?",
+      "choices": [
+        "Paper",
+        "Glass",
+        "Steel",
+        "Silk"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Cai Lun refined a method for making paper from plant fibres, cloth and other materials, making it cheaper and easier to produce."
+    },
+    {
+      "id": "sci-042",
+      "prompt": "China's magnetic compass, which transformed sea navigation, was developed centuries before it became common where?",
+      "choices": [
+        "Europe",
+        "Egypt",
+        "Australia",
+        "South America"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The compass was in use in China for navigation well before it became widespread among European sailors."
+    },
+    {
+      "id": "sci-043",
+      "prompt": "Movable type printing, using individual pieces for each character, was invented in China by Bi Sheng roughly how many centuries before Johannes Gutenberg's printing press appeared in Europe?",
+      "choices": [
+        "About four centuries",
+        "About fifty years",
+        "About one century",
+        "About ten centuries"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Bi Sheng developed movable type printing around 1040, roughly four hundred years before Gutenberg's press became famous in Europe in the mid-1400s."
+    },
+    {
+      "id": "sci-044",
+      "prompt": "Johannes Gutenberg's mid-1400s invention, which transformed how books were made and shared in Europe, was what?",
+      "choices": [
+        "The movable type printing press",
+        "The telescope",
+        "The steam engine",
+        "The electric motor"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Gutenberg's press let printers set and reuse individual metal letters, making books far quicker and cheaper to produce than copying by hand."
+    },
+    {
+      "id": "sci-045",
+      "prompt": "Gunpowder, one of China's Four Great Inventions, was first stumbled upon by chemists who were searching for what?",
+      "choices": [
+        "A potion for immortality",
+        "A stronger type of steel",
+        "A cure for disease",
+        "A better dye for silk"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Chinese alchemists experimenting with mixtures in search of an elixir of immortality accidentally created an early form of gunpowder."
+    },
+    {
+      "id": "sci-046",
+      "prompt": "Nikola Tesla is best known for developing which kind of electrical power system, still used to send electricity over long distances today?",
+      "choices": [
+        "Alternating current (AC)",
+        "Direct current only",
+        "Solar power",
+        "Wind power"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Tesla's work on alternating current helped make it practical to send electricity efficiently over long distances."
+    },
+    {
+      "id": "sci-047",
+      "prompt": "The Wright brothers achieved the first powered, controlled aeroplane flight in which year?",
+      "choices": [
+        "1903",
+        "1885",
+        "1920",
+        "1950"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Orville and Wilbur Wright flew their powered aircraft at Kitty Hawk, North Carolina, in 1903."
+    },
+    {
+      "id": "sci-048",
+      "prompt": "Wootz steel, an unusually strong and famous early steel later linked to legendary sword blades, was first produced in which country?",
+      "choices": [
+        "India",
+        "Germany",
+        "Japan",
+        "England"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Wootz steel was produced in southern India from around 2,300 years ago, and was later traded widely and prized for its strength."
+    },
+    {
+      "id": "sci-049",
+      "prompt": "Alan Turing's codebreaking work during the Second World War focused on decoding messages sent using which German machine?",
+      "choices": [
+        "The Enigma machine",
+        "The Analytical Engine",
+        "The telegraph",
+        "The radar system"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Turing and his colleagues at Bletchley Park built machines that helped crack codes produced by Germany's Enigma machine."
+    },
+    {
+      "id": "sci-050",
+      "prompt": "Alan Turing's theoretical idea of a simple machine that could, in principle, carry out any calculation is known today as a what?",
+      "choices": [
+        "Turing machine",
+        "Analytical Engine",
+        "Enigma machine",
+        "Difference engine"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Turing machine is a theoretical concept, not a physical device, that became a foundation for the modern science of computing."
+    }
+  ]
+}

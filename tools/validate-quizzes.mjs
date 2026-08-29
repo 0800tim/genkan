@@ -131,7 +131,13 @@ for (const path of paths) {
           errors.push(
             `question ${label} must have exactly 4 non-empty string choices`
           );
-        } else if (new Set(q.choices.map((c) => c.trim().toLowerCase())).size !== 4) {
+        } else if (new Set(q.choices.map((c) => c.trim())).size !== 4) {
+          // Trimmed but NOT lowercased. Lowercasing here made every question
+          // about capital letters a false positive by construction: "We went
+          // to New Zealand" and "we went to New Zealand" are the whole point
+          // of the question and collapse to one string if you fold the case.
+          // An accidental duplicate is nearly always an exact copy-paste, so
+          // an exact comparison still catches the thing this is here to catch.
           errors.push(`question ${label} has duplicate choices`);
         }
 

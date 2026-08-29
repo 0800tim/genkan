@@ -52,8 +52,13 @@ effort earns screen time.
 | `prompt` | string | The question. Plain text plus emoji is fine. |
 | `choices` | array | Exactly 4 strings. All plausible, no joke options, no trick answers. |
 | `answer_index` | int | 0 to 3, index of the correct choice as written in this file. |
-| `difficulty` | int, optional | 1 to 5. 1 is a warm-up, 5 is a stretch. Drives the difficulty ramp below. |
-| `explanation` | string, optional | One friendly sentence shown after answering, right or wrong. Teach, never scold. |
+| `difficulty` | int | 1 to 5. 1 is a warm-up, 5 is a stretch. Drives the difficulty ramp below. Optional in the schema, expected in practice: every bank shipped here has it on every question. |
+| `explanation` | string | One friendly sentence shown after answering, right or wrong, and the whole content of the bank's study page. Teach, never scold. Optional in the schema, required in review: every question shipped here has one. |
+
+The last two are "optional" only in the sense that the validator will not stop a
+bank without them. A bank with no explanations is a test rather than a lesson and
+will be sent back, and a bank with no difficulty is sampled flat while every
+other bank ramps. Write both.
 
 ## Random sampling (why banks are big)
 
@@ -118,8 +123,52 @@ Two guarantees hold whatever the profile says:
   or below the level that kid is already comfortable with. The ramp
   stretches a kid; it never sets them up to fail.
 
-Banks with no `difficulty` fields keep working exactly as they always
-have: flat random sampling, no ramp. Nothing needs to be backfilled.
+Banks with no `difficulty` fields still work: flat random sampling, no ramp.
+That path is kept for a database bank half-written in the dashboard, not as an
+option for a file bank. **Every bank in this directory is labelled.** The eight
+that predated the ramp were backfilled rather than left as a documented
+exception, because two classes of bank behaving differently is exactly the kind
+of inconsistency nobody remembers six months later.
+
+## What the validator checks
+
+`node tools/validate-quizzes.mjs` runs over every bank in this directory, or
+over the files you name. `bin/kidnet-quiz validate` calls the same thing, so a
+generated bank can be checked before it is installed. It exits non-zero if any
+bank fails.
+
+Hard failures:
+
+- The file does not parse as JSON.
+- A missing or empty `id`, `title` or `emoji`; a `suggested_age_min`,
+  `minutes_per_pass`, `pass_mark` or `questions_per_round` that is not a
+  positive integer.
+- `id` does not match the filename, or two banks share an `id`.
+- `pass_mark` is greater than `questions_per_round`.
+- A question with a missing or duplicate `id`, a missing or empty `prompt`, or a
+  prompt that duplicates another in the same bank.
+- Anything other than exactly four non-empty string choices, or two choices that
+  are the same. That comparison trims but does **not** fold case, because
+  "We went to New Zealand" against "we went to New Zealand" is the entire point
+  of a capital-letters question.
+- An `answer_index` that is not an integer from 0 to 3.
+- An `explanation` that is present but is not a string.
+- A `difficulty` outside 1 to 5, or a bank where some questions carry it and
+  some do not. All or none.
+- Fewer than `questions_per_round` questions at difficulty 1 or 2, in a bank
+  that uses difficulty. A struggling kid is given a round built mostly from
+  those two levels, so there has to be enough to fill one without repeating.
+- Fewer than `4 x questions_per_round` questions in total.
+
+Warnings, printed but not fatal: a difficulty level with no questions in it.
+
+A passing line prints the question count and the ramp, so
+`PASS times-tables.json (60 questions, ramped 12/16/15/12/5)` tells you the
+spread across levels 1 to 5 at a glance.
+
+What it cannot check, and what review is for: whether the answer is actually
+correct, whether the explanation teaches anything, and whether the wrong answers
+are plausible. Fact-check every answer yourself.
 
 ## Anti-grind rules (server-enforced, NOT in this file)
 
@@ -182,6 +231,9 @@ New banks arrive by pull request. Checklist:
 - Valid JSON, fields as above, exactly 4 choices per question.
 - Every `answer_index` verified correct. Fact-check every single one.
 - Kid-appropriate, encouraging tone, no trick questions.
+- An explanation on every question, written for the child who got it wrong.
+  `CONTRIBUTING.md` has what separates a good one from a restatement of the
+  answer.
 - If you use `difficulty`, label every question and spread the levels
   as above. Half-labelled banks are rejected, and a bank needs at least
   `questions_per_round` questions at levels 1 and 2 so a struggling kid

@@ -1,0 +1,791 @@
+{
+  "id": "ca-elementary-secondary",
+  "title": "Canada, Elementary and Secondary",
+  "emoji": "🇨🇦",
+  "suggested_age_min": 8,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "questions": [
+    {
+      "id": "ca-001",
+      "prompt": "What is the capital city of Canada?",
+      "choices": [
+        "Ottawa",
+        "Toronto",
+        "Montreal",
+        "Vancouver"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Ottawa, in the province of Ontario, is Canada's capital, even though Toronto is the country's biggest city."
+    },
+    {
+      "id": "ca-002",
+      "prompt": "Toronto, Canada's biggest city, is in which province?",
+      "choices": [
+        "Ontario",
+        "Quebec",
+        "British Columbia",
+        "Alberta"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Toronto is the capital of Ontario and Canada's most populated city."
+    },
+    {
+      "id": "ca-003",
+      "prompt": "Montreal is the biggest city in which province?",
+      "choices": [
+        "Quebec",
+        "Ontario",
+        "British Columbia",
+        "Manitoba"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Montreal is Quebec's biggest city, though Quebec City, not Montreal, is the provincial capital."
+    },
+    {
+      "id": "ca-004",
+      "prompt": "Vancouver sits on which coast of Canada?",
+      "choices": [
+        "The Pacific coast",
+        "The Atlantic coast",
+        "The Arctic coast",
+        "The Gulf coast"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Vancouver is on Canada's west coast, on the Pacific Ocean."
+    },
+    {
+      "id": "ca-005",
+      "prompt": "How many provinces make up Canada?",
+      "choices": [
+        "Ten",
+        "Eight",
+        "Nine",
+        "Twelve"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Canada has ten provinces, plus three territories in the north."
+    },
+    {
+      "id": "ca-006",
+      "prompt": "Besides its ten provinces, how many territories does Canada have in the north?",
+      "choices": [
+        "Three",
+        "One",
+        "Two",
+        "Five"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The three northern territories are Yukon, the Northwest Territories and Nunavut."
+    },
+    {
+      "id": "ca-007",
+      "prompt": "What is the capital city of British Columbia?",
+      "choices": [
+        "Victoria",
+        "Vancouver",
+        "Kelowna",
+        "Kamloops"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Victoria, on Vancouver Island, is the capital of British Columbia, though Vancouver is the province's biggest city."
+    },
+    {
+      "id": "ca-008",
+      "prompt": "What is the capital city of Alberta?",
+      "choices": [
+        "Edmonton",
+        "Calgary",
+        "Red Deer",
+        "Banff"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Edmonton is Alberta's capital, while Calgary is the province's largest city."
+    },
+    {
+      "id": "ca-009",
+      "prompt": "What is the capital city of Manitoba?",
+      "choices": [
+        "Winnipeg",
+        "Brandon",
+        "Regina",
+        "Saskatoon"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Winnipeg is Manitoba's capital and by far its biggest city."
+    },
+    {
+      "id": "ca-010",
+      "prompt": "What is the capital city of Saskatchewan?",
+      "choices": [
+        "Regina",
+        "Saskatoon",
+        "Moose Jaw",
+        "Prince Albert"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Regina is Saskatchewan's capital, though Saskatoon is the province's biggest city."
+    },
+    {
+      "id": "ca-011",
+      "prompt": "What is the capital city of Nova Scotia?",
+      "choices": [
+        "Halifax",
+        "Sydney",
+        "Truro",
+        "Dartmouth"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Halifax, on the Atlantic coast, is Nova Scotia's capital and biggest city."
+    },
+    {
+      "id": "ca-012",
+      "prompt": "What is the capital city of New Brunswick?",
+      "choices": [
+        "Fredericton",
+        "Saint John",
+        "Moncton",
+        "Bathurst"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Fredericton is New Brunswick's capital, even though Saint John and Moncton are both bigger cities."
+    },
+    {
+      "id": "ca-013",
+      "prompt": "What is the capital city of Prince Edward Island?",
+      "choices": [
+        "Charlottetown",
+        "Summerside",
+        "Souris",
+        "Cavendish"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Charlottetown is the capital of Prince Edward Island, Canada's smallest province."
+    },
+    {
+      "id": "ca-014",
+      "prompt": "What is the capital city of Newfoundland and Labrador?",
+      "choices": [
+        "St. John's",
+        "Corner Brook",
+        "Gander",
+        "Labrador City"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "St. John's, on the island of Newfoundland, is the capital of Newfoundland and Labrador."
+    },
+    {
+      "id": "ca-015",
+      "prompt": "What is the capital of Nunavut, Canada's newest and most northern territory?",
+      "choices": [
+        "Iqaluit",
+        "Rankin Inlet",
+        "Cambridge Bay",
+        "Baker Lake"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Iqaluit is the capital of Nunavut, a territory created in 1999 for Canada's Inuit."
+    },
+    {
+      "id": "ca-016",
+      "prompt": "Which mountain range runs through western Canada?",
+      "choices": [
+        "The Rocky Mountains",
+        "The Andes",
+        "The Alps",
+        "The Appalachians"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Rocky Mountains stretch through British Columbia and Alberta."
+    },
+    {
+      "id": "ca-017",
+      "prompt": "The Canadian Shield, which covers much of central and northern Canada, is best described as which of these?",
+      "choices": [
+        "A huge region of ancient, rocky land",
+        "A mountain range in the west",
+        "A desert on the prairies",
+        "A rainforest on the coast"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Canadian Shield is an enormous area of very old rock, shaped by ancient glaciers, covering much of Ontario, Quebec and the north."
+    },
+    {
+      "id": "ca-018",
+      "prompt": "Which of these is NOT one of the five Great Lakes?",
+      "choices": [
+        "Lake Winnipeg",
+        "Lake Superior",
+        "Lake Huron",
+        "Lake Ontario"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The five Great Lakes are Superior, Huron, Michigan, Erie and Ontario. Lake Winnipeg is a different, separate lake in Manitoba."
+    },
+    {
+      "id": "ca-019",
+      "prompt": "Canada shares the Great Lakes with which country?",
+      "choices": [
+        "The United States",
+        "Mexico",
+        "Greenland",
+        "France"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Great Lakes sit on the border between Canada and the United States."
+    },
+    {
+      "id": "ca-020",
+      "prompt": "Which river carries water from the Great Lakes out to the Atlantic Ocean?",
+      "choices": [
+        "The St. Lawrence River",
+        "The Fraser River",
+        "The Mackenzie River",
+        "The Yukon River"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The St. Lawrence River flows from the Great Lakes, past Montreal and Quebec City, out to the Atlantic."
+    },
+    {
+      "id": "ca-021",
+      "prompt": "Which river is the longest in Canada?",
+      "choices": [
+        "The Mackenzie River",
+        "The Fraser River",
+        "The St. Lawrence River",
+        "The Yukon River"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The Mackenzie River flows through the Northwest Territories to the Arctic Ocean and is Canada's longest river."
+    },
+    {
+      "id": "ca-022",
+      "prompt": "Which bay, between New Brunswick and Nova Scotia, has the highest tides in the world?",
+      "choices": [
+        "The Bay of Fundy",
+        "Hudson Bay",
+        "James Bay",
+        "Georgian Bay"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Bay of Fundy's tides can rise and fall by more than 15 metres, the biggest tidal range on Earth."
+    },
+    {
+      "id": "ca-023",
+      "prompt": "Which three oceans touch Canada's coastline?",
+      "choices": [
+        "The Atlantic, Pacific and Arctic",
+        "The Atlantic, Pacific and Indian",
+        "The Pacific, Arctic and Southern",
+        "The Atlantic, Indian and Arctic"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Canada touches the Atlantic Ocean in the east, the Pacific in the west and the Arctic in the north, giving it the longest coastline of any country."
+    },
+    {
+      "id": "ca-024",
+      "prompt": "Indigenous peoples had been living in what is now Canada for roughly how long before Europeans arrived?",
+      "choices": [
+        "Thousands of years",
+        "A few hundred years",
+        "Only a few decades",
+        "Since the 1600s"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Indigenous peoples have lived across what is now Canada for thousands of years before any European set foot there."
+    },
+    {
+      "id": "ca-025",
+      "prompt": "The Inuit traditionally live in which part of Canada?",
+      "choices": [
+        "The Arctic and far north",
+        "The southern prairies",
+        "The west coast rainforest",
+        "The Great Lakes region"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Inuit are Indigenous people of the Arctic, traditionally living across Canada's far north."
+    },
+    {
+      "id": "ca-026",
+      "prompt": "The Métis, one of Canada's three recognised Indigenous peoples, are a distinct people descended from whom?",
+      "choices": [
+        "First Nations and European fur traders",
+        "Only French settlers",
+        "Only British settlers",
+        "Recent immigrants"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Métis Nation grew from families with both First Nations and European, mostly French, fur-trade ancestry, and developed its own distinct culture."
+    },
+    {
+      "id": "ca-027",
+      "prompt": "The Haudenosaunee Confederacy, a long-standing alliance of Indigenous nations in what is now Ontario and New York, is also known by which name?",
+      "choices": [
+        "The Six Nations",
+        "The Seven Sisters",
+        "The Great Council",
+        "The Long Council"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Haudenosaunee Confederacy is also called the Six Nations, after the six member nations it eventually included."
+    },
+    {
+      "id": "ca-028",
+      "prompt": "European fur traders who paddled canoes over long distances between trading posts were known as what?",
+      "choices": [
+        "Voyageurs",
+        "Settlers",
+        "Loyalists",
+        "Pioneers"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Voyageurs were the fur traders, mostly French Canadian, who paddled and portaged canoes loaded with furs and goods across the country."
+    },
+    {
+      "id": "ca-029",
+      "prompt": "New France, Canada's first major European colony, was settled mainly by people from which country?",
+      "choices": [
+        "France",
+        "Britain",
+        "Spain",
+        "Netherlands"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "New France was France's colony along the St. Lawrence River, centred on Quebec City, founded in the early 1600s."
+    },
+    {
+      "id": "ca-030",
+      "prompt": "The 1759 Battle of the Plains of Abraham, a turning point in the fight for control of Canada, was fought near which city?",
+      "choices": [
+        "Quebec City",
+        "Montreal",
+        "Toronto",
+        "Halifax"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The battle was fought on high ground just outside the walls of Quebec City, between British and French forces."
+    },
+    {
+      "id": "ca-031",
+      "prompt": "Canadian Confederation, when Ontario, Quebec, Nova Scotia and New Brunswick joined together as one country, happened in which year?",
+      "choices": [
+        "1867",
+        "1812",
+        "1901",
+        "1931"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Confederation took place on 1 July 1867, a date still celebrated every year as Canada Day."
+    },
+    {
+      "id": "ca-032",
+      "prompt": "Who was Canada's first Prime Minister?",
+      "choices": [
+        "John A. Macdonald",
+        "Wilfrid Laurier",
+        "William Lyon Mackenzie King",
+        "John Diefenbaker"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "John A. Macdonald became Canada's first Prime Minister when Confederation took place in 1867."
+    },
+    {
+      "id": "ca-033",
+      "prompt": "Which of these provinces did NOT join Canada at Confederation in 1867?",
+      "choices": [
+        "Manitoba",
+        "Ontario",
+        "Quebec",
+        "Nova Scotia"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Only Ontario, Quebec, Nova Scotia and New Brunswick joined in 1867. Manitoba became a province in 1870, and other provinces joined later still."
+    },
+    {
+      "id": "ca-034",
+      "prompt": "The Canadian Pacific Railway, completed in 1885, is famous for doing what?",
+      "choices": [
+        "Linking the country from coast to coast",
+        "Carrying only mail",
+        "Connecting Canada to the United States only",
+        "Running only through the prairies"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Canadian Pacific Railway joined British Columbia to the rest of Canada, fulfilling a promise made when BC joined Confederation."
+    },
+    {
+      "id": "ca-035",
+      "prompt": "Which First World War battle, fought in 1917, is often seen as a defining moment for Canada as a nation?",
+      "choices": [
+        "The Battle of Vimy Ridge",
+        "The Battle of Britain",
+        "The Battle of the Somme",
+        "The Battle of Ypres"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "At Vimy Ridge in April 1917, Canadian troops fighting together as one force captured ground that other Allied armies had not been able to take."
+    },
+    {
+      "id": "ca-036",
+      "prompt": "The Battle of Vimy Ridge was fought in which country?",
+      "choices": [
+        "France",
+        "Belgium",
+        "Germany",
+        "Britain"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Vimy Ridge is in northern France, where the battle was fought in April 1917."
+    },
+    {
+      "id": "ca-037",
+      "prompt": "On D-Day in June 1944, Canadian troops landed on which beach in Normandy?",
+      "choices": [
+        "Juno Beach",
+        "Omaha Beach",
+        "Gold Beach",
+        "Sword Beach"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Juno Beach was the section of the Normandy coast where Canadian forces landed on D-Day, 6 June 1944."
+    },
+    {
+      "id": "ca-038",
+      "prompt": "The Statute of Westminster, passed in 1931, did what for Canada?",
+      "choices": [
+        "Gave Canada full power to make its own laws, separate from Britain",
+        "Made Canada a republic",
+        "Ended Canada's ties to the Commonwealth",
+        "Created the Canadian Senate"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The Statute of Westminster in 1931 gave Canada and other dominions full legislative independence from the British Parliament."
+    },
+    {
+      "id": "ca-039",
+      "prompt": "Canada's Constitution was fully brought under Canadian control, without needing approval from Britain, in which year?",
+      "choices": [
+        "1982",
+        "1931",
+        "1867",
+        "1949"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "In 1982, the Constitution was patriated, meaning Canada no longer needed the British Parliament's approval to change it."
+    },
+    {
+      "id": "ca-040",
+      "prompt": "What document, added when the Constitution was patriated in 1982, guarantees Canadians' basic rights and freedoms?",
+      "choices": [
+        "The Canadian Charter of Rights and Freedoms",
+        "The Bill of Rights",
+        "The Magna Carta",
+        "The Declaration of Independence"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Canadian Charter of Rights and Freedoms became part of the Constitution in 1982 and protects rights such as free speech and equality before the law."
+    },
+    {
+      "id": "ca-041",
+      "prompt": "What kind of government does Canada have?",
+      "choices": [
+        "A parliamentary democracy",
+        "A one-party republic",
+        "A direct democracy with no parliament",
+        "An absolute monarchy"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Canada is a parliamentary democracy and a constitutional monarchy: laws are made by an elected parliament."
+    },
+    {
+      "id": "ca-042",
+      "prompt": "Who leads Canada's government day to day?",
+      "choices": [
+        "The Prime Minister",
+        "The President",
+        "The Governor General",
+        "The King"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Prime Minister leads the government and is normally the head of the political party with the most seats in Parliament."
+    },
+    {
+      "id": "ca-043",
+      "prompt": "Canada's Parliament is made up of two houses. What are they called?",
+      "choices": [
+        "The House of Commons and the Senate",
+        "The House of Lords and the Commons",
+        "The Assembly and the Council",
+        "The Congress and the Senate"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Members of the House of Commons are elected, while members of the Senate are appointed."
+    },
+    {
+      "id": "ca-044",
+      "prompt": "Who officially represents the King in Canada?",
+      "choices": [
+        "The Governor General",
+        "The Prime Minister",
+        "The Chief Justice",
+        "The Speaker of the House"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The Governor General carries out the King's formal, ceremonial duties in Canada, since Canada is a constitutional monarchy."
+    },
+    {
+      "id": "ca-045",
+      "prompt": "Which of these areas is mainly run by Canada's provinces, rather than the federal government?",
+      "choices": [
+        "Education and health care",
+        "National defence",
+        "Currency",
+        "Foreign affairs"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Under Canada's constitution, provinces run their own schools and hospitals, while the federal government handles things like defence and money."
+    },
+    {
+      "id": "ca-046",
+      "prompt": "What are Canada's two official languages?",
+      "choices": [
+        "English and French",
+        "English and Spanish",
+        "French and German",
+        "English only"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Canada has been officially bilingual, in English and French, since 1969."
+    },
+    {
+      "id": "ca-047",
+      "prompt": "In which province is French the majority language?",
+      "choices": [
+        "Quebec",
+        "Ontario",
+        "Manitoba",
+        "British Columbia"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Quebec is home to most of Canada's French speakers, and French is the province's sole official language."
+    },
+    {
+      "id": "ca-048",
+      "prompt": "Which is Canada's only officially bilingual province, with both English and French as official languages by law?",
+      "choices": [
+        "New Brunswick",
+        "Quebec",
+        "Ontario",
+        "Nova Scotia"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "New Brunswick is Canada's only province that is legally bilingual, alongside sizeable French and English speaking communities."
+    },
+    {
+      "id": "ca-049",
+      "prompt": "Canada's national flag, adopted in 1965, features which symbol?",
+      "choices": [
+        "A red maple leaf",
+        "A beaver",
+        "A crown",
+        "A moose"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The red and white maple leaf flag was adopted in 1965, replacing an earlier flag that included the British Union Jack."
+    },
+    {
+      "id": "ca-050",
+      "prompt": "Which animal is a well known symbol of Canada, and appears on the five cent coin?",
+      "choices": [
+        "The beaver",
+        "The kangaroo",
+        "The bison",
+        "The bear"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The beaver has been a symbol of Canada since the fur trade days and appears on the nickel, Canada's five cent coin."
+    },
+    {
+      "id": "ca-051",
+      "prompt": "What is the name of Canada's national anthem?",
+      "choices": [
+        "O Canada",
+        "God Save the King",
+        "The Maple Leaf Forever",
+        "Land of Hope and Glory"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "O Canada became Canada's official national anthem in 1980, though it had been sung since the 1880s."
+    },
+    {
+      "id": "ca-052",
+      "prompt": "Canada Day, marking Confederation in 1867, is celebrated on what date?",
+      "choices": [
+        "1 July",
+        "4 July",
+        "26 January",
+        "1 January"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Canada Day falls on 1 July every year, the date Confederation took effect in 1867."
+    },
+    {
+      "id": "ca-053",
+      "prompt": "What is Canada's federal police force commonly called?",
+      "choices": [
+        "The Royal Canadian Mounted Police, or Mounties",
+        "The Royal Guard",
+        "The National Police",
+        "The Border Force"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Royal Canadian Mounted Police, nicknamed the Mounties, is Canada's national police force, known for its red uniform."
+    },
+    {
+      "id": "ca-054",
+      "prompt": "What colours appear on the Canadian flag?",
+      "choices": [
+        "Red and white",
+        "Blue and white",
+        "Red and gold",
+        "Green and white"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Canadian flag is red and white, the colours officially declared Canada's national colours in 1921."
+    },
+    {
+      "id": "ca-055",
+      "prompt": "Insulin, used to treat which disease, was discovered by Frederick Banting and Charles Best at the University of Toronto?",
+      "choices": [
+        "Diabetes",
+        "Measles",
+        "Tuberculosis",
+        "Influenza"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Banting and Best discovered insulin in 1921 and 1922, giving people with diabetes a life saving treatment."
+    },
+    {
+      "id": "ca-056",
+      "prompt": "The first practical implantable cardiac pacemaker was built in the 1950s by which Canadian engineer?",
+      "choices": [
+        "John Hopps",
+        "Alexander Graham Bell",
+        "Sandford Fleming",
+        "James Naismith"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "John Hopps, an engineer working in Ottawa, built the first practical pacemaker in 1950, though it took years more work before implantable versions were used in patients."
+    },
+    {
+      "id": "ca-057",
+      "prompt": "The idea of dividing the world into standard time zones was proposed by which Canadian?",
+      "choices": [
+        "Sandford Fleming",
+        "John Hopps",
+        "James Naismith",
+        "John A. Macdonald"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Sandford Fleming, a Scottish born Canadian engineer, proposed worldwide standard time in the 1870s and 1880s, the system still used today."
+    },
+    {
+      "id": "ca-058",
+      "prompt": "Standard time divides the world up into what?",
+      "choices": [
+        "Time zones",
+        "Calendar months",
+        "Weather regions",
+        "Postal codes"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Standard time splits the globe into time zones, each keeping a set time rather than every town using its own local sun time."
+    },
+    {
+      "id": "ca-059",
+      "prompt": "The sport of basketball was invented by James Naismith, who was born in which country?",
+      "choices": [
+        "Canada",
+        "The United States",
+        "Britain",
+        "Scotland"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "James Naismith was born in Ontario, Canada, and invented basketball in 1891 while working in the United States."
+    },
+    {
+      "id": "ca-060",
+      "prompt": "Alexander Graham Bell did key early work developing the telephone at his family's home in which Canadian town?",
+      "choices": [
+        "Brantford, Ontario",
+        "Halifax, Nova Scotia",
+        "Victoria, British Columbia",
+        "Whitehorse, Yukon"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Bell's family home in Brantford, Ontario, is where he did important early experiments on the telephone, before patenting it in the United States."
+    }
+  ]
+}

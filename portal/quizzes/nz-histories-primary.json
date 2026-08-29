@@ -1,0 +1,688 @@
+{
+  "id": "nz-histories-primary",
+  "title": "Aotearoa New Zealand Histories, Years 4 to 6",
+  "emoji": "🛶",
+  "suggested_age_min": 8,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Aotearoa New Zealand Histories became a compulsory strand of the New Zealand Curriculum in 2023. Facts checked against nzhistory.govt.nz and teara.govt.nz (Ministry for Culture and Heritage), 2026-08-30. Sticks to documented dates, places and events; leaves out anything contested or a matter of ongoing interpretation.",
+  "questions": [
+    {
+      "id": "nzhp-001",
+      "prompt": "What do we call the canoes that early Polynesian voyagers sailed to reach Aotearoa?",
+      "choices": [
+        "Waka",
+        "Ferries",
+        "Rafts",
+        "Kayaks"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Waka is the Māori word for canoe, and early voyaging waka were large enough to cross the open ocean."
+    },
+    {
+      "id": "nzhp-002",
+      "prompt": "What is a whānau?",
+      "choices": [
+        "A family, including grandparents, aunts, uncles and cousins",
+        "A type of fishing net",
+        "A carved meeting house",
+        "A gathering of many tribes"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Whānau is the word for family, usually meaning an extended family rather than just parents and children."
+    },
+    {
+      "id": "nzhp-003",
+      "prompt": "What is a marae?",
+      "choices": [
+        "A communal meeting ground with a meeting house at its centre",
+        "A type of waka",
+        "A style of tattoo",
+        "A fishing net"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "A marae is a community's meeting place, with the wharenui, the carved meeting house, standing at its heart."
+    },
+    {
+      "id": "nzhp-004",
+      "prompt": "What is a pā?",
+      "choices": [
+        "A fortified Māori village, often on a hill",
+        "A woven cloak",
+        "A canoe paddle",
+        "A type of net for catching eels"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "A pā was a defended settlement, often built on a hill or headland with banks, ditches and fences for protection."
+    },
+    {
+      "id": "nzhp-005",
+      "prompt": "What was the moa?",
+      "choices": [
+        "A giant flightless bird, now extinct",
+        "A type of shark",
+        "A kind of waka",
+        "A small lizard"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The moa was a huge flightless bird found only in Aotearoa. Several species existed, and all are now extinct."
+    },
+    {
+      "id": "nzhp-006",
+      "prompt": "In what year was the Treaty of Waitangi first signed?",
+      "choices": [
+        "1840",
+        "1820",
+        "1860",
+        "1800"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Treaty of Waitangi was first signed at Waitangi, in the Bay of Islands, on 6 February 1840."
+    },
+    {
+      "id": "nzhp-007",
+      "prompt": "What date is Waitangi Day?",
+      "choices": [
+        "6 February",
+        "1 January",
+        "25 April",
+        "5 November"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Waitangi Day, 6 February, marks the anniversary of the Treaty's first signing in 1840."
+    },
+    {
+      "id": "nzhp-008",
+      "prompt": "Which explorer's ship was the first European vessel known to reach New Zealand, in 1642?",
+      "choices": [
+        "Abel Tasman",
+        "James Cook",
+        "Christopher Columbus",
+        "Ferdinand Magellan"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The Dutch explorer Abel Tasman sighted New Zealand in 1642, though he never landed."
+    },
+    {
+      "id": "nzhp-009",
+      "prompt": "Which explorer charted much of the New Zealand coastline for Britain, arriving in 1769?",
+      "choices": [
+        "James Cook",
+        "Abel Tasman",
+        "Francis Drake",
+        "Walter Raleigh"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "James Cook mapped much of the New Zealand coast during his 1769 voyage, more than a century after Tasman's visit."
+    },
+    {
+      "id": "nzhp-010",
+      "prompt": "What were prospectors searching for during the Otago gold rush?",
+      "choices": [
+        "Gold",
+        "Coal",
+        "Silver",
+        "Oil"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Gold was discovered in Otago in 1861, and thousands of prospectors rushed to the region hoping to strike it rich."
+    },
+    {
+      "id": "nzhp-011",
+      "prompt": "What tropical root vegetable did early Māori bring with them and learn to grow in New Zealand's cooler climate?",
+      "choices": [
+        "Kūmara",
+        "Potato",
+        "Rice",
+        "Banana"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Kūmara, a kind of sweet potato, came from tropical Polynesia and had to be carefully stored over winter to survive New Zealand's cooler weather."
+    },
+    {
+      "id": "nzhp-012",
+      "prompt": "What is a hapū?",
+      "choices": [
+        "A group of related whānau, sometimes called a sub tribe",
+        "A single family household",
+        "A type of waka",
+        "A carved wooden box"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A hapū is made up of several related whānau. Many hapū together make up an iwi."
+    },
+    {
+      "id": "nzhp-013",
+      "prompt": "What is an iwi?",
+      "choices": [
+        "A large group of related hapū, often translated as 'tribe'",
+        "A single extended family",
+        "A fishing net",
+        "A type of feather cloak"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "An iwi is the largest of the traditional Māori kinship groups, made up of several hapū who share a common ancestor."
+    },
+    {
+      "id": "nzhp-014",
+      "prompt": "Which ocean did early Polynesian voyagers cross to reach Aotearoa?",
+      "choices": [
+        "The Pacific Ocean",
+        "The Atlantic Ocean",
+        "The Indian Ocean",
+        "The Arctic Ocean"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Aotearoa lies in the South Pacific, and its first people arrived after generations of voyaging across the Pacific Ocean."
+    },
+    {
+      "id": "nzhp-015",
+      "prompt": "Without modern instruments, how did early Polynesian navigators find their way across the open ocean?",
+      "choices": [
+        "By reading the stars, ocean swells, winds and bird flight paths",
+        "By following underwater cables",
+        "By using paper maps",
+        "By radio signals from other waka"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Polynesian navigators read the sky and sea itself, using the position of stars, the direction of swells and currents, and the flight paths of birds to find land."
+    },
+    {
+      "id": "nzhp-016",
+      "prompt": "What did early Māori mainly hunt the moa for?",
+      "choices": [
+        "Food, along with feathers and bone for tools",
+        "Sport only, never eating it",
+        "Its eggs alone",
+        "Trading with Europeans"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Moa were hunted for meat, and their feathers and bones were used to make tools and ornaments."
+    },
+    {
+      "id": "nzhp-017",
+      "prompt": "What eventually happened to the moa after Polynesian settlers arrived in Aotearoa?",
+      "choices": [
+        "It was hunted to extinction within a few hundred years",
+        "It is still found in remote forests today",
+        "It was tamed and kept as livestock",
+        "It flew to Australia"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Moa had no natural predators before people arrived, so hunting and habitat loss wiped them out within a few hundred years of settlement."
+    },
+    {
+      "id": "nzhp-018",
+      "prompt": "Where was the Treaty of Waitangi first signed?",
+      "choices": [
+        "At Waitangi, in the Bay of Islands",
+        "In Wellington",
+        "In Auckland",
+        "In Dunedin"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The Treaty was first signed at Waitangi, on the shore of the Bay of Islands in Northland."
+    },
+    {
+      "id": "nzhp-019",
+      "prompt": "Who led the British side at the signing of the Treaty of Waitangi?",
+      "choices": [
+        "William Hobson",
+        "James Cook",
+        "Abel Tasman",
+        "Samuel Marsden"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "William Hobson represented the British Crown and signed the Treaty on its behalf."
+    },
+    {
+      "id": "nzhp-020",
+      "prompt": "Roughly how many Māori rangatira, or chiefs, signed the Treaty of Waitangi during 1840, as copies were carried around the country?",
+      "choices": [
+        "About 500",
+        "About 50",
+        "About 5,000",
+        "About 5"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Copies of the Treaty travelled around New Zealand through 1840, and around 500 rangatira added their names or moko to it."
+    },
+    {
+      "id": "nzhp-021",
+      "prompt": "What did European sealers, whalers and traders commonly exchange with Māori in the early 1800s?",
+      "choices": [
+        "Muskets, tools and blankets, in return for food, flax and timber",
+        "Cars for horses",
+        "Money for citizenship",
+        "Nothing, contact was forbidden"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Early trade between Māori and European visitors swapped muskets, metal tools and blankets for food, flax and timber."
+    },
+    {
+      "id": "nzhp-022",
+      "prompt": "What sparked the Otago gold rush of 1861?",
+      "choices": [
+        "The discovery of gold at Gabriel's Gully, near Lawrence",
+        "A new law requiring farmers to dig for gold",
+        "The end of a war",
+        "A ship full of gold sinking offshore"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Gabriel Read found payable gold at Tuapeka, known as Gabriel's Gully, in May 1861, and word of it triggered a rush of prospectors."
+    },
+    {
+      "id": "nzhp-023",
+      "prompt": "Which city grew rapidly because of the Otago gold rush?",
+      "choices": [
+        "Dunedin",
+        "Auckland",
+        "Hamilton",
+        "Napier"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Dunedin boomed as the port and supply town for the Otago goldfields, and for a time became New Zealand's largest and richest town."
+    },
+    {
+      "id": "nzhp-024",
+      "prompt": "What was one of the hardest daily tasks facing early European settler families in New Zealand?",
+      "choices": [
+        "Clearing dense native bush to make room for farms and houses",
+        "Finding drinking water in the desert",
+        "Building boats to cross deserts",
+        "Avoiding snow all year round"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Much of New Zealand was covered in dense forest, and settler families spent long, hard years felling trees and clearing land before they could farm it."
+    },
+    {
+      "id": "nzhp-025",
+      "prompt": "What is a wharenui?",
+      "choices": [
+        "The carved meeting house at the centre of a marae",
+        "A type of waka",
+        "A feather cloak worn by chiefs",
+        "A storage pit for kūmara"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The wharenui is the large carved meeting house that stands at the heart of a marae, often named after an ancestor."
+    },
+    {
+      "id": "nzhp-026",
+      "prompt": "Around what period do most historians and archaeologists say the first Polynesian settlers reached Aotearoa?",
+      "choices": [
+        "Around the 1300s",
+        "Around 500 BC",
+        "Around the 1600s",
+        "Around the year 1900"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Most current evidence points to the first Polynesian settlers arriving in Aotearoa sometime around the 1300s, making it one of the last major landmasses on Earth to be settled."
+    },
+    {
+      "id": "nzhp-027",
+      "prompt": "Was the Polynesian voyage to Aotearoa most likely an accident or a planned journey?",
+      "choices": [
+        "A deliberate, planned voyage",
+        "A shipwreck that drifted there by accident",
+        "A single lost fisherman who found it alone",
+        "Nobody sailed there, people walked across ice"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Evidence of skilled navigation, and the plants and animals carried along, shows this was a deliberate voyage of discovery and settlement, not an accident."
+    },
+    {
+      "id": "nzhp-028",
+      "prompt": "Where did Abel Tasman's crew have a violent encounter with Māori in 1642?",
+      "choices": [
+        "Golden Bay, in the north of the South Island",
+        "Wellington Harbour",
+        "The Bay of Islands",
+        "Milford Sound"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Tasman's ships anchored off Golden Bay, where a clash left several of his crew dead. He then sailed away without landing."
+    },
+    {
+      "id": "nzhp-029",
+      "prompt": "What kind of food did early Māori communities gather from the sea?",
+      "choices": [
+        "Fish and shellfish",
+        "Only seaweed",
+        "Whale meat exclusively",
+        "Nothing, they avoided the sea"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Coastal communities relied heavily on kaimoana, seafood such as fish and shellfish, to feed their people."
+    },
+    {
+      "id": "nzhp-030",
+      "prompt": "How did most early European settlers reach New Zealand in the 1840s?",
+      "choices": [
+        "By sailing ship, on a voyage that took several months",
+        "By steam train",
+        "By aeroplane",
+        "Overland from Australia"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "There were no aeroplanes yet, so settlers sailed from Britain in wooden ships, a voyage that commonly took three to four months."
+    },
+    {
+      "id": "nzhp-031",
+      "prompt": "Which region had another major gold rush in the mid 1860s, a few years after Otago's?",
+      "choices": [
+        "The West Coast of the South Island",
+        "Northland",
+        "The Bay of Plenty",
+        "Wellington"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Gold was found on the West Coast in the mid 1860s, and towns such as Hokitika grew almost overnight as prospectors arrived."
+    },
+    {
+      "id": "nzhp-032",
+      "prompt": "What did missionaries hope to bring to Māori communities from the early 1800s onward?",
+      "choices": [
+        "Christianity, along with reading, writing and new farming methods",
+        "Only new weapons",
+        "Nothing, they came purely as traders",
+        "New waka designs"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Missionaries came to preach Christianity, and alongside it taught reading, writing and new farming techniques."
+    },
+    {
+      "id": "nzhp-033",
+      "prompt": "Who held the first known Christian church service in New Zealand, at Rangihoua in the Bay of Islands on Christmas Day 1814?",
+      "choices": [
+        "Samuel Marsden",
+        "William Hobson",
+        "James Cook",
+        "Abel Tasman"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Missionary Samuel Marsden held New Zealand's first known Christian service at Rangihoua on 25 December 1814."
+    },
+    {
+      "id": "nzhp-034",
+      "prompt": "What were the two written languages of the Treaty of Waitangi?",
+      "choices": [
+        "English and Māori",
+        "English and French",
+        "Māori and Latin",
+        "English only"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The Treaty exists as two texts, one in English and one in Māori, and most chiefs who signed did so on the Māori language version."
+    },
+    {
+      "id": "nzhp-035",
+      "prompt": "What kind of settlements did organisations such as the New Zealand Company set up in the 1840s, including Wellington and Nelson?",
+      "choices": [
+        "Planned towns for British settlers",
+        "Māori only settlements",
+        "Gold mining camps",
+        "Prisons"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The New Zealand Company organised planned settlements of British migrants, including Wellington in 1840 and Nelson soon after."
+    },
+    {
+      "id": "nzhp-036",
+      "prompt": "Many early New Zealand towns grew up around what kinds of activity?",
+      "choices": [
+        "Trading posts, mission stations, goldfields and planned settlements",
+        "Volcanoes only",
+        "Airports",
+        "Snowfields"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A town often began life as a trading post, a mission station, a goldfield camp or a planned settlement, and grew from there."
+    },
+    {
+      "id": "nzhp-037",
+      "prompt": "What was a rua kūmara?",
+      "choices": [
+        "A storage pit used to keep kūmara through winter",
+        "A type of fishing hook",
+        "A war canoe",
+        "A meeting house"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Because kūmara could not survive frost, Māori dug storage pits, rua kūmara, to keep the crop safe and dry over winter."
+    },
+    {
+      "id": "nzhp-038",
+      "prompt": "In Māori tradition, who is remembered as one of the great early navigators credited with discovering Aotearoa?",
+      "choices": [
+        "Kupe",
+        "Hobson",
+        "Marsden",
+        "Tasman"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Tradition credits the navigator Kupe as one of the first to find and name Aotearoa, long before permanent settlement began."
+    },
+    {
+      "id": "nzhp-039",
+      "prompt": "What does 'Aotearoa' commonly get translated as in English?",
+      "choices": [
+        "Land of the long white cloud",
+        "Land of the rising sun",
+        "Island of fire",
+        "Place of many rivers"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Aotearoa is often translated as 'land of the long white cloud', though its exact origin is debated among scholars."
+    },
+    {
+      "id": "nzhp-040",
+      "prompt": "Article 2 of the Treaty of Waitangi guaranteed Māori 'tino rangatiratanga', or full authority, over which things?",
+      "choices": [
+        "Their lands, forests, fisheries and other taonga",
+        "Only their weapons",
+        "The entire British navy",
+        "Nothing, it promised no guarantees"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "In the Māori text, Article 2 guaranteed rangatira and their people tino rangatiratanga, full authority, over their lands, forests, fisheries and other taonga, meaning treasures."
+    },
+    {
+      "id": "nzhp-041",
+      "prompt": "In the Treaty's English text, what did Māori give the Crown, described using a word with no exact Māori match?",
+      "choices": [
+        "Sovereignty",
+        "Land only",
+        "Money",
+        "Nothing"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The English text used the word 'sovereignty', a concept that had no single matching word in Māori, which is part of why the two texts differ."
+    },
+    {
+      "id": "nzhp-042",
+      "prompt": "Why did missionary Henry Williams have to work through a single night before the Treaty signing?",
+      "choices": [
+        "He was translating the Treaty from English into Māori",
+        "He was building the meeting house at Waitangi",
+        "He was repairing a ship",
+        "He was writing a dictionary"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Henry Williams and his son Edward translated the Treaty into Māori overnight, ready for the signing the next day."
+    },
+    {
+      "id": "nzhp-043",
+      "prompt": "What was harakeke, and why was it valuable in early trade with Europeans?",
+      "choices": [
+        "A flax plant, used to make rope and cloth, and traded for European goods",
+        "A type of gold",
+        "A breed of dog",
+        "A currency of shells"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Harakeke, New Zealand flax, was processed into fibre for rope and cloth, and became an important trade good in the early 1800s."
+    },
+    {
+      "id": "nzhp-044",
+      "prompt": "Many prospectors who rushed to the Otago goldfields in 1861 had already been on the goldfields of which nearby country?",
+      "choices": [
+        "Australia",
+        "Canada",
+        "Japan",
+        "Chile"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Many miners came across the Tasman Sea from the Australian goldfields, chasing the next gold rush."
+    },
+    {
+      "id": "nzhp-045",
+      "prompt": "Why is the exact date Polynesians first settled Aotearoa still debated by researchers?",
+      "choices": [
+        "Because archaeology, radiocarbon dating and oral tradition point to slightly different dates",
+        "Because nobody has ever tried to find out",
+        "Because it happened yesterday",
+        "Because there is no evidence at all"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Different kinds of evidence, dug up sites, carbon dating and passed down tradition, do not all point to exactly the same year, so historians describe a likely range rather than one fixed date."
+    },
+    {
+      "id": "nzhp-046",
+      "prompt": "How long after Abel Tasman's 1642 voyage did James Cook chart the New Zealand coastline?",
+      "choices": [
+        "About 127 years later",
+        "About 20 years later",
+        "About 300 years later",
+        "The very next year"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Tasman sighted New Zealand in 1642, and Cook did not return to chart it in detail until 1769, a gap of about 127 years."
+    },
+    {
+      "id": "nzhp-047",
+      "prompt": "What does the name 'Waitangi' generally refer to?",
+      "choices": [
+        "Weeping waters, from a nearby stream",
+        "A type of waka",
+        "A British ship",
+        "A settler farm"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Waitangi is often translated along the lines of 'weeping waters', referring to a stream near the treaty grounds."
+    },
+    {
+      "id": "nzhp-048",
+      "prompt": "Which is the larger grouping, a hapū or an iwi?",
+      "choices": [
+        "An iwi, since it is made up of several hapū",
+        "A hapū, since it is made up of several iwi",
+        "They are exactly the same size",
+        "Neither is bigger, they never combine"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "A hapū is one sub group, and several related hapū join together to form the larger iwi."
+    },
+    {
+      "id": "nzhp-049",
+      "prompt": "What Māori word did the Treaty's translators use for the idea of British 'sovereignty', since no single Māori word matched it exactly?",
+      "choices": [
+        "Kāwanatanga, meaning governance",
+        "Rangatiratanga, meaning chieftainship",
+        "Whanaungatanga, meaning kinship",
+        "Manaakitanga, meaning hospitality"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Translators settled on 'kāwanatanga', built from the word for governor, to stand in for 'sovereignty'. It is a narrower idea than the English word, which is one reason the two Treaty texts differ."
+    },
+    {
+      "id": "nzhp-050",
+      "prompt": "Approximately how many years after gold was found in Otago did a second major rush begin on the West Coast?",
+      "choices": [
+        "A few years, in the mid 1860s",
+        "Fifty years, in 1911",
+        "The very same week",
+        "A century later, in 1961"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The Otago rush began in 1861, and West Coast fields such as Hokitika drew their own rush only a few years later, in the mid 1860s."
+    },
+    {
+      "id": "nzhp-051",
+      "prompt": "Why did Wellington later replace Auckland as New Zealand's capital city, in 1865?",
+      "choices": [
+        "Its central location suited a country whose population and gold wealth had grown in the South Island",
+        "Auckland burned down",
+        "Wellington had the only port in the country",
+        "The Queen ordered it for no stated reason"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "As the South Island's population and wealth grew, especially after the gold rushes, Wellington's central position made it a more practical capital than Auckland."
+    },
+    {
+      "id": "nzhp-052",
+      "prompt": "Beyond finding matching words, what was a genuine source of difficulty in translating the Treaty of Waitangi?",
+      "choices": [
+        "Some ideas about land and authority did not exist in quite the same form in both cultures",
+        "There was no difficulty at all, translation was simple",
+        "The Treaty was never actually translated",
+        "Both sides already spoke identical languages"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Beyond finding matching words, underlying ideas about land, authority and ownership were understood differently in Māori and British society, which made an exact translation very difficult."
+    }
+  ]
+}

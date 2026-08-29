@@ -1,0 +1,412 @@
+{
+  "id": "te-reo-basics",
+  "title": "Te Reo Māori, Beginners",
+  "emoji": "🌿",
+  "suggested_age_min": 7,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Only words and phrases the author was confident of are included. Māori month names were deliberately left out: the transliterated Gregorian months exist but the author was not fully confident of every macron, and a wrong fact in a language bank is worse than a missing one. The 'kaka and kākā' pair from the brief is covered as a pronunciation point (long vowels) rather than a claimed alternate meaning for the unmacronned form, which the author could not verify.",
+  "questions": [
+    {
+      "id": "tr-001",
+      "prompt": "What does 'Kia ora' mean?",
+      "choices": ["Hello", "Goodbye", "Please", "Sorry"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Kia ora is the most common Māori greeting. It also does double duty as thanks and as a general good wish."
+    },
+    {
+      "id": "tr-002",
+      "prompt": "How do you say 'yes' in te reo Māori?",
+      "choices": ["Āe", "Kāo", "Kai", "Rā"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Āe means yes. Its opposite, kāo, means no."
+    },
+    {
+      "id": "tr-003",
+      "prompt": "How do you say 'no' in te reo Māori?",
+      "choices": ["Āe", "Kāo", "Wai", "Mā"],
+      "answer_index": 1,
+      "difficulty": 1,
+      "explanation": "Kāo means no. Āe is its opposite, yes."
+    },
+    {
+      "id": "tr-004",
+      "prompt": "What is 'tahi' in English?",
+      "choices": ["One", "Two", "Three", "Ten"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Tahi is the number one. Rua is two and toru is three."
+    },
+    {
+      "id": "tr-005",
+      "prompt": "What is 'rua' in English?",
+      "choices": ["One", "Two", "Four", "Five"],
+      "answer_index": 1,
+      "difficulty": 1,
+      "explanation": "Rua is the number two."
+    },
+    {
+      "id": "tr-006",
+      "prompt": "What does 'whānau' mean?",
+      "choices": ["Family", "Friend", "Teacher", "Neighbour"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Whānau means family, and often means the wider, extended family, not just parents and children."
+    },
+    {
+      "id": "tr-007",
+      "prompt": "What colour is 'mā'?",
+      "choices": ["White", "Black", "Red", "Yellow"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Mā means white. Its opposite, pango, means black."
+    },
+    {
+      "id": "tr-008",
+      "prompt": "What colour is 'pango'?",
+      "choices": ["White", "Black", "Blue", "Green"],
+      "answer_index": 1,
+      "difficulty": 1,
+      "explanation": "Pango means black."
+    },
+    {
+      "id": "tr-009",
+      "prompt": "What does 'wai' mean?",
+      "choices": ["Water", "Food", "Fire", "Earth"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Wai means water. Kai, a similar-looking word, means food."
+    },
+    {
+      "id": "tr-010",
+      "prompt": "What does 'ka pai' mean?",
+      "choices": ["Good, well done", "Bad", "Very sad", "Stop"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Ka pai is a common way to say good, or well done."
+    },
+    {
+      "id": "tr-011",
+      "prompt": "What is 'toru' in English?",
+      "choices": ["Two", "Three", "Four", "Six"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "Toru is the number three."
+    },
+    {
+      "id": "tr-012",
+      "prompt": "What is 'whā' in English?",
+      "choices": ["Three", "Four", "Five", "Nine"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "Whā is the number four."
+    },
+    {
+      "id": "tr-013",
+      "prompt": "What is 'rima' in English?",
+      "choices": ["Four", "Five", "Six", "Seven"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "Rima is the number five."
+    },
+    {
+      "id": "tr-014",
+      "prompt": "What is 'tekau' in English?",
+      "choices": ["Five", "Eight", "Nine", "Ten"],
+      "answer_index": 3,
+      "difficulty": 2,
+      "explanation": "Tekau is the number ten."
+    },
+    {
+      "id": "tr-015",
+      "prompt": "What colour is 'whero'?",
+      "choices": ["Red", "Yellow", "Blue", "Green"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Whero means red."
+    },
+    {
+      "id": "tr-016",
+      "prompt": "What colour is 'kōwhai'?",
+      "choices": ["Yellow", "Red", "Blue", "Black"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Kōwhai means yellow. It shares its name with the yellow-flowered kōwhai tree."
+    },
+    {
+      "id": "tr-017",
+      "prompt": "What colour is 'kikorangi'?",
+      "choices": ["Blue", "Green", "White", "Orange"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Kikorangi means blue."
+    },
+    {
+      "id": "tr-018",
+      "prompt": "What does 'māmā' mean?",
+      "choices": ["Mum", "Dad", "Sister", "Grandmother"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Māmā means mum. Pāpā means dad."
+    },
+    {
+      "id": "tr-019",
+      "prompt": "What does 'pāpā' mean?",
+      "choices": ["Mum", "Dad", "Brother", "Grandfather"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "Pāpā means dad."
+    },
+    {
+      "id": "tr-020",
+      "prompt": "What is 'kūmara'?",
+      "choices": ["A sweet potato", "A type of fish", "A native bird", "A meeting house"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Kūmara is a sweet potato, a food grown in New Zealand for centuries."
+    },
+    {
+      "id": "tr-021",
+      "prompt": "What day is 'Rāhina'?",
+      "choices": ["Monday", "Tuesday", "Saturday", "Sunday"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Rāhina is Monday, the first weekday."
+    },
+    {
+      "id": "tr-022",
+      "prompt": "What day is 'Rātapu'?",
+      "choices": ["Saturday", "Sunday", "Friday", "Wednesday"],
+      "answer_index": 1,
+      "difficulty": 2,
+      "explanation": "Rātapu is Sunday."
+    },
+    {
+      "id": "tr-023",
+      "prompt": "What does 'karu' mean?",
+      "choices": ["Eye", "Ear", "Nose", "Mouth"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Karu means eye."
+    },
+    {
+      "id": "tr-024",
+      "prompt": "What does 'ihu' mean?",
+      "choices": ["Nose", "Ear", "Hand", "Foot"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Ihu means nose."
+    },
+    {
+      "id": "tr-025",
+      "prompt": "What does 'taringa' mean?",
+      "choices": ["Eye", "Ear", "Mouth", "Heart"],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "Taringa means ear."
+    },
+    {
+      "id": "tr-026",
+      "prompt": "What does 'tuakana' mean?",
+      "choices": ["An older sibling of the same gender", "A younger sibling", "A grandparent", "A cousin only"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Tuakana is an older brother (to a boy) or older sister (to a girl). Teina is the younger sibling in the same relationship."
+    },
+    {
+      "id": "tr-027",
+      "prompt": "What does 'teina' mean?",
+      "choices": ["A younger sibling of the same gender", "An older sibling", "A parent", "A grandchild"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Teina is a younger sibling of the same gender. Tuakana is the older one."
+    },
+    {
+      "id": "tr-028",
+      "prompt": "How do you ask someone 'How are you?' in te reo?",
+      "choices": ["Kei te pēhea koe?", "He aha tēnei?", "Ko wai tō ingoa?", "Kei hea koe?"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Kei te pēhea koe? literally asks how you are travelling or feeling."
+    },
+    {
+      "id": "tr-029",
+      "prompt": "'Kei te pai ahau' means what?",
+      "choices": ["I am good", "I am hungry", "I am lost", "I am late"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Kei te pai ahau is a common reply to Kei te pēhea koe?, meaning I am good."
+    },
+    {
+      "id": "tr-030",
+      "prompt": "'He aha tēnei?' means what?",
+      "choices": ["What is this?", "Where is this?", "Who is this?", "When is this?"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "He aha tēnei? asks what a nearby object is."
+    },
+    {
+      "id": "tr-031",
+      "prompt": "What is a 'kiwi'?",
+      "choices": ["A flightless native bird", "A type of fish", "A tree", "A greeting"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The kiwi is New Zealand's flightless national bird, and gave its name to New Zealanders."
+    },
+    {
+      "id": "tr-032",
+      "prompt": "What is a 'tūī'?",
+      "choices": ["A native bird known for its song", "A native fish", "A type of cloud", "A greeting word"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The tūī is a native songbird known for its complex calls and the white tuft at its throat."
+    },
+    {
+      "id": "tr-033",
+      "prompt": "What does 'ua' mean?",
+      "choices": ["Rain", "Wind", "Sun", "Snow"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Ua means rain."
+    },
+    {
+      "id": "tr-034",
+      "prompt": "What does 'hau' mean?",
+      "choices": ["Rain", "Wind", "Cloud", "Cold"],
+      "answer_index": 1,
+      "difficulty": 3,
+      "explanation": "Hau means wind."
+    },
+    {
+      "id": "tr-035",
+      "prompt": "What does 'mahana' mean?",
+      "choices": ["Warm", "Cold", "Wet", "Windy"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Mahana means warm."
+    },
+    {
+      "id": "tr-036",
+      "prompt": "What does a macron (the line over a vowel, like ā) do to a Māori word?",
+      "choices": ["Makes the vowel sound longer", "Makes the word plural", "Turns a noun into a verb", "Shows the word is a question"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A macron shows the vowel is held longer. Getting it right can completely change a word's meaning."
+    },
+    {
+      "id": "tr-037",
+      "prompt": "Which of these words means 'cake'?",
+      "choices": ["Keke", "Kēkē", "Kaka", "Kea"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Keke, with short vowels, means cake. Kēkē, with a macron on both vowels, means armpit. The same trick applies to kākā, the native parrot: said with long vowels, kā-kā, not short ones."
+    },
+    {
+      "id": "tr-038",
+      "prompt": "Which of these words means 'armpit'?",
+      "choices": ["Keke", "Kēkē", "Kai", "Kau"],
+      "answer_index": 1,
+      "difficulty": 4,
+      "explanation": "Kēkē means armpit. Without the macrons, keke means cake, a completely different word."
+    },
+    {
+      "id": "tr-039",
+      "prompt": "How is 'wh' usually pronounced in te reo Māori?",
+      "choices": ["Like an f sound", "Like a w sound", "Like a v sound", "Silent"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "In most words and dialects, wh sounds like the English f. Whānau, for example, sounds roughly like 'fah-no'."
+    },
+    {
+      "id": "tr-040",
+      "prompt": "How is 'ng' pronounced in a word like 'tangata'?",
+      "choices": ["As one soft sound, like the ng in 'singer'", "As a hard g, like in 'finger'", "As a separate n and g", "It is silent"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Ng is a single sound, the same as the ng in the English word singer, with no hard g."
+    },
+    {
+      "id": "tr-041",
+      "prompt": "What is a marae?",
+      "choices": ["A communal meeting ground and the buildings around it", "A type of Māori food", "A school subject", "A native bird"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A marae is a community's meeting grounds, centred on a wharenui, the meeting house."
+    },
+    {
+      "id": "tr-042",
+      "prompt": "What is a pōwhiri?",
+      "choices": ["A formal welcome ceremony onto a marae", "A type of song", "A native tree", "A style of weaving"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A pōwhiri is the formal process of welcoming visitors onto a marae."
+    },
+    {
+      "id": "tr-043",
+      "prompt": "What is a hongi?",
+      "choices": ["A traditional greeting where two people press noses together", "A type of dance", "A woven mat", "A speech of welcome"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A hongi is a greeting where two people press noses (and often foreheads) together, sharing breath."
+    },
+    {
+      "id": "tr-044",
+      "prompt": "Who are 'manuhiri' at a pōwhiri?",
+      "choices": ["The visitors being welcomed", "The hosts", "The children present", "The speakers only"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Manuhiri are the visitors. The hosts, who belong to the marae, are called tangata whenua."
+    },
+    {
+      "id": "tr-045",
+      "prompt": "How do you ask 'What is your name?' in te reo?",
+      "choices": ["Ko wai tō ingoa?", "Kei te pēhea koe?", "He aha tēnei?", "Kei hea koe?"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Ko wai tō ingoa? literally asks 'who is your name', and is answered with Ko [name] tōku ingoa."
+    },
+    {
+      "id": "tr-046",
+      "prompt": "If you are the one leaving, which farewell do you say to the people staying?",
+      "choices": ["E noho rā", "Haere rā", "Kia ora", "Tēnā koutou"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "E noho rā means something like 'stay well' and is said by the person leaving. Haere rā, 'go well', is said by the person staying, to the one leaving."
+    },
+    {
+      "id": "tr-047",
+      "prompt": "If you are staying and someone else is leaving, which farewell do you say to them?",
+      "choices": ["E noho rā", "Haere rā", "Nau mai", "Āe"],
+      "answer_index": 1,
+      "difficulty": 5,
+      "explanation": "Haere rā, 'go well', is said to the person who is leaving. E noho rā is said by that person back to you, the one staying."
+    },
+    {
+      "id": "tr-048",
+      "prompt": "During a pōwhiri, the karanga, the ceremonial call that begins the welcome, is traditionally given by whom?",
+      "choices": ["Women", "Children", "Visitors only", "The youngest person present"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "The karanga, the calling that opens a pōwhiri, is traditionally performed by women of the home marae."
+    },
+    {
+      "id": "tr-049",
+      "prompt": "During a pōwhiri, whaikōrero, the formal speeches, are traditionally given by whom?",
+      "choices": ["Men", "Women", "Only the visitors", "Only the very old"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Whaikōrero, formal oratory during a pōwhiri, is traditionally the role of men, though practice can vary between marae."
+    },
+    {
+      "id": "tr-050",
+      "prompt": "Who are 'tangata whenua' at a pōwhiri?",
+      "choices": ["The hosts, the people of that land", "The visitors being welcomed", "The children present", "Musicians only"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Tangata whenua literally means people of the land, the hosts who belong to that marae."
+    }
+  ]
+}

@@ -1,0 +1,675 @@
+{
+  "id": "nz-histories-local",
+  "title": "Places and Names of Aotearoa",
+  "emoji": "🗺️",
+  "suggested_age_min": 10,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Facts checked against Land Information New Zealand (linz.govt.nz), nzhistory.govt.nz and teara.govt.nz, 2026-08-30. Focused on documented name meanings, elements and official dual names rather than general geography, which portal/quizzes/nz-geography.json already covers.",
+  "questions": [
+    {
+      "id": "nzpl-001",
+      "prompt": "What does the Māori word 'wai' mean, as seen in place names such as Waikato and Waitangi?",
+      "choices": [
+        "Water",
+        "Mountain",
+        "Island",
+        "Sand"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "'Wai' means water, and it appears at the start of many New Zealand place names next to rivers, lakes or springs."
+    },
+    {
+      "id": "nzpl-002",
+      "prompt": "What does 'maunga' mean in Māori place names?",
+      "choices": [
+        "Mountain",
+        "River",
+        "Harbour",
+        "Village"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "'Maunga' means mountain, so a name containing it usually points to a nearby peak."
+    },
+    {
+      "id": "nzpl-003",
+      "prompt": "What does 'awa' mean in a Māori place name?",
+      "choices": [
+        "River",
+        "Lake",
+        "Beach",
+        "Path"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "'Awa' means river, describing a flowing waterway."
+    },
+    {
+      "id": "nzpl-004",
+      "prompt": "What does 'roto' mean, as in Rotorua or Rotoiti?",
+      "choices": [
+        "Lake",
+        "Mountain",
+        "Forest",
+        "Bridge"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "'Roto' means lake, so both Rotorua and Rotoiti are named for the lakes they sit beside."
+    },
+    {
+      "id": "nzpl-005",
+      "prompt": "What does 'motu' mean in a Māori place name?",
+      "choices": [
+        "Island",
+        "Cave",
+        "Valley",
+        "Cliff"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "'Motu' means island. You will spot it in names for islands all round the coast."
+    },
+    {
+      "id": "nzpl-006",
+      "prompt": "What does 'puke' mean in a Māori place name, as in Pukekohe?",
+      "choices": [
+        "Hill",
+        "River",
+        "Coast",
+        "Cave"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "'Puke' means hill, so Pukekohe roughly describes a hill where kohekohe trees grew."
+    },
+    {
+      "id": "nzpl-007",
+      "prompt": "What does 'whanga' mean, as in Whangārei or Whangamatā?",
+      "choices": [
+        "Harbour or bay",
+        "Mountain",
+        "Desert",
+        "Waterfall"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "'Whanga' means harbour or bay, so names beginning with it usually sit on the coast."
+    },
+    {
+      "id": "nzpl-008",
+      "prompt": "What does 'one' mean in a Māori place name, as in Ninety Mile Beach's Māori name?",
+      "choices": [
+        "Sand or beach",
+        "Fire",
+        "Rain",
+        "Snow"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "'One' means sand or earth, often describing a beach, as in Te Oneroa a Tōhē, the long beach of Tōhē."
+    },
+    {
+      "id": "nzpl-009",
+      "prompt": "What does 'kāinga' mean?",
+      "choices": [
+        "Home or village",
+        "War canoe",
+        "Storage pit",
+        "Meeting house"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "'Kāinga' means a home, village or settlement, showing where people once lived."
+    },
+    {
+      "id": "nzpl-010",
+      "prompt": "What does 'ara' mean in a Māori place name?",
+      "choices": [
+        "Path or way",
+        "Star",
+        "Cloud",
+        "Shellfish"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "'Ara' means a path or way, often marking an old route people travelled."
+    },
+    {
+      "id": "nzpl-011",
+      "prompt": "What is New Zealand's tallest mountain's official dual name?",
+      "choices": [
+        "Aoraki / Mount Cook",
+        "Taranaki / Egmont",
+        "Tongariro / Ngāuruhoe",
+        "Ruapehu / Tama"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "New Zealand's tallest peak carries the dual name Aoraki, its Māori name, and Mount Cook, its English name."
+    },
+    {
+      "id": "nzpl-012",
+      "prompt": "Mount Taranaki was for many years officially known by which English name, before Taranaki became the recognised name in 1986?",
+      "choices": [
+        "Mount Egmont",
+        "Mount Cook",
+        "Mount Ruapehu",
+        "Mount Aspiring"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Captain Cook named the mountain Egmont in 1770, and it was officially Mount Egmont until 1986, when Taranaki became the recognised name."
+    },
+    {
+      "id": "nzpl-013",
+      "prompt": "What is the Māori name for Stewart Island, New Zealand's third largest island?",
+      "choices": [
+        "Rakiura",
+        "Motutapu",
+        "Rangitoto",
+        "Kapiti"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Stewart Island carries the dual name Rakiura, and both names are officially recognised."
+    },
+    {
+      "id": "nzpl-014",
+      "prompt": "What does Rotorua's name mean?",
+      "choices": [
+        "Second lake",
+        "Boiling water",
+        "Red earth",
+        "Long harbour"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Rotorua combines 'roto', lake, with 'rua', two, and its full name recalls being the second lake discovered by an early ancestor."
+    },
+    {
+      "id": "nzpl-015",
+      "prompt": "What does Kaikōura's name literally describe?",
+      "choices": [
+        "Eating crayfish",
+        "A high mountain",
+        "A cold wind",
+        "A large island"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Kaikōura combines 'kai', food or to eat, with 'kōura', crayfish, recalling a meal of crayfish eaten there in tradition."
+    },
+    {
+      "id": "nzpl-016",
+      "prompt": "What is the Māori name for the Auckland region, meaning roughly 'Tāmaki desired by many'?",
+      "choices": [
+        "Tāmaki Makaurau",
+        "Te Whanganui a Tara",
+        "Kirikiriroa",
+        "Ngāmotu"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Tāmaki Makaurau describes a place so rich in resources that many groups wanted to hold it, which is why it changed hands often in tradition."
+    },
+    {
+      "id": "nzpl-017",
+      "prompt": "What does Wellington's Māori name, Te Whanganui a Tara, mean?",
+      "choices": [
+        "The great harbour of Tara",
+        "The city of sails",
+        "The place of hills",
+        "The land of rivers"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Te Whanganui a Tara means the great harbour of Tara, an ancestor remembered in local tradition."
+    },
+    {
+      "id": "nzpl-018",
+      "prompt": "What is Hamilton's Māori name, Kirikiriroa, said to describe?",
+      "choices": [
+        "A long stretch of gravel along the Waikato River",
+        "A field of flowers",
+        "A steep cliff",
+        "A deep lake"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Kirikiriroa describes the long gravel banks that once lined the Waikato River through the area."
+    },
+    {
+      "id": "nzpl-019",
+      "prompt": "What does Ngāmotu, the Māori name for the area around New Plymouth, mean?",
+      "choices": [
+        "The islands",
+        "The mountain",
+        "The harbour",
+        "The forest"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Ngāmotu means 'the islands', naming the small islands just off the coast there."
+    },
+    {
+      "id": "nzpl-020",
+      "prompt": "Cape Reinga's Māori name, Te Rerenga Wairua, translates to roughly what?",
+      "choices": [
+        "The leaping off place of spirits",
+        "The bay of many fish",
+        "The rock of the sun",
+        "The valley of echoes"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "In tradition, spirits of the dead were believed to travel to this headland before leaping into the sea on their journey onward."
+    },
+    {
+      "id": "nzpl-021",
+      "prompt": "Ninety Mile Beach's Māori name, Te Oneroa a Tōhē, is named for what?",
+      "choices": [
+        "Tōhē, a chief remembered in the traditions of the far north",
+        "A type of fish caught nowhere else",
+        "The colour of the sand",
+        "A ship that was wrecked there"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The beach is named for Tōhē, a chief remembered in the traditions of the far north."
+    },
+    {
+      "id": "nzpl-022",
+      "prompt": "Despite its English name, roughly how long is Ninety Mile Beach?",
+      "choices": [
+        "About 88 kilometres",
+        "About 145 kilometres",
+        "About 9 kilometres",
+        "About 500 kilometres"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Ninety Mile Beach is actually closer to 88 kilometres, or about 55 miles, long, shorter than its English name suggests."
+    },
+    {
+      "id": "nzpl-023",
+      "prompt": "What geological feature does 'maunga' most often describe when it appears in a place name in the Auckland area?",
+      "choices": [
+        "A volcanic peak",
+        "A river mouth",
+        "A sandy beach",
+        "A forest clearing"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "'Maunga' points to a mountain, and in the Auckland area it is often one of the region's many small volcanic peaks."
+    },
+    {
+      "id": "nzpl-024",
+      "prompt": "Why do many New Zealand places, such as Auckland and Tāmaki Makaurau, carry both an English and a Māori name today?",
+      "choices": [
+        "Because both names are officially recognised, often after Treaty settlements restored the traditional name alongside the existing one",
+        "Because the Māori name was only ever a nickname",
+        "Because English names were banned by law",
+        "Because the two names always meant exactly the same place"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Dual names have been formally recognised over recent decades, often as part of Treaty settlements, restoring long standing Māori names alongside the names settlers gave."
+    },
+    {
+      "id": "nzpl-025",
+      "prompt": "What is Dunedin's Māori name, Ōtepoti, generally understood to describe?",
+      "choices": [
+        "A landing place or corner of land near the harbour",
+        "A field of gold",
+        "A snow covered mountain",
+        "A wide river mouth"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Ōtepoti is generally linked to a landing place or corner of land close to the Otago Harbour, where the city later grew."
+    },
+    {
+      "id": "nzpl-026",
+      "prompt": "For much of the twentieth century, how was the name of the city and river now spelled 'Whanganui' commonly written instead?",
+      "choices": [
+        "Wanganui, without the 'h'",
+        "Whangarei",
+        "Rotorua",
+        "Taupo"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "For over a century the name was commonly spelled 'Wanganui', without the 'h', before the traditional spelling 'Whanganui' was restored as correct."
+    },
+    {
+      "id": "nzpl-027",
+      "prompt": "Matiu is the Māori name for which dual named island in Wellington Harbour?",
+      "choices": [
+        "Somes Island",
+        "Rangitoto Island",
+        "Kapiti Island",
+        "Waiheke Island"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Wellington Harbour's Somes Island carries the dual name Matiu, and both names are officially recognised."
+    },
+    {
+      "id": "nzpl-028",
+      "prompt": "What does the dual naming of places like Mount Aspiring, also called Tititea, generally reflect?",
+      "choices": [
+        "That a landscape can carry more than one name and more than one history, both worth knowing",
+        "That one of the two names must be wrong",
+        "That mountains never had Māori names before Europeans arrived",
+        "That English names always came first"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A single peak can hold a Māori name reaching back through generations of tradition, and an English name from later exploration or mapping, and both are part of its story."
+    },
+    {
+      "id": "nzpl-029",
+      "prompt": "Why might two communities describe the history of the very same piece of land quite differently?",
+      "choices": [
+        "Because a place's remembered history reflects each community's own experience of it, such as settlement, loss or return",
+        "Because only one version can ever be true and taught",
+        "Because place names never carry any history at all",
+        "Because history only exists in written records"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A place can be remembered very differently depending on whose experience of it is being told, whether that is generations of continuous occupation, or displacement and later return."
+    },
+    {
+      "id": "nzpl-030",
+      "prompt": "What is the connection between a region's name and the identity people in that region often feel?",
+      "choices": [
+        "Regional names, especially Māori ones tied to ancestors or landscape, are often a strong part of local identity and pride",
+        "Region names have no connection to identity at all",
+        "Only English place names create any sense of local identity",
+        "Regional identity is unrelated to history"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Names tied to an ancestor, a landscape feature or a historic event often become a strong part of how people in a region see themselves and their place."
+    },
+    {
+      "id": "nzpl-031",
+      "prompt": "Whakaari, the Māori name for an active volcanic island in the Bay of Plenty, is also known by which English name?",
+      "choices": [
+        "White Island",
+        "Great Barrier Island",
+        "Kapiti Island",
+        "Stewart Island"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Whakaari, an active volcano in the Bay of Plenty, is also known by its English name, White Island."
+    },
+    {
+      "id": "nzpl-032",
+      "prompt": "In Rotorua's fuller traditional name, Te Rotorua nui a Kahumatamomoe, what does 'nui' generally add?",
+      "choices": [
+        "A sense of size or greatness, roughly 'big' or 'great'",
+        "A colour, usually red",
+        "A number, always meaning 'two'",
+        "A direction, usually 'north'"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "'Nui' generally means big or great, adding emphasis to the name it is attached to."
+    },
+    {
+      "id": "nzpl-033",
+      "prompt": "Milford Sound, in Fiordland, carries which Māori name?",
+      "choices": [
+        "Piopiotahi",
+        "Rakiura",
+        "Ngāmotu",
+        "Whakatū"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Milford Sound's dual name is Piopiotahi, and both names appear on official maps."
+    },
+    {
+      "id": "nzpl-034",
+      "prompt": "What does the presence of both an English and a Māori name on an official map, such as Aoraki / Mount Cook, usually signal?",
+      "choices": [
+        "Formal recognition that the place carries two histories, side by side",
+        "That the Māori name is only temporary",
+        "That the two names are simply spelling variants of each other",
+        "That mapmakers made an error"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A slash between two names on an official map marks formal, equal recognition of both the English and Māori history of that place."
+    },
+    {
+      "id": "nzpl-035",
+      "prompt": "What is Whakatū the Māori name for?",
+      "choices": [
+        "Nelson",
+        "New Plymouth",
+        "Hamilton",
+        "Dunedin"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Whakatū is the Māori name recognised alongside the city of Nelson."
+    },
+    {
+      "id": "nzpl-036",
+      "prompt": "Fox Glacier, in Westland, carries which Māori name?",
+      "choices": [
+        "Te Moeka o Tuawe",
+        "Piopiotahi",
+        "Rakiura",
+        "Whakatū"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Fox Glacier's dual name, Te Moeka o Tuawe, is recognised alongside the English name given after a former premier."
+    },
+    {
+      "id": "nzpl-037",
+      "prompt": "Why does Rotorua's fuller traditional name include the phrase 'a Kahumatamomoe'?",
+      "choices": [
+        "It names the ancestor associated with discovering or naming the lake",
+        "It describes the colour of the lake",
+        "It marks the direction to travel to reach it",
+        "It is simply a poetic sound with no meaning"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Many full place names include the name of an ancestor connected to that place, here Kahumatamomoe, tying the landscape to whakapapa, genealogy."
+    },
+    {
+      "id": "nzpl-038",
+      "prompt": "Why did Mount Egmont officially become known as Taranaki again in 1986?",
+      "choices": [
+        "The New Zealand Geographic Board recognised the older Māori name, tied to the ancestor Rua Taranaki, as the mountain's name",
+        "Cook's original name was found to be a mistake in translation",
+        "A vote of local settlers chose it at random",
+        "The mountain physically changed shape"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "In 1986 the Geographic Board formally restored Taranaki, a name connected to the ancestor Rua Taranaki, as the mountain's recognised name, alongside its earlier English name."
+    },
+    {
+      "id": "nzpl-039",
+      "prompt": "Which organisation is officially responsible for approving dual and alternative place names in New Zealand?",
+      "choices": [
+        "The New Zealand Geographic Board",
+        "The Reserve Bank of New Zealand",
+        "The Waitangi Tribunal",
+        "The Department of Conservation, acting alone"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The New Zealand Geographic Board, Ngā Pou Taunaha o Aotearoa, is the official body that decides and records place names, including dual names."
+    },
+    {
+      "id": "nzpl-040",
+      "prompt": "The large 1998 Treaty settlement with which iwi created eighty seven officially recognised dual place names, including Aoraki / Mount Cook?",
+      "choices": [
+        "Ngāi Tahu",
+        "Waikato Tainui",
+        "Ngāti Toa",
+        "Te Arawa"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The 1998 Ngāi Tahu settlement created 87 dual place names across the South Island, including Aoraki / Mount Cook."
+    },
+    {
+      "id": "nzpl-041",
+      "prompt": "What does a place name built from 'wai' plus a description, such as Waitomo, usually tell you?",
+      "choices": [
+        "Something about water at that location, in this case caves with an underground stream",
+        "That the place has no water nearby at all",
+        "That the name has nothing to do with the landscape",
+        "That the place was named by a ship's captain"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Waitomo combines 'wai', water, with 'tomo', a hole or shaft, describing the underground rivers running through its limestone caves."
+    },
+    {
+      "id": "nzpl-042",
+      "prompt": "Why can knowing common Māori place name elements, such as 'wai' or 'maunga', help you guess what an unfamiliar place might be like?",
+      "choices": [
+        "Because many names describe a real feature of the landscape, such as water or a mountain, at that location",
+        "Because every Māori place name means exactly the same thing",
+        "Because place names are chosen at random with no pattern",
+        "Because only English names describe real landscape features"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Since elements like 'wai' or 'maunga' describe real landscape features, spotting them in an unfamiliar name is often a genuine clue to what is actually there."
+    },
+    {
+      "id": "nzpl-043",
+      "prompt": "What is one reason a place might have gained an official dual name only in recent decades, rather than much earlier?",
+      "choices": [
+        "Because Treaty settlements and changing official policy have progressively restored Māori names since the 1990s",
+        "Because Māori names were invented only in the 1990s",
+        "Because English names were made illegal",
+        "Because dual names have always existed since 1840"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Formal recognition of dual names largely developed from the 1990s onward, alongside the Treaty settlement process, rather than being standard practice earlier."
+    },
+    {
+      "id": "nzpl-044",
+      "prompt": "Whanganui and Whangārei both begin with 'whanga'. What does this suggest about both places?",
+      "choices": [
+        "Both places are connected to a harbour or bay",
+        "Both places are on top of a mountain",
+        "Both places are named after the same ancestor",
+        "Both places have identical histories"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "The shared element 'whanga' points to both places having a coastal harbour or bay as a defining feature, even though their fuller histories are quite different."
+    },
+    {
+      "id": "nzpl-045",
+      "prompt": "New Zealand regional names, such as Waikato or Taranaki, most often take their name from what?",
+      "choices": [
+        "A major river, mountain or ancestor connected to that area",
+        "A number assigned by government surveyors",
+        "A translation of a European place name",
+        "Random letters chosen for convenience"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Most New Zealand regional names describe a defining natural feature, such as the Waikato River, or an ancestor connected to the area, such as Taranaki."
+    },
+    {
+      "id": "nzpl-046",
+      "prompt": "What does the dual name Whakaari / White Island mean for how the place appears on official documents and maps?",
+      "choices": [
+        "Both names are used together, with neither treated as more official than the other",
+        "Only Whakaari can now legally be used",
+        "Only White Island can now legally be used",
+        "The names must never be used together"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "On official maps and documents, both names sit side by side, reflecting that the place carries both histories equally."
+    },
+    {
+      "id": "nzpl-047",
+      "prompt": "Why is the exact translation of some traditional Māori place names sometimes debated, even among fluent speakers?",
+      "choices": [
+        "Because some names were composed generations ago, and their original context or wordplay is not always fully recorded",
+        "Because Māori place names have no fixed spelling at all",
+        "Because place names are re-invented every year",
+        "Because there is only ever one possible meaning for any name"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "A name coined many generations ago can carry wordplay, a reference to an event, or a meaning that was never written down in full, so translations are sometimes offered as the most likely reading rather than a single certain answer."
+    },
+    {
+      "id": "nzpl-048",
+      "prompt": "A place carrying two names, such as Rakiura and Stewart Island, is best understood as what?",
+      "choices": [
+        "Two histories of the same place, standing alongside each other, not competing to be the one true name",
+        "Proof that one name must eventually be dropped",
+        "Evidence the place was named twice by mistake",
+        "A sign that the Māori name is less accurate"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Dual names are not a contest between a right answer and a wrong one. They record that a place has been known, used and valued through more than one history."
+    },
+    {
+      "id": "nzpl-049",
+      "prompt": "Some place names combine an element like 'puke' with a description of what once grew or lived there, such as Pukekohe. What does this pattern usually offer historians?",
+      "choices": [
+        "Clues about the original plants, animals or landscape features at that site, before it changed",
+        "Nothing useful at all, the words are decorative only",
+        "The exact population of the area at the time of naming",
+        "The precise year the place was first visited"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Names describing what grew or lived somewhere, like the kohekohe trees behind Pukekohe, can be genuine evidence of what the landscape looked like before it was cleared or built on."
+    },
+    {
+      "id": "nzpl-050",
+      "prompt": "Why do some New Zealand place names combine a Māori element with an ancestor's name rather than a plain landscape description, such as Te Whanganui a Tara?",
+      "choices": [
+        "Because the name ties the landscape to a specific person or story remembered in that community's history",
+        "Because ancestor names were required by law for every place",
+        "Because it made the name easier to translate into English",
+        "Because landscape features could not legally be named"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Attaching an ancestor's name to a landscape feature, as in 'a Tara', links that place permanently to a person and a story, not just its physical shape."
+    },
+    {
+      "id": "nzpl-051",
+      "prompt": "Why does a name like Kaikōura, describing a single remembered meal of crayfish, still work as a place name today?",
+      "choices": [
+        "Because place names can preserve a specific remembered event, not just a general landscape description",
+        "Because crayfish are still the only food eaten in Kaikōura",
+        "Because it was renamed for tourism reasons",
+        "Because the name has no connection to the coastline at all"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Place names do not only describe landscape in general terms. Some, like Kaikōura, preserve a specific remembered event, in this case a meal, tied to that exact spot."
+    }
+  ]
+}

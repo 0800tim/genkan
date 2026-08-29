@@ -1,0 +1,412 @@
+{
+  "id": "health-and-pe",
+  "title": "Health and Physical Education",
+  "emoji": "🏃",
+  "suggested_age_min": 9,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Written to be practical and factual: how the body works, what to do, where to get help. Not a place for moralising about food or bodies. 1737 and Youthline (0800 376 633) match the helplines already referenced elsewhere in this product.",
+  "questions": [
+    {
+      "id": "hp-001",
+      "prompt": "What is the main job of the heart?",
+      "choices": ["To pump blood around the body", "To digest food", "To filter air", "To store energy"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The heart is a muscle that pumps blood, carrying oxygen and nutrients, around your whole body."
+    },
+    {
+      "id": "hp-002",
+      "prompt": "What is the main job of the lungs?",
+      "choices": ["To take in oxygen and remove carbon dioxide", "To pump blood", "To digest food", "To store water"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Your lungs bring oxygen into your blood and get rid of carbon dioxide when you breathe out."
+    },
+    {
+      "id": "hp-003",
+      "prompt": "Why is it a good idea to warm up before exercise?",
+      "choices": ["It gradually gets your heart and muscles ready, lowering injury risk", "It makes you tired before you start", "It replaces the need to stretch", "It only matters for professional athletes"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Warming up raises your heart rate and loosens your muscles gradually, so you are less likely to strain something."
+    },
+    {
+      "id": "hp-004",
+      "prompt": "What is the best everyday drink for staying hydrated?",
+      "choices": ["Water", "Fizzy drink", "Energy drink", "Coffee"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Water is the best everyday choice for hydration, with nothing added that your body has to deal with."
+    },
+    {
+      "id": "hp-005",
+      "prompt": "Why is washing your hands with soap important?",
+      "choices": ["It removes germs and helps stop illness spreading", "It only makes your hands smell nice", "It is just a habit with no real effect", "It replaces the need to brush your teeth"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Soap and water physically remove germs from your skin, which is one of the simplest ways to stop illness spreading."
+    },
+    {
+      "id": "hp-006",
+      "prompt": "In New Zealand, what number do you call in a genuine emergency?",
+      "choices": ["111", "999", "911", "000"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "111 is the emergency number in New Zealand for fire, police or ambulance."
+    },
+    {
+      "id": "hp-007",
+      "prompt": "At a patrolled beach, where is the safest place to swim?",
+      "choices": ["Between the flags", "Anywhere quiet and empty", "Near rocks", "Close to a river mouth"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Lifeguards watch the area between the flags, which is checked for the safest conditions that day."
+    },
+    {
+      "id": "hp-008",
+      "prompt": "What does sunscreen help protect your skin from?",
+      "choices": ["Damage from UV rays", "Cold weather", "Insect bites", "Dehydration"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Sunscreen blocks or absorbs UV radiation from the sun, which can damage skin over time."
+    },
+    {
+      "id": "hp-009",
+      "prompt": "Roughly how many main food groups does New Zealand's healthy eating guidance describe?",
+      "choices": ["Four", "Ten", "Two", "Twenty"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "NZ guidance groups food into four kinds: vegetables and fruit, grain foods, milk and milk products, and protein foods."
+    },
+    {
+      "id": "hp-010",
+      "prompt": "Why do growing children and teenagers generally need more sleep than adults?",
+      "choices": ["Sleep supports growth, memory and mood while the body and brain are developing", "They don't, adults need more", "Sleep only matters for babies", "It has no connection to health"],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Sleep plays a big role in physical growth, learning, memory and mood, which is why growing bodies need more of it."
+    },
+    {
+      "id": "hp-011",
+      "prompt": "What happens to your heart rate during exercise?",
+      "choices": ["It increases, to pump more blood to your muscles", "It decreases", "It stops changing", "It becomes irregular in everyone"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Your heart beats faster during exercise so it can deliver more oxygen and energy to working muscles."
+    },
+    {
+      "id": "hp-012",
+      "prompt": "What is the biceps muscle mainly used for?",
+      "choices": ["Bending the elbow", "Bending the knee", "Blinking", "Digesting food"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "The biceps, at the front of the upper arm, contracts to bend your elbow."
+    },
+    {
+      "id": "hp-013",
+      "prompt": "What does stretching help with?",
+      "choices": ["Flexibility and muscle recovery", "Making muscles permanently bigger", "Replacing sleep", "Improving eyesight"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Stretching helps keep muscles flexible and can support recovery after exercise."
+    },
+    {
+      "id": "hp-014",
+      "prompt": "Why is cooling down after hard exercise a good idea?",
+      "choices": ["It helps your heart rate return to normal gradually", "It makes you more tired", "It is only needed in winter", "It replaces warming up"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A gentle cool down lets your heart rate and breathing settle back down gradually rather than stopping suddenly."
+    },
+    {
+      "id": "hp-015",
+      "prompt": "On a food label's nutrition panel, what does 'per 100g' let you do?",
+      "choices": ["Compare different foods fairly, using the same amount", "Tell you the price", "Tell you the use-by date", "Tell you the country it was made in"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Comparing amounts per 100g is a fair way to compare two different foods, since serving sizes can vary a lot."
+    },
+    {
+      "id": "hp-016",
+      "prompt": "On an ingredients list, how are ingredients usually ordered?",
+      "choices": ["From the most to the least, by weight", "Alphabetically", "By price", "Randomly"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Ingredients are listed in order of quantity, so whatever is listed first makes up the largest part of the food."
+    },
+    {
+      "id": "hp-017",
+      "prompt": "Why do dentists recommend brushing your teeth twice a day?",
+      "choices": ["It helps prevent tooth decay", "It makes teeth grow faster", "It replaces the need to eat", "It is only needed after eating lollies"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Regular brushing with fluoride toothpaste clears away the plaque that causes tooth decay."
+    },
+    {
+      "id": "hp-018",
+      "prompt": "What is the safest way to cough or sneeze, to avoid spreading germs?",
+      "choices": ["Into your elbow", "Into your open hand", "Onto the floor", "Holding your breath"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Coughing or sneezing into your elbow, rather than your hand, cuts down on spreading germs to things you then touch."
+    },
+    {
+      "id": "hp-019",
+      "prompt": "What is the recovery position used for?",
+      "choices": ["Keeping an unconscious but breathing person's airway clear", "Treating a broken bone", "Cooling down after exercise", "Warming up before sport"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Rolling someone onto their side in the recovery position helps stop them choking if they vomit while unconscious."
+    },
+    {
+      "id": "hp-020",
+      "prompt": "What is the first thing to do for a minor burn?",
+      "choices": ["Cool it under cool running water", "Rub ice directly on it", "Pop any blisters", "Cover it in butter"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Cool running water for around 20 minutes is the standard first step for a burn. Ice and butter can both make things worse."
+    },
+    {
+      "id": "hp-021",
+      "prompt": "If you are caught in a rip current at the beach, what should you do?",
+      "choices": ["Stay calm and swim parallel to the shore, or raise a hand for help", "Swim straight back to shore as hard as you can", "Dive underwater to escape it", "Panic and shout continuously while swimming against it"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Fighting a rip current straight on wears you out. Staying calm and swimming parallel to the beach, or signalling for help, is safer."
+    },
+    {
+      "id": "hp-022",
+      "prompt": "New Zealand has some of the highest levels of what, compared to many other countries?",
+      "choices": ["UV radiation from the sun", "Air pollution", "Humidity", "Rainfall"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "New Zealand's UV levels are especially high, particularly from September to April, which is why sun protection matters here."
+    },
+    {
+      "id": "hp-023",
+      "prompt": "What does the saying 'slip, slop, slap, wrap' remind people to do?",
+      "choices": ["Slip on a shirt, slop on sunscreen, slap on a hat, wrap on sunglasses", "Slip into bed early, sleep well, wake up, walk to school", "Slip on shoes, run fast, jump high, land safely", "Slip, slide, spin and stop while dancing"],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "It's a simple reminder for sun safety: cover up, use sunscreen, wear a hat, and protect your eyes."
+    },
+    {
+      "id": "hp-024",
+      "prompt": "Why might a food or drink high in added sugar affect your teeth?",
+      "choices": ["Sugar feeds the bacteria that cause tooth decay", "Sugar makes teeth grow more slowly", "Sugar has no effect on teeth at all", "Sugar only affects adult teeth"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Bacteria in your mouth turn sugar into acid, and that acid is what wears away tooth enamel over time."
+    },
+    {
+      "id": "hp-025",
+      "prompt": "Why does the body need extra fluids during exercise or hot weather?",
+      "choices": ["You lose water through sweat and need to replace it", "Exercise stops the body needing water", "Hot weather makes the body need less water", "Only athletes need to think about this"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Sweating is how your body cools itself, and that fluid needs replacing so the rest of your body keeps working properly."
+    },
+    {
+      "id": "hp-026",
+      "prompt": "Roughly how many hours of sleep a night do most teenagers need?",
+      "choices": ["About 8 to 10 hours", "About 3 to 4 hours", "About 15 hours", "Exactly 6 hours, the same as adults"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Most teenagers need somewhere around 8 to 10 hours a night, more than most adults."
+    },
+    {
+      "id": "hp-027",
+      "prompt": "Why might someone check with a trusted adult before treating a burn bigger than a coin?",
+      "choices": ["Bigger or more serious burns often need proper medical care", "Small burns never need treatment", "Only doctors are allowed to touch skin", "It is against the law to help someone with a burn"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Cooling a small burn is good first aid, but a larger, deep or blistered burn is worth getting checked properly."
+    },
+    {
+      "id": "hp-028",
+      "prompt": "What is one reason to always supervise young children near water, even shallow water?",
+      "choices": ["A young child can drown in a very small amount of water, quickly and quietly", "Young children are naturally strong swimmers", "Shallow water has no risk at all", "Lifeguards are only needed for adults"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Drowning can happen fast and silently, even in shallow water, which is why close supervision matters for young children."
+    },
+    {
+      "id": "hp-029",
+      "prompt": "If you fall unexpectedly into cold water, what does water safety advice suggest doing first?",
+      "choices": ["Float on your back to catch your breath before swimming for safety", "Swim as hard and fast as possible straight away", "Hold your breath and dive to the bottom", "Remove all your clothing immediately"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Cold water shock can leave you gasping and disoriented. Floating first, to get your breathing under control, comes before trying to swim anywhere."
+    },
+    {
+      "id": "hp-030",
+      "prompt": "Can UV rays still be strong on a cloudy day?",
+      "choices": ["Yes, clouds do not block most UV radiation", "No, clouds always block all UV", "Only in summer", "Only near the beach"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "A lot of UV gets through cloud cover, which is why sunburn on an overcast day catches people out."
+    },
+    {
+      "id": "hp-031",
+      "prompt": "What is 1737, in New Zealand?",
+      "choices": ["A free call or text helpline to talk to a trained counsellor", "An emergency-only number, like 111", "A school subject code", "A weather forecast phone line"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "1737 is a free, confidential way to talk to a trained counsellor, any time, about anything on your mind, not just in a crisis."
+    },
+    {
+      "id": "hp-032",
+      "prompt": "What is Youthline's free phone number in New Zealand?",
+      "choices": ["0800 376 633", "111", "0800 123 456", "1737"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Youthline (0800 376 633) is a free, confidential helpline for young people. Both Youthline and 1737 are there for everyday struggles, not only emergencies."
+    },
+    {
+      "id": "hp-033",
+      "prompt": "Is it normal to have ups and downs in your mood?",
+      "choices": ["Yes, everyone does, and it is worth talking to someone you trust about it", "No, a good mood should never change", "Only adults have mood changes", "Talking about it makes things worse"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Everybody's mood shifts. Talking to someone you trust, a parent, friend, or a helpline, is a genuinely useful thing to do, not a sign anything is wrong with you."
+    },
+    {
+      "id": "hp-034",
+      "prompt": "What is one thing that can help your mood on an ordinary day?",
+      "choices": ["Physical activity, good sleep, or spending time with people you trust", "Skipping meals", "Staying inside alone all day", "Ignoring how you feel"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Movement, rest and connecting with people you trust are all things that genuinely help mood, alongside talking to someone when you need to."
+    },
+    {
+      "id": "hp-035",
+      "prompt": "Why might a doctor ask about your sleep as part of checking your general health?",
+      "choices": ["Sleep affects growth, mood, memory and how your body recovers", "Sleep has nothing to do with physical health", "Only elite athletes need good sleep", "Sleep only matters for babies"],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Sleep is tied into a huge number of things your body and brain do, from healing to remembering what you learned that day."
+    },
+    {
+      "id": "hp-036",
+      "prompt": "During exercise, why does your breathing rate increase along with your heart rate?",
+      "choices": ["Your muscles need more oxygen, so your body brings in more and removes more carbon dioxide", "Breathing faster cools the blood down", "It is an accident with no real purpose", "It only happens in cold weather"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Working muscles need extra oxygen and produce extra carbon dioxide, so both your heart and lungs work harder to keep up."
+    },
+    {
+      "id": "hp-037",
+      "prompt": "What is the difference between a dynamic stretch and a static stretch?",
+      "choices": ["A dynamic stretch involves movement, a static stretch is held still", "A dynamic stretch is always painful, a static one never is", "A static stretch is only for the legs", "There is no real difference"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Dynamic stretches move through a range of motion and often come before exercise, while static stretches are held in place and often come after."
+    },
+    {
+      "id": "hp-038",
+      "prompt": "Why should jewellery or tight clothing be removed near a burn as soon as possible?",
+      "choices": ["The area may swell, and anything tight could then be hard to remove and cut off circulation", "Jewellery makes burns worse instantly", "It is only a hygiene concern", "It has nothing to do with swelling"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Burnt skin often swells. Getting rings, watches or tight sleeves off early, before the swelling starts, avoids them becoming a problem later."
+    },
+    {
+      "id": "hp-039",
+      "prompt": "Why is 'per serving' information on a food label sometimes less useful for comparing two products than 'per 100g'?",
+      "choices": ["Serving sizes can be defined differently by different brands", "Per serving numbers are always fake", "Per 100g is only used overseas", "Serving size never varies between products"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "One brand's 'serving' might be a different size to another's, so per 100g gives a fairer like-for-like comparison."
+    },
+    {
+      "id": "hp-040",
+      "prompt": "Why might someone's urine colour be mentioned as a rough hydration guide?",
+      "choices": ["Pale, straw-coloured urine generally suggests good hydration, while dark urine can suggest you need more fluid", "Urine colour tells you your blood type", "Urine colour has no connection to hydration", "Dark urine always means a serious illness"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "It's a rough, everyday guide, not a medical test: pale urine generally means you are drinking enough, and dark urine is a hint to have some water."
+    },
+    {
+      "id": "hp-041",
+      "prompt": "What is one reason 1737 and Youthline exist as separate services from calling 111?",
+      "choices": ["They are for talking things through, not for emergencies needing police, fire or ambulance", "They only operate during office hours", "They are more expensive than 111", "They require a referral from a doctor first"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "111 is for urgent, immediate danger. 1737 and Youthline are there for talking, any time, about things that are not an emergency."
+    },
+    {
+      "id": "hp-042",
+      "prompt": "Why is a warm-up before intense exercise especially useful for muscles specifically?",
+      "choices": ["It increases blood flow to muscles and slightly raises their temperature, making them more flexible", "It makes muscles permanently stronger in one session", "It has no effect on muscles, only on mood", "It replaces the need for any stretching ever"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Warmed muscles, with better blood flow, move through their range more easily and are less likely to be strained."
+    },
+    {
+      "id": "hp-043",
+      "prompt": "Why do NZ sun safety messages emphasise seeking shade especially in the middle of the day?",
+      "choices": ["UV radiation is generally strongest when the sun is highest in the sky", "The middle of the day is when it is coldest", "Shade only matters in summer", "UV is weakest around midday"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "UV is typically at its strongest when the sun is high overhead, roughly late morning to mid-afternoon, so shade matters most then."
+    },
+    {
+      "id": "hp-044",
+      "prompt": "Which of these is a good reason to talk to a trusted adult or a helpline, even if things do not feel like an emergency?",
+      "choices": ["Getting support early is genuinely useful, and these services exist for exactly that", "You should only reach out once things are extremely serious", "Trusted adults are too busy to be told about ordinary problems", "Helplines only want to hear about big crises"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Support services like 1737 and Youthline are there for the everyday stuff too, not just crisis moments, and reaching out early is a sign of good sense, not weakness."
+    },
+    {
+      "id": "hp-045",
+      "prompt": "Why is 'don't fight the rip, swim parallel to shore' good advice specifically?",
+      "choices": ["A rip current is usually a narrow channel, so swimming sideways can get you out of it with less effort", "Swimming parallel makes the current stronger", "It gets you back to the beach faster than swimming straight in", "Rips only flow parallel to the shore, never out to sea"],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "A rip is often a narrow river of water flowing out to sea. Swimming across it, rather than against it, can get you clear of it using far less energy."
+    },
+    {
+      "id": "hp-046",
+      "prompt": "Why might cardiovascular fitness built up over months of regular exercise show up as a lower resting heart rate?",
+      "choices": ["A fitter heart can pump more blood with each beat, so it needs fewer beats per minute at rest", "A lower resting heart rate always means someone is unwell", "Resting heart rate has nothing to do with fitness", "Exercise permanently slows down the whole body"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Regular training can make the heart a more efficient pump, moving more blood per beat, so it does not need to beat as often when you are resting."
+    },
+    {
+      "id": "hp-047",
+      "prompt": "Why is covering a burn with cling film sometimes recommended, after cooling it?",
+      "choices": ["It is a clean, non-stick covering that protects the area while you get further help", "It cools the burn faster than water", "It stops the burn needing any further care", "It replaces the need to cool the burn first"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Cling film does not stick to a burn the way some dressings do, and it gives some protection, but cooling the burn under water always comes first."
+    },
+    {
+      "id": "hp-048",
+      "prompt": "Why do health guidelines describe added sugar and salt as things to be mindful of, rather than foods to avoid completely?",
+      "choices": ["Both occur naturally in many foods and matter more in large amounts than as an occasional treat", "Sugar and salt are always harmful in any amount", "Only salt matters, sugar has no effect on health", "Both should be eliminated from every diet"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Sugar and salt are ordinary parts of food in reasonable amounts. Guidance is generally about the overall pattern of what you eat, not about banning specific foods."
+    },
+    {
+      "id": "hp-049",
+      "prompt": "What is one reason NZ water safety advice separates rip current technique from general fitness swimming ability?",
+      "choices": ["Even a strong swimmer can be exhausted fighting a rip, so the technique matters more than swimming strength", "Only weak swimmers get caught in rips", "Rip currents do not affect strong swimmers at all", "Swimming lessons cover rip currents in every case"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Rips can exhaust even a strong, confident swimmer if they swim straight against the current, which is why knowing the technique of swimming parallel matters for everyone."
+    },
+    {
+      "id": "hp-050",
+      "prompt": "Why might a health class point out that talking to a helpline is confidential?",
+      "choices": ["Knowing a conversation is private can make it easier to be honest about what's really going on", "Confidential means the call is recorded for school reports", "It means only your parents can find out what you said", "Confidentiality is only offered to adults"],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Confidential means what you say stays private with the service, which is often exactly what makes it easier to talk openly."
+    }
+  ]
+}
