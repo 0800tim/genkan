@@ -19,6 +19,10 @@ import { columns, legend, ranked, sparkline, meter, goalBar, table, esc } from "
 import { LIVE_CSS, LIVE_JS, livePage, liveStrip } from "./liveui.mjs";
 import { MANAGE_CSS, MANAGE_JS, family } from "./manage.mjs";
 import { HOUSEHOLD_CSS, HOUSEHOLD_JS, housePanel, assignOptions, roleTag, isKid } from "./household.mjs";
+// The System page: the health of the box itself. Its own module, like the live
+// wire and the manage area, so this file stays the shared shell plus the pages
+// that read the household database.
+import { SYS_CSS, SYS_JS, systemPage } from "./sysview.mjs";
 
 // ---------------------------------------------------------------------------
 // Style. One block, no external anything.
@@ -486,7 +490,7 @@ function toggleTheme(){var d=document.documentElement;
 `;
 
 // ---------------------------------------------------------------------------
-export { livePage, family };
+export { livePage, family, systemPage };
 
 // The public demo (demo/compose.yaml) runs this same code against a made-up
 // household, so every page has to say so plainly and in the house style. With
@@ -512,11 +516,11 @@ const DEMO_BAR = DEMO ? `<div class="demobar" role="note">
 
 export function shell({ tab, body, title = "Hearth" }) {
   const nav = [["/", "Home"], ["/live", "Right now"], ["/week", "Week"], ["/trends", "Trends"],
-    ["/earn", "Learn to earn"], ["/devices", "Devices"], ["/family", "Family"]];
+    ["/earn", "Learn to earn"], ["/devices", "Devices"], ["/family", "Family"], ["/system", "System"]];
   return `<!doctype html><html lang="en-NZ"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<title>${esc(title)}</title><style>${CSS}${POLISH}${LIVE_CSS}${MANAGE_CSS}${HOUSEHOLD_CSS}${DEMO_CSS}</style></head><body>
+<title>${esc(title)}</title><style>${CSS}${POLISH}${LIVE_CSS}${MANAGE_CSS}${HOUSEHOLD_CSS}${SYS_CSS}${DEMO_CSS}</style></head><body>
 <div class="top"><div class="brand"><span class="porch"></span><b>Hearth</b>
   <span>the house with the porch light on</span></div>
   <button class="tbtn" onclick="toggleTheme()" aria-label="Switch light or dark">Theme</button></div>
@@ -524,7 +528,7 @@ export function shell({ tab, body, title = "Hearth" }) {
 <div class="msg" id="msg" role="status" aria-live="polite"></div>
 ${DEMO_BAR}${body}
 <div id="tip" role="tooltip" aria-hidden="true"></div>
-<script>${JS}${MANAGE_JS}${HOUSEHOLD_JS}${LIVE_JS}</script></body></html>`;
+<script>${JS}${MANAGE_JS}${HOUSEHOLD_JS}${LIVE_JS}${SYS_JS}</script></body></html>`;
 }
 
 // ---------------------------------------------------------------------------

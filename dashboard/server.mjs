@@ -2,7 +2,7 @@
 // the per-kid analytics the charts read out of Postgres.
 // Binds to the tailnet so it is private to the operator.
 //
-// Five views, all server rendered so the page works with no internet and with
+// Seven views, all server rendered so the page works with no internet and with
 // JavaScript disabled (the controls need JS, the charts and numbers do not):
 //   /          Home     - state and controls, unchanged behaviour
 //   /live      Right now - the live wire: SSE ticks, real-time traffic charts,
@@ -13,6 +13,9 @@
 //   /earn      Learn to earn - the jobs on offer per child, the quiz banks,
 //                          and the earning history
 //   /devices   Devices  - the roster and the naming queue
+//   /system    System   - the health of the box Hearth itself runs on: CPU,
+//                          memory, disk, load, uptime, its containers and the
+//                          throughput of its own network cards
 //   /kid/:name Kid      - one child: their devices, time, goals and controls
 // The control API (/api/act, /api/assign, /api/claim) and its optional
 // DASH_TOKEN are untouched.
@@ -21,8 +24,10 @@ import { execFile } from "node:child_process";
 import pg from "pg";
 import { analytics, digest, kidDetail, GOAL_METRICS } from "./analytics.mjs";
 import { shell, tonight, trends, devices as devicesView, week as weekView, kid as kidView } from "./views.mjs";
+import { systemPage } from "./views.mjs";
 import { livePage, family as familyView } from "./views.mjs";
 import { LiveWire } from "./live.mjs";
+import { SysMonitor } from "./sysmon.mjs";
 import { householdApi } from "./household.mjs";
 import { earnData, earnPage, taskApi, quizApi, decideClaim } from "./earn.mjs";
 import { dirname, join } from "node:path";
@@ -69,6 +74,11 @@ async function syncAdguard() {
 
 // One sampler for the whole process; it only runs while a page is watching.
 const wire = new LiveWire(q, m => console.log(m));
+// The box's own health. Unlike the live wire this one runs from start-up on a
+// slow clock, because its whole job is to have a few hours of history ready
+// the moment somebody opens the System page. See dashboard/sysmon.mjs for why
+// it is a second stream rather than more fields on the live one.
+const sysmon = new SysMonitor().start();
 
 const readJson = async req => {
   let b = "";
@@ -139,13 +149,17 @@ const authed = req => !DASH_TOKEN || (req.headers["x-dash-token"] === DASH_TOKEN
 // own page. Deliberately inline: the speed test is served from another
 // container and must not depend on this one for its stylesheet.
 const SPEED_NAV = `<div style="display:flex;gap:18px;align-items:center;padding:11px 20px;
-  background:#14161f;border-bottom:1px solid rgba(236,228,214,.11);
+  background:#14161f;border-bottom:1px solid rgba(236,228,214,.11);flex-wrap:wrap;
   font:600 14px/1 ui-sans-serif,system-ui,sans-serif">
   <a href="/" style="color:#f2a15a;text-decoration:none">&lsaquo; Hearth</a>
   <a href="/" style="color:#c3bcaf;text-decoration:none">Home</a>
   <a href="/live" style="color:#c3bcaf;text-decoration:none">Right now</a>
   <a href="/devices" style="color:#c3bcaf;text-decoration:none">Devices</a>
   <span style="color:#ece4d6">Speed</span>
+  <span style="margin-left:auto;color:#8f8879;font-weight:600;font-size:12.5px">
+    Measuring this device to the Hearth box over the network you are on now.
+    For the family wifi, open it from a device on that network.
+  </span>
 </div>`;
 
 // The speed test lives in the gateway container, on the docker bridge. In the
@@ -193,6 +207,17 @@ async function proxySpeed(req, res) {
       r.on("data", c => body += c);
       r.on("end", () => {
         body = body.replace(/<body([^>]*)>/i, `<body$1>${SPEED_NAV}`);
+        // The speed test's own script asks for /ping, /download and friends as
+        // absolute paths, which is correct when it is served at its own root
+        // and wrong the moment it is proxied under /speed: those requests went
+        // to the dashboard instead. Ping still appeared to work, because it
+        // times a round trip and a 404 is a round trip, so the gauge showed a
+        // plausible latency next to a download of exactly zero. Point them at
+        // the prefix. Named explicitly rather than by pattern, so this cannot
+        // quietly rewrite something else the page fetches later.
+        for (const ep of ["ping", "download", "upload", "internet", "info"]) {
+          body = body.split(`fetch("/${ep}`).join(`fetch("/speed/${ep}`);
+        }
         const h = { ...r.headers, "content-type": "text/html; charset=utf-8" };
         delete h["content-length"];
         res.writeHead(r.statusCode || 200, h);
@@ -455,6 +480,14 @@ const server = createServer(async (req, res) => {
     // that only speaks HTTP, and the browser reconnects on its own. Handled
     // before the page code below so a stream never pays for a state() query.
     if (req.method === "GET" && req.url === "/api/stream") { wire.attach(req, res); return; }
+    // ---- the box's own health ---------------------------------------------
+    // Its own stream on purpose: a slower clock, a longer memory, and it must
+    // keep sampling whether or not anybody is watching traffic.
+    if (req.method === "GET" && req.url === "/api/system/stream") { sysmon.attach(req, res); return; }
+    if (req.method === "GET" && req.url === "/api/system.json") {
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
+      res.end(JSON.stringify(await sysmon.pageData())); return;
+    }
     // The same numbers as one JSON object, for anything that cannot hold a
     // stream open: a watch face, a script, or a quick look with curl.
     if (req.method === "GET" && req.url === "/api/live.json") {
@@ -480,6 +513,14 @@ const server = createServer(async (req, res) => {
     // browsers key off the attribute name alone, so that spelling switched it ON
     // and every control silently 403'd. Omit the attribute entirely.
     if (DASH_TOKEN) headers["set-cookie"] = `dash=${DASH_TOKEN}; Path=/; SameSite=Strict`;
+    // Deliberately answered before state() runs. The System page reads nothing
+    // out of Postgres, and a health page that goes down with the database is a
+    // health page that is missing exactly when it is wanted.
+    if (url.pathname === "/system") {
+      res.writeHead(200, headers);
+      res.end(shell({ tab: "/system", title: "Hearth system", body: systemPage(await sysmon.pageData()) }));
+      return;
+    }
     const s = await state();
     let html;
     if (url.pathname === "/week") {

@@ -318,3 +318,113 @@ export function goalBar(g) {
       <span class="gaim">${g.elapsed < 7 ? `day ${g.elapsed} of 7` : "full week"}</span></div>
   </div>`;
 }
+
+// ---------------------------------------------------------------------------
+// Line and area chart, for a value sampled over time.
+//
+// The column chart above answers "how much, per day". This one answers "what
+// has it been doing for the last half hour", which is a different shape: many
+// more points than columns, no gaps between them, and a line that has to stay
+// readable when two of them are drawn on the same plot.
+//
+// Geometry, the same problem columns() solves and the same answer, with one
+// addition. Text must never scale with the container, so every label lives in
+// the outer svg (or in a nested svg with no viewBox), where an SVG percentage
+// resolves against real pixels. The marks, though, need a coordinate system:
+// polyline points cannot be percentages. So the plot is a nested svg with
+// viewBox "0 0 1000 <height>" and preserveAspectRatio="none": the y scale is
+// exactly 1 because the viewBox height matches the pixel height, and only x
+// stretches. Non-uniform scaling would smear the stroke, so every stroked mark
+// carries vector-effect="non-scaling-stroke" and comes out the same weight on
+// a phone and on a desktop.
+//
+// Everything is given a stable id, because the System page redraws these in
+// place from its event stream: the client rewrites points, d and the tick
+// labels, and never rebuilds the DOM.
+// ---------------------------------------------------------------------------
+export const LINE_VB = 1000;      // plot width in user units
+const LINE_GUTTER = 46;           // default px reserved on the left for the y ticks
+export const LINE_TOP = 9;        // px of headroom above the scale maximum
+const LINE_XBAND = 19;            // px reserved below the plot for time labels
+
+// Map a value to a y in plot user units. Exported so the client that updates
+// the chart uses exactly the same arithmetic as the server that drew it.
+export function lineY(v, max, plotH) {
+  const f = max > 0 ? Math.max(0, Math.min(1, v / max)) : 0;
+  return LINE_TOP + (1 - f) * (plotH - LINE_TOP);
+}
+
+// series: [{ key, label, colour, values }]  values may contain nulls, which
+//         are gaps in the reading and are simply not drawn.
+// ticks:  [{ v, label }] from the top down. xlabels: [string] left to right.
+export function lines({
+  series = [], max = 100, ticks = [], xlabels = [],
+  height = 152, id = "ln", title = "", empty = "No readings yet.",
+  gutter = LINE_GUTTER,
+}) {
+  const plotH = height;
+  const H = plotH + LINE_XBAND;
+  const any = series.some(s => (s.values || []).some(v => v !== null && v !== undefined));
+
+  let grid = "", yticks = "";
+  for (const t of ticks) {
+    const y = lineY(t.v, max, plotH);
+    grid += `<line class="grid" x1="0" x2="${LINE_VB}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" vector-effect="non-scaling-stroke"/>`;
+    // The anchor is inline rather than an attribute on purpose: the shared
+    // chart stylesheet sets text-anchor on .xlab, and a CSS property always
+    // beats a presentation attribute. Inline style is the one thing that wins.
+    yticks += `<text class="tick" x="${gutter - 7}" y="${(y + 3.2).toFixed(1)}" style="text-anchor:end">${esc(t.label)}</text>`;
+  }
+
+  let defs = "", marks = "";
+  series.forEach((s, i) => {
+    const gid = `${id}-g${i}`;
+    defs += `<linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1">`
+      + `<stop offset="0" stop-color="${s.colour}" stop-opacity=".30"/>`
+      + `<stop offset="1" stop-color="${s.colour}" stop-opacity="0"/></linearGradient>`;
+    const { pts, area } = linePath(s.values || [], max, plotH);
+    marks += `<path class="larea" id="${id}-a${i}" d="${area}" fill="url(#${gid})"/>`
+      + `<polyline class="lline" id="${id}-l${i}" points="${pts}" fill="none" stroke="${s.colour}"`
+      + ` stroke-width="2" stroke-linejoin="round" stroke-linecap="round" vector-effect="non-scaling-stroke"/>`;
+  });
+
+  const xs = xlabels.length ? xlabels : ["", "", ""];
+  const anchor = i => (i === 0 ? "start" : i === xs.length - 1 ? "end" : "middle");
+  const atPct = i => (xs.length < 2 ? 0 : (i / (xs.length - 1)) * 100);
+  const xband = xs.map((l, i) =>
+    `<text class="xlab" id="${id}-x${i}" x="${atPct(i).toFixed(2)}%" y="13"`
+    + ` style="text-anchor:${anchor(i)}">${esc(l)}</text>`).join("");
+
+  const plotStyle = `width:calc(100% - ${gutter}px)`;
+  return `<svg class="chart lchart" width="100%" height="${H}" role="img" aria-label="${esc(title || "chart")}"`
+    + ` data-max="${max}" data-ploth="${plotH}">`
+    + `<defs>${defs}</defs>`
+    + `<g class="ticks" id="${id}-ticks">${yticks}</g>`
+    + `<svg class="plot" id="${id}-plot" x="${gutter}" y="0" width="90%" height="${plotH}"`
+    + ` viewBox="0 0 ${LINE_VB} ${plotH}" preserveAspectRatio="none" style="${plotStyle}">`
+    + grid + (any ? marks : "") + `</svg>`
+    + `<svg class="xband" x="${gutter}" y="${plotH}" width="90%" height="${LINE_XBAND}" style="${plotStyle}">`
+    + xband + `</svg>`
+    + (any ? "" : `<text class="lempty" x="50%" y="${(plotH / 2).toFixed(0)}" text-anchor="middle">${esc(empty)}</text>`)
+    + `</svg>`;
+}
+
+// The two strings a line needs: the polyline points, and the closed path that
+// fills the area under it. Nulls break neither, they are just left out.
+export function linePath(values, max, plotH) {
+  const n = values.length;
+  if (n < 2) return { pts: "", area: "" };
+  const step = LINE_VB / (n - 1);
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const v = values[i];
+    if (v === null || v === undefined || !Number.isFinite(v)) continue;
+    out.push([i * step, lineY(v, max, plotH)]);
+  }
+  if (out.length < 2) return { pts: "", area: "" };
+  const pts = out.map(([x, y]) => `${x.toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const first = out[0], last = out[out.length - 1];
+  const area = `M${first[0].toFixed(1)},${plotH} L` + pts.split(" ").join(" L")
+    + ` L${last[0].toFixed(1)},${plotH} Z`;
+  return { pts, area };
+}

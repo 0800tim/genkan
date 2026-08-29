@@ -123,6 +123,14 @@ CROSS JOIN LATERAL (
 ) b
 WHERE c.name IN ('Piper','Rangi','Nova');
 
+-- One child is out of time TODAY, on purpose. The page a kid meets when their
+-- time runs out is the most important screen in the product, and a demo where
+-- everybody has minutes left never shows it. Rangi has used the lot, so the
+-- portal greets them with the earn-it-back page rather than the hub.
+UPDATE time_ledger SET used_min = budget_min + bonus_min
+ WHERE day = CURRENT_DATE
+   AND child_id = (SELECT id FROM children WHERE name = 'Rangi');
+
 -- The metered categories. Gaming, video and social only: audio and schoolwork
 -- are deliberately free, which is the whole point of METERING.md.
 INSERT INTO category_usage (child_id, day, category, used_min)

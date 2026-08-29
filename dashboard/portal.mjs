@@ -19,6 +19,13 @@ import { randomBytes } from "node:crypto";
 import path from "node:path";
 import pg from "pg";
 
+const DEMO = process.env.HEARTH_DEMO === "1";
+// The ?kid= override lets a parent see what a child sees. At home it is
+// view-only: earning from somebody else's device would let one kid farm
+// another's minutes, which is why a POST requires a real device match.
+// The public demo has no real devices at all, and a portal you cannot play
+// is not a demo of anything, so there the override may earn. Its database
+// is invented and reseeded nightly, so there is nothing to farm.
 const BIND = process.env.BIND || "127.0.0.1";   // container: 0.0.0.0 (its netns is the island)
 const PORT = Number(process.env.PORT || 8890);  // container: 80
 const QUIZ_DIR = process.env.QUIZ_DIR || path.join(import.meta.dirname, "..", "portal", "quizzes");
@@ -261,8 +268,19 @@ a.back{color:#c4b5fd}.foot{margin-top:6px;font-size:12px;opacity:.7;line-height:
 .warm p{font-size:16px;line-height:1.55;margin:0 0 12px}.warm p:last-child{margin-bottom:0}
 .warm .lead{font-size:17px}.warm b{color:#fde68a}
 .helplines{background:rgba(0,0,0,.22);border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.7}`;
+// The public demo serves this page to strangers, and a screenshot of it would
+// otherwise look like a real child's screen. Say what it is, at the top, every
+// time. Nothing renders at home, where DEMO is unset.
+const DEMO_NOTE = DEMO
+  ? `<div style="max-width:520px;margin:0 auto 14px;padding:11px 15px;border-radius:14px;
+       background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);
+       font:600 14px/1.45 system-ui,sans-serif;color:#fff">
+       Demo. An invented family, made-up minutes, nobody's real child.
+       The quizzes work: pass a round and watch the clock change.
+     </div>`
+  : "";
 const page = body => `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
-<title>Hearth</title><style>${CSS}</style><div class="wrap">${body}</div>`;
+<title>${DEMO ? "Hearth demo" : "Hearth"}</title><style>${CSS}</style><div class="wrap">${DEMO_NOTE}${body}</div>`;
 const helpFoot = `<div class="foot">Need to talk to someone? Free, any time: call or text <b>1737</b>,
  or Youthline <b>0800 376 633</b>. These always work, even when your internet is off.</div>`;
 
@@ -436,7 +454,7 @@ const server = createServer(async (req, res) => {
     const send = html => { res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }); res.end(html); };
     if (!kid) return send(page(`<div class="card"><h1>Hearth</h1><div class="msg">This device isn't recognised on the kids network yet. Ask Dad to add it.</div>${helpFoot}</div>`));
     if (req.method === "POST") {
-      if (!kid.real) return send(page(`<div class="card"><div class="msg">Earning only works from your own device on the network.</div></div>`));
+      if (!kid.real && !DEMO) return send(page(`<div class="card"><div class="msg">Earning only works from your own device on the network.</div></div>`));
       if ((lastPost.get(kid.id) || 0) > Date.now() - 1500) return send(page(`<div class="card"><div class="msg">Slow down a wee bit.</div></div>`));
       lastPost.set(kid.id, Date.now());
       let b = ""; req.on("data", c => { if ((b += c).length > 10_000) req.destroy(); });

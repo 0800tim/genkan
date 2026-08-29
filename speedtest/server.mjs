@@ -271,7 +271,11 @@ function draw(){
 async function pingTest(n){
   n = n || 15; const times = [];
   for (let i = 0; i < n; i++){ const t = performance.now();
-    await fetch("/ping?x=" + i, { cache: "no-store" }); times.push(performance.now() - t); }
+    const r = await fetch("/ping?x=" + i, { cache: "no-store" });
+    // A 404 is a round trip too, so timing it produces a plausible latency
+    // beside a throughput of zero. Refuse to report that as a ping.
+    if (!r.ok) throw new Error("the speed test endpoints are not answering (" + r.status + ")");
+    times.push(performance.now() - t); }
   times.sort(function(a,b){ return a-b; });
   const med = times[Math.floor(n/2)];
   let jit = 0; for (let i = 0; i < n-1; i++) jit += Math.abs(times[i+1] - times[i]);
@@ -279,13 +283,14 @@ async function pingTest(n){
 }
 async function throughput(phase, seconds, streams, onRate){
   const ctl = new AbortController();
-  let bytes = 0; const t0 = performance.now(); const jobs = [];
+  let bytes = 0, fail = null; const t0 = performance.now(); const jobs = [];
   if (phase === "dl"){
     for (let s = 0; s < streams; s++) jobs.push((async function(){
       const r = await fetch("/download?s=" + s + "&t=" + Date.now(), { signal: ctl.signal, cache: "no-store" });
+      if (!r.ok) throw new Error("download rejected: " + r.status);
       const rd = r.body.getReader();
       for (;;){ const c = await rd.read(); if (c.done) break; bytes += c.value.length; }
-    })().catch(function(){}));
+    })().catch(function(e){ if (e.name !== "AbortError") fail = fail || e; }));
   } else {
     const mb4 = new Uint8Array(4*1024*1024);
     for (let o = 0; o < mb4.length; o += 65536) crypto.getRandomValues(mb4.subarray(o, o + 65536));
@@ -295,10 +300,18 @@ async function throughput(phase, seconds, streams, onRate){
     // in-flight post after time is up so the average counts every byte.
     for (let s = 0; s < streams; s++) jobs.push((async function(){
       while (!ctl.signal.aborted){
-        await fetch("/upload", { method: "POST", body: blob, cache: "no-store" });
-        bytes += blob.size;
+        // Count what the server says it received, not what we meant to send.
+        // Adding blob.size when the fetch merely RESOLVES scores failures as
+        // throughput: a 404 answered in 9ms was being booked as 8 MB, which
+        // is how a wifi link once reported 2.2 Gbps while moving nothing at
+        // all. A confidently wrong number is worse than an obvious zero.
+        const r = await fetch("/upload", { method: "POST", body: blob, cache: "no-store" });
+        if (!r.ok) throw new Error("upload rejected: " + r.status);
+        const j = await r.json();
+        if (!j || typeof j.bytes !== "number") throw new Error("upload did not confirm");
+        bytes += j.bytes;
       }
-    })().catch(function(){}));
+    })().catch(function(e){ fail = fail || e; }));
   }
   let last = { t: t0, b: 0 }, ema = 0;
   const tick = setInterval(function(){
@@ -328,6 +341,9 @@ async function throughput(phase, seconds, streams, onRate){
   const elapsed = phase === "ul"
     ? (performance.now() - t0)/1000
     : Math.min((performance.now() - t0)/1000, seconds);
+  // If every stream failed, there is no measurement here, only an elapsed
+  // time. Say so rather than returning a number computed from nothing.
+  if (fail && bytes === 0) throw fail;
   return bytes*8/elapsed/1e6;
 }
 

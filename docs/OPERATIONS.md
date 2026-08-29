@@ -59,7 +59,10 @@ the top of `dashboard/server.mjs`, because this is the part of the project that
 moves fastest. At the time of writing: `/` for tonight's state and controls,
 `/week` for the weekly digest with a plain-text version to send, `/trends` for
 per-child usage, services and the earn versus spend balance, `/devices` for the
-roster and the naming queue, and `/kid/<name>` for one child.
+roster and the naming queue, `/system` for the health of the box itself (CPU,
+memory, disk, load, uptime, the Hearth containers and the throughput of the
+box's own network cards, all read straight out of `/proc` and `/sys`), and
+`/kid/<name>` for one child.
 
 The repo does not ship a systemd unit for the dashboard, because where it binds
 is household-specific. A minimal user unit:

@@ -76,6 +76,40 @@ services:
       start_period: 20s
     restart: unless-stopped
 
+  # The kid's side of the house. It is the same portal.mjs a real island runs,
+  # against the same fake database, so the demo shows exactly what a child sees
+  # when their time runs out and what they can do about it. The portal never
+  # shells out to anything, it only reads and writes the database, so there is
+  # nothing here that could reach a firewall even if it wanted to.
+  demo-portal:
+    image: node:22-slim
+    container_name: hearth-demo-portal
+    depends_on:
+      demo-db:
+        condition: service_healthy
+    working_dir: /app
+    environment:
+      HEARTH_DEMO: "1"
+      TZ: Pacific/Auckland
+      BIND: 0.0.0.0
+      PORT: "8890"
+      KIDS_DB_URL: postgres://postgres:demo@demo-db:5432/hearth_demo
+      QUIZ_DIR: /quizzes
+    volumes:
+      - ../dashboard:/app:ro
+      - ../portal/quizzes:/quizzes:ro
+    command: node portal.mjs
+    networks: [demo]
+    ports:
+      - "127.0.0.1:9276:8890"
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8890/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
 networks:
   demo:
     name: hearth-demo
