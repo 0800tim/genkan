@@ -55,6 +55,7 @@ install -m 0755 "$R/bin/kidnet-alerts"      /usr/local/bin/kidnet-alerts
 install -m 0755 "$R/bin/kidnet-servicemap"   /usr/local/bin/kidnet-servicemap
 install -m 0755 "$R/bin/kidnet-servicemeter" /usr/local/bin/kidnet-servicemeter
 install -m 0755 "$R/bin/kidnet-tor-sync"    /usr/local/bin/kidnet-tor-sync
+install -m 0755 "$R/bin/kidnet-iot-policy"  /usr/local/bin/kidnet-iot-policy
 install -d -m 0755 /usr/local/lib/hearth /etc/kids-network
 # Where kidnet-tor-sync keeps the relay list and the generated nft snippet.
 install -d -m 0755 /var/lib/hearth
@@ -74,6 +75,11 @@ install -m 0644 "$R/config/systemd-network/kids-services.service" /etc/systemd/s
 install -m 0644 "$R/config/systemd-network/kids-services.timer"   /etc/systemd/system/
 install -m 0644 "$R/config/systemd-network/kids-tor-sync.service" /etc/systemd/system/
 install -m 0644 "$R/config/systemd-network/kids-tor-sync.timer"   /etc/systemd/system/
+# Household IoT policy. Installed but deliberately NOT enabled: it ships in
+# observe mode and switching it on is a decision a parent makes once they have
+# read what it will do. See docs/HOUSEHOLD-SECURITY.md.
+install -m 0644 "$R/config/systemd-network/kids-iot-policy.service" /etc/systemd/system/
+install -m 0644 "$R/config/systemd-network/kids-iot-policy.timer"   /etc/systemd/system/
 systemctl daemon-reload
 
 echo "Starting the stack..."

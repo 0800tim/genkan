@@ -35,10 +35,35 @@ do it.
 |---|---|---|
 | gaming (Roblox/Fortnite/Steam/consoles) | YES | the main issue |
 | video (YouTube, Shorts, TikTok, Netflix) | YES | time-wasting |
+| download (game, console and OS updates) | counted, never charged | bandwidth, not screen time. See below |
 | social (Insta/Snap) | no | blockable, but not counted: it overlaps video |
 | audio (Spotify, Apple Music) | NO | "singing in the shower" is fine |
 | schoolwork (Drive/Docs/Khan) | NO | encourage it |
 | chess, messaging Dad, general web | NO | not in a metered set |
+
+### A download is not screen time
+
+A 60 GB console update is the biggest thing on the wire all evening and it is
+not playing. Charging it to a child's gaming budget would take an afternoon off
+them for something they did not do, so `download` is its own category: counted
+in `category_usage`, drawn as its own band on the live chart, and deliberately
+excluded from budget enforcement. Two rules separate it from play, and both are
+needed:
+
+1. **Destination.** The content-delivery names (`steamcontent.com`,
+   `cs.steampowered.com`, the PSN, Xbox and Nintendo asset CDNs, OS and app
+   store updates) are their own `download` rows in `category_domains`, and are
+   longer domain suffixes than the gaming names they sit under. Longest suffix
+   wins, so `cs.steampowered.com` is a download while `steampowered.com` stays
+   gaming.
+2. **Rate.** A game is a trickle and an update is a flood. More than
+   `DOWNLOAD_BYTES_PER_MIN` (50 MB, about 7 Mbit/s) to a *gaming* address in
+   one minute is booked as a download instead. That catches the CDN names
+   nobody has listed yet. It is deliberately not applied to video, where 4K
+   streaming is legitimately fast.
+
+The same threshold is applied on the live chart, so what a parent sees and what
+the meter books agree.
 
 ## Turning a category OFF (enforcement, separate from metering)
 
@@ -58,6 +83,20 @@ Precise: kills Roblox/Fortnite/Steam while chess, music and homework stay up.
   pre-buffered video can look idle).
 - **Determined bypass**: a VPN hides destination IPs, so categorisation fails.
   That's a bug-bounty level, and we can block known VPNs to raise the bar.
+- **Shared front doors are dropped, not guessed.** A bare `googlevideo.com`
+  lookup returns a general Google edge address that also answers for search and
+  the Play Store. Metering it made every byte a phone sent to Google look like
+  YouTube, which is what made the live chart show the whole house watching
+  video all day. `kidnet-catmap` now tags an address only when it answered for
+  exactly one category and for no uncategorised name in the window it scanned.
+  The cost is real: a dedicated CDN host that appears once beside an
+  uncategorised name is dropped too, so a category can be under-counted. Under
+  the true figure is a far smaller lie than colouring the whole house with it.
+- **The map is only as good as its list.** Bytes come from CDN names, not front
+  doors: nobody streams from `netflix.com`, they stream from `nflxvideo.net`.
+  A service whose CDN is not in `category_domains` lands in "other". That list
+  lives in `config/db/schema-services.sql` and `config/db/schema-categories.sql`
+  and is meant to be extended.
 
 ## Status: built and deployed (2026-08-29)
 
@@ -100,3 +139,37 @@ together, an address serving several services attributes to whichever resolved
 it most recently for that device, and bytes are not minutes. Both numbers are
 reported; neither is the whole story. Adding a service is a database row, not a
 firewall edit: see `config/db/schema-services.sql` and docs/CLI.md.
+
+## The live wire, and why it never touches these counters
+
+The dashboard's "Right now" page reads the same firewall every second and a
+half to draw real-time traffic charts. Two things keep that away from the
+metering above.
+
+First, it only ever **reads**. It runs one command per tick,
+`nft -j list sets inet kids`, which returns every dynamic set with its counters
+in a single call. Listing a set does not reset it, so `gaming_dev`, `video_dev`
+and every `svc_*_dev` keep accruing exactly as `kidnet-catmeter` and
+`kidnet-servicemeter` expect. The dashboard never flushes, adds to or deletes
+any of those sets, and never edits a rule that feeds them. It also copes with
+the meters' own once-a-minute flush: when a counter reads lower than it did a
+tick ago, the live wire treats that as a reset rather than as negative traffic.
+
+Second, per-device totals get their own separate pair of sets. nftables has no
+grand total per device, only per category and per service, so "a lot of
+bandwidth is going out, who is responsible?" cannot be answered from the sets
+above: a speed test or a game download belongs to no category. The dashboard
+therefore maintains `live_up_dev` and `live_down_dev`, fed by a `livemetering`
+chain at forward priority 30 that contains nothing but two `update` statements
+and accepts everything. Like the service chain it only counts: it cannot change
+a verdict, and it sits after the filter chain so blocked traffic is never
+counted. The sets carry a ten-minute timeout so they cannot grow without bound,
+and the chain is only ever created when it is genuinely absent, so a restart
+cannot stack duplicate rules. Set `HEARTH_LIVE_DEVICE_TOTALS=0` on the
+dashboard to turn it off; everything else keeps working, and per-device figures
+fall back to "traffic Hearth can put a name to".
+
+The household figure on that page comes from somewhere else again: the kids0
+byte counters in `/proc/net/dev` inside the gateway container. That is every
+byte that crossed the wire, named or not, which is why the household total is
+usually larger than the sum of the devices Hearth can attribute.

@@ -1,0 +1,568 @@
+#!/usr/bin/env bash
+# hearth:summary=Generate and apply the household IoT security policy (nftables sets + chain) from the database.
+#
+# The household side of Hearth. The kid-facing layers ask "how long, and of
+# what"; this one asks "what is this thing allowed to talk to".
+#
+# The case that shapes everything: a security camera must be able to PUSH OUT
+# to its vendor's cloud, so remote recording still works and a stolen camera
+# still has a backup, while nothing on the internet can reach IN to it and it
+# cannot wander around the household network. So policy is written in terms of
+# who may START a conversation, and replies are never re-judged.
+#
+# Like kidnet-servicemeter, this GENERATES its firewall from database rows
+# (config/db/schema-policies.sql, view device_policy_effective) rather than
+# hand-editing kids.nft. It writes two things, and it is worth knowing both:
+#
+#  1. A chain of its own, `iotpolicy`, hooked into forward at priority -5, so
+#     it runs BEFORE kids.nft's forward chain. A drop is final and an accept is
+#     not, so a chain placed here can tighten anything while still handing every
+#     packet it permits to the existing rules for their usual treatment.
+#     Isolation, DNS forcing, Tor and the kid block all still get their say.
+#     The safety net (@kids_allow) is returned from at the top of the chain, so
+#     no policy here can silence 1737.
+#
+#  2. In ENFORCE mode only, a short marked list of exception rules at the top of
+#     kids.nft's own forward chain. They exist because kids.nft blocks the
+#     island from all private space and the island's own addresses sit inside
+#     it, so "view my own camera from my own phone" would otherwise be
+#     collateral damage the moment that traffic starts reaching the gateway.
+#     Every one of them can only ever permit traffic BETWEEN TWO ISLAND
+#     ADDRESSES, because that is all the sets are allowed to contain, and the
+#     reverse-direction ones carry ct state established,related. The isolation
+#     that matters, the island being unable to reach the main house LAN, the
+#     tailnet or the Docker internals, is untouched. They carry the comment
+#     "hearth-iot-allow", they are replaced as a set on every run, and
+#     `mode off` removes them. See docs/HOUSEHOLD-SECURITY.md.
+#
+# Fail-safe, in order of how much it matters:
+#   * database unreachable  -> change nothing, keep the rules already loaded
+#   * mode='observe'        -> every deny becomes a counter, nothing is blocked
+#   * vendor unknown, or no addresses learned for it yet
+#                           -> that device is NOT restricted, and is reported
+#   * generated ruleset fails to validate -> nothing is applied, an alert is raised
+# A household must never be locked out of its own front door because a resolver
+# blinked.
+#
+#   kidnet-iot-policy apply           regenerate and apply the policy chain
+#   kidnet-iot-policy learn           resolve vendor domains into vendor_ips
+#   kidnet-iot-policy status          what is enforced right now, and on what
+#   kidnet-iot-policy show <name|ip>  the effective policy for one device
+#   kidnet-iot-policy mode <off|observe|enforce>
+#   kidnet-iot-policy set <name|ip> <field> <value>
+#   kidnet-iot-policy allow <src-name|ip> <dst-name|ip> [note]   parent grant
+#   kidnet-iot-policy revoke <src> <dst>
+#   kidnet-iot-policy dryrun          print the ruleset that WOULD be applied
+set -uo pipefail
+
+GW="${GW_CONTAINER:-hearth-gw}"
+KIDS_IF="${KIDS_IF:-kids0}"
+TABLE="inet kids"
+CHAIN=iotpolicy
+# The policy chain runs BEFORE kids.nft's forward chain (priority 0), not
+# after. Reason: a drop is final and an accept is not, so a chain that sits
+# after filter could tighten nothing that filter had already accepted, and a
+# chain that sits before it can tighten everything while still handing every
+# packet it permits to the existing rules for the usual treatment. Isolation,
+# DNS forcing, Tor and the kid block all still get their say.
+PRIO="${IOT_POLICY_PRIORITY:--5}"
+# Every address this tool ever writes into a set is checked against the island
+# subnet first. That is what makes the forward-chain exceptions below provably
+# safe: they can only ever permit island-to-island traffic, never a route to
+# the main house LAN or the tailnet.
+KIDS_NET="${KIDS_SUBNET:-192.168.60.0/24}"
+# The comment every rule this tool inserts into kids.nft's own forward chain
+# carries, so they can be found again and replaced atomically.
+MARK="hearth-iot-allow"
+
+# nft access: the gateway container by default; NFT_NS=<netns> for the tests,
+# NFT_DIRECT=1 for a no-docker box. Same three-way switch as the meters.
+nftx(){ if [ -n "${NFT_NS:-}" ]; then sudo ip netns exec "$NFT_NS" nft "$@"
+        elif [ "${NFT_DIRECT:-0}" = 1 ]; then "${NFT:-/usr/sbin/nft}" "$@"
+        else docker exec -i "$GW" nft "$@"; fi; }
+PG="${PG_CONTAINER:-postgres}"
+psqll(){ docker exec -i "$PG" psql -U postgres -d kids_network -tAc "$1"; }
+log(){ echo "kidnet-iot-policy: $*"; }
+# Alerts land in the same table the dashboard reads. Never fatal.
+alert(){ psqll "INSERT INTO alerts(severity,category,detail) VALUES('$1','iot-policy','$(printf '%s' "$2" | sed "s/'/''/g")')" >/dev/null 2>&1 || true; }
+# The counterpart to alert(). "The previous rules are still in force" stops
+# being true the moment a later run succeeds, and an urgent banner that is no
+# longer true is worse than no banner: it teaches a parent to ignore the red
+# ones. A good run therefore retires the bad runs that came before it.
+alert_clear(){ psqll "UPDATE alerts SET acknowledged=true
+                      WHERE category='iot-policy' AND NOT acknowledged" >/dev/null 2>&1 || true; }
+ERRF="$(mktemp -t kidnet-iot-policy.XXXXXX)"
+trap 'rm -f "$ERRF"' EXIT
+ck_text(){ [[ "$1" =~ ^[A-Za-z0-9_:+.,\ -]{0,80}$ ]] || { echo "kidnet-iot-policy: bad text" >&2; exit 1; }; }
+# A vendor name becomes part of an nft set name, so it has to be reduced to
+# something nft will accept. Lowercase, non-alphanumerics to underscores.
+slug(){ printf '%s' "$1" | tr 'A-Z' 'a-z' | tr -c 'a-z0-9' '_' | sed 's/_\{1,\}/_/g; s/^_//; s/_$//'; }
+
+db_up(){ [ "$(psqll 'SELECT 1' 2>/dev/null)" = 1 ]; }
+# IOT_POLICY_MODE overrides the stored mode for one run. That is how the test
+# suite drives every mode without ever writing to a live household's settings,
+# and how a parent can try enforcement for five minutes without committing.
+mode(){ if [ -n "${IOT_POLICY_MODE:-}" ]; then printf '%s' "$IOT_POLICY_MODE"
+        else psqll "SELECT mode FROM iot_policy_settings WHERE id=1"; fi; }
+ttl(){ psqll "SELECT vendor_ip_ttl_hours FROM iot_policy_settings WHERE id=1"; }
+
+# Resolve a device argument (label, hostname or address) to one device row.
+dev_id(){ local k="$1"
+  psqll "SELECT id FROM devices WHERE is_active AND (host(reserved_ip)='$(printf '%s' "$k" | tr -cd '0-9.')'
+         OR lower(label)=lower('$(printf '%s' "$k" | sed "s/'/''/g")')
+         OR lower(hostname)=lower('$(printf '%s' "$k" | sed "s/'/''/g")')) ORDER BY id LIMIT 1"; }
+
+# ---------------------------------------------------------------------------
+# learn: which addresses belong to which vendor cloud
+# ---------------------------------------------------------------------------
+# Two roads to the same table, because each covers the other's blind spot.
+#   1. Resolve every vendor domain ourselves. Works on a fresh box before any
+#      gadget has said a word, and does not need AdGuard to be up.
+#   2. Read our own DNS answers (the trick the category and service maps use):
+#      it catches the CDN names a vendor actually hands its devices, which no
+#      static list would ever contain.
+# Rows are only ever added or refreshed, never deleted. An allowlist that can
+# shrink to nothing on a bad resolver day is how you brick a front door lock.
+learn(){
+  db_up || { log "database unreachable, learned nothing (existing addresses kept)"; return 0; }
+  local vid dom ip n=0 rows=""
+  while IFS='|' read -r vid dom; do
+    [ -n "${vid:-}" ] || continue
+    for ip in $(getent ahostsv4 "$dom" 2>/dev/null | awk '{print $1}' | sort -u); do
+      case "$ip" in 0.0.0.0|127.*|"") continue;; esac
+      rows="$rows$ip\t$vid\n"; n=$((n+1))
+    done
+  done < <(psqll "SELECT vd.vendor_id||'|'||vd.domain FROM vendor_domains vd
+                  JOIN vendor_clouds v ON v.id=vd.vendor_id
+                  WHERE v.common OR v.id IN (
+                    SELECT vc.id FROM device_policy_effective e JOIN vendor_clouds vc ON vc.vendor=e.cloud
+                    WHERE e.internet_out='vendor')")
+  if [ -n "$rows" ]; then
+    # DISTINCT is load-bearing, not tidiness. Several of a vendor's domains
+    # routinely resolve to the same CDN address, and Postgres refuses an
+    # ON CONFLICT DO UPDATE that touches one row twice in a single command.
+    # That error used to be swallowed, so learn reported success while
+    # inserting nothing at all, and every vendor-restricted device stayed
+    # wide open because the firewall had no addresses to allow.
+    if ! printf "%b" "$rows" | docker exec -i "$PG" psql -U postgres -d kids_network -qc "
+      CREATE TEMP TABLE _vi(ip inet, vendor_id int);
+      COPY _vi FROM STDIN WITH (FORMAT text);
+      INSERT INTO vendor_ips(ip,vendor_id,seen)
+        SELECT DISTINCT ip,vendor_id,now() FROM _vi
+      ON CONFLICT (ip,vendor_id) DO UPDATE SET seen=now();" 2>"$ERRF" >/dev/null; then
+      log "could not store the addresses it resolved: $(head -1 "$ERRF" 2>/dev/null)" >&2
+      alert urgent "IoT vendor learning could not store its results, so restricted devices have no allow list"
+      return 1
+    fi
+  fi
+  local stored; stored=$(psqll "SELECT count(*) FROM vendor_ips")
+  log "resolved $n vendor address(es), $stored now stored"
+
+  # Second road: our own query log, for the CDN names a static list cannot know.
+  [ -n "${ADGUARD_PASS:-}" ] || { log "ADGUARD_PASS not set, skipping the query-log pass"; return 0; }
+  local MAP TSV
+  MAP=$(psqll "SELECT vd.vendor_id||' '||vd.domain FROM vendor_domains vd")
+  [ -n "$MAP" ] || return 0
+  TSV=$(ADGUARD_URL="${ADGUARD_URL:-http://127.0.0.1:8853}" ADGUARD_USER="${ADGUARD_USER:-admin}" \
+        ADGUARD_PASS="$ADGUARD_PASS" PAGES="${IOTMAP_PAGES:-15}" MAP="$MAP" python3 <<'PY'
+import os,json,urllib.request,urllib.parse,base64,sys,csv
+url=os.environ["ADGUARD_URL"]; pages=int(os.environ["PAGES"])
+auth=base64.b64encode(f'{os.environ["ADGUARD_USER"]}:{os.environ["ADGUARD_PASS"]}'.encode()).decode()
+own={}
+for line in os.environ["MAP"].splitlines():
+    if not line.strip(): continue
+    vid,dom=line.split(" ",1); own[dom.strip().lower()]=vid
+def which(host):
+    host=host.rstrip(".").lower(); parts=host.split(".")
+    for i in range(len(parts)):                      # longest suffix wins
+        suf=".".join(parts[i:])
+        if suf in own: return own[suf]
+    return None
+def get(u):
+    r=urllib.request.Request(u); r.add_header("Authorization","Basic "+auth)
+    try: return json.load(urllib.request.urlopen(r,timeout=8))
+    except Exception: raise SystemExit(0)
+seen=set(); rows=[]; older=None
+for _ in range(pages):
+    u=url+"/control/querylog?limit=100"+(f"&older_than={urllib.parse.quote(older)}" if older else "")
+    d=get(u); data=d.get("data") or []
+    if not data: break
+    for e in data:
+        v=which((e.get("question") or {}).get("name",""))
+        if not v: continue
+        for a in (e.get("answer") or []):
+            if a.get("type")=="A":
+                ip=a.get("value","")
+                if ip and (ip,v) not in seen: seen.add((ip,v)); rows.append((ip,v))
+    older=d.get("oldest") or (data[-1].get("time") if data else None)
+    if not older: break
+w=csv.writer(sys.stdout,delimiter="\t")
+for ip,v in rows: w.writerow([ip,v])
+PY
+)
+  [ -n "$TSV" ] || { log "query log added nothing new"; return 0; }
+  printf '%s\n' "$TSV" | docker exec -i "$PG" psql -U postgres -d kids_network -qc "
+    CREATE TEMP TABLE _vi(ip inet, vendor_id int);
+    COPY _vi FROM STDIN WITH (FORMAT text);
+    INSERT INTO vendor_ips(ip,vendor_id,seen) SELECT ip,vendor_id,now() FROM _vi
+    ON CONFLICT (ip,vendor_id) DO UPDATE SET seen=now();" >/dev/null 2>&1
+  log "query log tagged $(printf '%s\n' "$TSV" | grep -c .) address/vendor pair(s)"
+}
+
+# ---------------------------------------------------------------------------
+# generate: turn the database rows into one nftables transaction
+# ---------------------------------------------------------------------------
+# Everything is emitted as a SINGLE transaction: add the chain if it is
+# missing, flush it, rebuild the sets, then write the rules. nft applies that
+# atomically, so there is no instant where half a policy is loaded, and a
+# syntax error anywhere means nothing changes at all.
+generate(){
+  local M="$1" TTLH="$2" ips vslug vendors="" stale s v keep locked pairs devs
+  # The three verdicts, chosen by mode. In observe every deny becomes a plain
+  # `return`, which lands on the chain's accept policy: the counter in front of
+  # it still ticks, so a parent sees exactly what enforcing WOULD have stopped,
+  # while nothing in the house actually breaks.
+  local A R RJ
+  if [ "$M" = enforce ]; then A="accept"; R="drop"; RJ="reject"
+  else                       A="return"; R="return"; RJ="return"; fi
+
+  # Per-vendor address lists, only for vendors some device is actually pinned
+  # to, plus the common (time and certificate) list every locked device gets.
+  local want_vendors
+  want_vendors=$(psqll "SELECT DISTINCT vc.vendor FROM device_policy_effective e
+                        JOIN vendor_clouds vc ON vc.vendor=e.cloud
+                        WHERE e.internet_out='vendor'")
+
+  # ---- clear out the previous pass, atomically -----------------------------
+  # Rules this tool has inserted into kids.nft's OWN forward chain are found by
+  # their comment and deleted by handle. Doing it in the same transaction as
+  # the rebuild means there is never an instant with half a policy loaded.
+  local h
+  for h in $(nftx -a list chain $TABLE forward 2>/dev/null \
+             | awk -v m="$MARK" '$0 ~ m {for(i=1;i<=NF;i++) if($i=="handle") print $(i+1)}'); do
+    echo "delete rule $TABLE forward handle $h"
+  done
+
+  echo "add chain $TABLE $CHAIN { type filter hook forward priority $PRIO; policy accept; }"
+  echo "flush chain $TABLE $CHAIN"
+
+  # Sets that always exist, so every rule below parses even in an empty house.
+  for s in iot_dev iot_personal iot_wan_ok iot_reach_ok iot_to_personal_ok \
+           iot_to_iot_ok iot_no_net iot_locked; do
+    echo "add set $TABLE $s { type ipv4_addr; }"
+    echo "flush set $TABLE $s"
+  done
+  echo "add set $TABLE iot_cloud_common { type ipv4_addr; flags interval; }"
+  echo "flush set $TABLE iot_cloud_common"
+  echo "add set $TABLE iot_grants { type ipv4_addr . ipv4_addr; }"
+  echo "flush set $TABLE iot_grants"
+
+  # Drop per-vendor sets left over from a vendor nobody uses any more. Safe
+  # here because the chain has already been flushed in this same transaction,
+  # so nothing references them.
+  stale=$(nftx list table $TABLE 2>/dev/null | sed -n 's/^[[:space:]]*set \(iot_v_[a-z0-9_]*\) {.*/\1/p')
+  for s in $stale; do
+    keep=0
+    for v in $want_vendors; do
+      case "$s" in "iot_v_$(slug "$v")_ips"|"iot_v_$(slug "$v")_dev") keep=1;; esac
+    done
+    [ "$keep" = 1 ] || echo "delete set $TABLE $s"
+  done
+  for v in $want_vendors; do
+    vslug=$(slug "$v"); [ -n "$vslug" ] || continue
+    echo "add set $TABLE iot_v_${vslug}_ips { type ipv4_addr; flags interval; }"
+    echo "flush set $TABLE iot_v_${vslug}_ips"
+    echo "add set $TABLE iot_v_${vslug}_dev { type ipv4_addr; }"
+    echo "flush set $TABLE iot_v_${vslug}_dev"
+  done
+
+  # ---- membership ----------------------------------------------------------
+  # ISLAND ADDRESSES ONLY, checked in SQL. A device row with a main-LAN or
+  # tailnet address in it (a mistake, or a tampered database) can never reach
+  # these sets, which is what keeps the forward-chain exceptions honest.
+  fill(){ local set="$1" q="$2" list
+    list=$(psqll "$q" | grep -E '^[0-9]+[.]' | sort -u | paste -sd,)
+    [ -n "$list" ] && echo "add element $TABLE $set { $list }"; }
+  local ISLAND="ip::inet << inet '$KIDS_NET'"
+
+  fill iot_dev      "SELECT ip FROM device_policy_effective WHERE $ISLAND"
+  fill iot_personal "SELECT host(reserved_ip) FROM devices
+                     WHERE category='personal' AND is_active AND reserved_ip IS NOT NULL
+                       AND reserved_ip << inet '$KIDS_NET'"
+  fill iot_wan_ok         "SELECT ip FROM device_policy_effective WHERE $ISLAND AND inbound_from_wan"
+  fill iot_reach_ok       "SELECT ip FROM device_policy_effective WHERE $ISLAND AND reachable_from_personal"
+  fill iot_to_personal_ok "SELECT ip FROM device_policy_effective WHERE $ISLAND AND talk_to_personal"
+  fill iot_to_iot_ok      "SELECT ip FROM device_policy_effective WHERE $ISLAND AND talk_to_iot"
+  fill iot_no_net         "SELECT ip FROM device_policy_effective WHERE $ISLAND AND internet_out='none'"
+
+  # The common list (time sync, certificate checks). If it is empty we simply
+  # have no common rule; the per-vendor lists still stand.
+  ips=$(psqll "SELECT host(vi.ip) FROM vendor_ips vi JOIN vendor_clouds v ON v.id=vi.vendor_id
+               WHERE v.common AND vi.seen > now() - interval '$TTLH hours'" | grep -E '^[0-9]+[.]' | sort -u | paste -sd,)
+  [ -n "$ips" ] && echo "add element $TABLE iot_cloud_common { $ips }"
+
+  # Vendor-restricted devices. THE fail-safe: a device is only added to
+  # iot_locked (and so only ever restricted) once we actually hold addresses
+  # for its vendor. An empty allowlist means "not learned yet", never "block
+  # everything", because the second reading darkens a camera.
+  locked=""
+  for v in $want_vendors; do
+    vslug=$(slug "$v"); [ -n "$vslug" ] || continue
+    ips=$(psqll "SELECT host(vi.ip) FROM vendor_ips vi JOIN vendor_clouds vc ON vc.id=vi.vendor_id
+                 WHERE vc.vendor='$v' AND vi.seen > now() - interval '$TTLH hours'" \
+          | grep -E '^[0-9]+[.]' | sort -u | paste -sd,)
+    # Nothing inside the TTL? Fall back to every address we have ever learned
+    # for this vendor rather than to an empty list.
+    [ -n "$ips" ] || ips=$(psqll "SELECT host(vi.ip) FROM vendor_ips vi JOIN vendor_clouds vc ON vc.id=vi.vendor_id
+                                  WHERE vc.vendor='$v'" | grep -E '^[0-9]+[.]' | sort -u | paste -sd,)
+    if [ -z "$ips" ]; then
+      log "no addresses known for vendor '$v' yet: its devices stay UNRESTRICTED outbound (run 'learn')" >&2
+      continue
+    fi
+    echo "add element $TABLE iot_v_${vslug}_ips { $ips }"
+    devs=$(psqll "SELECT ip FROM device_policy_effective WHERE $ISLAND AND internet_out='vendor' AND cloud='$v'" \
+           | grep -E '^[0-9]+[.]' | sort -u | paste -sd,)
+    [ -n "$devs" ] || continue
+    echo "add element $TABLE iot_v_${vslug}_dev { $devs }"
+    locked="$locked${locked:+,}$devs"
+    vendors="$vendors $vslug"
+  done
+  [ -n "$locked" ] && echo "add element $TABLE iot_locked { $locked }"
+
+  # Parent grants, as source/destination pairs, island addresses only.
+  pairs=$(psqll "SELECT src_ip||' . '||dst_ip FROM device_access_pairs
+                 WHERE src_ip::inet << inet '$KIDS_NET' AND dst_ip::inet << inet '$KIDS_NET'" \
+          | grep -E '^[0-9]+[.]' | paste -sd,)
+  [ -n "$pairs" ] && echo "add element $TABLE iot_grants { $pairs }"
+
+  # ---- the policy chain ----------------------------------------------------
+  # Read top to bottom; each rule is one sentence of the policy.
+  {
+  # Replies are never re-judged. This is what makes "the camera may push out"
+  # mean "and the cloud may answer", and "my phone may reach the camera" mean
+  # "and the video comes back". It is also what stops the inbound rule below
+  # from killing the camera's own cloud session on the way home.
+  echo "ct state established,related accept"
+  # The safety net is untouchable. IoT policy has no business anywhere near
+  # the help lines, and this rule guarantees it can never get near them.
+  echo "ip daddr @kids_allow return comment \"safety net is never policed here\""
+
+  # Inbound from the internet. NAT already makes this very hard; saying it out
+  # loud means it does not depend on NAT staying correct forever.
+  echo "iifname != \"$KIDS_IF\" ip daddr @iot_wan_ok return comment \"explicitly published device\""
+  echo "iifname != \"$KIDS_IF\" ip daddr @iot_dev counter $R comment \"internet may not start a conversation with a smart device\""
+
+  # A parent's explicit pair wins over everything below it.
+  echo "ip saddr . ip daddr @iot_grants $A comment \"parent grant\""
+
+  # Household phones reaching the gadgets. Default is yes for cameras and
+  # locks: viewing your own camera from your own sofa has to keep working, or
+  # the household turns the whole thing off.
+  echo "ip saddr @iot_personal ip daddr @iot_reach_ok $A comment \"phone -> device the parent allows\""
+  echo "ip saddr @iot_personal ip daddr @iot_dev counter $RJ comment \"phone -> device not on the allow list\""
+
+  # The gadget's own reach, in three steps: your phones, the other gadgets,
+  # then the internet.
+  echo "ip saddr @iot_to_personal_ok ip daddr @iot_personal $A comment \"device allowed to start a conversation with a phone\""
+  echo "ip saddr @iot_dev ip daddr @iot_personal counter $R comment \"smart device may not start a conversation with a phone\""
+  echo "ip saddr @iot_to_iot_ok ip daddr @iot_dev $A comment \"device allowed to reach other devices (e.g. an NVR)\""
+  echo "ip saddr @iot_dev ip daddr @iot_dev counter $R comment \"lateral movement between smart devices\""
+  echo "ip saddr @iot_no_net counter $R comment \"device with no internet at all\""
+  echo "ip saddr @iot_locked ip daddr @iot_cloud_common $A comment \"time sync and certificate checks\""
+  for vslug in $vendors; do
+    echo "ip saddr @iot_v_${vslug}_dev ip daddr @iot_v_${vslug}_ips $A comment \"vendor cloud: $vslug\""
+  done
+  echo "ip saddr @iot_locked counter $R comment \"vendor-restricted device reaching anything else\""
+  } | while IFS= read -r r; do echo "add rule $TABLE $CHAIN $r"; done
+
+  # ---- the exceptions inside kids.nft's own forward chain -------------------
+  # Why this exists at all. kids.nft blocks the island from ALL private space,
+  # and the island's own subnet sits inside that space, so any island-to-island
+  # packet that actually reaches the gateway is dropped as collateral. With one
+  # access point that never happens: the AP switches those frames itself and we
+  # never see them. The moment a household turns on client isolation, or gives
+  # the gadgets their own SSID, every one of those packets comes to us instead,
+  # and the collateral drop would kill "view my own camera from my own phone".
+  #
+  # These rules are the exception, and they are deliberately narrow:
+  #   * both addresses must be island addresses, because that is all the sets
+  #     are allowed to contain (checked in SQL, above). The isolation that
+  #     matters, the island reaching the main house LAN, the tailnet or the
+  #     Docker internals, is untouched;
+  #   * a personal device may only initiate if it is a known reservation and is
+  #     not currently cut off, so neither the static-IP dodge nor "kidnet off"
+  #     is weakened;
+  #   * the reverse-direction rules carry ct state established,related, so they
+  #     only ever carry replies to a conversation one of the rules above
+  #     already permitted. Nothing new is allowed inward.
+  #
+  # Only in enforce mode. In observe mode this tool changes nothing at all.
+  if [ "$M" = enforce ]; then
+    local known="ip saddr @kids_known ip saddr != @kids_block"
+    local est="ct state established,related"
+    for r in \
+      "$known ip saddr . ip daddr @iot_grants accept" \
+      "$known ip saddr @iot_personal ip daddr @iot_reach_ok accept" \
+      "ip saddr @iot_to_iot_ok ip daddr @iot_dev accept" \
+      "ip saddr @iot_to_personal_ok ip daddr @iot_personal accept" \
+      "$est ip daddr . ip saddr @iot_grants accept" \
+      "$est ip saddr @iot_reach_ok ip daddr @iot_personal accept" \
+      "$est ip saddr @iot_dev ip daddr @iot_to_iot_ok accept" \
+      "$est ip saddr @iot_personal ip daddr @iot_to_personal_ok accept"; do
+      echo "insert rule $TABLE forward iifname \"$KIDS_IF\" $r comment \"$MARK\""
+    done
+  fi
+}
+
+apply(){
+  if ! db_up; then
+    log "database unreachable; leaving the firewall exactly as it is"
+    return 0
+  fi
+  nftx list table $TABLE >/dev/null 2>&1 || { log "firewall not loaded (island down); nothing to do"; return 0; }
+  local M; M=$(mode); M=${M:-observe}
+  if [ "$M" = off ]; then
+    # Order matters: the forward-chain exceptions reference the policy sets, so
+    # they go first, then the chain, then the sets. One transaction, so "off"
+    # is as atomic as "on" and can never leave a half-removed policy.
+    local off h
+    off=""
+    for h in $(nftx -a list chain $TABLE forward 2>/dev/null \
+               | awk -v m="$MARK" '$0 ~ m {for(i=1;i<=NF;i++) if($i=="handle") print $(i+1)}'); do
+      off="$off"$'\n'"delete rule $TABLE forward handle $h"
+    done
+    nftx list chain $TABLE $CHAIN >/dev/null 2>&1 && off="$off"$'\n'"delete chain $TABLE $CHAIN"
+    for h in $(nftx list table $TABLE 2>/dev/null | sed -n 's/^[[:space:]]*set \(iot_[a-z0-9_]*\) {.*/\1/p'); do
+      off="$off"$'\n'"delete set $TABLE $h"
+    done
+    if [ -z "$off" ]; then log "mode=off: nothing loaded"; return 0; fi
+    if printf '%s\n' "$off" | nftx -f - 2>"$ERRF"; then
+      alert_clear
+      log "mode=off: policy chain, its exceptions and its sets removed"
+    else
+      log "mode=off: could not remove the policy ($(head -1 "$ERRF" 2>/dev/null))" >&2
+      return 1
+    fi
+    return 0
+  fi
+  local rules; rules=$(generate "$M" "$(ttl)")
+  # Validate before touching anything. A ruleset that does not parse must
+  # change nothing at all, not half a policy.
+  if ! printf '%s\n' "$rules" | nftx -c -f - 2>"$ERRF"; then
+    log "generated ruleset did NOT validate; nothing applied" >&2
+    sed 's/^/  /' "$ERRF" >&2
+    alert urgent "IoT policy failed to validate: $(head -1 "$ERRF" 2>/dev/null); the previous rules are still in force"
+    return 1
+  fi
+  if ! printf '%s\n' "$rules" | nftx -f - 2>"$ERRF"; then
+    log "applying the policy failed; the previous rules are still in force" >&2
+    sed 's/^/  /' "$ERRF" >&2
+    alert urgent "IoT policy failed to apply: $(head -1 "$ERRF" 2>/dev/null)"
+    return 1
+  fi
+  alert_clear
+  # A device the parent asked to keep on a short lead, which is in fact on no
+  # lead at all, is the one failure this tool must never be quiet about. It is
+  # exactly the promise a camera is bought on. Say which device, and say what
+  # would fix it, on the dashboard rather than only in a terminal nobody is
+  # watching.
+  local loose; loose=$(psqll "SELECT string_agg(name,', ') FROM device_policy_effective
+                              WHERE internet_out='vendor' AND NOT vendor_known")
+  if [ -n "$loose" ]; then
+    alert warn "Not actually restricted yet: $loose. Hearth does not know which brand's cloud to allow, so it is letting them talk to anything. Set the brand: kidnet-iot-policy set <device> cloud <brand>"
+  fi
+  local n; n=$(psqll "SELECT count(*) FROM device_policy_effective")
+  log "mode=$M, $n smart device(s) under policy$([ "$M" = observe ] && echo ' (counting only, nothing blocked)')"
+}
+
+status(){
+  db_up || { echo "database unreachable"; return 1; }
+  echo "mode: $(mode)   (off | observe | enforce)"
+  echo
+  echo "Smart devices under policy"
+  psqll "SELECT '  '||rpad(name,24)||rpad(coalesce(ip,'-'),16)||rpad(kind,13)
+                ||rpad('out='||internet_out||coalesce(' ('||cloud||')',''),22)
+                ||CASE WHEN reachable_from_personal THEN 'phones may reach it' ELSE 'closed to phones' END
+                ||CASE WHEN internet_out='vendor' AND NOT vendor_known THEN '  [NO VENDOR KNOWN: not restricted]' ELSE '' END
+         FROM device_policy_effective ORDER BY kind, name"
+  echo
+  echo "Parent grants (this device may reach that one)"
+  psqll "SELECT '  '||src_name||' -> '||dst_name||coalesce('  ('||note||')','') FROM device_access_pairs" | grep . || echo "  (none)"
+  echo
+  echo "Vendor addresses learned"
+  psqll "SELECT '  '||rpad(v.vendor,14)||count(*)||' address(es), newest '||coalesce(to_char(max(vi.seen),'YYYY-MM-DD HH24:MI'),'never')
+         FROM vendor_clouds v JOIN vendor_ips vi ON vi.vendor_id=v.id GROUP BY v.vendor ORDER BY v.vendor" | grep . || echo "  (none yet: run 'kidnet-iot-policy learn')"
+  echo
+  if nftx list chain $TABLE $CHAIN >/dev/null 2>&1; then
+    echo "Firewall counters (what the policy has actually refused)"
+    nftx list chain $TABLE $CHAIN 2>/dev/null | grep -E 'counter packets [1-9]' | sed 's/^\s*/  /' | grep . \
+      || echo "  (nothing refused yet)"
+  else
+    echo "Policy chain is NOT loaded."
+  fi
+}
+
+show(){ local id; id=$(dev_id "$1"); [ -n "$id" ] || { echo "unknown device '$1'"; exit 1; }
+  psqll "SELECT 'device        '||name||E'\n'||
+                'address       '||coalesce(ip,'-')||E'\n'||
+                'kind          '||kind||coalesce(' (vendor guess: '||guessed_vendor||')','')||E'\n'||
+                'internet out  '||internet_out||coalesce(' -> '||cloud,'')||E'\n'||
+                'inbound wan   '||inbound_from_wan||E'\n'||
+                'to other IoT  '||talk_to_iot||E'\n'||
+                'to phones     '||talk_to_personal||E'\n'||
+                'from phones   '||reachable_from_personal||E'\n'||
+                'source        '||CASE WHEN overridden THEN 'parent override' ELSE 'class default' END
+         FROM device_policy_effective WHERE device_id=$id" | grep . \
+  || echo "device $1 is not an active smart device with a reserved address, so no policy applies"; }
+
+setfield(){ local id f v; id=$(dev_id "$1"); [ -n "$id" ] || { echo "unknown device '$1'"; exit 1; }
+  f="$2"; v="$3"
+  case "$f" in
+    internet_out) case "$v" in none|vendor|full) ;; *) echo "internet_out must be none, vendor or full"; exit 1;; esac
+                  v="'$v'";;
+    inbound_from_wan|talk_to_iot|talk_to_personal|reachable_from_personal)
+                  case "$v" in yes|true|on|1) v=true;; no|false|off|0) v=false;; *) echo "$f must be yes or no"; exit 1;; esac;;
+    vendor) local vid; vid=$(psqll "SELECT id FROM vendor_clouds WHERE lower(vendor)=lower('$(printf '%s' "$v" | tr -cd 'A-Za-z0-9_-')')")
+            [ -n "$vid" ] || { echo "unknown vendor '$v' (see: SELECT vendor FROM vendor_clouds)"; exit 1; }
+            f=vendor_id; v="$vid";;
+    *) echo "field must be one of: internet_out inbound_from_wan talk_to_iot talk_to_personal reachable_from_personal vendor"; exit 1;;
+  esac
+  psqll "INSERT INTO device_policy(device_id,$f,set_by) VALUES($id,$v,'parent')
+         ON CONFLICT (device_id) DO UPDATE SET $f=$v, set_by='parent', updated_ts=now()" >/dev/null
+  psqll "INSERT INTO block_events(target_type,target_ref,action,source,actor)
+         VALUES('iot-policy','device $id',' $f=$v','manual','kidnet-iot-policy')" >/dev/null
+  echo "kidnet-iot-policy: $f set for device $id; run 'kidnet-iot-policy apply' to make it real"; }
+
+grant(){ local s t; s=$(dev_id "$1"); t=$(dev_id "$2"); ck_text "${3:-}"
+  [ -n "$s" ] || { echo "unknown device '$1'"; exit 1; }
+  [ -n "$t" ] || { echo "unknown device '$2'"; exit 1; }
+  psqll "INSERT INTO device_access_grants(src_device_id,dst_device_id,note,set_by)
+         VALUES($s,$t,'${3:-}','parent') ON CONFLICT (src_device_id,dst_device_id)
+         DO UPDATE SET note='${3:-}', set_by='parent'" >/dev/null
+  echo "kidnet-iot-policy: $1 may now reach $2; run 'kidnet-iot-policy apply' to make it real"; }
+
+revoke(){ local s t; s=$(dev_id "$1"); t=$(dev_id "$2")
+  psqll "DELETE FROM device_access_grants WHERE src_device_id=$s AND dst_device_id=$t" >/dev/null
+  echo "kidnet-iot-policy: grant removed; run 'kidnet-iot-policy apply' to make it real"; }
+
+setmode(){ case "$1" in off|observe|enforce) ;; *) echo "mode must be off, observe or enforce"; exit 1;; esac
+  psqll "UPDATE iot_policy_settings SET mode='$1', updated_ts=now(), set_by='parent' WHERE id=1" >/dev/null
+  psqll "INSERT INTO block_events(target_type,target_ref,action,source,actor)
+         VALUES('iot-policy','household','mode=$1','manual','kidnet-iot-policy')" >/dev/null
+  echo "kidnet-iot-policy: mode=$1"; apply; }
+
+# No default verb on purpose. This tool rewrites part of a live firewall, so
+# `kidnet iot` on its own prints the usage rather than quietly applying.
+case "${1:-}" in
+  apply)  apply;;
+  learn)  learn; apply;;
+  status) status;;
+  show)   show "${2:?device}";;
+  set)    setfield "${2:?device}" "${3:?field}" "${4:?value}";;
+  allow)  grant "${2:?src}" "${3:?dst}" "${4:-}";;
+  revoke) revoke "${2:?src}" "${3:?dst}";;
+  mode)   setmode "${2:?off|observe|enforce}";;
+  dryrun) db_up || { echo "database unreachable"; exit 1; }
+          generate "$(mode)" "$(ttl)";;
+  *) sed -n '3,/^set -uo/p' "$0" | sed '$d; s/^# \{0,1\}//';;
+esac

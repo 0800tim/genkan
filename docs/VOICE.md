@@ -30,7 +30,7 @@ well and keeps the door open to reusing HA's ecosystem of satellites
 Speaker recognition is NOT authentication. A recording of Dad played back
 will fool it, and we do not pretend otherwise. The real control is the
 audit trail: every voice-granted action notifies the parent's phone
-immediately ("+30 min to Ben, granted by voice sounding like Tim,
+immediately ("+30 min to Ben, granted by voice sounding like a parent,
 kitchen mic"). Parent sees a grant they did not make, one tap reverses it.
 
 ## The Easter egg (by design)

@@ -26,6 +26,15 @@ SERVICES=$(psqll "SELECT name FROM services WHERE metered ORDER BY name")
 [ -n "$SERVICES" ] || exit 0
 
 # 1. Ensure the sets and the counting chain exist, and refresh the address sets.
+#    The chain is only built when it is genuinely ABSENT. Re-adding it every
+#    minute stacked a fresh copy of every rule each run, so a packet was
+#    counted once per accumulated copy and service_usage inflated without
+#    limit. Rebuilding on demand also means a service added to the database
+#    still gets picked up, because the chain is dropped and recreated then.
+want_rules=$(echo "$SERVICES" | wc -w)
+have_rules=$(nftx list chain inet kids servicemetering 2>/dev/null | grep -c 'update @svc_' || echo 0)
+if [ "$have_rules" != "$want_rules" ]; then
+  nftx delete chain inet kids servicemetering 2>/dev/null || true
 {
   echo "table inet kids {"
   for s in $SERVICES; do
@@ -40,6 +49,7 @@ SERVICES=$(psqll "SELECT name FROM services WHERE metered ORDER BY name")
   echo "  }"
   echo "}"
 } | nftx -f - 2>/dev/null || true
+fi
 
 for s in $SERVICES; do
   ips=$(psqll "SELECT host(si.ip) FROM service_ips si JOIN services sv ON sv.id=si.service_id

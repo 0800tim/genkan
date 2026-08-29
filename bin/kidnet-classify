@@ -12,7 +12,16 @@ psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
 
 # Reclassify anything still on defaults (category personal + kind unknown), plus
 # any device the parent has not overridden. Never touches infra or assigned ones.
-rows=$(psqll "SELECT id||'|'||coalesce(lower(hostname),'')||'|'||lower(mac::text) FROM devices WHERE category<>'infra' AND kind IN ('unknown','')")
+# Only guess about devices nobody has decided on. A parent's choice, whether
+# a class or an owner, must never be overwritten by the guesser: filing the
+# SMS gateway as an appliance and finding it back under "personal" a minute
+# later is worse than never guessing at all.
+rows=$(psqll "SELECT id||'|'||coalesce(lower(hostname),'')||'|'||lower(mac::text)
+              FROM devices
+              WHERE kind IN ('unknown','')
+                AND category = 'personal'
+                AND child_id IS NULL
+                AND label IS NULL")
 [ -n "$rows" ] || { echo "kidnet-classify: no devices"; exit 0; }
 
 classify(){ # echoes: kind|category|vendor

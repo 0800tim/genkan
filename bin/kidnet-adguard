@@ -19,7 +19,7 @@ render(){
   psqll "SELECT '@@||'||domain||'^\$important' FROM always_allow WHERE scope='safety' ORDER BY domain"
   psqll "SELECT '@@||'||domain||'^\$dnsrewrite' FROM always_allow WHERE scope='safety' ORDER BY domain"
   # Flagged on-ramps (Tor, darknet directories) -> the portal for EVERY child,
-  # always, not only when a category is blocked. A plain blocklist entry gives
+  # visiting children included, always, not only when a category is blocked. A plain blocklist entry gives
   # a dead connection; sending them to the portal means the kid gets the warm
   # "this one is blocked, come find me, you are not in trouble" page instead.
   # Self-harm patterns are deliberately excluded: those are a care signal and
@@ -27,7 +27,7 @@ render(){
   psqll "
     SELECT '||'||f.pattern||'^\$client='||c.name||',dnsrewrite=${PORTAL_IP}'
     FROM flag_domains f CROSS JOIN children c
-    WHERE f.category IN ('tor','darknet','drugs') AND c.kind='child'
+    WHERE f.category IN ('tor','darknet','drugs') AND c.kind IN ('child','guest-child') AND c.active
       AND f.pattern NOT LIKE '%.onion'
     ORDER BY c.name, f.pattern"
 

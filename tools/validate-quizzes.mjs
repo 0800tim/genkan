@@ -1,6 +1,14 @@
 #!/usr/bin/env node
-// Validates every quiz bank in portal/quizzes/*.json against FORMAT.md.
-// Usage: node tools/validate-quizzes.mjs
+// Validates quiz banks against FORMAT.md.
+//
+//   node tools/validate-quizzes.mjs                 every bank in portal/quizzes/
+//   node tools/validate-quizzes.mjs a.json b.json   just these files, wherever
+//                                                   they are (used by
+//                                                   bin/kidnet-quiz validate,
+//                                                   so a generated bank can be
+//                                                   checked before it is
+//                                                   installed)
+//
 // Exits non-zero if any bank fails.
 
 import { readFileSync, readdirSync } from "node:fs";
@@ -10,11 +18,15 @@ import { fileURLToPath } from "node:url";
 const repoRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const quizzesDir = join(repoRoot, "portal", "quizzes");
 
-const files = readdirSync(quizzesDir)
-  .filter((f) => f.endsWith(".json"))
-  .sort();
+const args = process.argv.slice(2).filter((a) => !a.startsWith("-"));
+const paths = args.length
+  ? args
+  : readdirSync(quizzesDir)
+      .filter((f) => f.endsWith(".json"))
+      .sort()
+      .map((f) => join(quizzesDir, f));
 
-if (files.length === 0) {
+if (paths.length === 0) {
   console.error(`No quiz banks found in ${quizzesDir}`);
   process.exit(1);
 }
@@ -22,10 +34,12 @@ if (files.length === 0) {
 let anyFailed = false;
 const seenBankIds = new Map();
 
-for (const file of files) {
-  const path = join(quizzesDir, file);
+for (const path of paths) {
+  const file = basename(path);
   const errors = [];
+  const warnings = [];
   let bank = null;
+  let bankLevels = null;            // difficulty spread, when the bank has one
 
   try {
     bank = JSON.parse(readFileSync(path, "utf8"));
@@ -80,6 +94,8 @@ for (const file of files) {
     } else {
       const ids = new Set();
       const prompts = new Set();
+      const levels = [0, 0, 0, 0, 0];   // how many questions at difficulty 1..5
+      let labelled = 0;
 
       bank.questions.forEach((q, i) => {
         const label = q && typeof q.id === "string" ? q.id : `#${i}`;
@@ -132,7 +148,50 @@ for (const file of files) {
         if ("explanation" in q && typeof q.explanation !== "string") {
           errors.push(`question ${label} explanation must be a string`);
         }
+
+        // difficulty is optional, but when it is there it must be sane: 1
+        // (warm-up) to 5 (stretch). The portal builds the round's ramp from it.
+        if ("difficulty" in q) {
+          if (
+            !Number.isInteger(q.difficulty) ||
+            q.difficulty < 1 ||
+            q.difficulty > 5
+          ) {
+            errors.push(
+              `question ${label} difficulty must be an integer from 1 to 5`
+            );
+          } else {
+            levels[q.difficulty - 1]++;
+            labelled++;
+          }
+        }
       });
+
+      // Difficulty is all or nothing per bank. A half-labelled bank builds a
+      // lopsided ramp and is the sort of thing nobody notices for months, so
+      // it fails here rather than quietly shipping. (The portal is more
+      // forgiving at runtime: it falls back to flat random sampling.)
+      if (labelled > 0 && labelled < bank.questions.length) {
+        errors.push(
+          `${labelled} of ${bank.questions.length} questions carry "difficulty": label all of them or none`
+        );
+      }
+
+      // A ramped bank has to be able to fill an easy round. A kid having a bad
+      // day is given a round built mostly from levels 1 and 2, so there must be
+      // enough of those to draw one without repeating.
+      if (labelled > 0) bankLevels = levels;
+      if (labelled > 0 && Number.isInteger(bank.questions_per_round)) {
+        const easy = levels[0] + levels[1];
+        if (easy < bank.questions_per_round) {
+          errors.push(
+            `only ${easy} questions at difficulty 1-2, need at least questions_per_round (${bank.questions_per_round}) so a struggling kid still gets a full, passable round`
+          );
+        }
+        levels.forEach((n, i) => {
+          if (n === 0) warnings.push(`no questions at difficulty ${i + 1}`);
+        });
+      }
 
       // Bank must be big enough that rounds do not repeat
       if (Number.isInteger(bank.questions_per_round)) {
@@ -147,17 +206,21 @@ for (const file of files) {
   }
 
   if (errors.length === 0) {
-    console.log(`PASS  ${file} (${bank.questions.length} questions)`);
+    const ramp = bankLevels
+      ? `, ramped ${bankLevels.join("/")}`
+      : ", no difficulty data";
+    console.log(`PASS  ${file} (${bank.questions.length} questions${ramp})`);
   } else {
     anyFailed = true;
     console.log(`FAIL  ${file}`);
     for (const err of errors) console.log(`      - ${err}`);
   }
+  for (const w of warnings) console.log(`      ! ${w}`);
 }
 
 console.log(
   anyFailed
     ? "\nSome banks failed validation."
-    : `\nAll ${files.length} banks passed.`
+    : `\nAll ${paths.length} banks passed.`
 );
 process.exit(anyFailed ? 1 : 0);

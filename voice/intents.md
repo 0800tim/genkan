@@ -68,10 +68,12 @@ happened.
 ### "kill the gaming" with nobody named
 
 `kidnet game off` needs a kid. Spoken commands often do not have one, because
-the parent means "all of them". Resolve it this way: if no name is heard, run
-the command once per child (`kind='child'`, so a visiting friend is not swept
-up), and say so out loud: "gaming off for Ada, Ben and Cleo". Never
-silently pick one kid.
+the parent means "all of them". Resolve it with the `kids` group, which is one
+command and covers every child under this roof and every visiting child, while
+never touching a visiting grown-up: `kidnet game off kids`. Say out loud who it
+reached: "gaming off for Ada, Ben, Cleo and Nina". Never silently pick one kid,
+and never expand the group by hand: who counts as a kid is decided in the
+database (see docs/HOUSEHOLD-ROLES.md).
 
 The same applies to "everyone off", which maps to `kidnet off all`. That verb
 already leaves IoT and infrastructure alone, so the security camera and the
@@ -84,7 +86,7 @@ confirmation, no matter who the speaker sounds like.**
 
 That is the whole point. Impersonating a parent is the attack (level 6 of
 BUG-BOUNTY.md), and the target is always minutes. So the rule is not "trust
-Tim's voice more", it is "the things worth impersonating for are the things
+a parent's voice more", it is "the things worth impersonating for are the things
 that get an extra step and a louder notification".
 
 Confirmation is a spoken challenge and a spoken answer:
@@ -93,7 +95,7 @@ Confirmation is a spoken challenge and a spoken answer:
 kid:      "Hey Claudia, give Ben thirty more minutes"
 claudia:  "Confirm plus thirty minutes for Ben?"
 speaker:  "yes"
-claudia:  "Done. Thirty minutes added for Ben. Tim's phone has been told."
+claudia:  "Done. Thirty minutes added for Ben. a parent's phone has been told."
 ```
 
 Rules for the confirmation step:
@@ -111,7 +113,7 @@ Rules for the confirmation step:
 **If the parent push cannot be sent, a time grant does not run.** This is the
 one hard interlock in the module. An unwitnessed grant defeats the only real
 control there is, so the agent queues nothing and retries nothing: it says
-"I can't reach Tim's phone, so I'm not doing that", and writes the row with
+"I can't reach a parent's phone, so I'm not doing that", and writes the row with
 `executed=false, notified=false, outcome='error'`. A kid waiting thirty
 seconds is a much smaller problem than a grant nobody ever hears about.
 
@@ -171,7 +173,7 @@ opposite of what the safety net is for.
 `voice_events.speaker_guess` and `speaker_confidence` are recorded on every
 row and used for exactly two things:
 
-1. Making the phone notification useful: "sounding like Tim (0.71)" is a much
+1. Making the phone notification useful: "sounding like a parent (0.71)" is a much
    better push than "someone".
 2. Making the bug bounty legible afterwards: parent and kid can sit down and
    look at the row where the recording scored 0.83.

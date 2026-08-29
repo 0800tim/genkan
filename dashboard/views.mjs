@@ -7,7 +7,7 @@
 // cannot see, and nothing is framed as an accusation.
 //
 // Three views, because a long scroll on a phone is not "at a glance":
-//   /          Tonight  - the controls and the state right now
+//   /          Home     - the controls and the state right now
 //   /trends    Trends   - the charts, per kid, over 7 or 30 days
 //   /devices   Devices  - the roster and the naming queue
 //
@@ -16,6 +16,9 @@
 
 import { SERIES, METERED, GOAL_METRICS, fmt } from "./analytics.mjs";
 import { columns, legend, ranked, sparkline, meter, goalBar, table, esc } from "./charts.mjs";
+import { LIVE_CSS, LIVE_JS, livePage, liveStrip } from "./liveui.mjs";
+import { MANAGE_CSS, MANAGE_JS, family } from "./manage.mjs";
+import { HOUSEHOLD_CSS, HOUSEHOLD_JS, housePanel, assignOptions, roleTag, isKid } from "./household.mjs";
 
 // ---------------------------------------------------------------------------
 // Style. One block, no external anything.
@@ -26,10 +29,10 @@ const CSS = `
   --plane:#f6f1ea; --surface:#fdfbf8; --surface-2:#f1ebe2; --raise:#ffffff;
   --ink:#191320; --ink-2:#554d5e; --ink-muted:#6f6779;
   --grid:#e7ded4; --axis:#cfc4b8; --line:rgba(25,19,32,.11);
-  --ember:#b1400b; --ember-soft:rgba(226,124,72,.14);
+  --ember:#b1400b; --ember-soft:rgba(226,124,72,.14); --on-ember:#fff;
   --ok:#0ca30c; --warn:#fab219; --serious:#ec835a; --crit:#d03b3b;
   --s-gaming:#2a78d6; --s-video:#eb6834; --s-social:#1baf7a;
-  --s-earned:#eda100; --s-other:#898781;
+  --s-earned:#eda100; --s-other:#898781; --s-download:#7a4fd0;
 }
 @media (prefers-color-scheme:dark){
   :root:where(:not([data-theme=light])){
@@ -37,9 +40,9 @@ const CSS = `
     --plane:#100d18; --surface:#1d1926; --surface-2:#262032; --raise:#2c2539;
     --ink:#f7f2ea; --ink-2:#c8c0d2; --ink-muted:#9c93ab;
     --grid:#2b2437; --axis:#3b3349; --line:rgba(255,255,255,.10);
-    --ember:#f0824a; --ember-soft:rgba(240,130,74,.15);
+    --ember:#f0824a; --ember-soft:rgba(240,130,74,.15); --on-ember:#231522;
     --s-gaming:#3987e5; --s-video:#d95926; --s-social:#199e70;
-    --s-earned:#c98500; --s-other:#898781;
+    --s-earned:#c98500; --s-other:#898781; --s-download:#9d7bec;
   }
 }
 :root[data-theme=dark]{
@@ -47,9 +50,9 @@ const CSS = `
   --plane:#100d18; --surface:#1d1926; --surface-2:#262032; --raise:#2c2539;
   --ink:#f7f2ea; --ink-2:#c8c0d2; --ink-muted:#9c93ab;
   --grid:#2b2437; --axis:#3b3349; --line:rgba(255,255,255,.10);
-  --ember:#f0824a; --ember-soft:rgba(240,130,74,.15);
+  --ember:#f0824a; --ember-soft:rgba(240,130,74,.15); --on-ember:#231522;
   --s-gaming:#3987e5; --s-video:#d95926; --s-social:#199e70;
-  --s-earned:#c98500; --s-other:#898781;
+  --s-earned:#c98500; --s-other:#898781; --s-download:#9d7bec;
 }
 *{box-sizing:border-box}
 html,body{margin:0}
@@ -162,6 +165,13 @@ code{font-size:11.5px;color:var(--ink-muted);font-family:ui-monospace,SFMono-Reg
 .alert{font-size:13.5px;padding:7px 0;border-top:1px solid var(--line);display:flex;gap:8px;
   flex-wrap:wrap;align-items:center}
 .alert .mini{margin-left:auto}
+.tag.warn{color:var(--warn,#c98a2b);border-color:currentColor}
+
+/* The owner picker that folds out under a device on the Devices page. */
+.chg{padding:0 0 10px;border-bottom:1px solid var(--line)}
+.chg[hidden]{display:none}
+.drow .mini{margin-left:10px}
+
 .alert:first-of-type{border-top:0}
 .alert .sev{flex:none;font-weight:600}
 .alert.urgent .sev{color:var(--crit)}
@@ -284,6 +294,86 @@ input,select{background:var(--surface-2);color:var(--ink);border:1px solid var(-
 `;
 
 // ---------------------------------------------------------------------------
+// Polish. Kept as its own block so the original stylesheet above stays legible
+// and every rule here can be read as "what the control-room pass changed".
+//
+// The brief was "running the matrix, but a parent has to understand it in two
+// seconds". So: depth and glow are spent only where something is actually
+// happening (the live figures, an online dot, a card that is currently doing
+// something), numbers get tabular figures wherever they sit in a column or
+// change under you, and the type gets denser without getting smaller. Both
+// themes are stepped separately, never flipped.
+// ---------------------------------------------------------------------------
+const POLISH = `
+/* The porch light: one warm wash at the top of the plane, in both themes. */
+body{position:relative}
+body::before{content:"";position:fixed;inset:0 0 auto;height:340px;pointer-events:none;z-index:-1;
+  background:radial-gradient(120% 100% at 50% -30%,var(--ember-soft),transparent 68%)}
+
+/* Numbers a parent reads in a column, or that change while they watch, get
+   equal-width digits so nothing jitters. Hero-sized figures deliberately do
+   NOT: tabular digits make a big number look loose. */
+.tile .val,.tile .dlt,.row .r,.tmeta,.pill,.tag,.mgnum,.lvstate,.alert time,
+.tview td.num,.tview th.num,.chart .tick,.gval{font-variant-numeric:tabular-nums}
+.hero .fig,.lvfig b{font-variant-numeric:proportional-nums}
+
+/* Header. The dot is the one thing on the page allowed to breathe. */
+.top{margin-bottom:14px}
+.brand b{letter-spacing:-.015em}
+.porch{position:relative}
+.porch::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--ember);
+  animation:porchpulse 3.6s ease-out infinite}
+@keyframes porchpulse{0%{transform:scale(1);opacity:.5}70%{transform:scale(3.4);opacity:0}100%{opacity:0}}
+.tbtn{transition:border-color .15s,color .15s}
+.tbtn:hover{border-color:var(--ember);color:var(--ember)}
+
+/* Nav: the current view is ember-lit rather than a flat black slug. */
+nav a{transition:border-color .15s,color .15s,background .15s}
+nav a:hover{border-color:var(--axis);color:var(--ink)}
+nav a.sel{background:var(--ember);border-color:var(--ember);color:var(--on-ember);
+  box-shadow:0 2px 12px color-mix(in oklab,var(--ember) 34%,transparent)}
+
+/* Cards: a hairline of lift, and a top edge that catches the light in dark
+   mode the way a real panel would. */
+.card,.kid{box-shadow:0 1px 2px rgba(0,0,0,.04),0 8px 24px -18px rgba(0,0,0,.35)}
+.card.flat{box-shadow:none}
+:root[data-theme=dark] .card:not(.flat),:root[data-theme=dark] .kid,
+:root[data-theme=dark] .mgcard{background-image:linear-gradient(var(--raise),transparent 64px)}
+@media (prefers-color-scheme:dark){:root:where(:not([data-theme=light])) .card:not(.flat),
+  :root:where(:not([data-theme=light])) .kid,
+  :root:where(:not([data-theme=light])) .mgcard{background-image:linear-gradient(var(--raise),transparent 64px)}}
+
+/* A device that is online right now gets the same slow pulse as the porch. */
+.dot-on{position:relative;box-shadow:0 0 0 3px color-mix(in oklab,var(--ok) 20%,transparent)}
+.dot-on::after{content:"";position:absolute;inset:0;border-radius:50%;background:var(--ok);
+  animation:porchpulse 3.6s ease-out infinite}
+
+/* Controls: press states and a warning glow only where something is cut off. */
+.chip{transition:transform .08s,border-color .15s,background .15s}
+.chip:hover{border-color:var(--axis)}
+.chip.off{box-shadow:inset 0 0 0 1px color-mix(in oklab,var(--crit) 22%,transparent)}
+.chip.mode.active{box-shadow:0 0 0 1px color-mix(in oklab,var(--ember) 30%,transparent)}
+.big{transition:filter .12s,transform .08s}
+.big:hover{filter:brightness(1.06)}
+.big:active{transform:translateY(1px)}
+.btn{transition:border-color .15s,background .15s}
+.btn:hover{border-color:var(--axis)}
+.mini{transition:background .15s}
+
+/* Denser, calmer type. */
+h2{margin-bottom:9px}
+.sub{line-height:1.5}
+.pill{font-weight:500}
+code{letter-spacing:-.01em}
+
+/* One focus treatment everywhere, so keyboard use never guesses. */
+a:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,
+summary:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--ember);outline-offset:2px;border-radius:8px}
+
+@media (prefers-reduced-motion:reduce){.porch::after,.dot-on::after{animation:none;display:none}}
+`;
+
+// ---------------------------------------------------------------------------
 // The client script. Small on purpose: the page works without it, this only
 // adds the tooltip layer, the theme toggle, and the existing control calls.
 // ---------------------------------------------------------------------------
@@ -291,32 +381,52 @@ const JS = `
 const DTOK=(document.cookie.match(/(?:^|; )dash=([^;]*)/)||[])[1]||'';
 function H(){return DTOK?{'content-type':'application/json','x-dash-token':DTOK}:{'content-type':'application/json'};}
 function say(t){var m=document.getElementById('msg');if(m)m.textContent=t;}
+/* One place decides what happens after a control call. A failure must NEVER
+   reload: the reload wipes the message and the parent sees a page that blinks
+   and changes nothing, which is exactly how the HttpOnly cookie bug hid. */
+function done(r,j,ms){
+  const msg=((j&&j.out)||'').trim();
+  if(!r.ok||(j&&j.ok===false)){
+    say(r.status===403?'Not signed in to this dashboard. Reload the page and try again.'
+                      :(msg||('That did not work (HTTP '+r.status+')')));
+    return false;}
+  say(msg||'done');setTimeout(()=>location.reload(),ms||600);return true;}
+async function post(url,body){
+  try{const r=await fetch(url,{method:'POST',headers:H(),body:JSON.stringify(body)});
+      let j={};try{j=await r.json();}catch(e){}
+      return {r,j};}
+  catch(e){return {r:{ok:false,status:0},j:{out:'Could not reach the dashboard: '+e.message}};}}
 async function act(cmd,who,arg){say('working...');
-  const r=await fetch('/api/act',{method:'POST',headers:H(),body:JSON.stringify({cmd,who,arg})});
-  const j=await r.json();say((j.out||'done').trim());setTimeout(()=>location.reload(),600);}
+  const {r,j}=await post('/api/act',{cmd,who,arg});done(r,j,600);}
 async function assign(mac){const label=document.getElementById('lbl_'+mac).value||'device';
-  const who=document.getElementById('who_'+mac).value;say('assigning...');
-  const r=await fetch('/api/assign',{method:'POST',headers:H(),body:JSON.stringify({mac,who,label})});
-  const j=await r.json();say((j.out||'done').trim());setTimeout(()=>location.reload(),700);}
+  const who=document.getElementById('who_'+mac).value;
+  /* Never guess an owner. An empty picker used to fall through to whoever
+     sorted first, which quietly gave one child somebody else's laptop. */
+  if(!who){say('Pick who this device belongs to first.');return;}
+  /* "Smart home device" and "Infrastructure" are not people, so they take the
+     other road: file the device by class instead of handing it to somebody. */
+  if(who==='__iot'||who==='__infra'||who==='__appliance')return assignClass(mac,who.slice(2));
+  say('assigning...');
+  const {r,j}=await post('/api/assign',{mac,who,label});done(r,j,700);}
+/* Reveal the owner picker for a device that already belongs to somebody. */
+function showChange(mac){var el=document.getElementById('chg_'+mac);if(!el)return;
+  el.hidden=!el.hidden;
+  if(!el.hidden){var sel=document.getElementById('who_'+mac);if(sel)sel.focus();}}
 async function claim(id,decision){say('working...');
-  const r=await fetch('/api/claim',{method:'POST',headers:H(),body:JSON.stringify({id,decision})});
-  const j=await r.json();say((j.out||'done').trim());setTimeout(()=>location.reload(),600);}
+  const {r,j}=await post('/api/claim',{id,decision});done(r,j,600);}
 
 async function ack(id){say('noting it...');
-  const r=await fetch('/api/ack',{method:'POST',headers:H(),body:JSON.stringify({id})});
-  const j=await r.json();say((j.out||'done').trim());setTimeout(()=>location.reload(),500);}
+  const {r,j}=await post('/api/ack',{id});done(r,j,500);}
 async function setGoal(cid){
   const m=document.getElementById('gm_'+cid).value;
   const d=document.getElementById('gd_'+cid).value;
   const h=parseFloat(document.getElementById('gh_'+cid).value||'0');
   if(!(h>0)){say('Put in a number of hours first.');return;}
   say('saving the goal...');
-  const r=await fetch('/api/goal',{method:'POST',headers:H(),
-    body:JSON.stringify({child_id:cid,metric:m,direction:d,target_min:Math.round(h*60)})});
-  const j=await r.json();say((j.out||'saved').trim());setTimeout(()=>location.reload(),500);}
+  const {r,j}=await post('/api/goal',{child_id:cid,metric:m,direction:d,target_min:Math.round(h*60)});
+  done(r,j,500);}
 async function delGoal(id){say('removing the goal...');
-  const r=await fetch('/api/goal',{method:'POST',headers:H(),body:JSON.stringify({id:id,remove:true})});
-  const j=await r.json();say((j.out||'removed').trim());setTimeout(()=>location.reload(),500);}
+  const {r,j}=await post('/api/goal',{id:id,remove:true});done(r,j,500);}
 
 /* copy the plain-text digest. The text is always on the page in a textarea, so
    a browser that refuses clipboard access loses nothing: it just gets opened. */
@@ -376,20 +486,45 @@ function toggleTheme(){var d=document.documentElement;
 `;
 
 // ---------------------------------------------------------------------------
+export { livePage, family };
+
+// The public demo (demo/compose.yaml) runs this same code against a made-up
+// household, so every page has to say so plainly and in the house style. With
+// HEARTH_DEMO unset, which is every real installation, DEMO_BAR is the empty
+// string and DEMO_CSS never reaches the page.
+const DEMO = process.env.HEARTH_DEMO === "1";
+const DEMO_CSS = DEMO ? `
+.demobar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:var(--ember-soft);border:1px solid var(--line);border-left:3px solid var(--ember);
+  border-radius:12px;padding:9px 13px;margin:0 0 12px;font-size:13px;color:var(--ink-2)}
+.demobar b{color:var(--ink);font-weight:600;letter-spacing:-.01em}
+.demobar .porch{margin-right:-2px}
+.demobar span{min-width:0}
+.demobar a{color:var(--ember);font-weight:500}
+@media(max-width:520px){.demobar{font-size:12.5px;padding:8px 11px}}
+` : "";
+const DEMO_BAR = DEMO ? `<div class="demobar" role="note">
+  <span class="porch" aria-hidden="true"></span>
+  <span><b>Demo household, made-up data.</b> Controls here do not change anything.
+  This is the real Hearth dashboard running against a fake family, so nobody's
+  network is behind it. <a href="https://hearth.appspurt.dev/">About Hearth</a></span>
+</div>` : "";
+
 export function shell({ tab, body, title = "Hearth" }) {
-  const nav = [["/", "Tonight"], ["/week", "Week"], ["/trends", "Trends"], ["/devices", "Devices"]];
+  const nav = [["/", "Home"], ["/live", "Right now"], ["/week", "Week"], ["/trends", "Trends"],
+    ["/earn", "Learn to earn"], ["/devices", "Devices"], ["/family", "Family"]];
   return `<!doctype html><html lang="en-NZ"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<title>${esc(title)}</title><style>${CSS}</style></head><body>
+<title>${esc(title)}</title><style>${CSS}${POLISH}${LIVE_CSS}${MANAGE_CSS}${HOUSEHOLD_CSS}${DEMO_CSS}</style></head><body>
 <div class="top"><div class="brand"><span class="porch"></span><b>Hearth</b>
   <span>the house with the porch light on</span></div>
   <button class="tbtn" onclick="toggleTheme()" aria-label="Switch light or dark">Theme</button></div>
-<nav>${nav.map(([h, l]) => `<a href="${h}"${tab === h ? ' class="sel" aria-current="page"' : ""}>${esc(l)}</a>`).join("")}</nav>
+<nav>${nav.map(([h, l]) => `<a href="${h}"${tab === h ? ' class="sel" aria-current="page"' : ""}>${esc(l)}</a>`).join("")}<a href="http://${process.env.KIDS_GW_IP || "192.168.60.1"}:8877" target="_blank" rel="noopener" title="Runs on the gateway, reachable from any device on the family network">Speed</a></nav>
 <div class="msg" id="msg" role="status" aria-live="polite"></div>
-${body}
+${DEMO_BAR}${body}
 <div id="tip" role="tooltip" aria-hidden="true"></div>
-<script>${JS}</script></body></html>`;
+<script>${JS}${MANAGE_JS}${HOUSEHOLD_JS}${LIVE_JS}</script></body></html>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -450,7 +585,7 @@ function catMeters(a) {
 }
 
 // ---------------------------------------------------------------------------
-// Tonight
+// Home
 // ---------------------------------------------------------------------------
 export function tonight(s, a) {
   const kidsA = new Map((a?.kids || []).map(k => [k.id, k]));
@@ -477,7 +612,9 @@ export function tonight(s, a) {
       <button class="decline" onclick="claim(${c.id},'decline')">No</button></span></div>`).join("")
     + `</div>` : "";
 
-  const kids = s.children.map(k => {
+  // Adults, household or visiting, do not get a screen-time card: they have no
+  // budget, nothing to earn, and no control on this page reaches them.
+  const kids = s.children.filter(k => k.active !== false && isKid(k.kind || "child")).map(k => {
     const st = kidState(k, s.cats);
     const an = kidsA.get(k.id);
     const t = (s.times || []).find(x => x.child_id === k.id) || {};
@@ -511,16 +648,39 @@ export function tonight(s, a) {
   return (urgent.length ? `<div class="card" style="border-color:var(--crit)"><h2 style="color:var(--crit)">Worth a quiet word</h2>`
     + urgent.map(x => `<div class="alert urgent"><span class="sev">urgent</span><span>${esc([x.category, x.domain, x.detail].filter(Boolean).join(" · "))}</span></div>`).join("")
     + `</div>` : "")
-    + hero + pause + claims + kids + newDev + alerts + recent;
+    + liveStrip() + hero + pause + claims + kids + housePanel(s) + newDev + alerts + recent;
 }
 
-function deviceAssignRow(d, people) {
+// One row, used both for the naming queue and for changing a device that is
+// already somebody's. The label box opens on the name the device already has
+// and the picker opens on its current owner, so re-assigning a device is a
+// one-field change instead of retyping everything.
+// Phones randomise their wifi address by default now, and both iOS and
+// Android will rotate it. When that happens the device arrives as a brand new
+// unnamed thing, loses its owner, its reserved address, its filtering level
+// and its metering, and the parent is never told why their child stopped
+// being covered. It is the quietest way this whole system fails. The
+// locally-administered bit in the first octet is how you spot one.
+function randomMac(mac) {
+  const first = parseInt(String(mac || "").slice(0, 2), 16);
+  return Number.isFinite(first) && (first & 0x02) !== 0;
+}
+const RANDOM_MAC_NOTE = "This phone gives the network a made-up address that it will change from "
+  + "time to time. When it does, it arrives here as a new unnamed device and stops being covered. "
+  + "On the phone, open the wifi settings for this network and turn off private or randomised "
+  + "address. Then name it here once and it stays named.";
+
+function deviceAssignRow(d, people, opts = {}) {
   const key = esc(d.mac || "");
+  const owner = d.person || "";
+  const name = d.label || d.hostname || "";
   return `<div class="row"><span><b>${esc(d.hostname || d.label || "(no name)")}</b> <code>${key}</code>
-      ${d.vendor ? `<code>${esc(d.vendor)}</code>` : ""} ${d.online ? '<span class="dot-on"></span>online' : ""}</span>
-    <span class="assign"><input id="lbl_${key}" placeholder="e.g. Ben phone" aria-label="Label for ${key}">
-      <select id="who_${key}" aria-label="Owner for ${key}">${people.map(p => `<option value="${esc(p.name)}">${esc(p.name)}</option>`).join("")}</select>
-      <button class="approve" onclick="assign('${key}')">Assign</button></span></div>`;
+      ${d.vendor ? `<code>${esc(d.vendor)}</code>` : ""} ${d.online ? '<span class="dot-on"></span>online' : ""}
+      ${owner ? `<span class="tag">now ${esc(owner)}${esc(roleTag(d.person_kind))}</span>` : ""}
+      ${randomMac(d.mac) ? `<span class="tag warn" title="${esc(RANDOM_MAC_NOTE)}">random address</span>` : ""}</span>
+    <span class="assign"><input id="lbl_${key}" value="${esc(name)}" placeholder="e.g. Ben phone" aria-label="Name for ${key}">
+      <select id="who_${key}" aria-label="Owner for ${key}">${assignOptions(people, owner)}</select>
+      <button class="approve" onclick="assign('${key}')">${opts.change ? "Change" : "Assign"}</button></span></div>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -535,6 +695,12 @@ export function devices(s) {
   const unassigned = s.devices.filter(d => d.unassigned && d.category === "personal"
     && !["ap", "infra", "gateway"].includes(d.device_kind));
 
+  // If any phone here randomises its address, say so once, plainly, at the top.
+  // A tooltip is not enough for the failure that quietly uncovers a child.
+  const anyRandom = s.devices.some(d => (d.category || "personal") === "personal" && randomMac(d.mac));
+  const randomNote = anyRandom ? `<div class="card"><h2>Phones with a random address</h2>
+    <p class="sub">${esc(RANDOM_MAC_NOTE)}</p></div>` : "";
+
   const naming = unassigned.length ? `<div class="card"><h2>🆕 New devices to name (${unassigned.length})</h2>
     <p class="sub">Who owns what is deliberately manual. Only you know whose device is whose.</p>
     ${unassigned.map(d => deviceAssignRow(d, s.people)).join("")}</div>` : "";
@@ -545,13 +711,20 @@ export function devices(s) {
     return `<div class="card"><h2>${esc(title)} (${rows.length})</h2><p class="sub">${esc(note)}</p>`
       + rows.map(d => `<div class="row drow">
           <div class="dname">${d.online ? '<span class="dot-on"></span>' : ""}<b>${esc(d.label || d.hostname || "(unnamed)")}</b>
-            ${cat === "personal" ? `<span class="tag">${esc(d.person || "unassigned")}${d.person_kind === "guest" ? " (guest)" : ""}</span>` : ""}</div>
+            ${cat === "personal" ? `<span class="tag">${esc(d.person || "unassigned")}${esc(roleTag(d.person_kind))}</span>` : ""}
+            ${cat === "personal" && randomMac(d.mac) ? '<span class="tag warn">random address</span>' : ""}
+            ${cat === "personal" ? `<button class="mini" onclick="showChange('${esc(d.mac || "")}')">Change owner</button>` : ""}</div>
           <div class="dmeta"><code>${esc([d.device_kind, d.vendor, d.ip || "no reserved IP", d.mac].filter(Boolean).join(" · "))}</code></div>
-        </div>`).join("")
+        </div>`
+        // Hidden until asked for, because a page full of open pickers invites
+        // the mis-click this whole change exists to prevent.
+        + (cat === "personal"
+          ? `<div class="chg" id="chg_${esc(d.mac || "")}" hidden>${deviceAssignRow(d, s.people, { change: true })}</div>`
+          : "")).join("")
       + `</div>`;
   }).join("");
 
-  return naming + (list || '<div class="card"><div class="empty">No devices yet. They register as they join the kids network.</div></div>');
+  return naming + randomNote + (list || '<div class="card"><div class="empty">No devices yet. They register as they join the kids network.</div></div>');
 }
 
 // ---------------------------------------------------------------------------
@@ -635,8 +808,8 @@ function kidTrends(k, win, { link = true } = {}) {
     })}</div>
     ${nothingYet ? '<p class="empty">Nothing recorded for this window yet. Minutes appear once the meter has run and the devices are named on the Devices tab.</p>' : ""}
     ${legend(usedSeries.length > 1 ? usedSeries : [], { note: "Music, schoolwork and messaging are never metered, so they only ever show up in ‘other online’." })}
-    ${table(["Day", "Gaming", "Video", "Social", "Other", "Total online"],
-      k.days.map(d => [fmt.dayFull(d.day), d.gaming, d.video, d.social, d.other, d.online]))}`;
+    ${table(["Day", "Gaming", "Video", "Social", "Downloads", "Other", "Total online"],
+      k.days.map(d => [fmt.dayFull(d.day), d.gaming, d.video, d.social, d.download, d.other, d.online]))}`;
 
   // --- Chart 2: losing time against gaining time ---------------------------
   // A week is the right unit for this conversation, but a 7 day window only
@@ -763,7 +936,7 @@ function measurementCard(a) {
 }
 
 // ---------------------------------------------------------------------------
-// Alerts, shared by Tonight and the kid page.
+// Alerts, shared by Home and the kid page.
 //
 // Alerts used to pile up forever, which trains a parent to ignore them. An
 // alert is a prompt to say something, so once it has been said it should stop
@@ -904,8 +1077,8 @@ export function week(s, dg) {
     <p class="fsub">Minutes each child spent online this week. Gaming, video and social are the meter's figures; the rest is everything else the daily ledger counted.</p>
     <div class="figure">${columns({ cols, series: keys.map(key => ({ key })), title: "Minutes per child this week" })}</div>
     ${legend(keys)}
-    ${table(["Child", "Gaming", "Video", "Social", "Other", "Total online"],
-      dg.kids.map(k => [k.name, k.totals.gaming, k.totals.video, k.totals.social,
+    ${table(["Child", "Gaming", "Video", "Social", "Downloads", "Other", "Total online"],
+      dg.kids.map(k => [k.name, k.totals.gaming, k.totals.video, k.totals.social, k.totals.download,
         Math.max(0, k.totals.online - k.totals.metered), k.totals.online]))}
     </div>` : "";
 
@@ -941,10 +1114,10 @@ function weekKid(k, dg, goalsMissing) {
       { key: "social", value: d.social }, { key: "other", value: d.other }],
   }));
   const dayChart = (!t.online && !t.metered) ? "" : `<p class="ftitle">Day by day</p>
-    <div class="figure">${columns({ cols, series: [{ key: "gaming" }, { key: "video" }, { key: "social" }, { key: "other" }], title: `${k.name}: minutes per day this week` })}</div>
-    ${legend(["gaming", "video", "social", "other"])}
-    ${table(["Day", "Gaming", "Video", "Social", "Other", "Total"],
-      k.days.map(d => [fmt.dayFull(d.day), d.gaming, d.video, d.social, d.other, d.online]))}`;
+    <div class="figure">${columns({ cols, series: [{ key: "gaming" }, { key: "video" }, { key: "social" }, { key: "download" }, { key: "other" }], title: `${k.name}: minutes per day this week` })}</div>
+    ${legend(["gaming", "video", "social", "download", "other"])}
+    ${table(["Day", "Gaming", "Video", "Social", "Downloads", "Other", "Total"],
+      k.days.map(d => [fmt.dayFull(d.day), d.gaming, d.video, d.social, d.download, d.other, d.online]))}`;
 
   const svc = k.serviceList.slice(0, 6);
   const anyMin = svc.some(x => x.minutes > 0);
@@ -1071,7 +1244,7 @@ export function kid(s, kd) {
   const wt = kd.weekTotals;
   const today = kd.kid ? kd.kid.today : null;
 
-  const head = `<p class="crumb"><a href="/">‹ Tonight</a></p>
+  const head = `<p class="crumb"><a href="/">‹ Home</a></p>
     <div class="card"><div class="kh">
       <h3 style="font-size:22px">${esc(c.name)} <span class="tag">${c.age} · ${esc(c.policy_tier)} tier</span></h3>
       ${st.study ? '<span class="pill study">Study mode</span>' : ""}

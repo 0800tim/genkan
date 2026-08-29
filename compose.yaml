@@ -53,6 +53,23 @@ services:
     command: node portal.mjs
     restart: unless-stopped
 
+  # A speed test any device on the island can reach, including guests with no
+  # VPN and no account. It measures the wifi leg and the internet leg
+  # separately, which is the only way a parent can tell which one is slow.
+  speedtest:
+    image: node:22-slim
+    container_name: hearth-speedtest
+    network_mode: "service:gateway"
+    depends_on: [gateway]
+    working_dir: /app
+    environment:
+      BIND: 0.0.0.0
+      PORT: 8877
+    volumes:
+      - ./speedtest:/app:ro
+    command: node server.mjs
+    restart: unless-stopped
+
   adguard:
     image: adguard/adguardhome:v0.107.79
     container_name: hearth-adguard

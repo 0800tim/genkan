@@ -7,7 +7,7 @@ INSERT INTO policies (tier, description, block_categories, safesearch, youtube_r
    ARRAY['adult-extreme','self-harm','drugs','proxy-vpn'], false, false, true, NULL, NULL)
 ON CONFLICT (tier) DO NOTHING;
 
--- Names are placeholders; Tim confirms real names/ages later.
+-- Names are placeholders; the household confirms real names and ages later.
 INSERT INTO children (name, age, policy_tier, notes) VALUES
  ('child-11', 11, 'young',    'youngest; strictest tier'),
  ('child-14', 14, 'standard', 'middle'),
@@ -44,4 +44,4 @@ INSERT INTO tasks (name, minutes, needs_approval, active) VALUES
  ('Homework finished',  45, true,  true),
  ('20 min reading',     20, true,  true),
  ('Study quiz (unrot)', 15, false, true)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (lower(name)) DO NOTHING;

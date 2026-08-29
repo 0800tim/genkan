@@ -100,7 +100,7 @@ don't just surveil.)
 
 ## 10. Open-source hardening (before publishing)
 
-- Split Tim's live values (NIC MAC, SSID, subnet) into config.env; ship
+- Split the household's live values (NIC MAC, SSID, subnet) into config.env; ship
   config.env.example only. [example added]
 - Keep secrets.env gitignored. [done]
 - README/QUICKSTART for other parents; MIT like unrot. [licence added]

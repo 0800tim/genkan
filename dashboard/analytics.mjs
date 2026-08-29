@@ -284,7 +284,7 @@ export async function analytics(q, days = 7) {
   const blank = () => ({
     days: dayList.map(d => ({
       day: d, online: 0, budget: 0, bonus: 0,
-      gaming: 0, video: 0, social: 0, metered: 0, other: 0,
+      gaming: 0, video: 0, social: 0, download: 0, metered: 0, other: 0,
       quiz: 0, chore: 0, earned: 0, granted: 0, penalty: 0,
       learn: 0, blocked: 0,
     })),
@@ -401,7 +401,7 @@ function weekly(days) {
     const dow = (dt.getUTCDay() + 6) % 7;                 // 0 = Monday
     const start = new Date(dt.getTime() - dow * 86400000).toISOString().slice(0, 10);
     if (!cur || cur.start !== start) {
-      cur = { start, gaming: 0, video: 0, social: 0, metered: 0, quiz: 0, chore: 0, earned: 0, learn: 0, days: 0 };
+      cur = { start, gaming: 0, video: 0, social: 0, download: 0, metered: 0, quiz: 0, chore: 0, earned: 0, learn: 0, days: 0 };
       out.push(cur);
     }
     for (const k of ["gaming", "video", "social", "metered", "quiz", "chore", "earned", "learn"]) cur[k] += d[k];
@@ -503,7 +503,7 @@ export async function weekTotals(q, w0, w1, notes = []) {
   ]);
   const out = new Map();
   const row = id => {
-    if (!out.has(id)) out.set(id, { online: 0, metered: 0, gaming: 0, video: 0, social: 0, earned: 0, quiz: 0, chore: 0 });
+    if (!out.has(id)) out.set(id, { online: 0, metered: 0, gaming: 0, video: 0, social: 0, download: 0, earned: 0, quiz: 0, chore: 0 });
     return out.get(id);
   };
   for (const r of ledger) row(r.child_id).online = num(r.online);
@@ -661,7 +661,7 @@ export async function digest(q, ref = null) {
   }
 
   const byChild = new Map(children.map(c => [c.id, {
-    days: dayList.map(d => ({ day: d, online: 0, gaming: 0, video: 0, social: 0, metered: 0, other: 0 })),
+    days: dayList.map(d => ({ day: d, online: 0, gaming: 0, video: 0, social: 0, download: 0, metered: 0, other: 0 })),
     dayIndex: new Map(dayList.map((d, i) => [d, i])),
     services: new Map(), topDomains: [], quizTopics: [], chores: [], alerts: [], flags: [], goals: [],
   }]));
@@ -699,7 +699,7 @@ export async function digest(q, ref = null) {
       d.metered = d.gaming + d.video + d.social;
       d.other = Math.max(0, d.online - d.metered);
     }
-    const t = totals.get(c.id) || { online: 0, metered: 0, gaming: 0, video: 0, social: 0, earned: 0, quiz: 0, chore: 0 };
+    const t = totals.get(c.id) || { online: 0, metered: 0, gaming: 0, video: 0, social: 0, download: 0, earned: 0, quiz: 0, chore: 0 };
     const e = earnBy.get(c.id) || {};
     const active = b.days.filter(d => d.online > 0).length;
     const busiest = b.days.reduce((a, d) => (d.online > (a?.online || 0) ? d : a), null);
@@ -783,7 +783,7 @@ export async function kidDetail(q, name, days = 7) {
     weekTotals(q, w.start, w.end, notes),
   ]);
 
-  const wt = totals.get(child.id) || { online: 0, metered: 0, gaming: 0, video: 0, social: 0, earned: 0, quiz: 0, chore: 0 };
+  const wt = totals.get(child.id) || { online: 0, metered: 0, gaming: 0, video: 0, social: 0, download: 0, earned: 0, quiz: 0, chore: 0 };
   return {
     child, kid, window: a.window, week: w, weekTotals: wt,
     devices, quizHistory, flags, alerts: recentAlerts, blocks,

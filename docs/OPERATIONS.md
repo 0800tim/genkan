@@ -451,3 +451,25 @@ To bring it back:
 Nothing above touches the host's own firewall, because Hearth never installs
 rules there. That is the point of the whole namespace design, and
 `container-test.sh` asserts it every run.
+
+## HTTPS for the dashboard
+
+The dashboard has no browser-trusted certificate by default, so browsers show
+"Not secure". That is cosmetic on a private network, but it is a poor look when
+demonstrating to anyone, and clicking through security warnings is a habit
+worth not teaching.
+
+If you use Tailscale, you can have a real certificate in one command:
+
+1. Enable it once, free, in the admin console:
+   https://login.tailscale.com/admin/dns -> HTTPS Certificates -> Enable
+2. Run `tools/enable-https.sh`
+
+That fetches a Let's Encrypt certificate for your machine's tailnet name,
+stands up a Caddy front end on port 8443 that terminates TLS and proxies to
+the dashboard, and installs it as a user service. Tailscale renews the
+certificate automatically.
+
+The dashboard stays private to your tailnet. It is deliberately NOT published
+through a public tunnel: this panel can switch a child's internet on and off,
+and that should not be reachable from the internet merely to obtain a padlock.

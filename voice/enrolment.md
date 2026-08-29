@@ -27,7 +27,7 @@ docker volume: hearth-voice_speaker-prints
   /prints/Ada.emb
   /prints/Ben.emb
   /prints/Cleo.emb
-  /prints/tim.emb
+  /prints/parent.emb
   /prints/index.json     names, sample counts, enrolment dates
 ```
 

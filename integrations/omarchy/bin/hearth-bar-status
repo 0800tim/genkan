@@ -20,8 +20,9 @@ set -uo pipefail
 
 readonly conf_file="${HEARTH_CONF:-${XDG_CONFIG_HOME:-$HOME/.config}/hearth/omarchy.conf}"
 if [[ -r $conf_file ]]; then
+  # Quietly: a typo in the config must not turn into noise on the status bar.
   # shellcheck disable=SC1090
-  source "$conf_file"
+  source "$conf_file" 2>/dev/null || true
 fi
 
 : "${HEARTH_HIDE_WHEN_DOWN:=0}"
@@ -177,7 +178,7 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 if out=$(build) && [[ -n $out ]]; then
-  printf '%s\n' "$out" >"$cache_file" 2>/dev/null
+  { printf '%s\n' "$out" >"$cache_file"; } 2>/dev/null || true
   printf '%s\n' "$out"
 else
   emit_stale_or_down

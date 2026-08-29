@@ -4,21 +4,23 @@ Every command Hearth ships, what it takes, and what it actually does. Written
 from the scripts themselves, so if this file and a script disagree, the script
 is right and this file is a bug.
 
-There are fourteen executables in `bin/`. One of them, `kidnet`, is the control
+There are sixteen executables in `bin/`. One of them, `kidnet`, is the control
 surface a parent or an agent drives by hand. The rest are background workers
-that timers run, plus `kidnet-report`, which you run when you want to read
-something.
+that timers run, plus `kidnet-report` and `kidnet-quiz`, which you run when you
+want to read something or to change what the kids can learn from.
 
-`deploy.sh` installs thirteen of them into `/usr/local/bin`. `kidnet-report` is
-not among them, so run it from the repo (`bin/kidnet-report`) or copy it
-yourself.
+`deploy.sh` installs fourteen of them into `/usr/local/bin`. `kidnet-report` and
+`kidnet-quiz` are not among them: run those from the repo
+(`bin/kidnet-report`, `bin/kidnet-quiz`), because they read files that live
+there.
 
 | Command | Run by | What it is for |
 |---|---|---|
 | [`kidnet`](#kidnet) | you, or your agent | the control surface: on, off, categories, time, devices |
 | [`kidnet-report`](#kidnet-report) | you, weekly | the family digest, read only |
+| [`kidnet-quiz`](#kidnet-quiz) | you, or your agent | manage the learn-to-earn quiz banks |
 | [`kidnet-meter`](#kidnet-meter) | `kids-meter.timer` | ticks a minute off each active child's daily budget |
-| [`kidnet-catmap`](#kidnet-catmap) | `kids-metering.timer` | learns which addresses are gaming or video |
+| [`kidnet-catmap`](#kidnet-catmap) | `kids-metering.timer` | learns which addresses are gaming, video or a download |
 | [`kidnet-catmeter`](#kidnet-catmeter) | `kids-metering.timer` | counts active category minutes, enforces category budgets |
 | [`kidnet-servicemap`](#kidnet-servicemap) | `kids-services.timer` | learns which addresses are YouTube, Netflix, Roblox and so on |
 | [`kidnet-servicemeter`](#kidnet-servicemeter) | `kids-services.timer` | counts real bytes per service per device |
@@ -29,6 +31,7 @@ yourself.
 | [`kidnet-adguard`](#kidnet-adguard) | `kidnet`, on every change | renders category blocks into AdGuard's rule list |
 | [`kidnet-adguard-clients`](#kidnet-adguard-clients) | `kidnet assign` | points each child's AdGuard client at their real device IPs |
 | [`kidnet-tor-sync`](#kidnet-tor-sync) | `kids-tor-sync.timer` | fetches the public Tor relay list for the firewall |
+| [`kidnet-iot-policy`](#kidnet-iot-policy) | `kids-iot-policy.timer` (installed, off by default) | generates the household IoT security policy from the database |
 
 Everything talks to Postgres through `docker exec -i postgres psql`, so the
 tools need the `postgres` container running and the Docker socket readable.
@@ -50,11 +53,25 @@ the state, and the gateway picks it up when it comes back.
 
 ### Who you can name
 
-Most commands take a person's name. Three of them also accept groups:
+Most commands take a person's name. They also accept a group:
 
-- `all` every child, guest and adult in the `children` table
-- `kids` everyone with `kind='child'`
-- `guests` everyone with `kind='guest'`
+- `kids` every child under this roof **and** every visiting child
+- `guests` every visitor, child and grown-up
+- `guest-kids` visiting children only
+- `guest-adults` visiting adults only
+- `adults` every grown-up, household and visiting
+- `household` everyone who lives here, no visitors
+- `all` everyone except the adults, plus any personal device nobody has claimed
+  yet. This is what `dinner` and bedtime use.
+- `everyone` literally every personal device, adults included
+
+`all` is deliberately not `everyone`: a control aimed at the kids must never
+reach a visiting grandparent, but it must still catch a tablet nobody has named
+yet. A guest who has been marked gone home is in no group at all.
+
+Which group somebody falls in is decided by their role (`child`, `guest-child`,
+`guest-adult`, `adult`), and the answer lives in the database, in
+`people_in_scope()`. See [HOUSEHOLD-ROLES.md](HOUSEHOLD-ROLES.md).
 
 **Groups only ever touch devices classified `personal`.** Cameras, locks,
 speakers and other IoT are never cut by `kidnet off all` or by `dinner`. See
@@ -62,8 +79,8 @@ speakers and other IoT are never cut by `kidnet off all` or by `dinner`. See
 
 ### Internet on and off
 
-    kidnet off <person|all|kids|guests>
-    kidnet on  <person|all|kids|guests>
+    kidnet off <person|group>
+    kidnet on  <person|group>
 
 Adds or removes that person's reserved addresses in the nftables `kids_block`
 set and records it in `category_state`. A blocked device keeps DHCP, DNS, the
@@ -122,6 +139,21 @@ old list in place rather than leaving a child unable to reach 1737.
 You rarely need to run this. The gateway container does the same sync at start
 and once an hour on its own.
 
+### Household devices
+
+    kidnet iot status                    what the policy is, and what it has refused
+    kidnet iot show <device>             the effective policy for one device
+    kidnet iot learn                     refresh the vendor address lists, then apply
+    kidnet iot apply                     regenerate the firewall from the policy rows
+    kidnet iot set <device> <field> <value>
+    kidnet iot allow <phone> <device>    let one device reach another
+    kidnet iot mode off|observe|enforce
+
+A pass-through to [`kidnet-iot-policy`](#kidnet-iot-policy), so there is one
+control surface. This is the household layer, not the kid layer: what each
+camera, lock, speaker and vacuum is allowed to talk to. Read
+[HOUSEHOLD-SECURITY.md](HOUSEHOLD-SECURITY.md) before switching it on.
+
 ### Devices and people
 
     kidnet devices                      the full roster, with owner and online state
@@ -129,15 +161,28 @@ and once an hour on its own.
     kidnet leases                       current DHCP leases
     kidnet assign <mac|ip> <person> <label> [reserved-ip]
     kidnet infra <mac>                  mark a device as infrastructure (an AP, a switch)
-    kidnet person add <name> <child|guest|adult> [tier]
+    kidnet person add <name> <child|guest-child|guest-adult|adult> [tier]
+    kidnet person list                  who is in the house, by role
+    kidnet guest leave <name>           they have gone home
+    kidnet guest back <name>            they are visiting again
+    kidnet guest list                   the visitors here right now
 
 `assign` maps a device to a person, then immediately runs
 `kidnet-adguard-clients` so the age tier follows the device rather than lagging
 a minute behind. Pass a MAC (anything containing a colon) or an address. The
 optional fifth argument sets the DHCP reservation at the same time.
 
-`person add` defaults the tier from the kind: `guest` gets the guest tier,
-`adult` gets teen, everyone else gets standard.
+`person add` defaults the filter level from the role: `guest-adult` gets the
+guest level, `adult` gets the adult level, and a child or a visiting child gets
+standard. A bare `guest` is read as `guest-child`, because that is the only
+thing it used to mean and because the safer mistake is to filter a grown-up too
+tightly rather than to leave a child unfiltered.
+
+`guest leave` does four things in an order that matters: it lifts anything
+blocked for them first (so no address is left cut off in the firewall), lets
+their devices go, clears their category blocks, and marks them inactive so they
+fall out of every group. Their row is kept, so `guest back` is one command.
+See [HOUSEHOLD-ROLES.md](HOUSEHOLD-ROLES.md).
 
 ### Looking around
 
@@ -151,7 +196,10 @@ Everything a person types is gated before it reaches SQL, because the dashboard
 feeds this script over HTTP and the household bug bounty invites the kids to
 attack it:
 
-- names: `[A-Za-z0-9_-]`, 1 to 32 characters
+- names: `[A-Za-z0-9_-]`, 1 to 32 characters. Group controls work by database
+  id rather than by name, so a household that already holds an awkwardly named
+  person can still use `kidnet off kids`; only addressing that person
+  individually is refused.
 - numbers: digits only, at most 4
 - free text (reasons, labels): letters, digits and `_ : + . , -` and spaces, at
   most 80 characters
@@ -207,9 +255,25 @@ No arguments. Run every minute by `kids-metering.timer`, just before
 
 Reads AdGuard's query log, matches each looked-up name against
 `category_domains` by longest domain suffix, and records the A-record answers
-in `category_ips` as "these addresses are gaming" or "these addresses are
-video". That is the trick that lets the firewall meter encrypted traffic
-without decrypting anything: see [../METERING.md](../METERING.md).
+in `category_ips` as "these addresses are gaming", "video" or "download". That
+is the trick that lets the firewall meter encrypted traffic without decrypting
+anything: see [../METERING.md](../METERING.md).
+
+Two guards decide whether an address is trustworthy enough to meter:
+
+* **The ambiguity guard.** An address is tagged only if, across the window just
+  scanned, it answered for exactly one category and for no uncategorised name.
+  A shared front door (a bare `googlevideo.com` lookup returns a general Google
+  edge address that also serves search and the Play Store) is dropped, and
+  deleted from `category_ips` if an earlier run had tagged it. Tagging those
+  was what made every byte a phone sent to Google look like YouTube.
+* **Routable answers only.** A blocked query is answered with `0.0.0.0` and a
+  rewritten one with the portal's address. Neither is a destination anyone
+  sends bytes to, so neither is ever learned.
+
+The honest cost: a dedicated CDN host that happens to appear once beside an
+uncategorised name is dropped too, so a category can be under-counted. That is
+a much smaller lie than colouring the whole house's traffic with it.
 
 | Variable | Default | Effect |
 |---|---|---|
@@ -227,23 +291,51 @@ No arguments. Run every minute by `kids-metering.timer`, straight after
 
 Three steps each minute:
 
-1. Refresh the `gaming_ips` and `video_ips` nft sets from `category_ips`, using
-   answers seen in the last 24 hours.
-2. Read and then flush the per-device counters `gaming_dev` and `video_dev`, so
-   each read is that minute's delta. A device over the threshold earns one
-   active minute for its owner in `category_usage`. Under the threshold is idle
-   keepalive and counts for nothing.
+1. Reconcile the `gaming_ips`, `video_ips` and `download_ips` nft sets to
+   exactly what `category_ips` holds from the last 24 hours. Flush and refill
+   in one transaction, not add-only: an address withdrawn by the mapper's
+   ambiguity guard has to leave the firewall too, or it keeps mis-colouring
+   every byte sent to it until the container is restarted.
+2. Read and then flush the per-device counters `gaming_dev`, `video_dev` and
+   `download_dev`, so each read is that minute's delta. A device over the
+   threshold earns one active minute for its owner in `category_usage`. Under
+   the threshold is idle keepalive and counts for nothing.
 3. Compare `category_usage` against `category_budgets`. A child at or over
    their budget gets that category blocked with `set_by='over-budget'`, and the
    block is pushed to AdGuard.
 
+**Downloads are not screen time.** A game update is bandwidth, and charging it
+to a child's gaming budget would be a lie. Two things separate a download from
+playing, and both are needed:
+
+* **Destination.** The content-delivery names (`steamcontent.com`,
+  `cs.steampowered.com`, the PSN, Xbox and Nintendo asset CDNs, OS and app
+  store updates) are their own `download` category in `category_domains`, and
+  are longer suffixes than the gaming domains they sit under, so they win.
+* **Rate.** Anything above `DOWNLOAD_BYTES_PER_MIN` to a *gaming* address in
+  one minute is booked as a download instead, which catches the CDN names
+  nobody has listed yet. Deliberately not applied to video, where 4K streaming
+  is legitimately fast.
+
+Download minutes are recorded so the live chart can show them, but the category
+is excluded from budget enforcement, so it can never cut a child off.
+
 Audio, schoolwork, chess and messaging are not in any metered set, so they are
 never counted and never blocked by this.
+
+If `download_ips` is missing (an island still running an older ruleset) the
+script creates the two sets and the one counting rule itself, so the new
+category starts working on the next tick instead of needing the gateway
+container restarted. It only ever adds what is genuinely absent, so it cannot
+stack a duplicate rule.
 
 | Variable | Default | Effect |
 |---|---|---|
 | `GAMING_THRESH` | `51200` | bytes in a minute that count as actively gaming |
 | `VIDEO_THRESH` | `256000` | bytes in a minute that count as actively watching |
+| `DOWNLOAD_THRESH` | `256000` | bytes in a minute that count as actively downloading |
+| `DOWNLOAD_BYTES_PER_MIN` | `52428800` | above this on a gaming address it is an update, not a game (~7 Mbit/s) |
+| `KIDS_IFACE` | `kids0` | island interface, used only when adding the download rule to an older ruleset |
 | `GW_CONTAINER` | `hearth-gw` | |
 | `NFT_NS` | unset | run `nft` in this network namespace instead (used by the tests) |
 | `NFT_DIRECT` | unset | `1` to run `nft` on the host |
@@ -478,16 +570,116 @@ specifically to defeat address lists. The honest version is in
 
 ---
 
+## kidnet-iot-policy
+
+    kidnet-iot-policy apply           regenerate and apply the policy chain
+    kidnet-iot-policy learn           resolve vendor domains into vendor_ips, then apply
+    kidnet-iot-policy status          the policy, and what the firewall has refused
+    kidnet-iot-policy show <device>   the effective policy for one device
+    kidnet-iot-policy mode off|observe|enforce
+    kidnet-iot-policy set <device> <field> <value>
+    kidnet-iot-policy allow <src> <dst> [note]
+    kidnet-iot-policy revoke <src> <dst>
+    kidnet-iot-policy dryrun          print the ruleset that WOULD be applied
+
+The household security layer. Generates its own nftables sets and chain from
+`device_policy_effective` (config/db/schema-policies.sql), the same way
+`kidnet-servicemeter` generates its counters, so adding a device or changing a
+rule is a database row rather than a firewall edit.
+
+Policy is written in terms of who may START a conversation: may this device
+reach the internet, and if so only its vendor's cloud; may the internet reach
+it (never, by default); may it reach the other gadgets or your phones; and may
+your phones reach it (yes, by default, because that is how you view your own
+camera). Established replies are never re-judged.
+
+The chain hooks forward at priority **-5**, ahead of `kids.nft`'s own forward
+chain, so every existing drop still gets the last word and this layer can only
+ever add a restriction. `@kids_allow` is returned from at the top, so no policy
+here can touch the safety net.
+
+`set` fields: `internet_out` (`none`, `vendor`, `full`), `inbound_from_wan`,
+`talk_to_iot`, `talk_to_personal`, `reachable_from_personal` (yes or no), and
+`vendor` (a row in `vendor_clouds`).
+
+| Variable | Default | Effect |
+|---|---|---|
+| `IOT_POLICY_MODE` | the stored mode | override the mode for one run, without writing it |
+| `IOT_POLICY_PRIORITY` | `-5` | the chain's nftables hook priority |
+| `KIDS_SUBNET` | `192.168.60.0/24` | the island. No address outside it ever enters a policy set |
+| `KIDS_IF` | `kids0` | the island interface |
+| `IOTMAP_PAGES` | `15` | query-log pages read when learning vendor addresses |
+| `GW_CONTAINER` / `NFT_NS` / `NFT_DIRECT` / `PG_CONTAINER` | as for the meters | |
+
+Fail-safe, in order of importance: a database outage changes nothing; `observe`
+(the shipped default) turns every deny into a counter; a vendor with no learned
+addresses leaves its devices unrestricted and reports the gap; and a ruleset
+that does not validate is not applied at all.
+
+Honest limits, stated at length in
+[HOUSEHOLD-SECURITY.md](HOUSEHOLD-SECURITY.md): a vendor on a large shared CDN
+cannot be pinned tightly, a compromised device that only talks to its vendor is
+still compromised, and two devices on the same access point can talk without
+the gateway ever seeing it unless client isolation is on.
+
+---
+
+## kidnet-quiz
+
+    kidnet-quiz list                      every bank, with its difficulty ramp
+    kidnet-quiz validate <file>...        check a bank without installing it
+    kidnet-quiz install <file> [--force]  validate, install, reload the portal
+    kidnet-quiz remove <id>               take a bank off the portal
+    kidnet-quiz stats [kid]               who has passed what, and how it is going
+    kidnet-quiz reload [--container]      re-read the bank directory
+
+The control surface for learn-to-earn content. A parent asks their agent for
+"a quiz on the animals of Madagascar for a 12 to 15 year old", the agent writes
+the JSON (`docs/runbooks/quiz-on-demand.md` is the recipe,
+`portal/quizzes/FORMAT.md` is the shape), and this script checks it and puts it
+in front of the kids.
+
+`install` refuses anything that does not pass `tools/validate-quizzes.mjs`,
+then re-validates the whole directory afterwards and pulls the file back out if
+the set no longer passes. A bank with a wrong answer in it takes minutes off a
+kid for being right, so nothing installs on trust.
+
+`list` shows each bank's difficulty spread across levels 1 to 5, or `flat` for
+a bank with no `difficulty` fields, which the portal samples at random instead
+of ramping.
+
+`stats` reads two things: the money trail in `time_events`
+(`reason` like `quiz:%`), which is every pass ever, and the teaching record in
+`quiz_rounds` / `quiz_answers` (config/db/schema-quizresults.sql), which is
+every round including the failed ones and how the kid went at each difficulty
+level. `remove` never deletes either: minutes earned stay earned.
+
+| Variable | Default | Effect |
+|---|---|---|
+| `HEARTH_REPO` | the parent of `bin/` | where the banks and the validator live |
+| `QUIZ_DIR` | `$HEARTH_REPO/portal/quizzes` | the bank directory |
+| `PORTAL_UNIT` | `kids-portal.service` | the host portal reloaded with SIGHUP after a change |
+| `PORTAL_CONTAINER` | `hearth-portal` | the island portal, signalled only with `reload --container` |
+
+The island container is left alone unless you ask for it, because SIGHUP only
+reloads a portal already running the code that handles it. On a box that has
+not been redeployed since bank reloading landed, a HUP would stop the process
+instead of reloading it.
+
+---
+
 ## The test suites
 
-Not in `bin/`, but part of the same surface. All five need the stack or at
-least Postgres, and three of them need root because they build throwaway
+Not in `bin/`, but part of the same surface. All seven need the stack or at
+least Postgres, and five of them need root because they build throwaway
 network namespaces.
 
     sudo test/firewall-test.sh        31 checks: the shipped ruleset, real packets, three namespaces
     sudo test/container-test.sh       26 checks: the real image, containment, replug, segment guard
+    sudo test/iot-policy-test.sh      39 checks: the household IoT policy, real packets, six namespaces
     sudo test/meter-test.sh            8 checks: category minutes, budget enforcement, grant
     sudo test/service-meter-test.sh    5 checks: per-service bytes, active minutes, idle ignored
+    sudo test/roles-test.sh           51 checks: the household roles, who each scope reaches, and the 11pm scenario
     ADGUARD_PASS=... test/adguard-test.sh   10 checks: the DNS layer, via AdGuard's own check_host API
 
 `container-test.sh` skips one containment check when the interim
@@ -496,6 +688,12 @@ for the island subnet on purpose.
 
 `adguard-test.sh` is the only one that does not need root, and the only one that
 needs the island profile up.
+
+`roles-test.sh` needs root only for a network namespace: it builds its own copy
+of the `kids_block` set in there rather than writing to the live gateway, so it
+is safe to run on a household that is in use. It creates its own people and
+devices, asserts, then deletes them and puts the category blocks it touched back
+exactly as it found them.
 
 After any change to `config/nftables/kids.nft`, `gateway/` or `bin/kidnet`, run
 the firewall and container suites. Both must pass fully.

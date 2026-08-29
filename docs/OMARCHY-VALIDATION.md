@@ -30,7 +30,7 @@ Version numbers below were true on the day.
   unmanage-the-NIC drop-in works); ~/.config/omarchy/hooks exists (so the
   post-update hook target is real).
 
-## What still needs Tim's sudo (cannot run headless)
+## What still needs a human at the keyboard (cannot run headless)
 
 The live steps in deploy.sh and the netns-based host tests (firewall-test.sh,
 container-test.sh) need root. On this box sudo requires a password, so an

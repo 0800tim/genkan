@@ -4,10 +4,10 @@
 # Enforcement (wired at deploy): 'internet'->nftables kids_block; gaming|video|
 # social->AdGuard domain blocks; always_allow (Spotify/schoolwork/help) wins.
 #
-#   kidnet off|on <person|all|kids|guests>   internet off/on (scoped)
-#   kidnet game off|on <kid>       gaming (Roblox/Fortnite/consoles)
-#   kidnet media off|on <kid>      video+social (YouTube/TikTok/Reels); Spotify stays
-#   kidnet study on|off <kid>      internet on, gaming+media off, schoolwork+audio ok
+#   kidnet off|on <scope>          internet off/on (scoped, see SCOPES below)
+#   kidnet game off|on <scope>     gaming (Roblox/Fortnite/consoles)
+#   kidnet media off|on <scope>    video+social (YouTube/TikTok/Reels); Spotify stays
+#   kidnet study on|off <scope>    internet on, gaming+media off, schoolwork+audio ok
 #   kidnet bonus <kid> <min> [why] grant extra general time (turns net back on)
 #   kidnet grant <kid> <cat> <min>  grant time to ONE category (clears its block)
 #   kidnet earn <kid> <task|min>   credit an earned task's minutes
@@ -16,12 +16,30 @@
 #   kidnet time <kid>              remaining time today
 #   kidnet dinner | resume         pause / restore ALL kids
 #   kidnet allow-sync              refresh the safety net (always_allow -> nft)
+#   kidnet iot <status|apply|learn|show|set|allow|mode>   household IoT security
+#                                  policy: what each camera, lock and gadget may
+#                                  talk to. See docs/HOUSEHOLD-SECURITY.md.
 #   kidnet devices | unassigned    devices seen; who is mapped, who is not
 #   kidnet assign <mac|ip> <person> <label> [ip]   map a device to a person
-#   kidnet person add <name> <kind> [tier]         add a person (child|guest|adult)
+#   kidnet person add <name> <role> [tier]  child|guest-child|guest-adult|adult
+#   kidnet person list             who is in the house, by role
+#   kidnet guest leave <name>      guest has gone home: unblock, free their devices
+#   kidnet guest back <name>       they are back; their old role returns
 #   kidnet recent <kid> [n]        last N domains that kid looked up
 #   kidnet topsites [n]            busiest domains across all kids today
 #   kidnet status | leases | allow-status
+#
+# SCOPES (a name, or one of these groups; see docs/HOUSEHOLD-ROLES.md)
+#   kids          household children AND visiting children. The 11pm scope.
+#   guests        every visitor, child and adult
+#   guest-kids    visiting children only
+#   guest-adults  visiting adults only
+#   adults        every grown-up, household and visiting. Nothing else touches them.
+#   household     everyone who lives here, no visitors
+#   all           everybody except adults, plus devices nobody has claimed yet
+#   everyone      literally every personal device, adults included
+# No scope ever touches a smart-home or infrastructure device: the front door
+# lock and the camera stay up through bedtime, dinner and a total cut.
 set -euo pipefail
 psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
 TABLE="inet kids"; SET="kids_block"; ALLOWSET="kids_allow"
@@ -38,15 +56,35 @@ ck_name(){ [[ "$1" =~ ^[A-Za-z0-9_-]{1,32}$ ]] || { echo "kidnet: bad name '$1'"
 ck_int(){ [[ "$1" =~ ^[0-9]{1,4}$ ]] || { echo "kidnet: bad number '$1'" >&2; exit 1; }; }
 ck_text(){ [[ "$1" =~ ^[A-Za-z0-9_:+.,\ -]{0,80}$ ]] || { echo "kidnet: bad text" >&2; exit 1; }; }
 tid(){ ck_name "$1"; psqll "SELECT id FROM children WHERE lower(name)=lower('$1')"; }
-# SAFETY: 'all', 'kids' and 'guests' only ever touch PERSONAL devices. IoT
-# (cameras, locks, speakers, fridges) and infrastructure are never cut, so a
-# bedtime "all off" can never darken the security camera or the front-door lock.
-ips_for(){ case "$1" in
-  all)    psqll "SELECT host(reserved_ip) FROM devices WHERE reserved_ip IS NOT NULL AND is_active AND category='personal'";;
-  kids)   psqll "SELECT host(d.reserved_ip) FROM devices d JOIN children c ON c.id=d.child_id WHERE c.kind='child' AND d.category='personal' AND d.reserved_ip IS NOT NULL AND d.is_active";;
-  guests) psqll "SELECT host(d.reserved_ip) FROM devices d JOIN children c ON c.id=d.child_id WHERE c.kind='guest' AND d.category='personal' AND d.reserved_ip IS NOT NULL AND d.is_active";;
-  *)      psqll "SELECT host(d.reserved_ip) FROM devices d JOIN children c ON c.id=d.child_id WHERE lower(c.name)=lower('$1') AND d.category='personal' AND d.reserved_ip IS NOT NULL";;
+# A person, by name or by database id. The dashboard has the id in hand and a
+# household can end up holding a person whose name ck_name will not pass (a
+# name typed straight into the database, say), so the guest commands take
+# either and then work purely by id.
+pid_of(){ if [[ "$1" =~ ^[0-9]{1,9}$ ]]; then psqll "SELECT id FROM children WHERE id=$1"; else tid "$1"; fi; }
+# The named groups. Anything not in this list is treated as one person's name.
+# What each one means lives in the database (people_in_scope, schema-roles.sql),
+# not here, so the firewall, the DNS layer and the dashboard cannot disagree
+# about who "kids" is.
+# The four roles, and the spellings a tired parent might type at 11pm. A bare
+# "guest" becomes a guest-child, because that is the only thing "guest" used to
+# mean here, and because the safer mistake is to filter an adult too tightly
+# rather than to leave a child unfiltered.
+canon_role(){ case "$(echo "$1" | tr 'A-Z' 'a-z')" in
+  child|kid)                                   echo child;;
+  adult|parent|grownup)                        echo adult;;
+  guest-child|guest-kid|guestchild|guestkid|kid-guest|child-guest|guest) echo guest-child;;
+  guest-adult|guestadult|adult-guest|guest-grownup) echo guest-adult;;
+  *) echo "kidnet: '$1' is not a role. Use child, guest-child, guest-adult or adult." >&2; exit 1;;
   esac; }
+SCOPES="all everyone kids guests guest-kids guest-adults adults household"
+is_scope(){ case " $SCOPES " in *" $1 "*) return 0;; esac; return 1; }
+ck_scope(){ is_scope "$1" || ck_name "$1"; }
+# SAFETY: no scope ever touches anything but a PERSONAL device. IoT (cameras,
+# locks, speakers, fridges) and infrastructure are never cut, so a bedtime
+# "all off" can never darken the security camera or the front-door lock. That
+# guard is inside ips_in_scope() in the database, in one place, and this is the
+# only way bin/kidnet ever resolves a target to addresses.
+ips_for(){ ck_scope "$1"; psqll "SELECT ip FROM ips_in_scope('$1')"; }
 audit(){ psqll "INSERT INTO block_events(target_type,target_ref,action,source,actor) VALUES('$1','$2','$3','${4:-agent}','the Hearth box')" >/dev/null; }
 # Push category_state to AdGuard's DNS layer. Best-effort and non-fatal: if
 # AdGuard is down the DB is still the source of truth and the container
@@ -54,20 +92,27 @@ audit(){ psqll "INSERT INTO block_events(target_type,target_ref,action,source,ac
 adguard_sync(){ [ -n "${ADGUARD_PASS:-}" ] || return 0
   local d; d="$(dirname "$0")/kidnet-adguard"
   [ -x "$d" ] && "$d" apply >/dev/null 2>&1 || true; }
-setcat(){ local kid="$1" cat="$2" b="$3" cid; [ "$kid" = all ] || ck_name "$kid"
-  case "$kid" in
-    all)    for c in $(psqll "SELECT name FROM children"); do setcat "$c" "$cat" "$b"; done; return;;
-    kids)   for c in $(psqll "SELECT name FROM children WHERE kind='child'"); do setcat "$c" "$cat" "$b"; done; return;;
-    guests) for c in $(psqll "SELECT name FROM children WHERE kind='guest'"); do setcat "$c" "$cat" "$b"; done; return;;
-  esac
+# One person, by database id. Ids come from the database, never from a parent's
+# typing, so a group can be expanded without every name having to survive a
+# trip through the shell. That matters: a household can hold a person called
+# "Guest (kid)", and splitting that on spaces would turn one control into two
+# failed lookups.
+setcat_id(){ psqll "INSERT INTO category_state(child_id,category,blocked,set_by) VALUES($1,'$2',$3,'agent')
+  ON CONFLICT (child_id,category) DO UPDATE SET blocked=$3, since=now(), set_by='agent'" >/dev/null; }
+setcat(){ local kid="$1" cat="$2" b="$3" cid id
+  # A group expands to the people in it. Adult guests are not in 'kids', which
+  # is the whole point: "media off kids" at 11pm must not reach grandma.
+  if is_scope "$kid"; then
+    ck_scope "$kid"
+    for id in $(psqll "SELECT id FROM people_in_scope('$kid')"); do setcat_id "$id" "$cat" "$b"; done
+    return
+  fi
+  ck_name "$kid"
   cid=$(tid "$kid"); [ -n "$cid" ] || { echo "unknown kid '$kid'"; exit 1; }
-  psqll "INSERT INTO category_state(child_id,category,blocked,set_by) VALUES($cid,'$cat',$b,'agent') ON CONFLICT (child_id,category) DO UPDATE SET blocked=$b, since=now(), set_by='agent'" >/dev/null; }
+  setcat_id "$cid" "$cat" "$b"; }
 internet(){ local kid="$1" act="$2" b ip err=0 n=0; [ "$act" = off ] && b=true || b=false
-  case "$kid" in
-    kids)   for c in $(psqll "SELECT name FROM children WHERE kind='child'");  do setcat "$c" internet "$b"; done;;
-    guests) for c in $(psqll "SELECT name FROM children WHERE kind='guest'");  do setcat "$c" internet "$b"; done;;
-    *)      setcat "$kid" internet "$b";;
-  esac
+  ck_scope "$kid"
+  setcat "$kid" internet "$b"
   if have_nft; then
     for ip in $(ips_for "$kid"); do
       n=$((n+1))
@@ -147,7 +192,16 @@ case "${1:-}" in
   penalty) cid=$(tid "${2:?kid}"); ck_int "${3:?min}"; ck_text "${4:-}"; addtime "$cid" "-${3}" penalty "${4:-}"; echo "kidnet: -$3 min from $2 (now $(remaining "$cid") left)";;
   spend)  cid=$(tid "${2:?kid}"); ck_int "${3:?min}"; ensure_day "$cid"; psqll "UPDATE time_ledger SET used_min=used_min+${3} WHERE child_id=$cid AND day=CURRENT_DATE" >/dev/null
           if [ "$(remaining "$cid")" = 0 ]; then internet "$2" off >/dev/null; psqll "UPDATE category_state SET set_by='out-of-time' WHERE child_id=$cid AND category='internet'" >/dev/null; echo "kidnet: $2 OUT OF TIME (captive portal explains)"; else echo "kidnet: $2 spent $3 ($(remaining "$cid") left)"; fi;;
-  time)   cid=$(tid "${2:?kid}"); ensure_day "$cid"
+  # No name given means "how is everybody doing", which is what a parent
+  # actually wants from a bare `kidnet time`. It used to die with a raw
+  # bash parameter error, which reached the dashboard verbatim.
+  time)   if [ -z "${2:-}" ]; then
+            for n in $(psqll "SELECT name FROM children WHERE kind IN ('child','guest-child') AND active ORDER BY name"); do
+              "$0" time "$n"
+            done
+            exit 0
+          fi
+          cid=$(tid "$2"); ensure_day "$cid"
           psqll "SELECT CASE
               WHEN budget_min >= 999 THEN name||': no daily limit (teen tier)'
               ELSE name||': '||remaining_min||' min left today (budget '||budget_min||' + bonus '||bonus_min||' - used '||used_min||')'
@@ -155,6 +209,9 @@ case "${1:-}" in
   dinner) internet all off; echo "DINNER: all off";;
   resume) internet all on;  echo "resumed: all on";;
   allow-sync)   allow_sync;;
+  # The household security layer lives in its own script, the same way the
+  # meters do. Passed straight through so there is one control surface.
+  iot) shift; exec "$(dirname "$0")/kidnet-iot-policy" "$@";;
   allow-status) if have_nft; then nftx list set $TABLE $ALLOWSET | sed -n 's/.*elements = //p'; else echo "(firewall not loaded)"; fi;;
   status) psqll "SELECT c.name||': '||string_agg(cs.category,', ' ORDER BY cs.category) FROM category_state cs JOIN children c ON c.id=cs.child_id WHERE cs.blocked GROUP BY c.name" | sed 's/^/  /' || echo "  (clean)";;
   leases) psqll "SELECT host(ip)||'  '||coalesce(hostname,'?') FROM dhcp_leases WHERE active ORDER BY ip";;
@@ -162,9 +219,13 @@ case "${1:-}" in
     SELECT coalesce(label,hostname,'(unlabelled)')||'  ['||coalesce(person,'UNASSIGNED')||']  '
            ||coalesce(ip,'-')||'  '||mac||CASE WHEN last_seen > now()-interval \$q\$5 min\$q\$ THEN '  online' ELSE '' END
     FROM device_roster ORDER BY unassigned DESC, person, label" | sed 's/^/  /';;
+  # The queue of things to hand to a person. Smart home and infrastructure are
+  # nobody's, so they do not belong in it: a smart lock sitting in a list of
+  # devices to assign to a child is the bug this queue used to have.
   unassigned) psqll "
     SELECT coalesce(hostname,'(no name)')||'  '||coalesce(ip,'-')||'  '||mac
-    FROM device_roster WHERE unassigned AND device_kind NOT IN ('ap','infra','gateway') ORDER BY last_seen DESC NULLS LAST" | sed 's/^/  /' || echo "  (none)";;
+    FROM device_roster WHERE unassigned AND category='personal'
+      AND device_kind NOT IN ('ap','infra','gateway') ORDER BY last_seen DESC NULLS LAST" | sed 's/^/  /' || echo "  (none)";;
   assign) key="${2:?mac-or-ip}"; ck_name "${3:?person}"; ck_text "${4:?label}"
     pid=$(psqll "SELECT id FROM children WHERE lower(name)=lower('$3')"); [ -n "$pid" ] || { echo "unknown person '$3' (add: kidnet person add)"; exit 1; }
     if echo "$key" | grep -q ':'; then col="mac::text='$key'"; else col="host(reserved_ip)='$key' OR id IN (SELECT device_id FROM dhcp_leases WHERE host(ip)='$key' AND device_id IS NOT NULL)"; fi
@@ -178,11 +239,58 @@ case "${1:-}" in
     echo "kidnet: assigned $n device(s) to $3 as '$4' (filtering tier applied)";;
   infra) key="${2:?mac}"; psqll "UPDATE devices SET kind='ap', child_id=NULL, notes='infrastructure, do not assign or block' WHERE mac::text='$key'" >/dev/null; echo "kidnet: marked $key as infrastructure";;
   person) case "${2:-}" in
-    add) ck_name "${3:?name}"; ck_name "${4:?kind}"; tier="${5:-}"
-         if [ -z "$tier" ]; then case "$4" in guest) tier=guest;; adult) tier=teen;; *) tier=standard;; esac; fi
-         psqll "INSERT INTO children(name,kind,policy_tier) VALUES('$3','$4','$tier') ON CONFLICT (name) DO UPDATE SET kind='$4'" >/dev/null
-         echo "kidnet: person '$3' ($4, tier $tier)";;
-    *) echo "usage: kidnet person add <name> <child|guest|adult> [tier]"; exit 1;; esac;;
+    add) ck_name "${3:?name}"; ck_name "${4:?role}"; tier="${5:-}"; role=$(canon_role "$4")
+         # Default filter level from the role. A visiting child gets 'standard'
+         # rather than the tightest level: you rarely know a friend's kid's age,
+         # standard still blocks adult, gambling, drugs, self-harm and weapons
+         # with SafeSearch on, and a parent can tighten it in one click.
+         if [ -z "$tier" ]; then case "$role" in
+           guest-adult) tier=guest;; adult) tier=adult;; *) tier=standard;; esac; fi
+         ck_name "$tier"
+         case "$role" in guest-*) arr="now()";; *) arr="NULL";; esac
+         psqll "INSERT INTO children(name,kind,policy_tier,active,arrived) VALUES('$3','$role','$tier',true,$arr)
+                ON CONFLICT (name) DO UPDATE SET kind='$role', active=true, departed=NULL" >/dev/null
+         echo "kidnet: person '$3' ($role, tier $tier)";;
+    list) psqll "
+      SELECT role_label||'  '||name||coalesce('  ('||policy_tier||')','')
+             ||'  '||devices||' device(s)'||CASE WHEN active THEN '' ELSE '   [gone home]' END
+      FROM household_roster ORDER BY CASE role WHEN 'child' THEN 1 WHEN 'guest-child' THEN 2
+        WHEN 'guest-adult' THEN 3 ELSE 4 END, name" | sed 's/^/  /';;
+    *) echo "usage: kidnet person add <name> <child|guest-child|guest-adult|adult> [tier]"; echo "       kidnet person list"; exit 1;; esac;;
+  # A guest goes home. Everything about the visit is undone in the order that
+  # cannot leave a stray block behind: unblock them FIRST (so their addresses
+  # come out of the firewall while we still know which ones are theirs), then
+  # let go of the devices, then mark them gone. They keep their row, so bringing
+  # them back next weekend is one command rather than a re-setup.
+  guest) case "${2:-}" in
+    leave) cid=$(pid_of "${3:?name-or-id}"); [ -n "$cid" ] || { echo "kidnet: nobody called '$3'"; exit 1; }
+      k=$(psqll "SELECT kind FROM children WHERE id=$cid")
+      case "$k" in guest-*) ;; *) echo "kidnet: $3 is a $k, not a guest. Household members do not leave."; exit 1;; esac
+      # Unblock FIRST, while we still know which addresses were theirs. Doing
+      # it after the devices are let go would leave their address sitting in
+      # kids_block with nothing left to say who put it there.
+      if have_nft; then
+        for ip in $(psqll "SELECT ip FROM people_devices WHERE person_id=$cid"); do
+          nftx delete element $TABLE $SET "{ $ip }" 2>/dev/null || true; done
+      fi
+      setcat_id "$cid" internet false
+      n=$(psqll "WITH u AS (UPDATE devices SET child_id=NULL, is_active=false WHERE child_id=$cid RETURNING 1) SELECT count(*) FROM u")
+      psqll "DELETE FROM category_state WHERE child_id=$cid" >/dev/null
+      psqll "UPDATE children SET active=false, departed=now() WHERE id=$cid" >/dev/null
+      psqll "INSERT INTO block_events(target_type,target_ref,action,source,actor)
+             SELECT 'child', name, 'left', 'manual', 'the Hearth box' FROM children WHERE id=$cid" >/dev/null
+      d="$(dirname "$0")/kidnet-adguard-clients"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
+      adguard_sync
+      echo "kidnet: $(psqll "SELECT name FROM children WHERE id=$cid") has gone home. $n device(s) let go, nothing left blocked, filtering tier retired.";;
+    back) cid=$(pid_of "${3:?name-or-id}"); [ -n "$cid" ] || { echo "kidnet: nobody called '$3'"; exit 1; }
+      psqll "UPDATE children SET active=true, departed=NULL, arrived=now() WHERE id=$cid" >/dev/null
+      # Their AdGuard client was removed when they left, so build it again.
+      d="$(dirname "$0")/kidnet-adguard-clients"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
+      echo "kidnet: $(psqll "SELECT name FROM children WHERE id=$cid") is back. Assign their device again: kidnet assign <mac> <name> '<label>'";;
+    list) psqll "
+      SELECT role_label||'  '||name||'  '||devices_online||' device(s) online'
+      FROM household_roster WHERE is_guest AND active ORDER BY role, name" | sed 's/^/  /' || echo "  (no guests)";;
+    *) echo "usage: kidnet guest leave|back <name> | kidnet guest list"; exit 1;; esac;;
   recent) ck_name "${2:?kid}"; psqll "
     SELECT to_char(l.ts,'HH24:MI')||'  '||l.action||'  '||l.domain
     FROM dns_log l JOIN devices d ON d.id=l.device_id JOIN children c ON c.id=d.child_id

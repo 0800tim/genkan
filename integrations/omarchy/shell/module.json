@@ -1,0 +1,10 @@
+{
+  "id": "hearth",
+  "type": "command",
+  "exec": "$HOME/.local/bin/hearth-bar-status",
+  "interval": 30,
+  "tooltip": "Hearth",
+  "onClick": "omarchy menu summon hearth",
+  "onRightClick": "$HOME/.local/bin/hearth-action dashboard",
+  "onMiddleClick": "$HOME/.local/bin/hearth-action status"
+}

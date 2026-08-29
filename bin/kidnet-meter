@@ -7,11 +7,18 @@ KN="$(command -v kidnet || echo "$(dirname "$0")/kidnet")"
 psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
 # Active kids = have a device seen recently, not already internet-blocked,
 # and a real daily budget (teen 999 = effectively unlimited, skip).
+#
+# Household children only. A visiting child is filtered and can be turned off
+# with the rest of the kids, but they have no allowance of their own to spend,
+# and an adult, visiting or not, is never metered at all.
 for kid in $(psqll "
   SELECT DISTINCT c.name FROM children c
   JOIN devices d ON d.child_id=c.id
   JOIN time_ledger l ON l.child_id=c.id AND l.day=CURRENT_DATE
-  WHERE d.last_seen > now() - interval '2 minutes'
+  WHERE c.kind='child' AND c.active
+    AND d.last_seen > now() - interval '2 minutes'
+    AND d.reserved_ip IS NOT NULL      -- only meter what we can enforce on
+    AND d.category = 'personal'        -- never meter smart home or infrastructure
     AND l.budget_min < 999
     AND NOT EXISTS (SELECT 1 FROM category_state cs WHERE cs.child_id=c.id AND cs.category='internet' AND cs.blocked)
 "); do

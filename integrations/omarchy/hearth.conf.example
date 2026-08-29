@@ -1,0 +1,53 @@
+# Hearth Omarchy integration: where the gateway is, and how to reach it.
+# Copy to ~/.config/hearth/omarchy.conf (install.sh does this for you).
+#
+# This file is sourced by bash. Keep it to plain KEY=value lines.
+
+# How to reach the gateway: local, ssh, http, or auto.
+#   auto   use kidnet on this machine if it is on PATH, then HEARTH_SSH,
+#          then HEARTH_URL. This is the default and it is usually right.
+#   local  the parent's desktop IS the gateway
+#   ssh    the gateway is another box on the tailnet
+#   http   only the dashboard is reachable, not a shell
+HEARTH_MODE=auto
+
+# local mode: the kidnet binary. deploy.sh puts it in /usr/local/bin.
+HEARTH_KIDNET=kidnet
+
+# ssh mode: user@host for the gateway. Set up a key first, this must never
+# prompt. The default options multiplex the connection so a bar polling every
+# 30 seconds costs one TCP handshake, not one per poll.
+#HEARTH_SSH=you@hearth
+#HEARTH_SSH_OPTS="-o BatchMode=yes -o ConnectTimeout=4"
+
+# http mode: the dashboard, and the shared secret if you set DASH_TOKEN on it.
+# Note the dashboard binds to the tailnet, so this is a tailnet address.
+#HEARTH_URL=http://hearth:8899
+#HEARTH_DASH_TOKEN=
+
+# Where "Open dashboard" goes. Defaults to HEARTH_URL.
+#HEARTH_DASHBOARD_URL=http://hearth:8899
+
+# Who the bar counts and the menu offers. Leave unset and it takes everyone who
+# owns a device on the roster, which includes any adults you have added. Set it
+# to just the children if you would rather be exact.
+#HEARTH_KIDS="Ada Ben Cleo"
+
+# Seconds before a slow gateway call is given up on.
+HEARTH_TIMEOUT=8
+
+# Count unacknowledged alerts in the bar. Needs a shell on the gateway
+# (local or ssh mode), because kidnet has no verb for it and the dashboard
+# does not expose one. Set to 0 to skip the query entirely.
+HEARTH_ALERTS=1
+
+# When the gateway is unreachable, show a dim home glyph (0) or nothing at
+# all (1). Nothing at all makes the item vanish from the bar.
+HEARTH_HIDE_WHEN_DOWN=0
+
+# How long to keep showing the last good answer when the gateway goes quiet,
+# before falling back to the unreachable state. Stops the bar flapping.
+HEARTH_STALE_SEC=180
+
+# Minutes remaining at which the bar item starts calling attention to itself.
+HEARTH_LOW_MIN=15

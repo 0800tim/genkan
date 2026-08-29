@@ -1,0 +1,50 @@
+/* Hearth status bar item.
+ *
+ * Deliberately colourless. Omarchy repaints Waybar for every theme, so a
+ * hardcoded hex here would be wrong on twenty-one of the twenty-two themes it
+ * ships. Everything below changes weight and opacity only, which reads
+ * correctly on light and dark themes alike and can never break the stylesheet
+ * by naming a colour a theme has not defined.
+ *
+ * The script sets these classes:
+ *   hearth   always
+ *   active   somebody is paused or needs attention
+ *   warn     somebody is out of time, or an alert is unacknowledged
+ *   paused   every kid is paused (dinner)
+ *   low      the lowest kid is near the end of their time
+ *   stale    the last answer is a little old, the gateway went quiet
+ *   down     the gateway is not reachable
+ */
+
+#custom-hearth {
+  padding: 0 8px;
+}
+
+#custom-hearth.low {
+  font-weight: bold;
+}
+
+#custom-hearth.warn {
+  font-weight: bold;
+}
+
+#custom-hearth.paused {
+  opacity: 0.75;
+}
+
+/* Quiet, not alarming. A gateway that is off or unreachable is a normal state
+ * in a house: the box gets unplugged, the laptop leaves the network. */
+#custom-hearth.stale {
+  opacity: 0.55;
+}
+
+#custom-hearth.down {
+  opacity: 0.35;
+}
+
+/* Optional. Uncomment only if your Omarchy theme's Waybar stylesheet defines
+ * these named colours, otherwise GTK will refuse the whole file.
+ *
+ * #custom-hearth.warn { color: @urgent; }
+ * #custom-hearth.down { color: @foreground; }
+ */

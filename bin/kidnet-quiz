@@ -1,0 +1,193 @@
+#!/usr/bin/env bash
+# hearth:summary=Manage learn-to-earn quiz banks: list, validate, install, remove, stats.
+#
+# The tool an AI agent drives when a parent says "make my kid a quiz on the
+# animals of Madagascar". The agent writes a bank as JSON (the shape is in
+# portal/quizzes/FORMAT.md, the recipe is in docs/runbooks/quiz-on-demand.md),
+# then hands it to this script, which checks it properly, puts it where the
+# portal can see it and tells the portal to pick it up. Nothing installs
+# without passing the validator, because a bank with a wrong answer in it
+# teaches a kid something false and takes minutes off them for being right.
+#
+#   kidnet-quiz list                    every bank, with its difficulty ramp
+#   kidnet-quiz validate <file>...      check a bank without installing it
+#   kidnet-quiz install <file> [--force]  validate, install, reload the portal
+#   kidnet-quiz remove <id>             take a bank off the portal
+#   kidnet-quiz stats [kid]             who has passed what, and how it is going
+#   kidnet-quiz reload [--container]    re-read the bank directory
+#
+# Results live in quiz_rounds / quiz_answers (config/db/schema-quizresults.sql).
+# Removing a bank never deletes them: a kid's earned minutes stay earned.
+set -euo pipefail
+
+# Repo root: this script lives in bin/. Installed to /usr/local/bin, set
+# HEARTH_REPO (or QUIZ_DIR) so it can still find the banks and the validator.
+SELF="$(readlink -f "$0")"
+REPO="${HEARTH_REPO:-$(cd "$(dirname "$SELF")/.." && pwd)}"
+QUIZ_DIR="${QUIZ_DIR:-$REPO/portal/quizzes}"
+VALIDATOR="${VALIDATOR:-$REPO/tools/validate-quizzes.mjs}"
+PORTAL_UNIT="${PORTAL_UNIT:-kids-portal.service}"
+PORTAL_CONTAINER="${PORTAL_CONTAINER:-hearth-portal}"
+psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
+ck_id(){ [[ "$1" =~ ^[a-z0-9-]{1,40}$ ]] || { echo "kidnet-quiz: bad bank id '$1' (lowercase, digits and hyphens)" >&2; exit 1; }; }
+ck_name(){ [[ "$1" =~ ^[A-Za-z0-9_-]{1,32}$ ]] || { echo "kidnet-quiz: bad name '$1'" >&2; exit 1; }; }
+need_dir(){ [ -d "$QUIZ_DIR" ] || { echo "kidnet-quiz: no bank directory at $QUIZ_DIR (set HEARTH_REPO or QUIZ_DIR)" >&2; exit 1; }; }
+need_validator(){ [ -f "$VALIDATOR" ] || { echo "kidnet-quiz: no validator at $VALIDATOR (set HEARTH_REPO)" >&2; exit 1; }; }
+
+# One line of facts about a bank file: id, title, questions, round size, pass
+# mark, minutes, and the difficulty spread. Reading JSON in bash is a bad idea,
+# so python does it (same as kidnet-catmeter).
+facts(){ python3 - "$1" <<'PY'
+import json,sys,os
+p=sys.argv[1]
+try: b=json.load(open(p,encoding="utf-8"))
+except Exception as e:
+    print("\t".join([os.path.basename(p),"UNREADABLE",str(e)[:40],"","","","",""])); raise SystemExit(0)
+qs=b.get("questions") or []
+lv=[0]*5
+for q in qs:
+    d=q.get("difficulty")
+    if isinstance(d,int) and 1<=d<=5: lv[d-1]+=1
+lab=sum(lv)
+ramp="/".join(str(x) for x in lv) if lab and lab*2>=len(qs) else "flat"
+print("\t".join([str(b.get("id","?")), str(b.get("title","?")), str(b.get("suggested_age_min","?")),
+                 str(len(qs)), str(b.get("questions_per_round","?")), str(b.get("pass_mark","?")),
+                 str(b.get("minutes_per_pass","?")), ramp]))
+PY
+}
+
+cmd_list(){ need_dir
+  local n=0
+  printf '%-20s %-26s %4s %4s %6s %5s %5s  %s\n' ID TITLE AGE Q ROUND PASS MIN "DIFFICULTY 1/2/3/4/5"
+  for f in "$QUIZ_DIR"/*.json; do
+    [ -e "$f" ] || continue
+    n=$((n+1))
+    IFS=$'\t' read -r id title age qn rnd pm min ramp < <(facts "$f")
+    printf '%-20s %-26.26s %4s %4s %6s %5s %5s  %s\n' "$id" "$title" "$age" "$qn" "$rnd" "$pm" "$min" "$ramp"
+  done
+  echo
+  echo "$n banks in $QUIZ_DIR. 'flat' means no difficulty data: the round is sampled at random"
+  echo "instead of ramped easy to hard. See portal/quizzes/FORMAT.md."
+}
+
+cmd_validate(){ need_validator
+  [ $# -gt 0 ] || { echo "usage: kidnet-quiz validate <file>..." >&2; exit 1; }
+  for f in "$@"; do [ -f "$f" ] || { echo "kidnet-quiz: no such file '$f'" >&2; exit 1; }; done
+  node "$VALIDATOR" "$@"
+}
+
+cmd_install(){ need_dir; need_validator
+  local force=0 src=""
+  for a in "$@"; do case "$a" in --force) force=1;; -*) echo "kidnet-quiz: unknown flag $a" >&2; exit 1;; *) src="$a";; esac; done
+  [ -n "$src" ] || { echo "usage: kidnet-quiz install <file.json> [--force]" >&2; exit 1; }
+  [ -f "$src" ] || { echo "kidnet-quiz: no such file '$src'" >&2; exit 1; }
+  local base id; base="$(basename "$src")"
+  case "$base" in *.json) ;; *) echo "kidnet-quiz: a bank file must be named <id>.json" >&2; exit 1;; esac
+  id="${base%.json}"; ck_id "$id"
+
+  # 1. The file itself. The validator also checks that the bank's own "id"
+  #    matches this filename, which is what the portal's URLs are built from.
+  echo "checking $src"
+  node "$VALIDATOR" "$src" || { echo "kidnet-quiz: not installed, the bank did not pass" >&2; exit 1; }
+
+  local dest="$QUIZ_DIR/$base"
+  if [ -e "$dest" ] && [ "$force" != 1 ]; then
+    echo "kidnet-quiz: $base already exists. Use --force to replace it." >&2
+    echo "  (a bank id is permanent once kids have earned from it: replacing keeps their history)" >&2
+    exit 1
+  fi
+  install -m 0644 "$src" "$dest"
+
+  # 2. The whole directory, so a clash with an existing bank cannot slip in.
+  #    If it fails now, the new file comes straight back out.
+  if ! node "$VALIDATOR"; then
+    rm -f "$dest"
+    echo "kidnet-quiz: removed $base again, it broke the set" >&2
+    exit 1
+  fi
+  echo "installed $dest"
+  cmd_reload
+  echo "kids will see it on the portal now. Try it yourself first: it is their time."
+}
+
+cmd_remove(){ need_dir
+  local id="${1:?usage: kidnet-quiz remove <id>}"; ck_id "$id"
+  local dest="$QUIZ_DIR/$id.json"
+  [ -f "$dest" ] || { echo "kidnet-quiz: no bank '$id' in $QUIZ_DIR" >&2; exit 1; }
+  rm -f "$dest"
+  echo "removed $dest"
+  echo "history kept: past rounds and the minutes they earned stay in the database."
+  cmd_reload
+}
+
+# Print a query's rows, or a friendly line when there are none. An empty quiz
+# history is the normal state of a brand new bank, not an error.
+show(){ local out; out=$(psqll "$1" 2>/dev/null || true); [ -n "$out" ] && echo "$out" || echo "  ${2:-(nothing yet)}"; }
+
+cmd_stats(){
+  if [ $# -gt 0 ]; then
+    local kid="$1"; ck_name "$kid"
+    local cid; cid=$(psqll "SELECT id FROM children WHERE lower(name)=lower('$kid')")
+    [ -n "$cid" ] || { echo "kidnet-quiz: unknown kid '$kid'" >&2; exit 1; }
+    echo "== $kid: quiz minutes earned (all time, from the time ledger)"
+    show "SELECT '  '||rpad(replace(reason,'quiz:',''),22)||lpad(count(*)::text,3)||' passes, '||lpad(sum(minutes)::text,4)||' min, last '||to_char(max(ts),'YYYY-MM-DD')
+          FROM time_events WHERE child_id=$cid AND kind='earn' AND reason LIKE 'quiz:%'
+          GROUP BY reason ORDER BY sum(minutes) DESC" "no quiz minutes earned yet"
+    echo
+    echo "== $kid: how the rounds have gone (last 30 days)"
+    show "SELECT '  '||rpad(bank_id,22)||lpad(rounds::text,3)||' rounds, '||lpad(passes::text,3)||' passed, '||lpad(round(100*accuracy)::text,3)||'% correct'
+          FROM quiz_form WHERE child_id=$cid ORDER BY last_ts DESC" "no rounds recorded yet"
+    echo
+    echo "== $kid: by difficulty (1 warm-up .. 5 stretch), last 30 days"
+    show "SELECT '  level '||difficulty||': '||lpad(round(100*accuracy)::text,3)||'% of '||asked||' questions'
+          FROM quiz_difficulty_form WHERE child_id=$cid ORDER BY difficulty" "no ramped banks taken yet"
+    echo
+    echo "  The next round is built from this: struggling gets an easier, kinder mix,"
+    echo "  comfortable gets stretched. A round is always passable either way."
+  else
+    echo "== passes per bank per kid (all time)"
+    show "SELECT '  '||rpad(c.name,10)||rpad(replace(t.reason,'quiz:',''),22)||lpad(count(*)::text,3)||' passes, '||lpad(sum(t.minutes)::text,4)||' min'
+          FROM time_events t JOIN children c ON c.id=t.child_id
+          WHERE t.kind='earn' AND t.reason LIKE 'quiz:%'
+          GROUP BY c.name, t.reason ORDER BY c.name, sum(t.minutes) DESC" "nobody has passed a quiz yet"
+    echo
+    echo "== rounds taken, passed or not (last 30 days)"
+    show "SELECT '  '||rpad(c.name,10)||rpad(f.bank_id,22)||lpad(f.rounds::text,3)||' rounds, '||lpad(f.passes::text,3)||' passed, '||lpad(round(100*f.accuracy)::text,3)||'% correct'
+          FROM quiz_form f JOIN children c ON c.id=f.child_id ORDER BY c.name, f.last_ts DESC" "no rounds recorded yet"
+    echo
+    echo "kidnet-quiz stats <kid> for one child, including how they go per difficulty level."
+  fi
+}
+
+# Tell the portal to re-read the bank directory. The host copy takes a SIGHUP.
+# The island container is deliberately left alone unless you ask: HUP only
+# reloads a portal already running the code that handles it, so on a box that
+# has not been redeployed since this feature landed, HUP would stop the
+# process instead. --container does it once you know the container is current.
+cmd_reload(){
+  local want_container=0 a
+  for a in "$@"; do [ "$a" = "--container" ] && want_container=1; done
+  if systemctl --user is-active --quiet "$PORTAL_UNIT" 2>/dev/null; then
+    systemctl --user kill --signal=HUP "$PORTAL_UNIT" && echo "reloaded $PORTAL_UNIT"
+  fi
+  if [ "$want_container" = 1 ]; then
+    docker kill --signal=HUP "$PORTAL_CONTAINER" >/dev/null 2>&1 \
+      && echo "reloaded $PORTAL_CONTAINER" \
+      || echo "note: could not signal $PORTAL_CONTAINER (is it running?)"
+  elif docker ps --format '{{.Names}}' 2>/dev/null | grep -qx "$PORTAL_CONTAINER"; then
+    echo "note: $PORTAL_CONTAINER left alone on purpose. Run 'kidnet-quiz reload --container'"
+    echo "      once it is running a portal that handles SIGHUP, or redeploy."
+  fi
+  return 0
+}
+
+case "${1:-}" in
+  list)     shift; cmd_list "$@";;
+  validate) shift; cmd_validate "$@";;
+  install)  shift; cmd_install "$@";;
+  remove)   shift; cmd_remove "$@";;
+  stats)    shift; cmd_stats "$@";;
+  reload)   shift; cmd_reload "$@";;
+  ""|-h|--help|help) awk 'NR>3 && /^#/ { sub(/^# ?/, ""); print; next } NR>3 { exit }' "$SELF";;
+  *) echo "kidnet-quiz: unknown command '$1'. Try: kidnet-quiz help" >&2; exit 1;;
+esac

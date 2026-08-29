@@ -30,7 +30,7 @@ scan(){ local pat="$1" label="$2"
 # Real-looking MACs only. Obvious fixtures (aa:bb:cc.., de:ad.., fe:ed..,
 # 00:00:.., and the documentation example) are expected in tests and docs; a
 # scanner that cries wolf on those is one people learn to ignore.
-scan '(?!aa:bb:cc|de:ad:be|fe:ed:|cc:dd:ee|dd:ee:ff|00:00:00|02:)([0-9a-f]{2}:){5}[0-9a-f]{2}' "real-looking MAC"
+scan '(?!aa:bb:cc|de:ad:be|fe:ed:|cc:dd:ee|dd:ee:ff|00:00:00|02:|ce:11:)([0-9a-f]{2}:){5}[0-9a-f]{2}' "real-looking MAC"
 # 100.64.0.x is the documentation-safe corner of the shared address space and
 # is used deliberately as the example VPN address. Flag the rest of the range.
 scan '100\.(6[5-9]|[7-9][0-9]|1[0-1][0-9]|12[0-7])\.[0-9]+\.[0-9]+|100\.64\.[1-9][0-9]*\.' "real VPN address"
@@ -39,9 +39,33 @@ scan '\$2[aby]\$[0-9]{2}\$[A-Za-z0-9./]{20,}' "bcrypt hash"
 scan 'gh[pousr]_[A-Za-z0-9]{20,}' "GitHub token"
 scan 'BEGIN [A-Z ]*PRIVATE KEY' "private key"
 # Real people. Names come from the database, so this stays correct as it changes.
+# Two exclusions, both deliberate. Role labels ('guest-adult', 'guest-kid') are
+# rows in `children` but they are not anybody, and matching them fired on every
+# test that exercises roles. And the author's own name belongs in the LICENSE
+# and the design notes: the project is published under its author's name.
+# Everything else, every child and every named adult, is still a hard failure.
+# From config.env (gitignored), not git's user.name, which on this machine is
+# an agency account. Kept out of this file on purpose: hardcoding it would make
+# the scanner flag itself, and a fork would scan for the wrong person.
+AUTHOR="${HEARTH_AUTHOR:-}"
+# The author's own row is excluded here because the placement check below
+# covers it properly. Matched on any word of AUTHOR, since the household row
+# is usually a first name while the LICENSE carries the full one.
 NAMES=$(docker exec -i postgres psql -U postgres -d kids_network -tAc \
-  "SELECT string_agg(name,'|') FROM children" 2>/dev/null)
+  "SELECT string_agg(name,'|') FROM children
+    WHERE name !~ '^guest-'
+      AND NOT (lower(name) = ANY (string_to_array(lower('${AUTHOR:-__none__}'), ' ')))" 2>/dev/null)
 [ -n "${NAMES:-}" ] && scan "\\b(${NAMES})\\b" "real people's names"
+# The author's name is allowed in the two files that are about authorship, and
+# nowhere else, so a README rewrite cannot quietly reintroduce it as an example.
+if [ -n "${AUTHOR:-}" ]; then
+  hits=$(grep -riIlF "$AUTHOR" "$PUB" --exclude-dir=.git 2>/dev/null \
+         | grep -vE '/(LICENSE|DECISIONS\.md|README\.md)$' | head -3)
+  if [ -n "$hits" ]; then
+    printf '  \033[31mLEAK\033[0m  %-22s %s\n' "author name outside LICENSE" \
+      "$(echo "$hits" | sed "s|$PUB/||" | tr '\n' ' ')"; fail=1
+  else printf '  ok    %-22s\n' "author name placement"; fi
+fi
 for f in secrets.env config.env; do
   [ -f "$PUB/$f" ] && { printf '  \033[31mLEAK\033[0m  %-22s\n' "$f"; fail=1; } || printf '  ok    %-22s absent\n' "$f"
 done

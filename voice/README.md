@@ -111,7 +111,7 @@ So the module is built on the assumption that impersonation succeeds. What
 protects the household is not the voiceprint, it is that **every voice action
 is written to `voice_events` and pushed to the parent's phone within seconds**:
 
-> +30 min to Ben, granted by voice sounding like Tim (0.71), kitchen mic
+> +30 min to Ben, granted by a voice sounding like a parent (0.71), kitchen mic
 
 A parent who did not say that sees a grant they did not make, and one tap
 reverses it. That is the whole design. The voiceprint narrows who probably

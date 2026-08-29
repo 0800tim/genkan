@@ -61,7 +61,7 @@ the admin port (host loopback, the docker network, the tailnet via the host).
 
 **Concrete attack:** the repo is published; anyone runs `git log -p` on
 `config/adguard/AdGuardHome.yaml`, extracts the hash, cracks `<the dev password>` in
-milliseconds, and now holds the admin password of the running filter. If Tim
+milliseconds, and now holds the admin password of the running filter. If the parent
 reuses that password anywhere else, it spreads.
 
 **Fix:**

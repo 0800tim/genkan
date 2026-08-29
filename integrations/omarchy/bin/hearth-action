@@ -54,16 +54,22 @@ choose_kid() {
   mapfile -t kids < <(kidnet --kids 2>/dev/null) || true
   ((${#kids[@]} > 0)) || fail "no kids to choose from"
 
+  # Fed from a here-string rather than a pipe: a picker that stops reading
+  # after the first line would otherwise SIGPIPE the writer and, with
+  # pipefail on, look exactly like the parent cancelling.
+  local list
+  list=$(printf '%s\n' "${kids[@]}")
+
   if command -v omarchy-menu-select >/dev/null 2>&1; then
     omarchy-menu-select "$prompt" "${kids[@]}"
   elif command -v walker >/dev/null 2>&1; then
-    printf '%s\n' "${kids[@]}" | walker --dmenu --placeholder "$prompt"
+    walker --dmenu --placeholder "$prompt" <<<"$list"
   elif command -v fuzzel >/dev/null 2>&1; then
-    printf '%s\n' "${kids[@]}" | fuzzel --dmenu --prompt "$prompt: "
+    fuzzel --dmenu --prompt "$prompt: " <<<"$list"
   elif command -v wofi >/dev/null 2>&1; then
-    printf '%s\n' "${kids[@]}" | wofi --dmenu --prompt "$prompt"
+    wofi --dmenu --prompt "$prompt" <<<"$list"
   elif command -v rofi >/dev/null 2>&1; then
-    printf '%s\n' "${kids[@]}" | rofi -dmenu -p "$prompt"
+    rofi -dmenu -p "$prompt" <<<"$list"
   else
     fail "no picker available (omarchy-menu-select, walker, fuzzel, wofi or rofi)"
   fi

@@ -65,7 +65,26 @@ INSERT INTO services (name,label,category,emoji,metered) VALUES
  ('minecraft','Minecraft','gaming','⛏️',true),
  ('spotify','Spotify','audio','🎧',false),
  ('khanacademy','Khan Academy','schoolwork','📚',false),
- ('googleclassroom','Google Classroom','schoolwork','🎓',false)
+ ('googleclassroom','Google Classroom','schoolwork','🎓',false),
+ -- Added because they are what a family actually uses. A service is metered
+ -- when we want its BYTES named on the live view; the time budget is per
+ -- CATEGORY, so a metered messaging or audio service is measured and labelled
+ -- without ever costing a child a minute (METERING.md).
+ ('facebook','Facebook','social','👍',true),
+ ('x','X','social','✖️',true),
+ ('reddit','Reddit','social','👽',true),
+ ('discord','Discord','social','💬',true),
+ ('pinterest','Pinterest','social','📌',true),
+ ('whatsapp','WhatsApp','messaging','💬',true),
+ ('telegram','Telegram','messaging','✈️',true),
+ ('playstation','PlayStation','gaming','🎮',true),
+ ('xbox','Xbox','gaming','🟩',true),
+ ('nintendo','Nintendo','gaming','🍄',true),
+ ('riot','Riot Games','gaming','⚔️',true),
+ ('battlenet','Battle.net','gaming','❄️',true),
+ ('applemusic','Apple Music','audio','🍎',false),
+ ('soundcloud','SoundCloud','audio','🔊',false),
+ ('duolingo','Duolingo','schoolwork','🦉',false)
 ON CONFLICT (name) DO NOTHING;
 
 INSERT INTO service_domains (service_id, domain)
@@ -84,7 +103,40 @@ SELECT s.id, d.domain FROM (VALUES
  ('minecraft','minecraft.net'),('minecraft','minecraftservices.com'),
  ('spotify','spotify.com'),('spotify','scdn.co'),('spotify','spotifycdn.com'),
  ('khanacademy','khanacademy.org'),('khanacademy','kastatic.org'),
- ('googleclassroom','classroom.google.com')
+ ('googleclassroom','classroom.google.com'),
+ -- The CDN names matter more than the front door: the front door is a few
+ -- kilobytes of HTML, the CDN is the gigabytes. Longest suffix wins, so a
+ -- download CDN sitting under a service's own domain still resolves to the
+ -- download CATEGORY in category_domains while staying named as that service
+ -- here.
+ ('youtube','yt3.ggpht.com'),('youtube','youtubei.googleapis.com'),
+ ('netflix','nflxext.com'),
+ ('primevideo','aiv-delivery.net'),
+ ('tiktok','tiktokv.com'),('tiktok','tiktokcdn-us.com'),('tiktok','muscdn.com'),
+ ('instagram','instagram.c10r.facebook.com'),
+ ('roblox','rbxinfra.com'),
+ ('fortnite','epicgames.dev'),
+ ('steam','steamserver.net'),('steam','steamcontent.com'),('steam','valve.net'),
+ ('minecraft','mojang.com'),
+ ('spotify','audio-fa.scdn.co'),
+ ('facebook','facebook.com'),('facebook','fbcdn.net'),('facebook','facebook.net'),
+ ('facebook','messenger.com'),('facebook','fb.com'),
+ ('x','x.com'),('x','twitter.com'),('x','twimg.com'),('x','t.co'),
+ ('reddit','reddit.com'),('reddit','redd.it'),('reddit','redditmedia.com'),('reddit','redditstatic.com'),
+ ('discord','discord.com'),('discord','discordapp.com'),('discord','discordapp.net'),
+ ('discord','discord.gg'),('discord','discord.media'),
+ ('pinterest','pinterest.com'),('pinterest','pinimg.com'),
+ ('whatsapp','whatsapp.com'),('whatsapp','whatsapp.net'),
+ ('telegram','telegram.org'),('telegram','t.me'),('telegram','telegram.me'),
+ ('playstation','playstation.com'),('playstation','playstation.net'),
+ ('playstation','sonyentertainmentnetwork.com'),
+ ('xbox','xbox.com'),('xbox','xboxlive.com'),('xbox','xboxservices.com'),
+ ('nintendo','nintendo.com'),('nintendo','nintendo.net'),('nintendo','nintendowifi.net'),
+ ('riot','riotgames.com'),('riot','leagueoflegends.com'),('riot','riotcdn.net'),
+ ('battlenet','battle.net'),('battlenet','blizzard.com'),('battlenet','activision.com'),
+ ('applemusic','music.apple.com'),
+ ('soundcloud','soundcloud.com'),('soundcloud','sndcdn.com'),
+ ('duolingo','duolingo.com')
 ) AS d(sname,domain) JOIN services s ON s.name=d.sname
 ON CONFLICT DO NOTHING;
 

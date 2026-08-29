@@ -1,0 +1,84 @@
+# The Hearth public demo: hearth-demo.appspurt.dev
+#
+# The REAL dashboard code from ../dashboard, mounted read only, run against a
+# throwaway Postgres full of a made-up family. Improving the dashboard improves
+# the demo, because there is no second copy of anything.
+#
+# What makes it inert, and why none of it is a matter of trust:
+#
+#  * Its own Postgres, its own volume, its own network. It has no route to the
+#    shared `postgres` container and no credentials for it.
+#  * NO docker socket. dashboard/live.mjs reaches the gateway with `docker exec`
+#    and the sampler in bin/ reaches nft the same way. With no socket in the
+#    container that path does not exist, whatever the code does.
+#  * HEARTH_DEMO=1 short-circuits runKidnet and runTool in server.mjs before
+#    execFile is ever reached, and switches live.mjs to a synthetic sampler.
+#    bin/ is not mounted either, so there is nothing to execute.
+#  * No NET_ADMIN, no host networking, no privileged flag.
+name: hearth-demo
+
+services:
+  demo-db:
+    image: postgres:16
+    container_name: hearth-demo-db
+    environment:
+      POSTGRES_PASSWORD: demo
+      POSTGRES_DB: hearth_demo
+      # Same day boundary as the reference household, so the seeded days line
+      # up with what the charts call "today".
+      TZ: Pacific/Auckland
+    volumes:
+      - demo-db:/var/lib/postgresql/data
+    networks: [demo]
+    # Deliberately NOT published. Seeding goes through `docker compose exec`.
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hearth_demo"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    restart: unless-stopped
+
+  demo-dashboard:
+    image: node:22-slim
+    container_name: hearth-demo-dashboard
+    depends_on:
+      demo-db:
+        condition: service_healthy
+    working_dir: /app
+    environment:
+      HEARTH_DEMO: "1"
+      # Same clock as the demo database, so "today" means the same thing to the
+      # page as it does to the daily ledger.
+      TZ: Pacific/Auckland
+      BIND: 0.0.0.0
+      PORT: "8899"
+      KIDS_DB_URL: postgres://postgres:demo@demo-db:5432/hearth_demo
+      QUIZ_DIR: /quizzes
+      # The control API guard. The page hands it to itself from a same-origin
+      # cookie exactly as it does at home, so the demo exercises that path too.
+      DASH_TOKEN: hearth-demo
+      # Only used for the "Speed" link in the nav. A documentation address, so
+      # nothing about the real household leaks into a public page.
+      KIDS_GW_IP: 192.168.60.1
+    volumes:
+      - ../dashboard:/app:ro
+      - ../portal/quizzes:/quizzes:ro
+    command: node server.mjs
+    networks: [demo]
+    ports:
+      - "127.0.0.1:9275:8899"
+    # node itself is the only HTTP client in this image, so it does the checking.
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:8899/').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+networks:
+  demo:
+    name: hearth-demo
+
+volumes:
+  demo-db:

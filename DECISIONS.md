@@ -350,3 +350,65 @@ Open, and deliberately not fixed in a documentation pass:
   reference box. OPERATIONS.md now carries a minimal one to copy.
 - **No seed for `tasks`.** DATABASE.md carries the INSERT to run.
 - **`schedules` is a table nothing reads.** Bedtimes are not automatic yet.
+
+## Two live-view bugs, and what they exposed (2026-08-29)
+
+Tim, looking at the live page: *"the chart at the top seems to be just showing
+video for everything... If I was downloading a game update, that should just be
+other"*, and *"the 'who's using it right now' keeps flashing in and out"*.
+
+**The chart.** Three separate faults, stacked.
+
+1. **The domain map was never in the repo.** `category_domains` is the whole
+   basis of per-category metering, and the forty-odd rows on the reference box
+   had been typed in by hand and never committed. A fresh install had an empty
+   map, so nothing could ever be categorised. It is now seeded in
+   `config/db/schema-categories.sql`, with the CDN names that actually move the
+   bytes rather than only the front doors: nobody streams from netflix.com,
+   they stream from nflxvideo.net.
+2. **Shared front doors were metered.** `kidnet-catmap` tagged any address that
+   answered for a category domain. A bare `googlevideo.com` lookup returns a
+   general Google edge address that also serves search, Gmail and the Play
+   Store, so every byte a phone sent to Google was counted as video. That is
+   precisely what Tim was seeing. The mapper now tags an address only if it
+   answered for exactly one category and for no uncategorised name in the
+   window it scanned, and withdraws one that turns out to be shared. It also
+   ignores `0.0.0.0`, which is what a blocked query resolves to: without that,
+   one blocked domain could tag the null address and swallow the island.
+   The cost is honest and stated in METERING.md: a dedicated CDN host that
+   appears once beside an uncategorised name is dropped too, so a category can
+   read low. Under the true figure is a far smaller lie than colouring the
+   whole house with it.
+3. **The address sets were add-only.** `kidnet-catmeter` added to `gaming_ips`
+   and `video_ips` and never removed, so a mis-tagged address kept colouring
+   traffic until the container was restarted. It now reconciles: flush and
+   refill in one transaction, the same pattern the gateway's `reconcile_set`
+   already uses.
+
+**Downloads are not screen time.** A 60 GB console update is the biggest thing
+on the wire all evening and it is not playing. `download` is now a category of
+its own with its own nftables set, its own band on the chart and its own
+colour, and it is deliberately excluded from budget enforcement. Two rules
+separate it from play: the content-delivery names are longer domain suffixes
+than the gaming names they sit under (so `cs.steampowered.com` beats
+`steampowered.com`), and more than 50 MB in one minute to a *gaming* address is
+booked as a download regardless. The rate rule is not applied to video, where
+4K streaming is legitimately fast. The same threshold is used by the live chart
+and by the meter, so what a parent sees and what gets booked agree.
+
+`config/nftables/kids.nft` is baked into the gateway image, so the new sets only
+reach a running island on a rebuild. `kidnet-catmeter` therefore creates them
+itself when they are absent, once, the same way `kidnet-servicemeter` creates
+its own chain. An island upgrades on the next minute tick instead of needing
+the container restarted.
+
+**The flicker.** The "who is using it right now" list was rebuilt from scratch
+whenever its membership *or its ordering* changed, and a device only appeared
+at all if it had moved a byte in that 1.5-second tick. A video buffering or a
+game between rounds dropped a device out of the list and put it back a second
+later, and two devices swapping places tore the whole card down. Now anything
+that has moved a byte in the last five minutes stays listed, fading as it goes
+quiet and showing its live rate (which may be zero) rather than a stale one,
+and rank changes move the existing rows instead of rebuilding them. Five
+minutes matches the roster's own "online" window, so a device leaves the list
+at about the moment it stops counting as online.

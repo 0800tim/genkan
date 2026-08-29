@@ -40,9 +40,13 @@ redefine things earlier ones create.
 | 9 | `schema-services.sql` | services, service_domains, service_ips, service_usage, and the seed service list |
 | 10 | `schema-voice.sql` | voice_events and the voice_recent view, for the optional voice module |
 | 11 | `schema-goals.sql` | goals: one agreed weekly target per child, read by the dashboard's Week and kid pages |
-| 12 | `seed.sql` | the three policy tiers, placeholder children, and the always_allow rows |
+| 12 | `schema-policies.sql` | the household security layer: vendor clouds and their domains, per-class and per-device IoT policy, parent grants, and the `device_policy_effective` view |
+| 13 | `schema-tasks.sql` | per-child job offers and quiz bank settings: `task_offers`, `quiz_settings`, two more columns on `tasks`, and the `task_offer_effective` view the dashboard's Learn to earn screen and the portal both read |
+| 14 | `schema-quizresults.sql` | `quiz_rounds` and `quiz_answers`, every graded quiz round including the failed ones, plus the `quiz_form` and `quiz_difficulty_form` views the portal's difficulty ramp reads |
+| 15 | `seed.sql` | the three policy tiers, placeholder children, and the always_allow rows |
+| 16 | `schema-roles.sql` | the four household roles (child, guest-child, guest-adult, adult), the `people` view with the role flags, the `people_in_scope()` and `ips_in_scope()` scope functions, and `household_roster` |
 
-Two ordering constraints are load-bearing:
+These ordering constraints are load-bearing:
 
 - `schema-devices.sql` must come **after** `schema-people.sql`. Both define the
   `device_roster` view; the later one adds `category` and `vendor`, and running
@@ -50,13 +54,26 @@ Two ordering constraints are load-bearing:
   which is what the dashboard and `kidnet devices` read.
 - `seed.sql` must come **after** `schema-safety.sql`, because its `always_allow`
   rows set the `category` column that file adds.
+- `schema-policies.sql` must come **after** `schema-devices.sql`, because its
+  `device_policy_effective` view reads `devices.category` and `devices.vendor`.
+- `schema-quizresults.sql` must come **after** `schema.sql`, because its two
+  tables hang off `children`. Nothing else depends on it: the portal treats
+  every write to it as best effort, so a gateway that has not loaded it still
+  runs quizzes and still pays out minutes, just without the difficulty ramp.
+- `schema-tasks.sql` must come **after** `schema-time.sql`, because it adds columns
+  to `tasks`, and after `schema-people.sql`, because every offer is per child.
+- `schema-roles.sql` must come **last**. It rebuilds the `people` view that
+  `schema-people.sql` created, adds the `adult` filter level to the `policies`
+  table that `seed.sql` fills, and migrates any old `kind='guest'` row to
+  `guest-child`. See [HOUSEHOLD-ROLES.md](HOUSEHOLD-ROLES.md).
 
 Load them:
 
 ```sh
 for f in schema schema-categories schema-time schema-safety schema-earn \
          schema-people schema-devices schema-flags schema-services \
-         schema-voice schema-goals seed; do
+         schema-voice schema-goals schema-policies schema-tasks \
+         schema-quizresults seed schema-roles; do
   psql "$KIDS_DB_URL" -v ON_ERROR_STOP=1 -f config/db/$f.sql
 done
 ```

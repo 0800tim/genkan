@@ -168,6 +168,33 @@ Honest caveats, also stated in the UI: services sharing a CDN blur together,
 YouTube Music counts as YouTube, Shorts cannot be separated from YouTube, and a
 VPN defeats the categorisation entirely.
 
+## More than a kid monitor: the household layer
+
+The same box is a household gateway, and the smart home is the other half of
+the job. Every device is classed as personal, smart home or infrastructure, and
+each smart device gets a policy written in terms of **who may start the
+conversation**.
+
+The case that shapes it: a security camera must keep pushing video out to its
+manufacturer's cloud, because that is what makes a stolen camera still have
+footage of the thief. So the camera may start a conversation with its vendor
+and with nothing else. Nothing on the internet may start one with the camera.
+The camera may not start one with your laptop, your phone or the robot vacuum.
+And your own phone may still start one with the camera, because a security
+control that breaks the camera app is a security control a household turns off.
+
+Locks and vacuums get the same shape. Speakers get the ordinary internet,
+because pinning an Echo to a domain list produces a broken speaker. Every
+default is a database row a parent can override for one device.
+
+It ships in observe mode, where every rule that would refuse traffic is a
+counter instead, so you can see exactly what enforcing would break before you
+commit. `docs/HOUSEHOLD-SECURITY.md` has the model, how to switch it on, and
+the limits: a vendor on a big shared CDN cannot be pinned tightly, a
+compromised device that only talks to its vendor is still compromised, and two
+devices on the same access point can talk without the gateway ever seeing it
+unless client isolation is on.
+
 ## The stack
 
 | Layer | What |
@@ -190,18 +217,26 @@ VPN defeats the categorisation entirely.
 - **Smart home is separate.** Cameras, locks and speakers are classified apart
   from personal devices and are never cut when you pause the kids. Nobody's
   front door lock goes offline at bedtime.
+- **A camera can push out, and nothing can reach in.** The household policy
+  layer pins a camera, lock or vacuum to its own vendor's cloud, so remote
+  recording and the theft backup keep working, while the internet cannot start
+  a conversation with it and it cannot roam your network. Off by default, with
+  an observe mode so you can see what it would do first.
 - **Self-harm is a care signal, never a punishment.** It alerts you and never
   routes to a blocking page.
 
 ## Tests
 
-Five suites, eighty checks, all packet-level or database-level, no mocks:
+Seven suites, a hundred and seventy checks, all packet-level or database-level,
+no mocks:
 
 ```bash
 sudo test/firewall-test.sh      # 31  the ruleset, in throwaway namespaces
 sudo test/container-test.sh     # 26  the real image, containment proven
+sudo test/iot-policy-test.sh    # 39  the household IoT policy, real packets
 sudo test/meter-test.sh         #  8  time budgets and category enforcement
 sudo test/service-meter-test.sh #  5  per-service byte accounting
+sudo test/roles-test.sh         # 51  who each scoped control reaches, and who it does not
 ADGUARD_PASS=... test/adguard-test.sh   # 10  the DNS layer, against a live AdGuard
 ```
 
@@ -225,8 +260,11 @@ help lines survive a cut.
 | `docs/DATABASE.md` | the schema, the load order, the two connection strings |
 | `docs/reporting.md` | the weekly family digest, and how to schedule it |
 | `docs/tor-and-safety.md` | the Tor and darknet layer, and its honest limits |
+| `docs/HOUSEHOLD-SECURITY.md` | what each camera, lock and gadget may talk to, and why |
+| `docs/HOUSEHOLD-ROLES.md` | children, adults and guests: who each control reaches, and who it never does |
 | `BUG-BOUNTY.md` | the household bug bounty, written for kids |
 | `docs/playbooks/` | the Switcheroo and other practical guides |
+| `integrations/omarchy/` | the Omarchy desktop integration: a status bar item and a menu |
 | `RECOMMENDATIONS.md` | age-tiered policy and what to do beyond on/off |
 | `ROADMAP.md` | what is built, what is half built, and where to help |
 | `CONTRIBUTING.md` | what a change must not weaken |
@@ -273,8 +311,11 @@ Particularly welcome:
   it should run anywhere. Packaging, hardening and making the setup less fiddly
   are all wide open.
 - **Teachers and tutors.** The quiz banks that kids earn time from are plain
-  JSON files. If you know how to teach a subject well, a good bank is worth
-  more than any feature I could write.
+  JSON files, and each question can carry a difficulty from 1 to 5 so a round
+  opens with warm-ups and gets harder as the kid goes. Your own agent can write
+  one on any topic in a few minutes (docs/runbooks/quiz-on-demand.md). If you
+  know how to teach a subject well, a good bank is worth more than any feature
+  I could write.
 - **Anyone who can break it.** Especially the filter bypasses. Found one? Open
   an issue. That is the whole spirit of the household bug bounty, scaled up.
 

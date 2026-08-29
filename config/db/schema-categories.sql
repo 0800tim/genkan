@@ -16,6 +16,110 @@ CREATE TABLE IF NOT EXISTS category_domains (
   PRIMARY KEY (category, domain)
 );
 
+-- ---------------------------------------------------------------------------
+-- The domain -> category map. This is the whole basis of per-category
+-- metering: we are the resolver, so a lookup here tells us which addresses a
+-- device is about to talk to, and the firewall counts bytes to those
+-- addresses. An empty or thin map means the meter has nothing to count and
+-- every byte falls through to "other", which is exactly what happened on the
+-- first box (the map was typed in by hand and never made it into the repo).
+--
+-- What matters far more than the front door is the CDN name the bytes
+-- actually come from: nobody streams from netflix.com, they stream from
+-- nflxvideo.net. Both are listed, and the longest suffix always wins.
+--
+-- Categories:
+--   gaming     playing. Metered.
+--   video      watching. Metered.
+--   social     scrolling. Metered (counted through the per-service sets).
+--   download   content delivery: a game update, an OS update, an app install.
+--              Bandwidth, not screen time, so it is charted and reported but
+--              NEVER charged to a child's budget. See METERING.md.
+--   audio      listening. Never metered.
+--   messaging  talking to people. Never metered.
+--   schoolwork Never metered.
+--
+-- download suffixes are deliberately longer than the gaming suffix they sit
+-- under (cs.steampowered.com beats steampowered.com), so a Steam download is
+-- classified as a download while the game itself stays gaming.
+INSERT INTO category_domains (category, domain) VALUES
+ -- ---- video ----
+ ('video','youtube.com'),('video','youtu.be'),('video','youtube-nocookie.com'),
+ ('video','googlevideo.com'),('video','ytimg.com'),('video','ggpht.com'),
+ ('video','netflix.com'),('video','nflxvideo.net'),('video','nflxso.net'),
+ ('video','nflximg.net'),('video','nflxext.com'),
+ ('video','disneyplus.com'),('video','disney-plus.net'),('video','dssott.com'),
+ ('video','bamgrid.com'),('video','disneystreaming.com'),
+ ('video','primevideo.com'),('video','aiv-cdn.net'),('video','aiv-delivery.net'),
+ ('video','tiktok.com'),('video','tiktokcdn.com'),('video','tiktokcdn-us.com'),
+ ('video','tiktokv.com'),('video','byteoversea.com'),('video','ibytedtos.com'),
+ ('video','muscdn.com'),('video','ttwstatic.com'),
+ ('video','twitch.tv'),('video','ttvnw.net'),('video','jtvnw.net'),
+ ('video','vimeo.com'),('video','vimeocdn.com'),
+ ('video','hulu.com'),('video','hulustream.com'),
+ ('video','crunchyroll.com'),('video','vrv.co'),
+ ('video','tvnz.co.nz'),('video','threenow.co.nz'),
+ ('video','dailymotion.com'),('video','dmcdn.net'),
+ -- ---- social ----
+ ('social','instagram.com'),('social','cdninstagram.com'),
+ ('social','facebook.com'),('social','fbcdn.net'),('social','facebook.net'),('social','fb.com'),
+ ('social','snapchat.com'),('social','sc-cdn.net'),('social','snap.com'),('social','snapkit.com'),
+ ('social','x.com'),('social','twitter.com'),('social','twimg.com'),('social','t.co'),
+ ('social','reddit.com'),('social','redd.it'),('social','redditmedia.com'),('social','redditstatic.com'),
+ ('social','discord.com'),('social','discordapp.com'),('social','discordapp.net'),
+ ('social','discord.gg'),('social','discord.media'),
+ ('social','pinterest.com'),('social','pinimg.com'),
+ ('social','tumblr.com'),('social','threads.net'),
+ -- ---- gaming (playing, not downloading) ----
+ ('gaming','roblox.com'),('gaming','rbxcdn.com'),('gaming','robloxlabs.com'),('gaming','rbxinfra.com'),
+ ('gaming','minecraft.net'),('gaming','minecraftservices.com'),('gaming','mojang.com'),
+ ('gaming','epicgames.com'),('gaming','fortnite.com'),('gaming','unrealengine.com'),('gaming','epicgames.dev'),
+ ('gaming','steampowered.com'),('gaming','steamcommunity.com'),('gaming','steamstatic.com'),
+ ('gaming','steamserver.net'),('gaming','valve.net'),
+ ('gaming','playstation.com'),('gaming','playstation.net'),('gaming','sonyentertainmentnetwork.com'),
+ ('gaming','xbox.com'),('gaming','xboxlive.com'),('gaming','xboxservices.com'),
+ ('gaming','nintendo.com'),('gaming','nintendo.net'),('gaming','nintendowifi.net'),
+ ('gaming','battle.net'),('gaming','blizzard.com'),('gaming','activision.com'),
+ ('gaming','ea.com'),('gaming','easports.com'),('gaming','origin.com'),
+ ('gaming','riotgames.com'),('gaming','leagueoflegends.com'),('gaming','riotcdn.net'),
+ ('gaming','ubisoft.com'),('gaming','ubi.com'),
+ ('gaming','supercell.com'),('gaming','supercellgames.com'),
+ ('gaming','miniclip.com'),('gaming','poki.com'),('gaming','coolmathgames.com'),('gaming','crazygames.com'),
+ -- ---- download: bandwidth, never screen time ----
+ ('download','steamcontent.com'),('download','cs.steampowered.com'),
+ ('download','steamcdn-a.akamaihd.net'),('download','client-download.steamstatic.com'),
+ ('download','download.epicgames.com'),('download','epicgames-download1.akamaized.net'),
+ ('download','fastly-download.epicgames.com'),('download','epicgamescdn.com'),
+ ('download','dl.playstation.net'),('download','gst.prod.dl.playstation.net'),
+ ('download','zeus.dl.playstation.net'),
+ ('download','dlassets.xboxlive.com'),('download','dlassets-ssl.xboxlive.com'),
+ ('download','assets1.xboxlive.com'),('download','assets2.xboxlive.com'),
+ ('download','xvcf1.xboxlive.com'),('download','xvcf2.xboxlive.com'),
+ ('download','d4c.nintendo.net'),('download','ccs.cdn.wup.nintendo.net'),('download','ccs.cdn.nintendo.net'),
+ ('download','setup.rbxcdn.com'),
+ ('download','launcher.mojang.com'),('download','piston-data.mojang.com'),
+ ('download','blzddist1-a.akamaihd.net'),('download','level3.blizzard.com'),
+ ('download','swcdn.apple.com'),('download','updates.cdn-apple.com'),('download','appldnld.apple.com'),
+ ('download','iosapps.itunes.apple.com'),
+ ('download','download.windowsupdate.com'),('download','dl.delivery.mp.microsoft.com'),
+ ('download','tlu.dl.delivery.mp.microsoft.com'),
+ ('download','dl.google.com'),('download','gvt1.com'),('download','redirector.gvt1.com'),
+ -- ---- audio: never metered ----
+ ('audio','spotify.com'),('audio','scdn.co'),('audio','spotifycdn.com'),
+ ('audio','music.apple.com'),('audio','audible.com'),('audio','audible.co.nz'),
+ ('audio','soundcloud.com'),('audio','sndcdn.com'),
+ -- ---- messaging: never metered ----
+ ('messaging','whatsapp.com'),('messaging','whatsapp.net'),('messaging','messenger.com'),
+ ('messaging','signal.org'),('messaging','telegram.org'),('messaging','t.me'),('messaging','telegram.me'),
+ -- ---- schoolwork: never metered ----
+ ('schoolwork','khanacademy.org'),('schoolwork','kastatic.org'),('schoolwork','kasandbox.org'),
+ ('schoolwork','classroom.google.com'),('schoolwork','docs.google.com'),('schoolwork','drive.google.com'),
+ ('schoolwork','wikipedia.org'),('schoolwork','wikimedia.org'),
+ ('schoolwork','education.govt.nz'),('schoolwork','duolingo.com'),
+ ('schoolwork','scratch.mit.edu'),('schoolwork','code.org'),('schoolwork','quizlet.com'),
+ ('schoolwork','seesaw.me'),('schoolwork','mathletics.com')
+ON CONFLICT (category, domain) DO NOTHING;
+
 -- Per-category metering (METERING.md). These three were created by hand on the
 -- first box; they belong here so a fresh deploy builds them too.
 --
@@ -48,6 +152,10 @@ CREATE TABLE IF NOT EXISTS category_budgets (
   PRIMARY KEY (child_id, category)
 );
 
--- The portal and dashboard connect as the limited kids_app role. Reads only:
--- the meter (kidnet-catmeter) and kidnet own every write to these tables.
+-- The portal and dashboard connect as the limited kids_app role. Usage and the
+-- learned addresses stay read-only: the meter (kidnet-catmeter) and kidnet own
+-- every write to those. Budgets are the exception, because a per-category
+-- budget is a parent's decision and the dashboard's manage-children area has
+-- to be able to set one; changing a budget cannot corrupt any measurement.
 GRANT SELECT ON category_usage, category_budgets, category_ips TO kids_app;
+GRANT INSERT, UPDATE, DELETE ON category_budgets TO kids_app;

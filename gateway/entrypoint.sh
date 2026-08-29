@@ -17,16 +17,20 @@ log(){ echo "[gateway] $(date -u +%FT%TZ) $*"; }
 
 # Alerts land in the same alerts table the dashboard and voice agent read.
 # Non-fatal by design: the firewall must not depend on the database being up.
-alert(){ local sev="$1" detail="$2"
+alert(){ local sev="$1" detail="$2" ack=false
   log "ALERT($sev): $detail"
+  # Routine informational events (the island coming up) are worth keeping for
+  # history but must not sit in a parent's alert queue. Anything worse than
+  # info arrives unacknowledged and demands attention.
+  [ "$sev" = info ] && ack=true
   [ -n "$DB" ] && timeout 5 psql "$DB" -qc \
-    "INSERT INTO alerts(severity,category,detail) VALUES('$sev','gateway','$(echo "$detail" | sed "s/'/''/g")')" 2>/dev/null
+    "INSERT INTO alerts(severity,category,detail,acknowledged) VALUES('$sev','gateway','$(echo "$detail" | sed "s/'/''/g")',$ack)" 2>/dev/null
   return 0; }
 
 # Segment guard: refuse to become a gateway on a wire that is already someone
 # else's network. Listens briefly for (a) another DHCP server answering, or
 # (b) traffic from private subnets that are not ours. Catches the exact
-# failure Tim fears: the Deco still bridged to the main house LAN, where our
+# failure to fear: the access point still bridged to the main house LAN, where our
 # DHCP server would fight the real router. Runs on every NIC (re)appearance.
 segment_guard(){
   local out rc bad

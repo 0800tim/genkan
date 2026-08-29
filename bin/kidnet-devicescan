@@ -26,15 +26,47 @@ PY
 printf '%s\n' "$TSV" | "${DB[@]}" -qc "
 CREATE TEMP TABLE _lease(mac text, ip inet, hostname text);
 COPY _lease FROM STDIN WITH (FORMAT text);
--- New MAC -> create an unassigned device row. Known MAC -> refresh seen + hostname.
+-- New MAC -> create an unassigned device row. Known MAC -> refresh seen +
+-- hostname. DISTINCT ON is load bearing: a device can hold more than one lease
+-- (a renewal on a new address, or a static plus a dynamic entry), and Postgres
+-- cannot apply ON CONFLICT to the same row twice within one statement.
+--
+-- last_seen is refreshed from the LEASE list, and a lease outlives the device
+-- that holds it, so last_seen alone can never mean "here right now". Presence
+-- is decided separately, from the neighbour table, further down.
 INSERT INTO devices(mac, hostname, kind, is_active, first_seen, last_seen)
-SELECT mac::macaddr, NULLIF(hostname,''), 'unknown', true, now(), now() FROM _lease
+SELECT DISTINCT ON (mac) mac::macaddr, NULLIF(hostname,''), 'unknown', true, now(), now()
+  FROM _lease ORDER BY mac, hostname DESC NULLS LAST
 ON CONFLICT (mac) DO UPDATE SET last_seen=now(),
   hostname=COALESCE(NULLIF(EXCLUDED.hostname,''), devices.hostname), is_active=true;
 -- Refresh the live lease table too (drives 'kidnet leases').
 INSERT INTO dhcp_leases(ip, mac, hostname, active, starts)
-SELECT ip, mac::macaddr, NULLIF(hostname,''), true, now() FROM _lease
-ON CONFLICT (ip) DO UPDATE SET mac=EXCLUDED.mac, hostname=EXCLUDED.hostname, active=true;"
+SELECT DISTINCT ON (ip) ip, mac::macaddr, NULLIF(hostname,''), true, now()
+  FROM _lease ORDER BY ip
+ON CONFLICT (ip) DO UPDATE SET mac=EXCLUDED.mac, hostname=EXCLUDED.hostname, active=true;
+-- A lease that has moved must drag the reservation with it. Everything that
+-- enforces anything (the block set, the meter, the AdGuard tier) keys on
+-- reserved_ip, so a stale one means we would block, meter and filter an
+-- address the device is no longer using: the controls would appear to work
+-- and quietly do nothing.
+UPDATE devices d SET reserved_ip = l.ip
+  FROM _lease l
+ WHERE d.mac = l.mac::macaddr
+   AND (d.reserved_ip IS NULL OR d.reserved_ip IS DISTINCT FROM l.ip);
+-- Stale leases for addresses a device no longer holds.
+UPDATE dhcp_leases SET active=false
+ WHERE active AND ip NOT IN (SELECT ip FROM _lease);"
+# Presence, from the gateway's neighbour table rather than the lease list. A
+# device in that table answered ARP recently, so it is genuinely on the wire.
+# A lease proves only that we gave it an address once.
+GW="${GW_CONTAINER:-hearth-gw}"
+PRESENT=$(docker exec "$GW" ip neigh show dev kids0 2>/dev/null \
+  | grep -iE 'REACHABLE|STALE|DELAY|PROBE' | awk '{print $1}' | grep -E '^[0-9]' | paste -sd, || true)
+if [ -n "${PRESENT:-}" ]; then
+  "${DB[@]}" -qc "UPDATE devices SET present_at = now()
+                   WHERE host(reserved_ip) = ANY (string_to_array('$PRESENT', ','))" 2>/dev/null || true
+fi
+
 # Auto-classify anything new (personal / iot / infra).
 d="$(dirname "$0")/kidnet-classify"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
 N=$(printf '%s\n' "$TSV" | grep -c . || true)

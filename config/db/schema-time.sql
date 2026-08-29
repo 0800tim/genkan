@@ -20,6 +20,8 @@ CREATE TABLE IF NOT EXISTS time_events (
 );
 
 -- Earnable tasks (chores / study). unrot quizzes can post 'earn' events too.
+-- A job is identified by its name, so seeding twice must not double the list.
+-- It did once, and every kid saw every chore twice.
 CREATE TABLE IF NOT EXISTS tasks (
   id       serial PRIMARY KEY,
   name     text NOT NULL,
@@ -27,6 +29,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   needs_approval boolean NOT NULL DEFAULT true,
   active   boolean NOT NULL DEFAULT true
 );
+CREATE UNIQUE INDEX IF NOT EXISTS tasks_name_uniq ON tasks (lower(name));
 
 -- Remaining minutes today for a child (budget + bonus - used), never below 0.
 CREATE OR REPLACE VIEW time_remaining AS

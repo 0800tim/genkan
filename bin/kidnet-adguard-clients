@@ -7,20 +7,36 @@
 # tiers land on the wrong devices (a stale seed config had Cleo's tier pointed
 # at addresses that later belonged to a parent's phone).
 #
-# Run after any device assignment. Idempotent, and never touches the guest
+# Run after any device assignment. Idempotent, and never touches the household
 # catch-all client.
+#
+# WHO GETS A CLIENT OF THEIR OWN (see docs/HOUSEHOLD-ROLES.md):
+#   child        yes, their age tier
+#   guest-child  yes. A visiting kid must be filtered like a kid, and an exact
+#                IP match beats the household catch-all's subnet match, so the
+#                child tier wins on their device and only their device.
+#   guest-adult  yes, but the light 'guest' level: malware and adult content,
+#                nothing else, and their queries are not logged individually.
+#                Without a client of their own they would fall through to the
+#                household catch-all, which does not block adult content.
+#   adult        NO. A household adult is effectively unrestricted, which is
+#                exactly what the catch-all already gives them.
+# People marked inactive (a guest who has gone home) are treated as having no
+# devices, so their tier stops applying the moment they leave.
 set -uo pipefail
 : "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}" "${ADGUARD_PASS:?set ADGUARD_PASS}"
 psqll(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
 
 MAP=$(psqll "
-  SELECT c.name||'|'||coalesce(string_agg(host(d.reserved_ip), ',' ORDER BY d.reserved_ip), '')
+  SELECT c.name||'|'||c.policy_tier||'|'||c.kind||'|'
+         ||CASE WHEN c.active THEN '1' ELSE '0' END||'|'
+         ||coalesce(string_agg(host(d.reserved_ip), ',' ORDER BY d.reserved_ip), '')
   FROM children c
   LEFT JOIN devices d ON d.child_id=c.id AND d.reserved_ip IS NOT NULL
-        AND d.is_active AND d.category='personal'
-  WHERE c.kind='child'
-  GROUP BY c.name")
-[ -n "$MAP" ] || { echo "kidnet-adguard-clients: no children"; exit 0; }
+        AND d.is_active AND d.category='personal' AND c.active
+  WHERE c.kind IN ('child','guest-child','guest-adult')
+  GROUP BY c.name, c.policy_tier, c.kind, c.active")
+[ -n "$MAP" ] || { echo "kidnet-adguard-clients: nobody who needs a client of their own"; exit 0; }
 
 ADGUARD_URL="$ADGUARD_URL" ADGUARD_USER="$ADGUARD_USER" ADGUARD_PASS="$ADGUARD_PASS" MAP="$MAP" python3 <<'PY'
 import os,json,base64,urllib.request
@@ -32,18 +48,107 @@ def call(path,data=None):
     r.add_header("Authorization","Basic "+auth); r.add_header("Content-Type","application/json")
     b=urllib.request.urlopen(r,timeout=10).read()
     return json.loads(b) if b else {}
+# The shipped filter level for each tier, used ONLY when a person has no
+# AdGuard client at all. An existing client is never re-templated: a parent who
+# has tuned one in the AdGuard UI keeps their tuning, and this tool goes on
+# doing the one job it has always done, which is keeping the addresses right.
+#
+# 'adult' is absent on purpose: household adults get no client of their own.
+TEMPLATES={
+  "young":  dict(parental=True,  safesearch=True,  services=[
+      "4chan","9gag","tiktok","instagram","snapchat","twitter","reddit","twitch",
+      "discord","onlyfans","tinder","grindr"]),
+  "standard": dict(parental=True, safesearch=True,  services=["4chan","onlyfans","tinder","grindr"]),
+  "teen":   dict(parental=False, safesearch=False, services=["onlyfans","tinder","grindr"]),
+  # A visiting adult: block malware (safebrowsing) and adult content (parental),
+  # and nothing else. No SafeSearch, no blocked services, no time limit, and
+  # their queries are kept out of the individual log, which is the promise the
+  # guest level makes.
+  "guest":  dict(parental=True,  safesearch=False, services=[], private=True),
+}
+# AdGuard's own tag vocabulary, so a client Hearth creates looks like one a
+# person created in the UI. Nothing here depends on the tag; it is there so the
+# AdGuard query log reads sensibly.
+TAGS={"young":["user_child"],"standard":["user_child"],"teen":["user_child"],
+      "guest":["user_regular"],"adult":["user_admin"]}
+def template(name, tier, ips):
+    t=TEMPLATES.get(tier) or TEMPLATES["standard"]
+    ss=bool(t["safesearch"])
+    return {
+      "name": name, "ids": ips, "tags": TAGS.get(tier,[]), "upstreams": [],
+      "use_global_settings": False, "filtering_enabled": True,
+      "safebrowsing_enabled": True, "parental_enabled": bool(t["parental"]),
+      "safesearch_enabled": ss,
+      "safe_search": {"enabled": ss, "bing": True, "duckduckgo": True, "ecosia": True,
+                      "google": True, "pixabay": True, "yandex": True, "youtube": True},
+      "use_global_blocked_services": False, "blocked_services": list(t["services"]),
+      "ignore_querylog": bool(t.get("private")), "ignore_statistics": bool(t.get("private")),
+    }
+
 want={}
 for line in os.environ["MAP"].splitlines():
     if not line.strip(): continue
-    name,ips=line.split("|",1)
-    want[name.strip()]=[i for i in ips.split(",") if i.strip()]
+    name,tier,role,active,ips=line.split("|",4)
+    want[name.strip()]=( tier.strip(), role.strip(), active.strip()=="1",
+                         [i for i in ips.split(",") if i.strip()] )
 clients={c.get("name"):c for c in (call("/control/clients").get("clients") or [])}
 changed=0
-parkn={}
-for name,ips in want.items():
+
+# Every identifier AdGuard is already using. AdGuard refuses two clients with
+# the same identifier, so a parking address has to be one nothing else holds.
+# Numbering the parked clients 1, 2, 3 in whatever order the query returned them
+# (which is what this did before) collides the moment one child already sits on
+# 192.0.2.1 and a different one is handed the same number: the update is
+# rejected and that client quietly keeps its old, real address, which is the
+# exact failure this tool exists to prevent. So the address is chosen from what
+# is actually free.
+in_use=set()
+for c in clients.values():
+    for i in (c.get("ids") or []): in_use.add(i)
+def park_address(cur_ids):
+    cur=set(cur_ids or [])
+    for n in range(1,255):
+        a="192.0.2.%d" % n            # TEST-NET-1, RFC 5737, never routable
+        if a in cur: return a         # already parked there, leave it be
+        if a not in in_use:
+            in_use.add(a); return a
+    return None
+
+for name,(tier,role,active,ips) in want.items():
     c=clients.get(name)
+    if not active:
+        # A guest who has gone home. Their client is deleted rather than parked:
+        # AdGuard's client list is a list of the people in the house, and it
+        # should not slowly fill with strangers. If they come back, the block
+        # below builds it again from their level the moment they have a device.
+        if c:
+            try:
+                call("/control/clients/delete",{"name":name})
+                for i in (c.get("ids") or []): in_use.discard(i)
+                print(f"  {name}: gone home, AdGuard client removed")
+                changed+=1
+            except Exception as e:
+                print(f"  {name}: could not remove their AdGuard client ({e})")
+        continue
     if not c:
-        print(f"  no AdGuard client named {name}; create it or rename one to match"); continue
+        # A guest arrives, gets a device, and their filtering has to work now,
+        # not after somebody remembers to open the AdGuard UI. Create the client
+        # from their level. AdGuard refuses a client with no identifier at all,
+        # so somebody with no device yet is created parked on an unroutable
+        # address: the client is ready, and it matches nothing until they have
+        # something to match.
+        use = ips or [park_address(None)]
+        try:
+            # /control/clients/add takes the client object directly; only
+            # /control/clients/update wraps it in {name, data}.
+            call("/control/clients/add",template(name,tier,use))
+            for i in use: in_use.add(i)
+            print(f"  {name}: created a {tier} client on {', '.join(use)}"
+                  + ("" if ips else " (parked; it matches nothing until they have a device)"))
+            changed+=1
+        except Exception as e:
+            print(f"  {name}: could not create the AdGuard client ({e}); create one named {name} by hand")
+        continue
     if not ips:
         # A child with no assigned devices must match NOTHING. Leaving stale
         # IDs behind is the exact bug this tool exists to fix: the tier would
@@ -52,9 +157,11 @@ for name,ips in want.items():
         # TEST-NET-1 address (RFC 5737, reserved for documentation and never
         # routable), which is the closest thing to "matches nothing".
         # Unique per child: AdGuard requires client identifiers to be unique,
-        # so every parked child needs its own reserved address.
-        PARK="192.0.2.%d" % (parkn.setdefault(name, len(parkn)+1))
-        if c.get("ids") and c.get("ids")!=[PARK]:
+        # so the address comes from park_address(), which picks one nothing
+        # else is holding rather than counting 1, 2, 3 and hoping.
+        PARK=park_address(c.get("ids"))
+        if PARK and c.get("ids")!=[PARK]:
+            for i in (c.get("ids") or []): in_use.discard(i)
             new=dict(c); new["ids"]=[PARK]
             try:
                 call("/control/clients/update",{"name":name,"data":new})
@@ -67,6 +174,8 @@ for name,ips in want.items():
         continue
     if sorted(c.get("ids") or [])==sorted(ips):
         continue
+    for i in (c.get("ids") or []): in_use.discard(i)
+    for i in ips: in_use.add(i)
     new=dict(c); new["ids"]=ips
     call("/control/clients/update",{"name":name,"data":new})
     print(f"  {name}: ids -> {', '.join(ips)}")

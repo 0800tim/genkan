@@ -4,9 +4,14 @@
 //
 // Five views, all server rendered so the page works with no internet and with
 // JavaScript disabled (the controls need JS, the charts and numbers do not):
-//   /          Tonight  - state and controls, unchanged behaviour
+//   /          Home     - state and controls, unchanged behaviour
+//   /live      Right now - the live wire: SSE ticks, real-time traffic charts,
+//                          filterable by person and by class of device
+//   /family    Family   - add, edit and remove people; rename and reassign devices
 //   /week      Week     - the weekly digest, with a plain-text version to send
 //   /trends    Trends   - usage, services and the earn/spend balance per kid
+//   /earn      Learn to earn - the jobs on offer per child, the quiz banks,
+//                          and the earning history
 //   /devices   Devices  - the roster and the naming queue
 //   /kid/:name Kid      - one child: their devices, time, goals and controls
 // The control API (/api/act, /api/assign, /api/claim) and its optional
@@ -16,6 +21,11 @@ import { execFile } from "node:child_process";
 import pg from "pg";
 import { analytics, digest, kidDetail, GOAL_METRICS } from "./analytics.mjs";
 import { shell, tonight, trends, devices as devicesView, week as weekView, kid as kidView } from "./views.mjs";
+import { livePage, family as familyView } from "./views.mjs";
+import { LiveWire } from "./live.mjs";
+import { householdApi } from "./household.mjs";
+import { earnData, earnPage, taskApi, quizApi, decideClaim } from "./earn.mjs";
+import { dirname, join } from "node:path";
 
 const BIND = process.env.BIND || "127.0.0.1";
 const PORT = Number(process.env.PORT || 8899);
@@ -29,8 +39,63 @@ const DASH_TOKEN = process.env.DASH_TOKEN || "";
 // docker-network name, host processes via the published localhost port.
 const pool = new pg.Pool({ connectionString: process.env.IN_CONTAINER ? process.env.KIDS_DB_URL_DOCKER : process.env.KIDS_DB_URL });
 const q = (t, p) => pool.query(t, p).then(r => r.rows);
-const runKidnet = args => new Promise(res => execFile("bash", [KIDNET, ...args], { timeout: 8000 },
+// The public demo (demo/compose.yaml) runs THIS file, unchanged, against a
+// throwaway database full of a made-up family. HEARTH_DEMO=1 is the one switch
+// that makes that safe: every path that would shell out goes through runKidnet
+// or runTool below, and with the flag set neither of them reaches execFile at
+// all. There is no firewall, no kidnet and no AdGuard behind a demo, so a
+// control answers honestly instead of failing in a way nobody can read.
+// Unset (the household default) this is a strict no-op: the two consts below
+// are exactly what they always were.
+const DEMO = process.env.HEARTH_DEMO === "1";
+const DEMO_REPLY = () => ({ ok: true, out: "This is the demo, so nothing was actually changed." });
+const runKidnet = DEMO ? async () => DEMO_REPLY() : args => new Promise(res => execFile("bash", [KIDNET, ...args], { timeout: 8000 },
   (e, so, se) => res({ ok: !e, out: (so || "") + (se || "") })));
+// The AdGuard side of a change. These two tools already own the whole mapping
+// between children, their assigned addresses and the DNS filter, so a rename,
+// a new child, a removal or a reassignment calls them rather than
+// reimplementing any of it. They are slower than a query (they talk to AdGuard
+// over HTTP), hence the longer timeout.
+const BINDIR = dirname(KIDNET);
+const runTool = DEMO ? async () => DEMO_REPLY() : (name, args = []) => new Promise(res =>
+  execFile("bash", [join(BINDIR, name), ...args], { timeout: 25000 },
+    (e, so, se) => res({ ok: !e, out: ((so || "") + (se || "")).trim() })));
+async function syncAdguard() {
+  const a = await runTool("kidnet-adguard-clients");
+  const b = await runTool("kidnet-adguard", ["apply"]);
+  const lines = [a.out, b.out].filter(Boolean).join(" ");
+  return { ok: a.ok && b.ok, out: lines };
+}
+
+// One sampler for the whole process; it only runs while a page is watching.
+const wire = new LiveWire(q, m => console.log(m));
+
+const readJson = async req => {
+  let b = "";
+  req.on("data", c => { b += c; if (b.length > 64000) req.destroy(); });
+  await new Promise(r => { req.on("end", r); req.on("close", r); });
+  try { return JSON.parse(b || "{}"); } catch { return {}; }
+};
+// Exactly kidnet's own gate. A person's name reaches bin/kidnet on the command
+// line, so anything it would refuse must be refused here, with a message a
+// parent can act on rather than a shell error.
+const NAME_RE = /^[A-Za-z0-9_-]{1,32}$/;
+const LABEL_RE = /^[A-Za-z0-9_:+.,'’ -]{1,40}$/;
+// The vocabulary the database enforces (children_kind_ck) and the filter
+// levels the policies table actually holds. Read once at start so adding a
+// level is a database row, not an edit here.
+const KINDS = ["child", "guest-child", "guest-adult", "adult"];
+let TIERS = ["young", "standard", "teen", "guest", "adult"];
+q("SELECT tier FROM policies").then(r => { if (r.length) TIERS = r.map(x => x.tier); }).catch(() => {});
+const CLASSES = ["personal", "iot", "infra"];
+const BUDGET_CATS = ["gaming", "video", "social"];
+// "" / null / undefined mean "no limit"; anything else must be a sane count of
+// minutes. Returns undefined for "leave this alone".
+function minutes(v) {
+  if (v === "" || v === null || v === undefined) return null;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 && n <= 1440 ? Math.round(n) : undefined;
+}
 
 async function state() {
   // NOTE: this list must stay in the same order as the queries below. It did
@@ -38,12 +103,21 @@ async function state() {
   // alerts held the people list, times held block_events and claims held the
   // time ledger. With almost no data in the tables nothing looked wrong; with
   // real rows every one of those panels showed the wrong thing.
-  const [children, devices, people, alerts, alertsAck, cats, events, times, claims] = await Promise.all([
-    q("SELECT id,name,age,policy_tier FROM children ORDER BY age"),
+  const [children, devices, people, household, alerts, alertsAck, cats, events, times, claims] = await Promise.all([
+    // Every person, with the role flags, so a page can say "the kids" (which
+    // now includes a visiting child) without a second query.
+    q(`SELECT id,name,age,policy_tier,kind,active,is_kid,is_guest,is_adult,is_household_child
+       FROM people ORDER BY kind,age,name`),
     q(`SELECT id,label,hostname,mac,ip,device_kind,category,vendor,person,person_kind,unassigned,
          (last_seen > now()-interval '5 minutes') AS online
        FROM device_roster ORDER BY unassigned DESC, online DESC, person NULLS LAST, label`),
-    q("SELECT name,kind FROM children ORDER BY kind,name"),
+    q("SELECT name,kind FROM people WHERE active ORDER BY kind,name"),
+    // Everyone, every role, past guests included: the Family page and the
+    // "who is in the house" panel.
+    q(`SELECT id,name,age,policy_tier,role AS kind,role_label,is_kid,is_guest,is_adult,
+         is_household_child,active,devices,devices_online
+       FROM household_roster ORDER BY active DESC,
+         CASE role WHEN 'child' THEN 1 WHEN 'guest-child' THEN 2 WHEN 'guest-adult' THEN 3 ELSE 4 END, name`),
     q("SELECT id,ts,severity,category,domain,detail FROM alerts WHERE NOT acknowledged ORDER BY ts DESC LIMIT 10"),
     // Acknowledged alerts are kept, not deleted: "we talked about it" is part
     // of the record, and a parent should be able to check what they already
@@ -56,14 +130,15 @@ async function state() {
        JOIN children c ON c.id=ec.child_id JOIN tasks t ON t.id=ec.task_id
        WHERE ec.status='pending' ORDER BY ec.ts`),
   ]);
-  return { children, devices, alerts, alertsAck, cats, events, times, claims, people };
+  return { children, devices, alerts, alertsAck, cats, events, times, claims, people , household }
 }
 
 const authed = req => !DASH_TOKEN || (req.headers["x-dash-token"] === DASH_TOKEN);
 
 const server = createServer(async (req, res) => {
   try {
-    if (req.method === "POST" && ["/api/claim", "/api/act", "/api/assign", "/api/ack", "/api/goal"].includes(req.url) && !authed(req)) {
+    if (req.method === "POST" && ["/api/claim", "/api/act", "/api/assign", "/api/ack", "/api/goal",
+      "/api/child", "/api/tier", "/api/device", "/api/household", "/api/task", "/api/quiz"].includes(req.url) && !authed(req)) {
       res.writeHead(403, { "content-type": "application/json" }); res.end('{"out":"forbidden"}'); return; }
     if (req.method === "POST" && req.url === "/api/assign") {
       let b = ""; req.on("data", c => b += c); await new Promise(r => req.on("end", r));
@@ -76,14 +151,18 @@ const server = createServer(async (req, res) => {
       let b = ""; req.on("data", c => b += c); await new Promise(r => req.on("end", r));
       const { id, decision } = JSON.parse(b || "{}");
       if (!Number.isInteger(id) || !["approve", "decline"].includes(decision)) { res.writeHead(400).end('{"out":"bad claim"}'); return; }
-      const [cl] = await q(`UPDATE earn_claims SET status=$2, decided_by='dashboard', decided_ts=now()
-        WHERE id=$1 AND status='pending' RETURNING child_id, task_id`, [id, decision === "approve" ? "approved" : "declined"]);
-      let out = "declined";
-      if (cl && decision === "approve") {
-        const [info] = await q("SELECT c.name kid, t.name task FROM children c, tasks t WHERE c.id=$1 AND t.id=$2", [cl.child_id, cl.task_id]);
-        out = (await runKidnet(["earn", info.kid, info.task])).out;
-      }
+      // The decision, the minutes and the unblock all live in earn.mjs now,
+      // because the reward can differ per child and the old path looked the
+      // minutes back up by a fuzzy match on the task's name.
+      const out = await decideClaim(q, runKidnet, id, decision);
       res.writeHead(200, { "content-type": "application/json" }); res.end(JSON.stringify({ ok: true, out })); return;
+    }
+    // Learn to earn: the jobs on offer, and which quizzes count for whom.
+    // Same guard as every other control, and nothing here touches the network.
+    if (req.method === "POST" && (req.url === "/api/task" || req.url === "/api/quiz")) {
+      const body = await readJson(req);
+      if (req.url === "/api/task") await taskApi(q, body, res); else await quizApi(q, body, res);
+      return;
     }
     if (req.method === "POST" && req.url === "/api/ack") {
       // Mark an alert as talked about. The only thing it changes is whether the
@@ -143,10 +222,176 @@ const server = createServer(async (req, res) => {
         res.writeHead(400).end('{"out":"bad command"}'); return; }
       res.writeHead(200, { "content-type": "application/json" }); res.end(JSON.stringify(await runKidnet(args))); return;
     }
+    // ---- household roles: guests arriving and leaving, and filing a device
+    // as smart home or infrastructure. See dashboard/household.mjs.
+    if (req.method === "POST" && req.url === "/api/household") {
+      const r = await householdApi(await readJson(req), { q, runKidnet, syncAdguard });
+      res.writeHead(r.code, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ok: r.ok, out: r.out })); return;
+    }
+
+    // ---- manage: people ----------------------------------------------------
+    // Add, edit or remove a child or guest. Every path that changes a name, a
+    // tier or who owns what finishes by pushing the result to AdGuard through
+    // the existing tools, so the DNS filter can never drift from the database.
+    if (req.method === "POST" && req.url === "/api/child") {
+      const b = await readJson(req);
+      const send = (code, out, ok = false) => {
+        res.writeHead(code, { "content-type": "application/json" });
+        res.end(JSON.stringify({ ok, out }));
+      };
+      if (b.op === "add") {
+        const name = String(b.name || "").trim();
+        const kind = String(b.kind || "child");
+        const tier = String(b.tier || "standard");
+        if (!NAME_RE.test(name)) return send(400, "A name can be letters, numbers, - and _ , up to 32 characters.");
+        if (!KINDS.includes(kind) || !TIERS.includes(tier)) return send(400, "That is not one of the choices.");
+        const [dup] = await q("SELECT id FROM children WHERE lower(name)=lower($1)", [name]);
+        if (dup) return send(400, `There is already somebody called ${name}.`);
+        // kidnet owns "add a person": same validation, same defaults, one place.
+        const add = await runKidnet(["person", "add", name, kind, tier]);
+        if (!add.ok) return send(500, add.out.trim() || "could not add them");
+        const age = minutes(b.age);
+        if (age !== undefined && age !== null) await q("UPDATE children SET age=$2 WHERE lower(name)=lower($1)", [name, age]);
+        const ag = await syncAdguard();
+        return send(200, `${name} added. ${ag.out || ""}`.trim(), true);
+      }
+      if (b.op === "save") {
+        const id = Number(b.id);
+        if (!Number.isInteger(id) || id <= 0) return send(400, "which person?");
+        const [cur] = await q("SELECT id,name FROM children WHERE id=$1", [id]);
+        if (!cur) return send(404, "no such person");
+        const name = String(b.name || "").trim();
+        const kind = String(b.kind || "child");
+        const tier = String(b.tier || "standard");
+        if (!NAME_RE.test(name)) return send(400, "A name can be letters, numbers, - and _ , up to 32 characters.");
+        if (!KINDS.includes(kind) || !TIERS.includes(tier)) return send(400, "That is not one of the choices.");
+        const age = minutes(b.age);
+        if (age === undefined) return send(400, "That age does not look right.");
+        const [clash] = await q("SELECT id FROM children WHERE lower(name)=lower($1) AND id<>$2", [name, id]);
+        if (clash) return send(400, `There is already somebody called ${name}.`);
+        await q("UPDATE children SET name=$2, age=$3, kind=$4, policy_tier=$5 WHERE id=$1",
+          [id, name, age, kind, tier]);
+        // Budgets: a number is a cap, an empty box means no cap, so the row goes.
+        const budgets = b.budgets && typeof b.budgets === "object" ? b.budgets : {};
+        for (const cat of BUDGET_CATS) {
+          if (!Object.prototype.hasOwnProperty.call(budgets, cat)) continue;
+          const m = minutes(budgets[cat]);
+          if (m === undefined) return send(400, `That ${cat} limit does not look right.`);
+          if (m === null || m === 0) await q("DELETE FROM category_budgets WHERE child_id=$1 AND category=$2", [id, cat]);
+          else await q(`INSERT INTO category_budgets(child_id,category,daily_min) VALUES($1,$2,$3)
+                        ON CONFLICT (child_id,category) DO UPDATE SET daily_min=EXCLUDED.daily_min`, [id, cat, m]);
+        }
+        const ag = await syncAdguard();
+        const renamed = cur.name !== name ? ` Renamed from ${cur.name}: check AdGuard has a client called ${name}.` : "";
+        return send(200, `Saved.${renamed} ${ag.out || ""}`.trim(), true);
+      }
+      if (b.op === "remove") {
+        const id = Number(b.id);
+        if (!Number.isInteger(id) || id <= 0) return send(400, "which person?");
+        const [cur] = await q("SELECT id,name FROM children WHERE id=$1", [id]);
+        if (!cur) return send(404, "no such person");
+        // devices.child_id is ON DELETE SET NULL, so their devices survive as
+        // unassigned rather than disappearing off the network. Everything else
+        // that hangs off a child (time, budgets, usage, blocks) cascades.
+        const [{ count } = { count: "0" }] = await q(
+          "SELECT count(*)::text AS count FROM devices WHERE child_id=$1", [id]);
+        await q("DELETE FROM children WHERE id=$1", [id]);
+        const ag = await syncAdguard();
+        return send(200, `${cur.name} removed. ${count} device(s) are now unassigned and need an owner. ${ag.out || ""}`.trim(), true);
+      }
+      return send(400, "bad request");
+    }
+
+    // ---- manage: what a filter level allows --------------------------------
+    if (req.method === "POST" && req.url === "/api/tier") {
+      const b = await readJson(req);
+      const tier = String(b.tier || "");
+      const school = minutes(b.school), weekend = minutes(b.weekend);
+      if (!TIERS.includes(tier)) { res.writeHead(400, { "content-type": "application/json" }); res.end('{"out":"no such level"}'); return; }
+      if (school === undefined || weekend === undefined) {
+        res.writeHead(400, { "content-type": "application/json" }); res.end('{"out":"Those minutes do not look right."}'); return; }
+      await q(`INSERT INTO policies(tier,daily_budget_school_min,daily_budget_weekend_min)
+               VALUES($1,$2,$3) ON CONFLICT (tier) DO UPDATE
+               SET daily_budget_school_min=EXCLUDED.daily_budget_school_min,
+                   daily_budget_weekend_min=EXCLUDED.daily_budget_weekend_min`, [tier, school, weekend]);
+      res.writeHead(200, { "content-type": "application/json" });
+      res.end(JSON.stringify({ ok: true, out: `Saved. It applies from each person's next day, not retroactively.` })); return;
+    }
+
+    // ---- manage: one device ------------------------------------------------
+    if (req.method === "POST" && req.url === "/api/device") {
+      const b = await readJson(req);
+      const send = (code, out, ok = false) => {
+        res.writeHead(code, { "content-type": "application/json" });
+        res.end(JSON.stringify({ ok, out }));
+      };
+      const id = Number(b.id);
+      if (!Number.isInteger(id) || id <= 0) return send(400, "which device?");
+      const [d] = await q("SELECT id, mac::text AS mac, label, category, child_id FROM devices WHERE id=$1", [id]);
+      if (!d) return send(404, "no such device");
+      const label = String(b.label || "").trim();
+      const cls = String(b.cls || "personal");
+      const person = String(b.person || "").trim();
+      if (label && !LABEL_RE.test(label)) return send(400, "A device name can be letters, numbers and simple punctuation, up to 40 characters.");
+      if (!CLASSES.includes(cls)) return send(400, "That is not one of the choices.");
+      if (person && !NAME_RE.test(person)) return send(400, "That owner name is not one Hearth knows.");
+      // Only a person's own device can belong to a person. Smart home kit and
+      // infrastructure are the household's, never a child's, so moving a device
+      // into either class also takes it off whoever had it.
+      if (cls !== "personal" && person) return send(400, "Smart home and infrastructure devices are the household's, so they cannot be assigned to a person.");
+      let out = [];
+      if (cls !== (d.category || "personal")) {
+        await q("UPDATE devices SET category=$2 WHERE id=$1", [id, cls]);
+        out.push(cls === "iot" ? "Moved to smart home." : cls === "infra" ? "Moved to infrastructure." : "Moved back to people's devices.");
+      }
+      if (person) {
+        const [p] = await q("SELECT id FROM children WHERE lower(name)=lower($1)", [person]);
+        if (!p) return send(400, `Hearth does not know anybody called ${person}.`);
+        // kidnet assign already updates the row, writes the audit trail and
+        // pushes the new address to AdGuard, so it does all three at once.
+        const r = await runKidnet(["assign", d.mac || String(id), person, label || d.label || "device"]);
+        out.push(r.out.trim() || "assigned");
+      } else {
+        await q("UPDATE devices SET child_id=NULL, label=COALESCE(NULLIF($2,''), label) WHERE id=$1", [id, label]);
+        if (d.child_id) out.push("Nobody owns it now, so it has no filter level and no time limit.");
+        else if (label && label !== d.label) out.push("Renamed.");
+        const ag = await syncAdguard();
+        if (ag.out) out.push(ag.out);
+      }
+      return send(200, out.join(" ") || "Nothing to change.", true);
+    }
+
+    // ---- the live wire -----------------------------------------------------
+    // Server-sent events, not a websocket: it is one-way, it survives a proxy
+    // that only speaks HTTP, and the browser reconnects on its own. Handled
+    // before the page code below so a stream never pays for a state() query.
+    if (req.method === "GET" && req.url === "/api/stream") { wire.attach(req, res); return; }
+    // The same numbers as one JSON object, for anything that cannot hold a
+    // stream open: a watch face, a script, or a quick look with curl.
+    if (req.method === "GET" && req.url === "/api/live.json") {
+      await wire.refreshMeta(true);
+      // Two reads a real interval apart, because a rate is a difference: back
+      // to back they would divide a tick's bytes by a few milliseconds and
+      // report a number that never happened.
+      if (!wire.last) {
+        await wire.ensureTotals(true);
+        await wire.tick();
+        await new Promise(r => setTimeout(r, 1000));
+        await wire.tick();
+      }
+      res.writeHead(200, { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" });
+      res.end(JSON.stringify(wire.snapshot())); return;
+    }
+
     // ---- pages -------------------------------------------------------------
     const url = new URL(req.url, "http://localhost");
     const headers = { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" };
-    if (DASH_TOKEN) headers["set-cookie"] = `dash=${DASH_TOKEN}; Path=/; SameSite=Strict; HttpOnly=false`;
+    // The page's own script reads this cookie to sign its control calls, so it
+    // must NOT be HttpOnly. Writing "HttpOnly=false" does not disable the flag:
+    // browsers key off the attribute name alone, so that spelling switched it ON
+    // and every control silently 403'd. Omit the attribute entirely.
+    if (DASH_TOKEN) headers["set-cookie"] = `dash=${DASH_TOKEN}; Path=/; SameSite=Strict`;
     const s = await state();
     let html;
     if (url.pathname === "/week") {
@@ -166,10 +411,27 @@ const server = createServer(async (req, res) => {
     } else if (url.pathname === "/trends") {
       const days = url.searchParams.get("days") === "30" ? 30 : 7;
       html = shell({ tab: "/trends", title: "Hearth trends", body: trends(s, await analytics(q, days)) });
+    } else if (url.pathname === "/live") {
+      html = shell({ tab: "/live", title: "Hearth: right now", body: livePage(s) });
+    } else if (url.pathname === "/family") {
+      // Everything the manage area needs that the shared state() does not
+      // already carry: the per-child category caps, how many devices each
+      // person actually has, and the per-tier daily allowances.
+      const [budgets, counts, policies] = await Promise.all([
+        q("SELECT child_id, category, daily_min FROM category_budgets"),
+        q("SELECT child_id, count(*)::int AS n FROM devices WHERE child_id IS NOT NULL GROUP BY child_id"),
+        q("SELECT tier, description, daily_budget_school_min, daily_budget_weekend_min FROM policies"),
+      ]);
+      const mg = { policies, budgets: {}, deviceCounts: {} };
+      for (const b of budgets) (mg.budgets[b.child_id] ||= {})[b.category] = b.daily_min;
+      for (const c of counts) mg.deviceCounts[c.child_id] = c.n;
+      html = shell({ tab: "/family", title: "Hearth family", body: familyView(s, mg) });
+    } else if (url.pathname === "/earn") {
+      html = shell({ tab: "/earn", title: "Hearth: learn to earn", body: earnPage(await earnData(q)) });
     } else if (url.pathname === "/devices") {
       html = shell({ tab: "/devices", title: "Hearth devices", body: devicesView(s) });
     } else if (url.pathname === "/" || url.pathname === "/index.html") {
-      // Tonight leans on a short window for the "last 7 days" lines under each
+      // Home leans on a short window for the "last 7 days" lines under each
       // kid; if the analytics query fails the controls must still render.
       let a = null;
       try { a = await analytics(q, 7); } catch (e) { a = null; }

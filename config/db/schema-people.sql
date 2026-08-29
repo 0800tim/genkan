@@ -8,6 +8,10 @@
 ALTER TABLE children ADD COLUMN IF NOT EXISTS kind text NOT NULL DEFAULT 'child';
   -- child | guest | adult
 COMMENT ON COLUMN children.kind IS 'child | guest | adult';
+-- SUPERSEDED by config/db/schema-roles.sql, which splits 'guest' into
+-- 'guest-child' and 'guest-adult' and migrates any old row. This file is kept
+-- as it was because the load order is additive; read schema-roles.sql for the
+-- vocabulary that is actually enforced, and docs/HOUSEHOLD-ROLES.md for why.
 
 -- Readability alias for new code (reads only; writes still go to children).
 CREATE OR REPLACE VIEW people AS SELECT * FROM children;

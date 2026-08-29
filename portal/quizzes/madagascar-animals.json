@@ -1,0 +1,584 @@
+{
+  "id": "madagascar-animals",
+  "title": "Animals of Madagascar",
+  "emoji": "🦎",
+  "suggested_age_min": 12,
+  "minutes_per_pass": 10,
+  "pass_mark": 8,
+  "questions_per_round": 10,
+  "source_note": "Written for ages 12 to 15 as the worked example in docs/runbooks/quiz-on-demand.md. Facts checked against general reference sources on Malagasy wildlife, 2026-08-29.",
+  "questions": [
+    {
+      "id": "mad-001",
+      "prompt": "Madagascar is a large island off the coast of which continent?",
+      "choices": [
+        "Africa",
+        "South America",
+        "Australia",
+        "Asia"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Madagascar sits in the Indian Ocean off the south-east coast of Africa."
+    },
+    {
+      "id": "mad-002",
+      "prompt": "Which group of animals lives in the wild only on Madagascar?",
+      "choices": [
+        "Lemurs",
+        "Monkeys",
+        "Koalas",
+        "Sloths"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Every wild lemur in the world lives on Madagascar and nowhere else."
+    },
+    {
+      "id": "mad-003",
+      "prompt": "A lemur is what kind of animal?",
+      "choices": [
+        "A primate",
+        "A rodent",
+        "A marsupial",
+        "A cat"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Lemurs are primates, so they are distant relatives of monkeys, apes and us."
+    },
+    {
+      "id": "mad-004",
+      "prompt": "Madagascar's chameleons are famous for being able to do what?",
+      "choices": [
+        "Change the colour of their skin",
+        "Breathe under water",
+        "Fly short distances",
+        "Grow a new tail every year"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Chameleons shift colour to control their temperature and to signal mood, not just to hide."
+    },
+    {
+      "id": "mad-005",
+      "prompt": "What gives the ring-tailed lemur its name?",
+      "choices": [
+        "Its long black and white striped tail",
+        "A ring of fur around its neck",
+        "The circles it runs in",
+        "Rings around its eyes"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "That striped tail is held up like a flag so the troop can follow each other through the scrub."
+    },
+    {
+      "id": "mad-006",
+      "prompt": "When is the aye-aye active?",
+      "choices": [
+        "At night",
+        "At midday",
+        "Only at dawn",
+        "Only in winter"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "The aye-aye is nocturnal, and it is the largest nocturnal primate in the world."
+    },
+    {
+      "id": "mad-007",
+      "prompt": "The fossa is Madagascar's biggest meat-eating mammal. What does it mostly hunt?",
+      "choices": [
+        "Lemurs",
+        "Fish",
+        "Antelope",
+        "Seals"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Fossa are built for chasing lemurs through the treetops, which is why the two are found together."
+    },
+    {
+      "id": "mad-008",
+      "prompt": "A tenrec looks most like which familiar animal?",
+      "choices": [
+        "A hedgehog",
+        "A squirrel",
+        "A rabbit",
+        "A badger"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Some tenrecs look just like hedgehogs, though they are not related at all."
+    },
+    {
+      "id": "mad-009",
+      "prompt": "Where do most lemurs spend their time?",
+      "choices": [
+        "In the trees",
+        "Underground",
+        "In rivers",
+        "On the open beach"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Most lemurs are forest animals, which is why losing forest is their biggest problem."
+    },
+    {
+      "id": "mad-010",
+      "prompt": "What do most lemurs mainly eat?",
+      "choices": [
+        "Fruit and leaves",
+        "Meat",
+        "Fish",
+        "Grass seeds only"
+      ],
+      "answer_index": 0,
+      "difficulty": 1,
+      "explanation": "Most lemurs live on fruit and leaves, with a few insects and flowers on the side."
+    },
+    {
+      "id": "mad-011",
+      "prompt": "Which is the largest lemur alive today?",
+      "choices": [
+        "The indri",
+        "The ring-tailed lemur",
+        "The aye-aye",
+        "The mouse lemur"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "An indri can weigh around 7 kg, which makes it the heaviest lemur still living."
+    },
+    {
+      "id": "mad-012",
+      "prompt": "The world's smallest primate is a Malagasy animal. Which one?",
+      "choices": [
+        "A mouse lemur",
+        "A tarsier",
+        "A marmoset",
+        "A tree shrew"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Madame Berthe's mouse lemur weighs about 30 grams, roughly the same as three teaspoons of sugar."
+    },
+    {
+      "id": "mad-013",
+      "prompt": "The fossa's closest relatives are which group of animals?",
+      "choices": [
+        "Mongooses",
+        "Big cats",
+        "Dogs",
+        "Bears"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Fossa look cat-like but descend from a mongoose-like ancestor that reached the island long ago."
+    },
+    {
+      "id": "mad-014",
+      "prompt": "What was the elephant bird?",
+      "choices": [
+        "A giant flightless bird that is now extinct",
+        "A bird that rides on elephants",
+        "A very small hummingbird",
+        "A kind of bat"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Elephant birds were the heaviest birds ever known, and they died out around a thousand years ago."
+    },
+    {
+      "id": "mad-015",
+      "prompt": "Roughly what share of Madagascar's wild species is found nowhere else on Earth?",
+      "choices": [
+        "About 90%",
+        "About 10%",
+        "About 30%",
+        "About 50%"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Around nine in ten Malagasy species are endemic, which means they live there and only there."
+    },
+    {
+      "id": "mad-016",
+      "prompt": "About half of the world's species of which reptile live on Madagascar?",
+      "choices": [
+        "Chameleons",
+        "Crocodiles",
+        "Sea turtles",
+        "Pythons"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Roughly half of all known chameleon species are Malagasy, and most live nowhere else."
+    },
+    {
+      "id": "mad-017",
+      "prompt": "How does Verreaux's sifaka cross open ground?",
+      "choices": [
+        "It hops sideways on its back legs",
+        "It runs on all fours",
+        "It burrows underneath",
+        "It glides between trees"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Sifakas are built for leaping between trunks, so on the ground they bounce sideways instead of walking."
+    },
+    {
+      "id": "mad-018",
+      "prompt": "How did the tomato frog get its name?",
+      "choices": [
+        "Its bright red-orange colour",
+        "It lives in tomato plants",
+        "It only eats tomatoes",
+        "Its round shape and green skin"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "A big female tomato frog really is tomato red, which warns predators to leave her alone."
+    },
+    {
+      "id": "mad-019",
+      "prompt": "Madagascar's day geckos (Phelsuma) are unusual among geckos because they are active when?",
+      "choices": [
+        "During the day",
+        "Only at night",
+        "Only at dusk",
+        "Only after rain"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Most geckos are night hunters, so the bright green day geckos stand out twice over."
+    },
+    {
+      "id": "mad-020",
+      "prompt": "The Madagascan flying fox is the island's largest what?",
+      "choices": [
+        "Bat",
+        "Bird",
+        "Fox",
+        "Owl"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "Flying foxes are big fruit bats, and they spread the seeds of many Malagasy trees."
+    },
+    {
+      "id": "mad-021",
+      "prompt": "Humpback whales gather off Madagascar's east coast each winter to do what?",
+      "choices": [
+        "Breed and raise their calves",
+        "Feed on krill",
+        "Hibernate",
+        "Moult their skin"
+      ],
+      "answer_index": 0,
+      "difficulty": 2,
+      "explanation": "They feed near Antarctica and travel north to Madagascar's warm water to calve."
+    },
+    {
+      "id": "mad-022",
+      "prompt": "What does the aye-aye do with its long, thin middle finger?",
+      "choices": [
+        "Hooks grubs out of holes in wood",
+        "Combs its fur",
+        "Digs burrows",
+        "Holds on while it sleeps"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "It taps the wood, listens for a hollow, gnaws in, then fishes the grub out with that skinny finger."
+    },
+    {
+      "id": "mad-023",
+      "prompt": "Chameleons of the genus Brookesia are remarkable for being what?",
+      "choices": [
+        "Among the smallest reptiles in the world",
+        "The longest-lived reptiles",
+        "The fastest lizards",
+        "The only venomous lizards"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Some Brookesia chameleons are small enough to stand on a fingernail."
+    },
+    {
+      "id": "mad-024",
+      "prompt": "What can an adult comet moth not do?",
+      "choices": [
+        "Eat",
+        "Fly",
+        "See",
+        "Fold its wings"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The adult moth has no working mouthparts, so it lives only a few days on the energy it stored as a caterpillar."
+    },
+    {
+      "id": "mad-025",
+      "prompt": "What does a female giraffe weevil do with a leaf?",
+      "choices": [
+        "Rolls it into a tube around a single egg",
+        "Uses it as an umbrella",
+        "Weaves it into a nest with others",
+        "Eats it whole"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "She rolls the leaf into a neat tube, lays one egg inside, and the tube becomes the grub's first meal."
+    },
+    {
+      "id": "mad-026",
+      "prompt": "Where do Madagascar's brightly coloured mantella frogs get their toxins from?",
+      "choices": [
+        "From the small animals they eat",
+        "They make them in their liver",
+        "From the water they sit in",
+        "From sunlight"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Mantellas take toxins from ants and mites in their diet, so captive-bred ones are harmless."
+    },
+    {
+      "id": "mad-027",
+      "prompt": "Madagascar has no native snakes of which kind?",
+      "choices": [
+        "Cobras or vipers",
+        "Tree-climbing snakes",
+        "Egg-eating snakes",
+        "Snakes longer than a metre"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "The island has plenty of snakes, but none of the front-fanged families that are dangerous to people."
+    },
+    {
+      "id": "mad-028",
+      "prompt": "How does the satanic leaf-tailed gecko avoid being eaten?",
+      "choices": [
+        "It looks exactly like a dead leaf",
+        "It sprays venom",
+        "It plays dead and smells bad",
+        "It buries itself in sand"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Right down to fake veins and nibbled edges. Its whole defence is not being noticed."
+    },
+    {
+      "id": "mad-029",
+      "prompt": "How does a lowland streaked tenrec make sound to keep its family together?",
+      "choices": [
+        "It rubs special quills on its back together",
+        "It hums through its nose",
+        "It drums on logs",
+        "It claps its front feet"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "It is one of the very few mammals that makes sound by rubbing body parts together, the way a cricket does."
+    },
+    {
+      "id": "mad-030",
+      "prompt": "How do male ring-tailed lemurs usually settle a dispute?",
+      "choices": [
+        "With a stink fight, wafting scent from their tails",
+        "By wrestling until one gives up",
+        "By racing to the top of a tree",
+        "By calling loudly all night"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "They rub scent onto their tails and flick it at each other. The loser walks away, and nobody gets hurt."
+    },
+    {
+      "id": "mad-031",
+      "prompt": "Why can a fossa climb down a tree trunk head first?",
+      "choices": [
+        "Its ankles turn almost backwards",
+        "Its claws hook backwards",
+        "It has a gripping tail",
+        "Its front legs are much longer"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Flexible ankles let it grip the trunk facing either way, which is how it chases lemurs through the canopy."
+    },
+    {
+      "id": "mad-032",
+      "prompt": "In a lemur troop, who is usually in charge?",
+      "choices": [
+        "An adult female",
+        "The largest male",
+        "The oldest male",
+        "Nobody, they take turns"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Female dominance is unusual among primates, but it is normal for lemurs."
+    },
+    {
+      "id": "mad-033",
+      "prompt": "How does the Madagascar hissing cockroach make its hissing sound?",
+      "choices": [
+        "By forcing air out through its breathing holes",
+        "By rubbing its wings together",
+        "By clicking its jaws",
+        "By scraping its legs on the ground"
+      ],
+      "answer_index": 0,
+      "difficulty": 3,
+      "explanation": "Most insects that make noise rub body parts together, so hissing through spiracles is genuinely rare."
+    },
+    {
+      "id": "mad-034",
+      "prompt": "The fat-tailed dwarf lemur is the only primate known to do what?",
+      "choices": [
+        "Hibernate for months at a time",
+        "Live entirely under water",
+        "Fly",
+        "Change colour"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "It fattens its tail, then sleeps out the dry season for up to seven months."
+    },
+    {
+      "id": "mad-035",
+      "prompt": "The golden bamboo lemur eats bamboo shoots that contain what?",
+      "choices": [
+        "Cyanide",
+        "Salt water",
+        "Alcohol",
+        "Iron filings"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "It swallows about twelve times the dose that would kill most animals its size, and nobody is quite sure how."
+    },
+    {
+      "id": "mad-036",
+      "prompt": "What is unusual about the aye-aye's front teeth?",
+      "choices": [
+        "They keep growing throughout its life",
+        "There are only two of them",
+        "They are hollow",
+        "They are made of bone, not enamel"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Ever-growing incisors are a rodent trick, and they let the aye-aye gnaw into hard wood."
+    },
+    {
+      "id": "mad-037",
+      "prompt": "Archaeoindris, an extinct Malagasy lemur, was about the size of what?",
+      "choices": [
+        "A gorilla",
+        "A house cat",
+        "A mouse",
+        "A horse"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Madagascar's biggest lemurs died out after people arrived. The largest was gorilla-sized."
+    },
+    {
+      "id": "mad-038",
+      "prompt": "The ploughshare tortoise, or angonoka, is famous for what?",
+      "choices": [
+        "Being one of the rarest tortoises on Earth",
+        "Being the fastest tortoise",
+        "Living in the sea",
+        "Climbing trees"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "Only a few hundred are left in the wild, in one bay in the north-west, and poaching is the reason."
+    },
+    {
+      "id": "mad-039",
+      "prompt": "The helmet vanga, a Malagasy bird, is best known for what?",
+      "choices": [
+        "A huge bright blue bill",
+        "A tail longer than its body",
+        "Building the biggest nest of any bird",
+        "Swimming under water"
+      ],
+      "answer_index": 0,
+      "difficulty": 4,
+      "explanation": "That heavy blue bill is for cracking large insects, and it makes the helmet vanga unmistakable."
+    },
+    {
+      "id": "mad-040",
+      "prompt": "Madagascar's boa snakes are most closely related to boas living where?",
+      "choices": [
+        "South America",
+        "West Africa",
+        "Australia",
+        "India"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "They are a leftover from the ancient southern supercontinent, long before the Atlantic Ocean existed."
+    },
+    {
+      "id": "mad-041",
+      "prompt": "How do scientists think the ancestors of lemurs first reached Madagascar?",
+      "choices": [
+        "They rafted across on floating vegetation",
+        "They walked over a land bridge",
+        "People brought them by boat",
+        "They swam the channel"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "A storm-torn mat of trees carrying a few small animals is the best explanation anyone has."
+    },
+    {
+      "id": "mad-042",
+      "prompt": "Madagascar broke away from India roughly how long ago?",
+      "choices": [
+        "About 88 million years ago",
+        "About 8 million years ago",
+        "About 500,000 years ago",
+        "About 400 million years ago"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "It has been an island on its own since the age of the dinosaurs, which is why its wildlife is so odd."
+    },
+    {
+      "id": "mad-043",
+      "prompt": "The word 'lemur' comes from a Latin word meaning what?",
+      "choices": [
+        "Spirits of the dead",
+        "Tree dweller",
+        "Night hunter",
+        "Ring tail"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Linnaeus named them after Roman ghosts, for their night-time calls and huge reflective eyes."
+    },
+    {
+      "id": "mad-044",
+      "prompt": "What is the Malagasy name for the indri?",
+      "choices": [
+        "Babakoto",
+        "Fanaloka",
+        "Angonoka",
+        "Vazimba"
+      ],
+      "answer_index": 0,
+      "difficulty": 5,
+      "explanation": "Babakoto means something like 'ancestor of Koto', and in many places it is taboo to harm one."
+    }
+  ]
+}

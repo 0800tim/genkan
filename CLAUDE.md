@@ -17,6 +17,8 @@ MIT, no telemetry, all data stays in the house. Sibling project: unrot.
   the household bug bounty.
 - docs/DATABASE.md: schema files and the order they must load in.
 - docs/tor-and-safety.md: the Tor layer, and what it cannot do.
+- docs/HOUSEHOLD-SECURITY.md: the IoT and household layer. What a camera,
+  lock or vacuum may talk to, why cloud backup still works, and the limits.
 - research/: agent research (Omarchy, naming, AdGuard, curriculum, the
   2026-08-29 security review).
 - docs/runbooks/: runbooks other parents hand to their own AI agents.
@@ -33,10 +35,13 @@ Postgres holds desired state; the gateway reconciles the firewall from it
 every 15s. The admin dashboard (dashboard/server.mjs) binds the tailnet on
 the HOST, outside the island. bin/kidnet is the CLI the agent drives.
 
-bin/ holds fourteen scripts: kidnet (the control surface), kidnet-report
-(the weekly digest) and twelve background workers driven by six systemd
-timers. deploy.sh installs thirteen of them; kidnet-report is run from the
-repo. docs/CLI.md is the reference.
+bin/ holds sixteen scripts: kidnet (the control surface), kidnet-report
+(the weekly digest), kidnet-quiz (the learn-to-earn bank manager) and thirteen
+background workers driven by systemd timers.
+deploy.sh installs fourteen of them and enables six timers; the seventh,
+kids-iot-policy.timer, is installed but left disabled because the household
+IoT policy is switched on deliberately (docs/HOUSEHOLD-SECURITY.md).
+kidnet-report is run from the repo. docs/CLI.md is the reference.
 
 ## Iron rules
 

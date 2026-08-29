@@ -6,16 +6,37 @@
 # video domain we learn the IPs it will talk to, and tag those IPs by category
 # (category_ips). The firewall then meters bytes per category by destination
 # IP. Runs on a short timer. See METERING.md.
+#
+# THE AMBIGUITY GUARD, and why it exists. The first version of this script
+# tagged any address that came back for a category domain. That is wrong for
+# shared front doors: a bare `googlevideo.com` lookup returns a general Google
+# edge address that also answers for search, Gmail and the Play Store, so
+# tagging it "video" made every byte a phone sent to Google look like YouTube.
+# On the live chart that showed up as the whole house watching video all day,
+# which is the bug this guard fixes.
+#
+# The rule: an address is only tagged when, across the window we just scanned,
+# it answered for exactly ONE category and for no uncategorised name at all.
+# An address that is shared with anything else is ambiguous, is never metered,
+# and is deleted from category_ips if a previous run had tagged it.
+#
+# Honest limit: a dedicated CDN host that happens to appear once alongside an
+# uncategorised name is dropped too. Under-counting a category is a far
+# smaller lie than colouring the whole house's traffic with it.
 set -euo pipefail
 : "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}" "${ADGUARD_PASS:?set ADGUARD_PASS}"
 PAGES="${CATMAP_PAGES:-15}"
 DB=(docker exec -i postgres psql -U postgres -d kids_network)
 
 # domain -> category, longest-suffix match. Pulled once from the DB.
-MAP=$("${DB[@]}" -tAc "SELECT category||' '||domain FROM category_domains WHERE category IN ('gaming','video','social','audio')")
+# 'download' is in here so a game UPDATE is separated from playing the game:
+# its CDN names are longer suffixes than the gaming names they sit under, so
+# cs.steampowered.com resolves to download while steampowered.com stays gaming.
+MAP=$("${DB[@]}" -tAc "SELECT category||' '||domain FROM category_domains
+                       WHERE category IN ('gaming','video','social','audio','download','messaging')")
 
 TSV=$(ADGUARD_URL="$ADGUARD_URL" ADGUARD_USER="$ADGUARD_USER" ADGUARD_PASS="$ADGUARD_PASS" PAGES="$PAGES" MAP="$MAP" python3 <<'PY'
-import os,json,urllib.request,urllib.parse,base64,sys,csv
+import os,json,urllib.request,urllib.parse,base64,sys,csv,ipaddress
 url=os.environ["ADGUARD_URL"]; pages=int(os.environ["PAGES"])
 auth=base64.b64encode(f'{os.environ["ADGUARD_USER"]}:{os.environ["ADGUARD_PASS"]}'.encode()).decode()
 # build domain->category (suffix match on registrable-ish domain)
@@ -23,41 +44,83 @@ cat_of={}
 for line in os.environ["MAP"].splitlines():
     if not line.strip(): continue
     c,d=line.split(" ",1); cat_of[d.strip().lower()]=c
-def category(name):
+# A content network lives on its subdomains. Its bare apex is a front door
+# that answers from whatever generic edge is nearest, and that edge also serves
+# the vendor's search, mail and app store. Learning an address from an apex
+# lookup is how one row (142.251.222.228, tagged video from a bare
+# googlevideo.com lookup) came to colour every byte any phone sent to Google as
+# video. The ambiguity guard cannot catch it, because within one scan window
+# the address genuinely only answered for one category.
+#
+# So: for these, only a subdomain may teach us an address. The apex still
+# categorises traffic for reporting, it just never contributes an address to
+# the meter.
+CDN_APEX={"googlevideo.com","nflxvideo.net","ttvnw.net","fbcdn.net","akamaized.net",
+          "cloudfront.net","llnwd.net","1e100.net","gstatic.com","googleapis.com",
+          "akamai.net","akamaiedge.net","edgesuite.net","fastly.net","cdn77.org"}
+def category(name, learning=False):
     name=name.rstrip(".").lower(); parts=name.split(".")
+    # longest suffix first, so a download CDN beats the gaming domain under it
     for i in range(len(parts)):
         suf=".".join(parts[i:])
-        if suf in cat_of: return cat_of[suf]
+        if suf in cat_of:
+            # i==0 means the queried name IS the apex, not a host beneath it.
+            if learning and i==0 and suf in CDN_APEX: return None
+            return cat_of[suf]
     return None
 def get(u):
     r=urllib.request.Request(u); r.add_header("Authorization","Basic "+auth)
-    return json.load(urllib.request.urlopen(r,timeout=10))
-seen=set(); rows=[]; older=None
+    try:
+        return json.load(urllib.request.urlopen(r,timeout=10))
+    except Exception as e:
+        print(f"kidnet-catmap: AdGuard unavailable ({e}); will retry next tick", file=sys.stderr)
+        raise SystemExit(0)
+def routable(ip):
+    # A blocked query is answered with 0.0.0.0 and a rewritten one with the
+    # portal's address. Neither is a destination anybody sends bytes to, and
+    # metering them would attribute the whole island to one category.
+    try: a=ipaddress.ip_address(ip)
+    except ValueError: return False
+    return a.version==4 and not (a.is_private or a.is_loopback or a.is_unspecified
+                                 or a.is_multicast or a.is_reserved or a.is_link_local)
+
+cats_for={}      # ip -> set(category)
+shared=set()     # ip that also answered for a name we cannot categorise
+older=None
 for _ in range(pages):
     u=url+"/control/querylog?limit=100"+(f"&older_than={urllib.parse.quote(older)}" if older else "")
     d=get(u); data=d.get("data") or []
     if not data: break
     for e in data:
         name=(e.get("question") or {}).get("name","")
-        cat=category(name)
-        if not cat: continue
+        cat=category(name, learning=True)
         for a in (e.get("answer") or []):
-            if a.get("type")=="A":
-                ip=a.get("value","")
-                if ip and (ip,cat) not in seen:
-                    seen.add((ip,cat)); rows.append((ip,cat))
+            if a.get("type")!="A": continue
+            ip=a.get("value","")
+            if not ip or not routable(ip): continue
+            if cat: cats_for.setdefault(ip,set()).add(cat)
+            else:   shared.add(ip)
     older=d.get("oldest") or (data[-1].get("time") if data else None)
     if not older: break
+
 w=csv.writer(sys.stdout,delimiter="\t")
-for ip,cat in rows: w.writerow([ip,cat])
+for ip,cats in cats_for.items():
+    if len(cats)==1 and ip not in shared:
+        w.writerow([ip,next(iter(cats))])     # unambiguous: meter it
+    else:
+        w.writerow([ip,"!"])                  # shared or contested: never meter it
 PY
 )
 [ -z "$TSV" ] && { echo "kidnet-catmap: nothing new"; exit 0; }
 printf '%s\n' "$TSV" | "${DB[@]}" -qc "
 CREATE TEMP TABLE _ci(ip inet, category text);
 COPY _ci FROM STDIN WITH (FORMAT text);
+-- Shared addresses are actively withdrawn, not merely skipped: one bad row
+-- keeps colouring the chart for 24 hours otherwise.
+DELETE FROM category_ips c USING _ci x WHERE x.category='!' AND c.ip=x.ip;
 INSERT INTO category_ips(ip,category,seen)
-SELECT ip,category,now() FROM _ci
+SELECT ip,category,now() FROM _ci WHERE category<>'!'
 ON CONFLICT (ip,category) DO UPDATE SET seen=now();"
-N=$(printf '%s\n' "$TSV" | grep -c . || true)
-echo "kidnet-catmap: tagged $N ip/category pair(s)"
+N=$(printf '%s\n' "$TSV" | grep -cv '	!$' || true)
+D=$(printf '%s\n' "$TSV" | grep -c '	!$' || true)
+echo "kidnet-catmap: tagged $N ip/category pair(s), dropped $D shared address(es)"

@@ -25,6 +25,7 @@ effort earns screen time.
       "prompt": "7 × 8 = ?",
       "choices": ["54", "56", "63", "48"],
       "answer_index": 1,
+      "difficulty": 2,
       "explanation": "7 groups of 8 make 56."
     }
   ]
@@ -51,6 +52,7 @@ effort earns screen time.
 | `prompt` | string | The question. Plain text plus emoji is fine. |
 | `choices` | array | Exactly 4 strings. All plausible, no joke options, no trick answers. |
 | `answer_index` | int | 0 to 3, index of the correct choice as written in this file. |
+| `difficulty` | int, optional | 1 to 5. 1 is a warm-up, 5 is a stretch. Drives the difficulty ramp below. |
 | `explanation` | string, optional | One friendly sentence shown after answering, right or wrong. Teach, never scold. |
 
 ## Random sampling (why banks are big)
@@ -61,6 +63,63 @@ and the server also shuffles the choice order per question (re-mapping
 `questions_per_round` questions so two rounds rarely look alike and there
 is no fixed answer sheet to memorise. Memorising the material itself is
 the whole point, so that is a win, not a cheat.
+
+## Difficulty and the ramp
+
+`difficulty` is optional and per question. It is the one field that changes
+how a round *feels*, so it is worth getting right.
+
+| Level | What it means | A kid in the band should |
+|---|---|---|
+| 1 | Warm-up. The thing everyone in the age band already knows. | get it right nearly every time |
+| 2 | Easy. One step of recall or one obvious step of working. | get it right most times |
+| 3 | Core. The middle of what this bank is actually teaching. | get it right about half to two thirds of the time |
+| 4 | Stretch. Two steps, or a detail you only know if you paid attention. | get it sometimes |
+| 5 | Hard. The interesting edge of the topic. | get it occasionally, and be pleased when they do |
+
+Rules for a bank that uses it:
+
+1. Label every question, not some of them. `tools/validate-quizzes.mjs`
+   rejects a bank that labels some and not others, and the server is
+   only a little more forgiving: a bank where fewer than half the
+   questions carry `difficulty` is treated as having no difficulty data
+   at all and is sampled the old flat random way.
+2. Give every level enough questions to fill a round several times over.
+   A rough shape that works: about a quarter of the bank at level 1, a
+   quarter at 2, a quarter at 3, and the last quarter split between 4
+   and 5. Levels 1 and 2 get used the most, because that is what a kid
+   having a bad day is given.
+3. Difficulty is relative to `suggested_age_min`, not to adults. A
+   level 5 in a bank for nine year olds is easier than a level 1 in a
+   bank for fifteen year olds. Pitch inside the band.
+4. Difficulty is not obscurity. Level 5 is a harder idea, never a more
+   obscure fact or a trick. "Which of these is a lemur?" with three
+   invented species names is not level 5, it is a bad question.
+
+### What the server does with it
+
+When a bank has difficulty data, the portal builds each round as a ramp:
+sorted easy to hard, opening with warm-ups so the kid starts by getting
+things right, and finishing with the stretch questions. It also adapts
+the mix to how that kid has been going lately (from `quiz_rounds` and
+`quiz_answers`, see `config/db/schema-quizresults.sql`):
+
+| How they have been going | The round they get |
+|---|---|
+| Struggling or just failed a round | Mostly levels 1 and 2, a couple of 3s at the end |
+| Steady, or brand new to quizzes | A spread centred on level 3 |
+| Passing comfortably | Centred on level 4, with 5s at the end |
+
+Two guarantees hold whatever the profile says:
+
+- **A round always opens with the easiest questions it contains.** No
+  kid ever meets the hardest question first.
+- **A round is always passable.** At least `pass_mark` questions sit at
+  or below the level that kid is already comfortable with. The ramp
+  stretches a kid; it never sets them up to fail.
+
+Banks with no `difficulty` fields keep working exactly as they always
+have: flat random sampling, no ramp. Nothing needs to be backfilled.
 
 ## Anti-grind rules (server-enforced, NOT in this file)
 
@@ -88,6 +147,10 @@ New banks arrive by pull request. Checklist:
 - Valid JSON, fields as above, exactly 4 choices per question.
 - Every `answer_index` verified correct. Fact-check every single one.
 - Kid-appropriate, encouraging tone, no trick questions.
+- If you use `difficulty`, label every question and spread the levels
+  as above. Half-labelled banks are rejected, and a bank needs at least
+  `questions_per_round` questions at levels 1 and 2 so a struggling kid
+  can still be given a full, passable round.
 - NZ English spelling. Māori place names with correct macrons (Taupō,
   Whangārei).
 - Bank size at least 4x `questions_per_round`.
