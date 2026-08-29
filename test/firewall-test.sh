@@ -201,9 +201,32 @@ banner "UNKNOWN static IP still lands on the portal :80" GATEWAY 203.0.113.2 80
 allow 203.0.113.2
 check "UNKNOWN static IP still reaches a help line"    yes 203.0.113.2 443
 unallow
-# restore
+# restore. The .77 address has to GO, and the default route has to name .50 as
+# its source, or everything after this still leaves as the unknown address and
+# every later check fails for a reason that has nothing to do with what it is
+# testing. That is the "passed for the wrong reason" trap in the other
+# direction: failing for the wrong reason.
 $KID ip addr add 192.168.60.50/24 dev k-eth0
-$KID ip route replace default via 192.168.60.1
+$KID ip addr del 192.168.60.77/24 dev k-eth0 2>/dev/null
+$KID ip route replace default via 192.168.60.1 src 192.168.60.50
+check "the restore worked, so what follows tests what it says" yes 203.0.113.2 443
+
+echo
+echo "Unclaimed devices (a lease alone used to be full access)"
+# A device with a lease but no owner. Before claim mode existed it passed
+# @kids_known and got everything, which made a rotating phone MAC an accidental
+# bypass. In the restricted lane it keeps DNS, the portal and the safety net,
+# and loses the internet. The safety net rule sits ABOVE this one, and that
+# ordering is the part worth testing: a child nobody has named yet must still
+# be able to reach a help line.
+$GW $NFT add element inet kids kids_unclaimed { 192.168.60.50 }
+check "an unclaimed device gets NO ordinary internet"      no  203.0.113.2 443
+banner "and its :80 still lands on the portal" GATEWAY 203.0.113.2 80
+allow 203.0.113.2
+check "and the safety net still wins over the restriction" yes 203.0.113.2 443
+unallow
+$GW $NFT delete element inet kids kids_unclaimed { 192.168.60.50 }
+check "claiming it gives the internet straight back"       yes 203.0.113.2 443
 
 echo
 printf 'passed %d, failed %d\n' "$pass" "$fail"

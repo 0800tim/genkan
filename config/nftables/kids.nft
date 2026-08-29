@@ -41,6 +41,14 @@ table inet kids {
     # it just makes you a stranger the gateway will not route for.
     set kids_known { type ipv4_addr; }
 
+    # Devices with a lease that belong to nobody. A lease alone used to be
+    # enough to pass @kids_known, so an unclaimed device got FULL unfiltered,
+    # unmetered internet, and a rotating phone MAC became an accidental bypass.
+    # These get DNS, the portal and the safety net, and nothing else, until
+    # somebody says whose they are. Filled only when claim mode is 'enforce'
+    # (docs/DEVICE-IDENTITY.md); empty otherwise, so this rule costs nothing.
+    set kids_unclaimed { type ipv4_addr; counter; }
+
     # Destinations that survive a cut: the NZ youth help lines and the
     # education allowlist, resolved from the always_allow table.
     # Populated by `kidnet allow-sync` (deploy + hourly timer), NOT by hand.
@@ -157,6 +165,13 @@ table inet kids {
         # sees "this device needs adding", not a dead connection.
         iifname $KIDS_IF ip saddr != @kids_known drop
 
+        # An unclaimed device. BELOW the @kids_allow safety net above, so a
+        # help line still answers for a device nobody has named yet, which is
+        # the whole point of the safety net. Its :80 goes to the portal (see
+        # nat), so the kid sees a page asking who they are rather than a dead
+        # connection, and DNS is an input rule so it keeps resolving.
+        iifname $KIDS_IF ip saddr @kids_unclaimed drop
+
         # Tor and the darknet. Deliberately BELOW the @kids_allow safety net,
         # so a help line that happens to share a CDN address with a relay stays
         # reachable, and ABOVE the kids_block rules, so an attempt from an
@@ -204,6 +219,11 @@ table inet kids {
         # Allowed known devices never match, so their probes get the real 204.
         iifname $KIDS_IF ip saddr @kids_block tcp dport 80 redirect to :$PORTAL_PORT
         iifname $KIDS_IF ip saddr != @kids_known tcp dport 80 redirect to :$PORTAL_PORT
+        # An unclaimed device HAS a lease, so it is in @kids_known and the rule
+        # above never fires for it. Without this line the forward chain drops
+        # its traffic and the kid gets a dead connection instead of the page
+        # asking who they are, which would make the whole feature useless.
+        iifname $KIDS_IF ip saddr @kids_unclaimed tcp dport 80 redirect to :$PORTAL_PORT
     }
 
     chain postrouting {

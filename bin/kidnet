@@ -302,6 +302,31 @@ case "${1:-}" in
     FROM dns_log l JOIN devices d ON d.id=l.device_id JOIN children c ON c.id=d.child_id
     WHERE lower(c.name)=lower('$2') AND l.ts > now() - interval \$q\$1 day\$q\$
     ORDER BY l.ts DESC LIMIT ${3:-25}" | sed 's/^/  /';;
+  # Device claiming. Off by default: a household running happily today must not
+  # find devices in a restricted lane because they pulled an update. See
+  # docs/DEVICE-IDENTITY.md for why this is claiming rather than logging in.
+  claim-mode) case "${2:-}" in
+      off|observe|enforce)
+        psqll "UPDATE claim_settings SET mode='$2', updated=now()" >/dev/null
+        audit household claim-mode "$2" agent
+        n=$(psqll "SELECT count(*) FROM unclaimed_devices")
+        case "$2" in
+          off)     echo "claim mode OFF: a lease is enough, as before ($n device(s) belong to nobody)";;
+          observe) echo "claim mode OBSERVE: nothing is restricted. $n device(s) WOULD be. Run 'kidnet unclaimed' to see them";;
+          enforce) echo "claim mode ENFORCE: $n device(s) now get DNS, the portal and the safety net only, until somebody claims them";;
+        esac;;
+      ""|status)
+        echo "claim mode: $(psqll "SELECT mode FROM claim_settings")   (off | observe | enforce)"
+        echo "$(psqll "SELECT count(*) FROM unclaimed_devices") personal device(s) belong to nobody";;
+      *) echo "usage: kidnet claim-mode <off|observe|enforce>"; exit 1;; esac;;
+  # Who is on the wire that nobody has claimed. Smart home kit, appliances and
+  # the access point are the household's and are never expected to announce
+  # themselves, so they are not in here.
+  unclaimed) psqll "
+      SELECT coalesce(label, hostname, '(no name)')||'  '||ip
+             ||'  last seen '||to_char(last_seen,'DD Mon HH24:MI')
+      FROM unclaimed_devices ORDER BY last_seen DESC" | sed 's/^/  /' \
+      || echo "  (every personal device belongs to somebody)";;
   topsites) ck_int "${2:-15}"; psqll "
     SELECT c.name||': '||l.domain||' ('||count(*)||')'
     FROM dns_log l JOIN devices d ON d.id=l.device_id JOIN children c ON c.id=d.child_id

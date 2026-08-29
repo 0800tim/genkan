@@ -143,6 +143,14 @@ sync_state(){
   EXTRA_IPS="$(adguard_lease_ips)" \
   reconcile_set kids_known "SELECT host(reserved_ip) FROM devices WHERE reserved_ip IS NOT NULL AND is_active
                             UNION SELECT host(ip) FROM dhcp_leases WHERE active"
+  # Unclaimed devices, but only when the household has switched claiming on.
+  # In 'off' and 'observe' the set stays empty, so the rule in kids.nft is a
+  # no-op and nothing changes for a family that has not opted in. Observe
+  # restricts nothing on purpose: a parent wants to know how many devices this
+  # would catch BEFORE it catches any. See docs/DEVICE-IDENTITY.md.
+  reconcile_set kids_unclaimed "SELECT ip FROM unclaimed_devices
+     WHERE (SELECT mode FROM claim_settings) = 'enforce'"
+
   # BLOCKED devices: the reservations of children whose internet is off.
   reconcile_set kids_block "SELECT host(d.reserved_ip) FROM devices d
      JOIN category_state cs ON cs.child_id=d.child_id

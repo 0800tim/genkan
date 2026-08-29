@@ -37,18 +37,37 @@ for _ in range(pages):
         rows.append((t.replace("T"," "), e.get("client") or "", name, action))
     older=d.get("oldest") or (data[-1].get("time") if data else None)
     if stop or not older: break
-w=csv.writer(sys.stdout,delimiter="\t")
+# CSV, not COPY's text format. A DNS label can legitimately contain a dot, and
+# AdGuard stores that in presentation form as a literal backslash-dot. COPY
+# FORMAT text reads backslash as an escape, so one lookup of a\.b.example
+# aborted the whole transaction, and because the next run keys off max(ts) in
+# dns_log the same poison was re-fetched and failed again, for good. One dig
+# from a child's laptop could stop every safety alert, silently. CSV has no
+# backslash grammar.
+w=csv.writer(sys.stdout)
 for r in rows: w.writerow(r)
 PY
 )
 [ -z "$TSV" ] && { echo "kidnet-dnslog: nothing new"; exit 0; }
 # Stage + join client IP to device/child, then insert.
-printf '%s\n' "$TSV" | "${DB_EXEC[@]}" -qc "
+ERRF="$(mktemp -t kidnet-dnslog.XXXXXX)"; trap 'rm -f "$ERRF"' EXIT
+if ! printf '%s\n' "$TSV" | "${DB_EXEC[@]}" -qc "
 CREATE TEMP TABLE _dl(ts timestamptz, client_ip inet, domain text, action text);
-COPY _dl FROM STDIN WITH (FORMAT text);
+COPY _dl FROM STDIN WITH (FORMAT csv);
 INSERT INTO dns_log(ts, device_id, client_ip, domain, action)
 SELECT dl.ts, d.id, dl.client_ip, dl.domain, dl.action
 FROM _dl dl LEFT JOIN devices d ON host(d.reserved_ip)=host(dl.client_ip);
-" 
+" 2>"$ERRF"; then
+  # Loud, because the damage of this failing is invisible. kidnet-alerts reads
+  # dns_log, so while the ingest is stalled no Tor, darknet, drugs or self-harm
+  # alert can fire and the parent's history simply stops, with nothing on the
+  # dashboard to say why.
+  msg="DNS ingest failed, so no safety alert can fire until it is fixed: $(head -1 "$ERRF" | tr -d "'" | cut -c1-150)"
+  echo "kidnet-dnslog: $msg" >&2
+  "${DB_EXEC[@]}" -qc "INSERT INTO alerts(severity,category,detail) VALUES('urgent','dns-ingest','$(printf '%s' "$msg" | sed "s/'/''/g")')" >/dev/null 2>&1 || true
+  exit 1
+fi
+# A good run retires the warnings from the bad ones before it.
+"${DB_EXEC[@]}" -qc "UPDATE alerts SET acknowledged=true WHERE category='dns-ingest' AND NOT acknowledged" >/dev/null 2>&1 || true
 N=$(printf '%s\n' "$TSV" | grep -c . || true)
 echo "kidnet-dnslog: ingested $N row(s)"

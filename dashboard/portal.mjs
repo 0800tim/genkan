@@ -66,10 +66,24 @@ setInterval(() => { const now = Date.now(); for (const [t, r] of rounds) if (r.e
 // honoured just when the source IP maps to no child (admin on the tailnet, or
 // pre-hardware testing), never to let one kid act as another. Returns the
 // child plus whether this was a real device match (POSTs require that).
+// Set by the dashboard when it links a parent to a child's portal view. It is
+// absent from the household's own portal container, so a device on the island
+// cannot use the override at all, which is the point.
+const PREVIEW_TOKEN = process.env.PORTAL_PREVIEW_TOKEN || "";
+let PREVIEW_OK = false;
 async function whoIs(ip, override) {
   const [byIp] = await q("SELECT c.id,c.name,c.age FROM children c JOIN devices d ON d.child_id=c.id WHERE host(d.reserved_ip)=$1 LIMIT 1", [ip]);
   if (byIp) return { ...byIp, real: true };
-  if (override) { const [o] = await q("SELECT id,name,age FROM children WHERE lower(name)=lower($1)", [override]); if (o) return { ...o, real: false }; }
+  // The ?kid= override is a parent's preview, not something a device on the
+  // island may use. Any unrecognised device could name any child and read
+  // their minutes, tasks and history: no writes, but a sibling on a new phone
+  // could see exactly how much time you had left, which is the sort of thing
+  // siblings do. It now needs the preview token, which only the dashboard
+  // holds, or the demo flag, where the household is invented anyway.
+  if (override && (DEMO || PREVIEW_OK)) {
+    const [o] = await q("SELECT id,name,age FROM children WHERE lower(name)=lower($1)", [override]);
+    if (o) return { ...o, real: false };
+  }
   return null;
 }
 async function status(childId) {
@@ -450,6 +464,9 @@ const server = createServer(async (req, res) => {
     const ip = (req.socket.remoteAddress || "").replace(/^::ffff:/, "");
     const kidOverride = url.searchParams.get("kid");
     const kidQS = kidOverride ? `?kid=${encodeURIComponent(kidOverride)}` : "";
+    // Per request: does this caller hold the preview token? Checked here, not
+    // inside whoIs, so the answer cannot be stale across concurrent requests.
+    PREVIEW_OK = PREVIEW_TOKEN !== "" && url.searchParams.get("preview") === PREVIEW_TOKEN;
     const kid = await whoIs(ip, kidOverride);
     const send = html => { res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }); res.end(html); };
     if (!kid) return send(page(`<div class="card"><h1>Hearth</h1><div class="msg">This device isn't recognised on the kids network yet. Ask Dad to add it.</div>${helpFoot}</div>`));
