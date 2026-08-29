@@ -33,7 +33,9 @@ else ok "every schema file loads"; fi
 # The tables and views the dashboard and the portal actually open on start.
 for rel in children devices people household_roster device_roster time_remaining \
            category_state time_ledger earn_claims task_offer_effective \
-           device_policy_effective quiz_settings alerts category_ips; do
+           device_policy_effective quiz_settings alerts category_ips \
+           quiz_banks quiz_bank_questions quiz_bank_summary earn_settings \
+           earn_settings_effective; do
   [ "$(psql "SELECT to_regclass('public.$rel') IS NOT NULL")" = t ] \
     && ok "$rel exists" || bad "$rel is missing after a fresh load"
 done
@@ -52,6 +54,10 @@ for t in young standard teen guest adult; do
     && ok "the '$t' filter level exists" || bad "no '$t' filter level after a fresh load"
 done
 # The safety net is an iron rule: a cut-off child must still reach a help line.
+# The reading list: a child out of time can still go and learn something.
+n=$(psql "SELECT count(*) FROM always_allow WHERE scope='learn'")
+[ "${n:-0}" -gt 5 ] && ok "the reading list is seeded ($n reference sites a blocked child can read)" \
+  || bad "always_allow has ${n:-0} learn rows, so learn-to-earn is a memory test"
 n=$(psql "SELECT count(*) FROM always_allow WHERE scope='safety'")
 [ "${n:-0}" -gt 0 ] && ok "the safety net is seeded ($n domains a blocked child can still reach)" \
   || bad "always_allow has no safety rows, so a cut-off child could not reach a help line"

@@ -134,6 +134,11 @@ internet(){ local kid="$1" act="$2" b ip err=0 n=0; [ "$act" = off ] && b=true |
 
 # --- Safety net -------------------------------------------------------------
 # always_allow rows with scope='safety' (the NZ youth help lines and schoolwork)
+# and scope='learn' (the reading list: Wikipedia and friends) both survive a
+# total cut. Safety because a child in trouble must always be able to reach
+# help. Learn because a child who is out of time can otherwise only answer what
+# they already know, which turns learn-to-earn into a memory test and defeats
+# the point of it. See config/db/schema-learn.sql.
 # must stay reachable through a total cut: kidnet off, dinner, bedtime, out of
 # time. The firewall matches addresses, not names, so resolve them and load them
 # into @kids_allow. Run at deploy and hourly (kids-allow-sync.timer): these are
@@ -145,7 +150,7 @@ internet(){ local kid="$1" act="$2" b ip err=0 n=0; [ "$act" = off ] && b=true |
 allow_sync(){
   local d ip got list="" ips resolved failed=""
   have_nft || { echo "kidnet: firewall not loaded yet, nothing to sync"; return 0; }
-  for d in $(psqll "SELECT domain FROM always_allow WHERE scope='safety' ORDER BY domain"); do
+  for d in $(psqll "SELECT domain FROM always_allow WHERE scope IN ('safety','learn') ORDER BY domain"); do
     got=0
     # getent keeps this dependency-free (no dig/host needed on a fresh box).
     for ip in $(getent ahostsv4 "$d" 2>/dev/null | awk '{print $1}'); do

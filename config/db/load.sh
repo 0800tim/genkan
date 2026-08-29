@@ -27,8 +27,8 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 FILES=(schema schema-categories schema-time schema-safety schema-earn
        schema-people schema-devices schema-flags schema-services
        schema-voice schema-goals schema-policies schema-tasks
-       schema-quizresults seed schema-presence schema-appliance schema-roles
-       schema-claim)
+       schema-quizresults schema-quizbanks seed schema-presence schema-appliance schema-roles
+       schema-claim schema-learn)
 
 # The files end in GRANT ... TO kids_app, so the role has to exist first.
 docker exec -i "$PG" psql -U postgres -d "$DB" -qc \

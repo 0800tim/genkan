@@ -29,6 +29,9 @@ const DEMO = process.env.HEARTH_DEMO === "1";
 const BIND = process.env.BIND || "127.0.0.1";   // container: 0.0.0.0 (its netns is the island)
 const PORT = Number(process.env.PORT || 8890);  // container: 80
 const QUIZ_DIR = process.env.QUIZ_DIR || path.join(import.meta.dirname, "..", "portal", "quizzes");
+// The three earn numbers, as they were before a parent could set them. They
+// are now the LAST fallback: earn_settings_effective answers first (per child,
+// then per household), and these only apply if that view is not there.
 const QUIZ_COOLDOWN_MIN = Number(process.env.QUIZ_COOLDOWN_MIN || 360); // per bank
 const QUIZ_DAILY_CAP = Number(process.env.QUIZ_DAILY_CAP || 30);        // minutes/day from quizzes
 const MASTERY_BONUS = 5;                                                // perfect round
@@ -38,23 +41,105 @@ const pool = new pg.Pool({ connectionString: process.env.IN_CONTAINER ? process.
 const q = (t, p) => pool.query(t, p).then(r => r.rows);
 const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-// ---- quiz banks: loaded at start, validated, answers never leave the server -
-// Reloadable: SIGHUP re-reads the directory, so a bank installed by
-// `kidnet-quiz install` appears without dropping anyone's in-flight round.
+// ---- quiz banks: two shelves, one list ------------------------------------
+// Answers never leave the server, whichever shelf a bank came off.
+//
+//   files     portal/quizzes/*.json, shipped with Hearth and installed by
+//             `kidnet-quiz install`. SIGHUP re-reads the directory, so a new
+//             one appears without dropping anyone's in-flight round.
+//   database  quiz_banks / quiz_bank_questions, written by a parent on the
+//             dashboard's /earn screen. They live in the database on purpose:
+//             portal/quizzes is tracked in git, so a `git pull` would happily
+//             delete a family's own content. Polled every half minute, so a
+//             bank a parent finishes on the couch is on the kids' list without
+//             anyone restarting anything.
+//
+// A file bank wins a clash of ids. The dashboard will not create a bank whose
+// id is already on the shelf, so a clash means a file was installed over the
+// top of a database bank, and installing a file is the more deliberate act.
+//
+// Size rule, and it differs by shelf on purpose. A file bank needs four
+// rounds' worth of questions (tools/validate-quizzes.mjs enforces it, and that
+// is unchanged). A database bank goes live once it holds one full round,
+// because a parent who has written twelve good questions should not be told to
+// write twenty-eight more before their kid sees any of them. A small bank
+// repeats itself, and the dashboard says so on the bank's own card.
 const banks = new Map();
-function loadBanks() {
+const fileBanks = new Map();
+let dbBanks = new Map();
+function mergeBanks() {
   banks.clear();
+  for (const [id, b] of fileBanks) banks.set(id, b);
+  for (const [id, b] of dbBanks) {
+    if (banks.has(id)) { console.error(`quiz bank ${id}: a file bank already has that id, the database copy is ignored`); continue; }
+    banks.set(id, b);
+  }
+}
+function loadFileBanks() {
+  fileBanks.clear();
   for (const f of readdirSync(QUIZ_DIR).filter(f => f.endsWith(".json"))) {
     try {
       const b = JSON.parse(readFileSync(path.join(QUIZ_DIR, f), "utf8"));
-      if (b.id && Array.isArray(b.questions) && b.questions.length >= 4 * (b.questions_per_round || 10)) banks.set(b.id, b);
+      if (b.id && Array.isArray(b.questions) && b.questions.length >= 4 * (b.questions_per_round || 10)) fileBanks.set(b.id, b);
       else console.error(`quiz bank ${f}: skipped (shape/size)`);
     } catch (e) { console.error(`quiz bank ${f}: ${e.message}`); }
   }
-  console.log(`portal: ${banks.size} quiz banks loaded`);
+  mergeBanks();
+  console.log(`portal: ${fileBanks.size} file banks, ${dbBanks.size} of your own, ${banks.size} on the list`);
 }
-loadBanks();
+// Cheap signature of the database shelf, so the poll below only rebuilds when
+// something actually changed.
+let dbSig = "";
+async function loadDbBanks(force) {
+  try {
+    const [sig] = await q(`SELECT count(*)::int AS banks, coalesce(max(updated_ts)::text,'') AS t,
+        (SELECT count(*) FROM quiz_bank_questions)::int AS qs,
+        (SELECT coalesce(max(updated_ts)::text,'') FROM quiz_bank_questions) AS qt FROM quiz_banks`);
+    const now = `${sig.banks}|${sig.t}|${sig.qs}|${sig.qt}`;
+    if (!force && now === dbSig) return;
+    dbSig = now;
+    const rows = await q(`SELECT id,title,emoji,suggested_age_min,minutes_per_pass,pass_mark,questions_per_round
+        FROM quiz_bank_summary WHERE active AND questions >= questions_per_round ORDER BY id`);
+    const qs = await q(`SELECT bank_id,question_id,prompt,choices,answer_index,difficulty,explanation
+        FROM quiz_bank_questions ORDER BY bank_id, seq, question_id`);
+    const next = new Map();
+    for (const b of rows) next.set(b.id, { ...b, questions: [] });
+    for (const r of qs) {
+      const b = next.get(r.bank_id);
+      if (!b) continue;
+      b.questions.push({ id: r.question_id, prompt: r.prompt, choices: r.choices,
+        answer_index: r.answer_index, difficulty: r.difficulty ?? undefined, explanation: r.explanation || "" });
+    }
+    dbBanks = next;
+    mergeBanks();
+    console.log(`portal: ${banks.size} quiz banks on the list (${dbBanks.size} written on the dashboard)`);
+  } catch (e) {
+    // The table may simply not be loaded yet on an older install. File banks
+    // keep working, which is the behaviour this portal has always had.
+    if (dbSig !== "unavailable") { dbSig = "unavailable"; console.error(`portal: quiz_banks not readable (${e.message}); file banks only`); }
+  }
+}
+function loadBanks() { loadFileBanks(); loadDbBanks(true); }
+loadFileBanks();
+loadDbBanks(true);
+setInterval(() => loadDbBanks(false), 30_000).unref();
 process.on("SIGHUP", loadBanks);
+
+// ---- the rules of earning -------------------------------------------------
+// The cooldown, the daily cap and the perfect-round bonus used to be constants
+// in this file. They are now per household and per child, set on the
+// dashboard, resolved once by earn_settings_effective. The constants below are
+// still the fallback, so a household that never opens that screen, or has not
+// loaded schema-quizbanks.sql, behaves exactly as it always did.
+const EARN_FALLBACK = { quiz_cooldown_min: QUIZ_COOLDOWN_MIN, quiz_daily_cap_min: QUIZ_DAILY_CAP,
+                        mastery_bonus_min: MASTERY_BONUS, default_minutes_per_pass: 10 };
+async function earnSettings(childId) {
+  try {
+    const [r] = await q(`SELECT quiz_cooldown_min, quiz_daily_cap_min, mastery_bonus_min, default_minutes_per_pass
+        FROM earn_settings_effective WHERE child_id=$1`, [childId]);
+    return r ? { ...EARN_FALLBACK, ...r } : EARN_FALLBACK;
+  } catch { return EARN_FALLBACK; }
+}
 
 // Active rounds live in memory: token -> {childId, bankId, questions:[{qid, answer}], expires}.
 // Lost on restart, which only means "start the round again". Nothing secret persists.
@@ -101,7 +186,8 @@ async function status(childId) {
     WHERE child_id=$1 AND kind='earn' AND reason LIKE 'quiz:%' AND ts::date=CURRENT_DATE`, [childId]);
   const lastPass = await q(`SELECT reason, max(ts) t FROM time_events
     WHERE child_id=$1 AND kind='earn' AND reason LIKE 'quiz:%' GROUP BY reason`, [childId]);
-  return { rem, cats, tasks, claims, quizEarnedToday: Number(quizToday[0]?.m || 0),
+  const set = await earnSettings(childId);
+  return { rem, cats, tasks, claims, set, quizEarnedToday: Number(quizToday[0]?.m || 0),
            quiz: Object.fromEntries(quiz.map(r => [r.bank_id, r])),
            lastPassAt: Object.fromEntries(lastPass.map(r => [r.reason.slice(5), new Date(r.t).getTime()])) };
 }
@@ -109,7 +195,7 @@ async function status(childId) {
 // the dashboard, otherwise the bank's own. A bank switched off for them is not
 // on their list at all.
 const quizOn = (st, bank) => st.quiz?.[bank.id]?.enabled !== false;
-const quizMinutes = (st, bank) => st.quiz?.[bank.id]?.minutes ?? (bank.minutes_per_pass || 10);
+const quizMinutes = (st, bank) => st.quiz?.[bank.id]?.minutes ?? (bank.minutes_per_pass || st.set?.default_minutes_per_pass || 10);
 // Mirrors kidnet's ensure_day: weekend days get the weekend budget.
 async function ensureDay(childId) {
   await q(`INSERT INTO time_ledger(child_id,day,budget_min)
@@ -293,8 +379,23 @@ const DEMO_NOTE = DEMO
        The quizzes work: pass a round and watch the clock change.
      </div>`
   : "";
+const STUDY_CSS = `
+.qrow{display:flex;align-items:stretch;gap:8px}
+.qrow .qcard{flex:1}
+.study-link{flex:none;display:flex;align-items:center;padding:0 13px;border-radius:14px;
+  background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.20);
+  color:#fff;text-decoration:none;font-weight:600;font-size:14px;white-space:nowrap}
+.study-link:hover{background:rgba(255,255,255,.18)}
+.study{margin-top:6px}
+.s-q{padding:13px 0;border-bottom:1px solid rgba(255,255,255,.14)}
+.s-q:last-child{border-bottom:0}
+.s-p{margin:0 0 6px;font-weight:600;line-height:1.45}
+.s-a{margin:0;display:inline-block;background:rgba(255,255,255,.20);
+  border-radius:9px;padding:4px 11px;font-weight:700}
+.s-e{margin:7px 0 0;opacity:.85;line-height:1.5}
+`;
 const page = body => `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
-<title>${DEMO ? "Hearth demo" : "Hearth"}</title><style>${CSS}</style><div class="wrap">${DEMO_NOTE}${body}</div>`;
+<title>${DEMO ? "Hearth demo" : "Hearth"}</title><style>${CSS}${STUDY_CSS}</style><div class="wrap">${DEMO_NOTE}${body}</div>`;
 // ---------------------------------------------------------------------------
 // Claiming a device
 // ---------------------------------------------------------------------------
@@ -396,6 +497,38 @@ async function claimPage(mac, ip, hostname, msg) {
     ${helpFoot}</div>`);
 }
 
+// ---------------------------------------------------------------------------
+// The study page
+// ---------------------------------------------------------------------------
+// Every question in every bank already carries an explanation. All 429 of
+// them. Until now a child never saw one unless they got the question wrong,
+// which means the material to learn from was sitting in the database being
+// used only to mark homework.
+//
+// This turns a bank into something you can read before you answer it. It is
+// not a substitute for going and reading properly, which is what the learn
+// allowlist is for, but it means a child who scored three out of ten has
+// somewhere to go that is not "try again and hope".
+function studyPage(bank, kidQS) {
+  const items = (bank.questions || []).map((q, i) => {
+    const ans = (q.choices || [])[q.answer_index];
+    return `<div class="s-q">
+      <p class="s-p"><b>${i + 1}.</b> ${esc(q.prompt)}</p>
+      <p class="s-a">${esc(ans ?? "")}</p>
+      ${q.explanation ? `<p class="s-e">${esc(q.explanation)}</p>` : ""}
+    </div>`;
+  }).join("");
+  return page(`<div class="card">
+    <h1>${esc(bank.emoji || "")} ${esc(bank.title)}</h1>
+    <div class="who">Everything this quiz can ask, with the answers and why.
+      Read it, then go and have a go. The questions come up in a different order
+      every time, so there is nothing to memorise the shape of.</div>
+    <div class="study">${items}</div>
+    <p><a class="back" href="/quiz/${esc(bank.id)}${kidQS}">I am ready, start a round</a></p>
+    <p><a class="back" href="/${kidQS}">Back</a></p>
+    ${helpFoot}</div>`);
+}
+
 const helpFoot = `<div class="foot">Need to talk to someone? Free, any time: call or text <b>1737</b>,
  or Youthline <b>0800 376 633</b>. These always work, even when your internet is off.</div>`;
 
@@ -466,17 +599,19 @@ function homePage(kid, st, kidQS) {
     ? `<h1>${outOfTime ? "⏳ Time's up" : "⏸️ Internet paused"}</h1>
        <div class="who">Hi ${esc(kid.name)}. ${outOfTime ? "You've used today's time, but you can earn more below." : "Some things are switched off right now. You can still earn time for later."}</div>`
     : `<h1>👋 Kia ora ${esc(kid.name)}</h1><div class="who">Your time, your call. Earn more below whenever you like.</div>`;
-  const capLeft = Math.max(0, QUIZ_DAILY_CAP - st.quizEarnedToday);
+  const cap = st.set.quiz_daily_cap_min, bonus = st.set.mastery_bonus_min;
+  const capLeft = Math.max(0, cap - st.quizEarnedToday);
   const myBanks = [...banks.values()].filter(b => quizOn(st, b));
   const quizCards = myBanks.map(b => {
     const last = st.lastPassAt[b.id] || 0;
-    const coolUntil = last + QUIZ_COOLDOWN_MIN * 60_000;
+    const coolUntil = last + st.set.quiz_cooldown_min * 60_000;
     const cooling = Date.now() < coolUntil;
     const note = cooling ? `ready ${new Date(coolUntil).toLocaleTimeString("en-NZ", { hour: "2-digit", minute: "2-digit" })}`
                : capLeft <= 0 ? "daily cap reached" : `+${Math.min(quizMinutes(st, b), capLeft)} min`;
     return (cooling || capLeft <= 0)
       ? `<div class="qcard dim"><span class="e">${esc(b.emoji || "🎓")}</span><b>${esc(b.title)}</b><span class="m">${note}</span></div>`
-      : `<a class="qcard" href="/quiz/${esc(b.id)}${kidQS}"><span class="e">${esc(b.emoji || "🎓")}</span><b>${esc(b.title)}</b><span class="m">${note}</span></a>`;
+      : `<div class="qrow"><a class="qcard" href="/quiz/${esc(b.id)}${kidQS}"><span class="e">${esc(b.emoji || "🎓")}</span><b>${esc(b.title)}</b><span class="m">${note}</span></a>`
+        + `<a class="study-link" href="/study/${esc(b.id)}${kidQS}" title="The answers and why, before you have a go">Read up</a></div>`;
   }).join("");
   // One claim per job per day, so the answer to "I did this" is always about
   // today. A job Dad has to say yes to waits; a job he has already trusted you
@@ -498,13 +633,13 @@ function homePage(kid, st, kidQS) {
       <div class="rem">${unlimited ? "∞" : Math.max(0, rem)}<small> ${unlimited ? "no daily limit" : "min left today"}</small></div></div>
     <div class="card"><h2>🎓 Earn time: quizzes (instant)</h2>${quizCards
       || '<div class="small">No quizzes on your list right now. Ask Dad to switch one back on.</div>'}
-      <div class="small">Pass a round to get minutes straight away. Perfect round = +${MASTERY_BONUS} bonus. Up to ${QUIZ_DAILY_CAP} min a day from quizzes; you've earned ${st.quizEarnedToday} today.</div></div>
+      <div class="small">Pass a round to get minutes straight away.${bonus > 0 ? ` Perfect round = +${bonus} bonus.` : ""} Up to ${cap} min a day from quizzes; you've earned ${st.quizEarnedToday} today.</div></div>
     <div class="card"><h2>🧺 Earn time: jobs</h2>${chores || '<div class="small">No jobs set up yet.</div>'}
       <div class="small">${anyTrusted ? "Some of these land on your clock straight away. The rest wait for Dad to say yes." : "Tap one when it is done and Dad gets asked."} One go at each a day.</div></div>
     <div class="card">${helpFoot}</div>`);
 }
 
-async function quizPage(kid, bank, kidQS, perMin) {
+async function quizPage(kid, bank, kidQS, perMin, bonus) {
   const ramped = isRamped(bank);
   const profile = ramped ? await rampProfile(kid.id, bank.id) : null;
   const pick = ramped
@@ -520,7 +655,7 @@ async function quizPage(kid, bank, kidQS, perMin) {
   }).join("");
   rounds.set(token, round);
   return page(`<div class="card"><h1>${esc(bank.emoji || "")} ${esc(bank.title)}</h1>
-    <div class="who">${round.questions.length} questions. Get ${bank.pass_mark} right to earn ${perMin} minutes. All ${round.questions.length} right = +${MASTERY_BONUS} bonus.${ramped ? " They start easy and get harder as you go, so treat the first few as a warm-up." : ""}</div>
+    <div class="who">${round.questions.length} questions. Get ${bank.pass_mark} right to earn ${perMin} minutes.${bonus > 0 ? ` All ${round.questions.length} right = +${bonus} bonus.` : ""}${ramped ? " They start easy and get harder as you go, so treat the first few as a warm-up." : ""}</div>
     <form method="post" action="/quiz/submit${kidQS}"><input type=hidden name=t value="${token}">${qhtml}
     <button class="go">Check my answers</button></form>
     <p><a class="back" href="/${kidQS}">← back</a></p></div>`);
@@ -538,13 +673,13 @@ async function gradeRound(kid, form, kidQS) {
   let creditedMsg = "", credited = 0;
   if (passed) {
     const st = await status(kid.id);
-    const coolMs = (st.lastPassAt[bank.id] || 0) + QUIZ_COOLDOWN_MIN * 60_000 - Date.now();
-    const capLeft = Math.max(0, QUIZ_DAILY_CAP - st.quizEarnedToday);
+    const coolMs = (st.lastPassAt[bank.id] || 0) + st.set.quiz_cooldown_min * 60_000 - Date.now();
+    const capLeft = Math.max(0, st.set.quiz_daily_cap_min - st.quizEarnedToday);
     if (!quizOn(st, bank)) creditedMsg = "This one is off your list just now, so no minutes this time. Try another quiz.";
     else if (coolMs > 0) creditedMsg = "You already passed this one recently, so no minutes this time. Try another quiz.";
-    else if (capLeft <= 0) creditedMsg = `You've hit today's ${QUIZ_DAILY_CAP} minute quiz cap. Nice work, back tomorrow.`;
+    else if (capLeft <= 0) creditedMsg = `You've hit today's ${st.set.quiz_daily_cap_min} minute quiz cap. Nice work, back tomorrow.`;
     else {
-      const mins = Math.min(quizMinutes(st, bank), capLeft) + (right === total ? MASTERY_BONUS : 0);
+      const mins = Math.min(quizMinutes(st, bank), capLeft) + (right === total ? st.set.mastery_bonus_min : 0);
       await credit(kid.id, mins, `quiz:${bank.id}`);
       credited = mins;
       creditedMsg = `+${mins} minutes earned${right === total ? " (perfect round bonus included)" : ""}. It's already on your clock.`;
@@ -616,6 +751,11 @@ const server = createServer(async (req, res) => {
       }
       return send(page(`<div class="card"><div class="msg">Unknown action.</div></div>`));
     }
+    // Read up before you answer. No cooldown, no cap, no round token: reading
+    // is not a thing to ration.
+    const sm = url.pathname.match(/^\/study\/([a-z0-9-]+)$/);
+    if (sm && banks.has(sm[1])) return send(studyPage(banks.get(sm[1]), kidQS));
+
     const m = url.pathname.match(/^\/quiz\/([a-z0-9-]+)$/);
     if (m && banks.has(m[1])) {
       const bank = banks.get(m[1]);
@@ -623,7 +763,8 @@ const server = createServer(async (req, res) => {
       if (p && p.enabled === false)
         return send(page(`<div class="card"><div class="msg">That one is off your list just now. There are others.</div>
           <p style="text-align:center"><a class="back" href="/${kidQS}">← back to Hearth</a></p></div>`));
-      return send(await quizPage(kid, bank, kidQS, p?.minutes ?? (bank.minutes_per_pass || 10)));
+      const set = await earnSettings(kid.id);
+      return send(await quizPage(kid, bank, kidQS, p?.minutes ?? (bank.minutes_per_pass || set.default_minutes_per_pass), set.mastery_bonus_min));
     }
     // A recent Tor/darknet/drugs flag replaces the ordinary page with the warm
     // one. Only on the fall-through GET, so an in-progress quiz and every POST
