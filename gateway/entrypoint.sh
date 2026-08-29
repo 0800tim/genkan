@@ -253,6 +253,26 @@ sync_state(){
 # Resolve the scope='safety' always_allow domains (NZ youth help lines,
 # schoolwork) into @kids_allow so they survive a cut. Same rules as
 # `kidnet allow-sync` on the host; both may run, both converge.
+# The Tor relay list. Reconciled here rather than in sync_state because it is
+# thousands of addresses that change once a day, and diffing that every fifteen
+# seconds would be work for nothing.
+#
+# It reads the database like every other set, which is the whole point of the
+# change: kidnet-tor-sync used to write a file and an nft snippet that nothing
+# ever applied, so @tor_nodes was empty for the life of the box while the daily
+# job reported success. A set the firewall rebuilds from Postgres cannot drift
+# out of force, because a restart puts it back rather than losing it.
+sync_tor_nodes(){
+  [ -n "$DB" ] || return 0
+  # reconcile_set already fails towards keeping what is loaded: a query that
+  # errors, or a database that is not answering, changes nothing at all. That
+  # is the safe direction here too. An empty tor_nodes table is a household
+  # that has not fetched the list yet, not an instruction to unblock Tor, and
+  # it cannot be told from a fetch that failed, so it is left to say so in
+  # kidnet-health rather than acted on.
+  reconcile_set tor_nodes "SELECT host(ip) FROM tor_nodes"
+}
+
 sync_safety_net(){
   [ -n "$DB" ] || return 0
   local d ip list="" ips
@@ -290,7 +310,12 @@ while true; do
     if ! segment_guard; then sleep 60; continue; fi
     ip addr replace "$GW_IP/$GW_CIDR" dev kids0
     load_firewall || { sleep 30; continue; }
-    sync_state; sync_safety_net; last_reconcile=$(printf '%(%s)T' -1)
+    # sync_tor_nodes belongs here as much as in the hourly pass. load_firewall
+    # has just reloaded kids.nft, which leaves @tor_nodes empty, and last_sync
+    # starts at now, so without this line every restart would leave an hour
+    # with no Tor block in it. That hole is the same shape as the bug this all
+    # exists to fix, just shorter.
+    sync_state; sync_safety_net; sync_tor_nodes; last_reconcile=$(printf '%(%s)T' -1)
     # Coming up healthy supersedes any earlier gateway alarm (a failed segment
     # guard, a vanished NIC, a reconcile error). Clear them, or the dashboard
     # keeps showing a solved problem as if it were happening now.
@@ -306,7 +331,8 @@ while true; do
     # Continuous reconcile: DB is the desired state, firewall follows.
     if [ $((now - last_reconcile)) -ge "$RECONCILE_S" ]; then sync_state; last_reconcile=$now; fi
     # Hourly safety-net refresh: help-line addresses are CDN-hosted and move.
-    if [ $((now - last_sync)) -ge 3600 ]; then sync_safety_net; last_sync=$now; fi
+    # The Tor relay list rides the same hour: it changes daily, not by the second.
+    if [ $((now - last_sync)) -ge 3600 ]; then sync_safety_net; sync_tor_nodes; last_sync=$now; fi
   fi
   sleep 5
 done

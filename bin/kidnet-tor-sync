@@ -5,10 +5,19 @@
 #   1. $TOR_NODES_FILE  - plain IPv4 list, one per line (audit trail, diffable)
 #   2. $TOR_NFT_FILE    - an `nft -f` snippet that flushes and refills the
 #                         `tor_nodes` set in table `inet kids`
-# It NEVER loads anything into a live ruleset itself. The gateway reconciler
-# (or a deploy step / timer owned by kidnet) applies the snippet with
-# `nft -f`, inside the container namespace, the same way everything else is
-# applied. One writer, no surprises.
+#   3. the `tor_nodes` table, which is what actually puts the list in force
+#
+# It NEVER loads anything into a live ruleset itself, and that used to be the
+# end of the story: the sentence here said "the gateway reconciler applies the
+# snippet", and no such step existed. The list was fetched faithfully every day
+# for the life of the box and the @tor_nodes set stayed empty the whole time.
+# Nothing was wrong with any one piece; nothing owned the join.
+#
+# So the addresses now go into Postgres, and the gateway rebuilds @tor_nodes
+# from there hourly and after every restart, exactly as it does for every other
+# set it enforces. The file and the snippet are kept: the file is the diffable
+# audit trail, and the snippet is what you apply by hand on a box with no
+# database. See DECISIONS.md, "A list nobody applies is not a blocklist".
 #
 # Why ALL relays and not just exits: a kid's Tor client dials a GUARD (entry)
 # relay, never an exit. The official torbulkexitlist is exits only, which is
@@ -49,6 +58,10 @@ set -euo pipefail
 : "${TOR_NFT_FILE:=/var/lib/hearth/tor-nodes.nft}"
 : "${TOR_MIN_NODES:=1000}"     # consensus is ~7-8k relays; under this = bad fetch
 : "${TOR_CHUNK:=500}"          # elements per `add element` line, for readability
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB_NAME="${HEARTH_DB:-kids_network}"
+DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_EXEC=(docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME")
 ONIONOO_URL="https://onionoo.torproject.org/details?type=relay&running=true&fields=or_addresses"
 DANME_URL="https://www.dan.me.uk/torlist/"   # FULL list (not ?exit), one IP per line
 
@@ -128,7 +141,43 @@ sync(){
   mv "$TOR_NFT_FILE.tmp" "$TOR_NFT_FILE"
   echo "kidnet-tor-sync: $n Tor relay addresses from $src"
   echo "kidnet-tor-sync: list    -> $TOR_NODES_FILE"
-  echo "kidnet-tor-sync: snippet -> $TOR_NFT_FILE (apply with: nft -f, in the gateway netns)"
+  echo "kidnet-tor-sync: snippet -> $TOR_NFT_FILE (apply by hand with: nft -f, in the gateway netns)"
+  load_db "$n" "$src"
+}
+
+# Put the addresses where the firewall can see them. CSV, not COPY's text
+# format: that format has a backslash grammar an attacker-supplied field can
+# use to end the copy early, which is how the DNS ingest was poisoned. A relay
+# list is third-party input and gets the same treatment.
+#
+# One transaction, and the shape matters. Refreshing last_seen on what is still
+# published, adding what is new, and deleting only what the fetch actually
+# contradicts means a relay never flickers out of the set between the delete
+# and the insert. A half-applied list is a window with no Tor block in it.
+load_db(){
+  local n="$1" src="$2" out rc
+  out=$( { printf '%s\n' "BEGIN;"
+           printf '%s\n' "CREATE TEMP TABLE _tor(ip inet) ON COMMIT DROP;"
+           printf '%s\n' "COPY _tor FROM STDIN WITH (FORMAT csv);"
+           cat "$TOR_NODES_FILE"
+           printf '%s\n' "\\."
+           printf '%s\n' "INSERT INTO tor_nodes(ip) SELECT DISTINCT ip FROM _tor
+                           ON CONFLICT (ip) DO UPDATE SET last_seen = now();"
+           printf '%s\n' "DELETE FROM tor_nodes t WHERE NOT EXISTS (SELECT 1 FROM _tor x WHERE x.ip = t.ip);"
+           printf '%s\n' "UPDATE tor_sync_state SET fetched_at=now(), node_count=(SELECT count(*) FROM tor_nodes), ok=true, detail='$src' WHERE id=1;"
+           printf '%s\n' "COMMIT;"
+         } | "${DB_EXEC[@]}" -q 2>&1 ); rc=$?
+  case "$out" in
+    *ERROR*)
+      # Loud, and recorded. The whole point of this change is that a relay list
+      # which does not reach the firewall must never look like one that did.
+      echo "kidnet-tor-sync: could not load the list into the database, so the" >&2
+      echo "kidnet-tor-sync: firewall keeps its previous addresses: $(printf '%s' "$out" | grep '^ERROR' | head -1)" >&2
+      "${DB_EXEC[@]}" -qc "UPDATE tor_sync_state SET ok=false, detail='$(printf '%s' "$out" | grep '^ERROR' | head -1 | sed "s/'/''/g" | cut -c1-150)' WHERE id=1" >/dev/null 2>&1 || true
+      return 1;;
+  esac
+  [ "$rc" = 0 ] || { echo "kidnet-tor-sync: database load failed (rc=$rc)" >&2; return 1; }
+  echo "kidnet-tor-sync: database -> tor_nodes ($n address(es)); the gateway rebuilds @tor_nodes within the hour"
 }
 
 emit(){
@@ -158,6 +207,29 @@ status(){
   else
     echo "snippet: MISSING ($TOR_NFT_FILE)"
   fi
+  # The two questions that matter, and they are not the same question. A list
+  # can be perfectly fresh and doing nothing at all, which is exactly what this
+  # tool did for the life of the first box.
+  local db gw
+  db=$("${DB_EXEC[@]}" -tAc "SELECT count(*) FROM tor_nodes" 2>/dev/null | head -1)
+  case "${db:-}" in
+    ''|*[!0-9]*) echo "database: could not read tor_nodes (is the schema loaded?)";;
+    0)           echo "database: EMPTY. Nothing is blocked. Run: kidnet-tor-sync sync";;
+    *)           echo "database: $db address(es) in tor_nodes";;
+  esac
+  gw=$(docker exec "${GW_CONTAINER:-hearth-gw}" nft -j list set inet kids tor_nodes 2>/dev/null \
+       | python3 -c 'import sys,json
+try: d=json.load(sys.stdin)
+except Exception: sys.exit(0)
+for b in d.get("nftables",[]):
+    st=b.get("set")
+    if st: print(len(st.get("elem",[]) or []))' 2>/dev/null | head -1)
+  case "${gw:-}" in
+    '') echo "firewall: could not ask the gateway (is hearth-gw running?)";;
+    0)  echo "firewall: @tor_nodes is EMPTY, so no relay is blocked yet."
+        echo "          The gateway refills it hourly; to do it now: docker restart hearth-gw";;
+    *)  echo "firewall: @tor_nodes holds $gw address(es), so the block is in force";;
+  esac
 }
 
 case "${1:-sync}" in

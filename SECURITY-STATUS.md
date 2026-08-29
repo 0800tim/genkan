@@ -19,17 +19,19 @@ the code, not against the reports.
 | Portal `?kid=` override readable by any device on the island | Low | `e35a515` | Needs a preview token the dashboard holds, or the demo flag. |
 | Test suites passing without running (missing netcat) | High | `1997b26`, `30f5be2` | Eleven isolation assertions passed on any machine without netcat, including every default Arch install. All probes moved to bash's own TCP support, and a probe that cannot run is now a hard failure. |
 | IoT vendor learning storing nothing while reporting success | High | `61c99f1` | The camera lockdown had never actually been in force. |
+| `bin/kidnet` connecting to Postgres as a superuser | High | `660e3c9` | Every CLI operation and every timer now connects as `kids_agent`: no password, so it cannot authenticate over TCP at all; no `DELETE` on the tables holding a child's history; and no route to `COPY ... TO PROGRAM`. Proven by firing the review's own payload at 21 verbs and checking the file it would have created is absent. `test/db-role-test.sh`, 77 checks. |
+| Ungated interpolations in CLI-only paths | Medium | `660e3c9` | 55 argument sites gated across `bin/`, `gateway/` and `demo/`. An id read back out of the database counts as an argument too, and every argument is now checked before the first connection opens. |
+| The Tor relay list never reaching the firewall | Medium | `3869c53` | Confirmed, and the cause was not the one assumed. The apply step existed; its readiness guard skipped it every time and exited 0, because `deploy.sh` runs the unit in exactly the two minutes the gateway has no firewall loaded. Three runs, three skips, zero applies, all logged as success. Measured empty on the live box, so a stock Tor Browser would have connected. The addresses now go into Postgres and the gateway rebuilds the set from there at startup and hourly. `kidnet-health` asks the firewall what it holds rather than reading a file's modification time, which is what had been reporting the list as current. `test/tor-test.sh`, 25 checks. |
+| The safety alert path failing silently | High | `ccc4181` | A bash comment inside a SQL string killed `kidnet-alerts` for a day. It reported "nothing new" and exited 0 throughout. A failed query now raises an urgent alert of its own. `test/alerts-test.sh`, 15 checks. |
+| `kidnet-health` reporting a working firewall as broken | Low | `3869c53` | `printf \| grep -q` under `set -o pipefail`: a match makes grep exit, the producer dies of SIGPIPE, and pipefail reports the successful match as a failure. Latent until the ruleset outgrew the pipe buffer. The same pattern in `kidnet-upgrade` would have waved a failing test suite through a release gate. |
 
 ## Open, and honestly so
 
 | Finding | Severity | Status |
 |---|---|---|
 | `kids_known` is fed by DHCP leases | High | Real. A device that gets a lease is known. Device claiming closes it (`docs/DEVICE-IDENTITY.md`) but **ships off by default**, so it is open until a household turns it on. That default is deliberate: switching it on changes what happens to every unrecognised device, and a family should choose that rather than inherit it from an update. |
-| `bin/kidnet` connects to Postgres as a superuser | High | Being fixed. Every CLI operation currently runs as `postgres` on a shared instance, which turns any injection into a whole-server problem. |
-| Remaining ungated interpolations in CLI-only paths | Medium | Being fixed. The HTTP-reachable ones are closed; several operator-only paths still interpolate without a gate. |
 | `DASH_TOKEN` handed to any unauthenticated GET | Medium | By design, and weaker than its comment claimed. It buys CSRF protection, not a perimeter. The perimeter is the private network the dashboard binds to. Do not expose the dashboard publicly without putting real authentication in front of it. |
-| `tor_nodes` empty on a live gateway | Medium | The Tor blocklist syncs from a timer that is installed but was not running here. The test suite passes because it injects its own elements, which is the same false-green shape found elsewhere. |
-| Nothing reads the `tor_dev` counters | Low | The alert path for a Tor attempt is not wired. The block works; the alert does not. |
+| Nothing reads the `tor_dev` counters | Low | The alert path for a Tor attempt is not wired. The counters tick now that the block is actually in force, and nothing reads them, so a child reaching for a relay is refused but no parent is told. |
 
 ## What this project cannot do, at all
 

@@ -62,9 +62,10 @@ rather than reassurance:
     test/schema-test.sh                 # 88 checks, a fresh install into an empty database
     test/db-role-test.sh                # 77 checks, the CLI's role cannot leave the database
     test/alerts-test.sh                 # 15 checks, the safety alert path runs
+    test/tor-test.sh                    # 25 checks, the relay list reaches the firewall
     ADGUARD_PASS=... test/adguard-test.sh
 
-docs/CLI.md lists all fourteen suites. Run them one at a time: several build a
+docs/CLI.md lists all fifteen suites. Run them one at a time: several build a
 throwaway database or a namespace with a fixed name, so two at once collide and
 report failures that are not real.
 
@@ -191,7 +192,7 @@ One service and seven timers. That is the entire host footprint, besides the
 | `kids-devicescan.timer` | every minute | `kidnet-devicescan`: DHCP leases into the devices table, then `kidnet-classify` |
 | `kids-dnslog.timer` | every 2 minutes | `kidnet-dnslog`, then `kidnet-alerts` as an `ExecStartPost` |
 | `kids-schedule.timer` | every minute | `kidnet-schedule apply`: puts scheduled bedtimes on, and lifts them in the morning |
-| `kids-tor-sync.timer` | daily, with up to 2h jitter | `kidnet-tor-sync sync`, then applies the snippet inside the gateway namespace |
+| `kids-tor-sync.timer` | daily, with up to 2h jitter | `kidnet-tor-sync sync`: fetches the relay list into the `tor_nodes` table. The gateway rebuilds the nft set from there. |
 
 There is an eighth timer, `kids-iot-policy.timer`. `deploy.sh` installs it and
 deliberately does **not** enable it, because the household IoT layer is switched

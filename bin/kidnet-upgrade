@@ -249,7 +249,10 @@ $out"
 
     say "   the database schema loads from empty..."
     if [ -x "$TMPW/test/schema-test.sh" ]; then
-      if ! out="$(bash "$TMPW/test/schema-test.sh" 2>&1)" || printf '%s' "$out" | grep -q FAIL; then
+      # Not `printf | grep -q`: under pipefail an early match kills printf with
+      # SIGPIPE and the 141 reads as "no FAIL found", which would wave a
+      # failing test suite through this gate. Bash's own matching cannot.
+      if ! out="$(bash "$TMPW/test/schema-test.sh" 2>&1)" || case "$out" in *FAIL*) true;; *) false;; esac; then
         printf '%s\n' "$out" | grep -E 'FAIL|failed' | head -10 | sed 's/^/     /'
         die "REFUSING TO UPGRADE: the new version's database schema does not load. Nothing has been changed."
       fi

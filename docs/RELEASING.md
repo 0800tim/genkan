@@ -87,6 +87,7 @@ test/schedule-test.sh           # 57 checks, bedtimes and who may lift a block
 test/notify-test.sh             # 41 checks, what a lock screen may say
 test/package-test.sh            # 31 checks, a community module cannot bite
 test/alerts-test.sh             # 15 checks, the safety alert path runs
+test/tor-test.sh                # 25 checks, the relay list reaches the firewall
 test/adguard-test.sh            # 9 checks, needs ADGUARD_PASS
 test/meter-test.sh              # 8 checks, time accounting
 test/service-meter-test.sh      # 6 checks, per-service time

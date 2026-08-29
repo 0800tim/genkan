@@ -114,6 +114,14 @@ GRANT SELECT, INSERT, UPDATE         ON service_ips       TO kids_agent;
 GRANT SELECT, INSERT, UPDATE         ON service_usage     TO kids_agent;
 GRANT SELECT, UPDATE                 ON claim_settings    TO kids_agent;  -- kidnet claim-mode
 GRANT SELECT, UPDATE                 ON iot_policy_settings TO kids_agent;
+-- The Tor relay list (config/db/schema-tor.sql). DELETE is granted here and
+-- deliberately, unlike on children or dns_log: a relay that leaves the public
+-- consensus has to leave the set too, or the household slowly accumulates a
+-- block list of addresses that are no longer Tor and nobody can explain why a
+-- site stopped working. kidnet-tor-sync only ever deletes what the fetch it
+-- just made contradicts, inside the same transaction that inserts.
+GRANT SELECT, INSERT, UPDATE, DELETE ON tor_nodes       TO kids_agent;  -- kidnet-tor-sync
+GRANT SELECT, UPDATE                 ON tor_sync_state  TO kids_agent;  -- when, how many, and whether it worked
 -- The slow lane (config/db/schema-slow.sql). One settings row the CLI updates,
 -- and two read-only views. The category_state grant above already covers the
 -- speed column, because the third state lives on the row the block lives on.

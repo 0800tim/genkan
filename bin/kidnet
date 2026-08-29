@@ -509,7 +509,7 @@ case "${1:-}" in
   # wrongly billed one. 'standard' unless the parent says otherwise.
   shared) key="${2:?mac-or-ip}"; ck_addr "$key"; ck_text "${3:-}"; tier="${4:-standard}"; ck_name "$tier"
     [ -n "$(psqll "SELECT 1 FROM policies WHERE tier='$tier'")" ] || { echo "kidnet: no filter level called '$tier'"; exit 1; }
-    if echo "$key" | grep -q ':'; then col="mac::text='$key'"; else col="host(reserved_ip)='$key'"; fi
+    if case "$key" in *:*) true;; *) false;; esac; then col="mac::text='$key'"; else col="host(reserved_ip)='$key'"; fi
     lblset=""; [ -n "${3:-}" ] && lblset=", label='$3'"
     n=$(psqll "WITH u AS (UPDATE devices SET category='shared', child_id=NULL,
                  policy_tier='$tier'$lblset WHERE $col RETURNING 1) SELECT count(*) FROM u")
@@ -528,7 +528,7 @@ case "${1:-}" in
       *) echo "kidnet: say on, off or default"; exit 1;; esac
     # devices is matched on its own columns; device_roster carries the resolved
     # answer and spells the address as `ip`, so it needs its own WHERE.
-    if echo "$key" | grep -q ':'; then col2="mac::text='$key'"; col3="mac='$key'"
+    if case "$key" in *:*) true;; *) false;; esac; then col2="mac::text='$key'"; col3="mac='$key'"
     else col2="host(reserved_ip)='$key'"; col3="ip='$key'"; fi
     cls=$(psqll "SELECT category FROM devices WHERE $col2 LIMIT 1")
     [ -n "$cls" ] || { echo "kidnet: no device matching '$key'"; exit 1; }
@@ -592,7 +592,7 @@ case "${1:-}" in
     ck_addr "$key"; ck_name "${3:?person}"; ck_text "${4:?label}"; [ -z "$rip" ] || ck_ip "$rip"
     pid=$(psqll "SELECT id FROM children WHERE lower(name)=lower('$3')"); [ -n "$pid" ] || { echo "unknown person '$3' (add: kidnet person add)"; exit 1; }
     ck_id "$pid"
-    if echo "$key" | grep -q ':'; then col="mac::text='$key'"; else col="host(reserved_ip)='$key' OR id IN (SELECT device_id FROM dhcp_leases WHERE host(ip)='$key' AND device_id IS NOT NULL)"; fi
+    if case "$key" in *:*) true;; *) false;; esac; then col="mac::text='$key'"; else col="host(reserved_ip)='$key' OR id IN (SELECT device_id FROM dhcp_leases WHERE host(ip)='$key' AND device_id IS NOT NULL)"; fi
     if [ -n "$rip" ]; then ripset=", reserved_ip='$rip'"; else ripset=""; fi
     n=$(psqll "WITH u AS (UPDATE devices SET child_id=$pid, label='$4'$ripset WHERE $col RETURNING 1) SELECT count(*) FROM u")
     audit device "$4" assigned agent

@@ -130,8 +130,8 @@ isolation, DNS forcing or the safety net.
 ```nft
 # --- declarations, alongside the existing sets -------------------------
 
-# Public Tor relay addresses. Populated by kidnet-tor-sync (deploy + a
-# daily timer) via the generated /var/lib/hearth/tor-nodes.nft snippet;
+# Public Tor relay addresses. The gateway rebuilds this from the tor_nodes
+# table at startup and hourly, like every other set it enforces;
 # NEVER edited by hand. flags interval so ranges can be added later.
 set tor_nodes { type ipv4_addr; flags interval; }
 
@@ -166,10 +166,21 @@ Done:
 1. **The relay list.** `kidnet-tor-sync sync` runs at deploy and then daily
    from `kids-tor-sync.timer`, with up to two hours of jitter so we are not
    hammering the Tor Project's directory API on the stroke of midnight.
-2. **The apply step.** `kids-tor-sync.service` pipes the generated snippet
-   into the gateway container, so `@tor_nodes` is flushed and refilled in a
-   single nft transaction and is never momentarily empty. If the running
-   image predates the set, the apply is skipped rather than failing the unit.
+2. **The apply step.** `kidnet-tor-sync` writes the addresses to the
+   `tor_nodes` table, and the gateway rebuilds `@tor_nodes` from there at
+   startup and on its hourly pass, flushing and refilling in a single nft
+   transaction so the set is never momentarily empty.
+
+   This is the second design. The first piped the rendered snippet into the
+   gateway from the systemd unit, guarded by "skip if the running image has no
+   `tor_nodes` set yet". `deploy.sh` runs that unit immediately after
+   recreating the gateway, which is exactly the two minutes the gateway spends
+   in its segment-guard wait with no firewall loaded, so the guard fired every
+   time and the apply never once happened. Three runs, three skips, zero
+   applies, and every one of them logged as a success. The set sat empty and a
+   stock Tor Browser would have connected. Reading it out of the database
+   removes the readiness question entirely: there is nothing to be too early
+   for, and a restart refills the set rather than losing it.
 3. **The DNS layer.** The `flag_domains` seed in `config/db/schema-flags.sql`
    carries the on-ramps, bridges, onion gateways and market directories, and
    `kidnet-adguard` renders the `tor`, `darknet` and `drugs` patterns as a

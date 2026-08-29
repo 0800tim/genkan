@@ -952,16 +952,31 @@ AdGuard keys clients by name and building it would overwrite that person's.
 
     kidnet-tor-sync [sync|emit|status]
 
-- `sync` (default) fetches the current public Tor relay list and writes two
-  files: a plain address list for the audit trail, and an `nft -f` snippet that
-  flushes and refills the `tor_nodes` set in one transaction.
+- `sync` (default) fetches the current public Tor relay list, loads the
+  addresses into the `tor_nodes` table, and writes two files: a plain address
+  list for the audit trail, and an `nft -f` snippet you can apply by hand on a
+  box with no database.
 - `emit` prints `nft` commands built from the list already on disk, without
   fetching.
-- `status` shows the list's size and age.
+- `status` shows three separate answers, because they are three separate
+  questions: what the file holds, what the database holds, and **what the
+  firewall is actually enforcing**.
 
-**It never loads anything into a live ruleset.** Applying the snippet is done by
-`kids-tor-sync.service`, which pipes it into the gateway container. One writer,
-no surprises.
+**It never loads anything into a live ruleset.** The gateway rebuilds
+`@tor_nodes` from the database at startup and hourly, the same way it rebuilds
+every other set it enforces. One writer, no surprises.
+
+That last part is new, and it is worth saying why. There used to be a second
+step in `kids-tor-sync.service` that piped the snippet into the gateway,
+guarded by "skip if the gateway has no `tor_nodes` set yet". `deploy.sh` runs
+the unit immediately after recreating the gateway, which is exactly when the
+gateway is in its segment-guard wait with no firewall loaded, so the guard
+fired every time, the apply was skipped every time, and the unit reported
+success every time. The set was empty and nothing said so.
+
+A fetch that cannot reach the firewall is not a blocklist. `kidnet-tor-sync
+status` and `kidnet-health` both now ask the firewall directly rather than
+looking at the age of a file.
 
 Sources in order: Onionoo, the Tor Project's own directory API, then dan.me.uk
 as a fallback (rate limited to one fetch per thirty minutes, so it is called
@@ -1411,6 +1426,7 @@ were doing exactly that on any machine without netcat. See DECISIONS.md.
     test/notify-test.sh               41 checks: what may reach a phone, and what may never reach a lock screen
     test/package-test.sh              31 checks: a community learning package treated as hostile input
     test/alerts-test.sh               15 checks: a flagged domain raises one alert, and a broken check says so
+    test/tor-test.sh                  25 checks: the relay list reaches the firewall, and says so when it does not
     ADGUARD_PASS=... test/adguard-test.sh    9 checks: the DNS layer, via AdGuard's own check_host API
 
 Run them one at a time. Several build a throwaway database or a namespace with
@@ -1421,8 +1437,8 @@ a fixed name, so two at once collide and report failures that are not real.
 for the island subnet on purpose.
 
 The ones that do not need root: `schema-test.sh`, `db-role-test.sh`,
-`schedule-test.sh`, `notify-test.sh`, `package-test.sh`, `alerts-test.sh` and
-`adguard-test.sh`.
+`schedule-test.sh`, `notify-test.sh`, `package-test.sh`, `alerts-test.sh`,
+`tor-test.sh` and `adguard-test.sh`.
 `adguard-test.sh` is the only one that needs the island profile up.
 
 `schema-test.sh` creates a throwaway database, loads every file through

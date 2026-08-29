@@ -31,7 +31,7 @@ FILES=(schema schema-categories schema-time schema-safety
        schema-badges seed schema-presence schema-appliance
        schema-roles schema-claim schema-shared schema-learn
        schema-learn-intl schema-schedule schema-slow schema-notify
-       schema-release schema-retention)
+       schema-release schema-retention schema-tor)
 
 # The files end in GRANT ... TO kids_app, so the role has to exist first.
 docker exec -i "$PG" psql -U postgres -d "$DB" -qc \

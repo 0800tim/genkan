@@ -71,7 +71,9 @@ uncommitted work; the timer lives on the box, not the repo), publish.sh (the
 pre-publish leak scan), validate-package.mjs (community packages),
 lint-sql-comments.py (refuses a bash '#' comment written inside a SQL string,
 which is legal bash and once killed the whole flagged-domain alert path for a
-day) and enable-https.sh.
+day), lint-pipefail-grep.py (refuses `printf | grep -q` in a script that sets
+pipefail: grep's early exit kills the producer with SIGPIPE and pipefail turns
+a successful match into a failure) and enable-https.sh.
 
 The learn-to-earn content is the largest part of the repo by volume: over 40
 quiz banks and more than 2,000 questions in portal/quizzes/ (every question

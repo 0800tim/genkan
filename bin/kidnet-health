@@ -150,11 +150,21 @@ run_checks(){
         "The gateway is up but has no rules, so nothing is being blocked or metered. Check: sudo docker logs $GW"
     else
       local missing=""
+      # Bash's own matching, not `printf | grep -q`. This script runs under
+      # `set -o pipefail`, and grep -q exits the moment it matches, which kills
+      # printf with SIGPIPE while it is still writing. pipefail then promotes
+      # that 141 to the pipeline's status, so a set that IS present reads as
+      # missing. It bit only once the ruleset grew past the pipe buffer: the
+      # sets are printed at the top of the table, so grep matched early and
+      # printf always had more to write, while the chains are printed at the
+      # bottom, so those checks kept passing. The result was kidnet-health
+      # telling a household its firewall was incomplete, and sending it to
+      # restart a gateway that was working perfectly.
       for c in input forward metering prerouting postrouting; do
-        printf '%s' "$rules" | grep -q "chain $c {" || missing="$missing $c"
+        case "$rules" in *"chain $c {"*) ;; *) missing="$missing $c";; esac
       done
       for s in kids_block kids_allow kids_known; do
-        printf '%s' "$rules" | grep -q "set $s {" || missing="$missing $s"
+        case "$rules" in *"set $s {"*) ;; *) missing="$missing $s";; esac
       done
       if [ -n "$missing" ]; then
         add fail firewall "The firewall is loaded but incomplete" \
@@ -265,14 +275,35 @@ run_checks(){
   # 11. The Tor relay list. A warning, never a failure: a stale list still
   #     blocks the relays it knew about, and docs/tor-and-safety.md is honest
   #     that this layer was never the real defence anyway.
-  if [ -f "$TOR_NODES_FILE" ]; then
+  #
+  #     This used to check the age of the FILE and nothing else, and reported
+  #     "the Tor relay list is current" every day on a box where the firewall
+  #     held not one relay address. The file was fresh; nothing had ever
+  #     applied it. So the question asked here is whether the block is IN
+  #     FORCE, and the file's age is only asked once the answer is yes.
+  local tor_n
+  tor_n=$(docker exec "${GW_CONTAINER:-hearth-gw}" nft -j list set inet kids tor_nodes 2>/dev/null \
+          | python3 -c 'import sys,json
+try: d=json.load(sys.stdin)
+except Exception: sys.exit(0)
+for b in d.get("nftables",[]):
+    st=b.get("set")
+    if st: print(len(st.get("elem",[]) or []))' 2>/dev/null | head -1)
+  if [ -z "${tor_n:-}" ]; then
+    : # the gateway is already reported as down above; do not say it twice
+  elif [ "$tor_n" = 0 ]; then
+    add warn tor "The Tor relay block is not in force" \
+      "The firewall holds no relay addresses, so a stock Tor Browser would connect. Fetch the list and let the gateway pick it up: sudo kidnet-tor-sync sync. It was never the real defence (docs/tor-and-safety.md), but it should be doing what it says."
+  elif [ -f "$TOR_NODES_FILE" ]; then
     local age; age=$(( ( $(date +%s) - $(stat -c %Y "$TOR_NODES_FILE" 2>/dev/null || echo 0) ) / 86400 ))
     if [ "$age" -gt 7 ]; then
       add warn tor "The Tor relay list is $age days old" \
-        "It still blocks what it knew about. The daily job may have failed: sudo systemctl status kids-tor-sync.service"
+        "It still blocks the $tor_n addresses it knew about. The daily job may have failed: sudo systemctl status kids-tor-sync.service"
     else
-      add ok tor "The Tor relay list is current" "Refreshed within the last $((age+1)) day(s)."
+      add ok tor "The Tor relay block is in force" "$tor_n relay addresses, refreshed within the last $((age+1)) day(s)."
     fi
+  else
+    add ok tor "The Tor relay block is in force" "$tor_n relay addresses in the firewall."
   fi
 }
 

@@ -1859,3 +1859,92 @@ those two are indistinguishable, the quiet answer is the dangerous one.
 
 For the record, the household lost nothing. Re-running the check over the whole
 outage window found no flagged look-up in it.
+
+## A list nobody applies is not a blocklist
+
+**2026-08-30.** `kidnet-tor-sync` fetched the public Tor relay list, wrote 7299
+addresses to a file and rendered an `nft -f` snippet, and `kids-tor-sync.service`
+piped that snippet into the gateway. Measured on the live box, the `@tor_nodes`
+set held zero addresses, so the three reject rules in `kids.nft` that use it
+matched nothing and a stock Tor Browser would have connected.
+
+The apply step was not missing. It was skipped, every single time, by its own
+guard:
+
+    docker exec hearth-gw nft list set inet kids tor_nodes >/dev/null 2>&1 \
+      || { echo "gateway has no tor_nodes set yet, skipping apply"; exit 0; }
+
+The reasoning was sound: a running gateway image might predate the set, and a
+fetch that succeeded should not be reported as a failure because of that. What
+it missed is *when* this unit runs. `deploy.sh` starts it immediately after
+recreating the gateway, which is exactly the two minutes the gateway spends in
+its segment-guard wait with no firewall loaded at all. So the guard was
+guaranteed to fire, the apply was guaranteed to be skipped, and the unit was
+guaranteed to finish green. The journal on this box: three runs, three skips,
+zero applies, three lines reading `Finished kids-tor-sync.service`.
+
+A guard that cannot distinguish "too early to apply" from "this will never
+apply" is not a guard, it is a way of not noticing.
+
+**The addresses now go into Postgres**, and the gateway rebuilds `@tor_nodes`
+from there at startup and hourly, exactly as it does for every other set it
+enforces. That is not a new mechanism, it is the mechanism this project already
+had and this one list was not using. It is also what makes the fix durable: a
+set the gateway rebuilds from the database cannot drift out of force, because a
+restart puts it back rather than losing it.
+
+The file and the snippet are kept. The file is the diffable audit trail, and
+the snippet is what you apply by hand on a box with no database.
+
+**The second `ExecStart` is gone rather than fixed.** A second writer for one
+set, racing the gateway's own reconcile and depending on a readiness check
+being right, is worth nothing next to the database the gateway already reads
+and already rebuilds from after every restart.
+
+**`kidnet-health` was the second half of the problem**, and the more important
+half. It reported "the Tor relay list is current" every day, and it was telling
+the truth about the only thing it was looking at: the modification time of a
+file. It now asks the firewall how many addresses it is holding, and only asks
+about the file's age once the answer is more than zero. A check that measures
+the input to a system and reports on the output of it is worse than no check,
+because it is believed.
+
+`kidnet-tor-sync status` gained the same distinction, and prints all three
+answers separately: what the file has, what the database has, and what the
+firewall is actually enforcing.
+
+## grep -q and pipefail disagree about what success means
+
+**2026-08-30.** Filling `@tor_nodes` with 7299 addresses pushed the ruleset past
+64KB, and `kidnet-health` immediately began reporting a complete firewall as
+incomplete, naming the three device lists the iron rules depend on. Nothing was
+wrong with the firewall.
+
+    printf '%s' "$rules" | grep -q "set kids_block {" || missing="$missing $s"
+
+`grep -q` exits the instant it matches. The producer is then still writing into
+a pipe with no reader, so it dies of SIGPIPE with status 141, and `set -o
+pipefail` promotes that to the status of the whole pipeline. **A successful
+match reports failure**, and only once the data outgrows the pipe buffer, which
+is why a change to the Tor list appeared to break the firewall check.
+
+The split in the symptom is the tell, and it is worth remembering: `nft list
+table` prints the sets first and the chains last, so every set check failed and
+every chain check passed. The chain checks were not more correct, they were just
+further down the output, giving `printf` time to finish before `grep` matched.
+
+Bash's own matching has no pipe, no second process and no race:
+
+    case "$rules" in *"set $s {"*) ;; *) missing="$missing $s";; esac
+
+`tools/lint-pipefail-grep.py` refuses the pattern anywhere in a script that sets
+`pipefail`, and runs inside `test/tor-test.sh`. Four other places had it. One
+was `kidnet-upgrade`, checking a test suite's output for `FAIL` before allowing
+a release through: there, a SIGPIPE would have read as "no failures found" and
+waved a broken release through the gate. It had not fired yet only because the
+suite's output was still smaller than the buffer.
+
+This is the second bug in one night whose whole damage was a check reporting
+calm it had not established. The first was `kidnet-alerts`. Both are the same
+mistake in different clothes: **the failure of a check must never be able to
+look like the success of a check.**

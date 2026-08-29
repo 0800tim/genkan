@@ -159,7 +159,7 @@ youth help lines reachable even when a child is fully cut off).
     sudo test/container-test.sh     # 26 checks, the real image
 
 Both must pass fully. They need root because they build network namespaces; they
-need no hardware. There are fourteen suites in total: the other twelve are
+need no hardware. There are fifteen suites in total: the other thirteen are
 `roles-test.sh` (108 checks, who each scoped control reaches), `schema-test.sh`
 (88 checks, a fresh install into an empty database), `db-role-test.sh`
 (77 checks, the CLI's database role cannot leave the database),
@@ -168,7 +168,8 @@ need no hardware. There are fourteen suites in total: the other twelve are
 (41 checks, what may appear on a lock screen), `iot-policy-test.sh` (39 checks,
 the household IoT layer), `package-test.sh` (31 checks, a community learning
 package treated as hostile input), `alerts-test.sh` (15 checks, the safety
-alert path runs and says so when it cannot), `meter-test.sh` (8),
+alert path runs and says so when it cannot), `tor-test.sh` (25 checks, the
+relay list reaches the firewall), `meter-test.sh` (8),
 `service-meter-test.sh` (6) and `adguard-test.sh` (9, and it needs a running
 AdGuard and `ADGUARD_PASS`).
 
@@ -176,14 +177,20 @@ Run them one at a time. Several build a throwaway database or a namespace with
 a fixed name, so two at once collide and report failures that are not real.
 
 The ones that need no root and touch nothing that is running: `schema-test.sh`,
-`db-role-test.sh`, `schedule-test.sh`, `package-test.sh`, `alerts-test.sh` and
-`notify-test.sh`.
+`db-role-test.sh`, `schedule-test.sh`, `package-test.sh`, `alerts-test.sh`,
+`tor-test.sh` and `notify-test.sh`.
 
 If you touch anything in `config/db/`, run `test/schema-test.sh`. Every other
 suite runs against a database that was built up over months, so none of them
 would notice that a fresh install no longer loads.
 
 If you touch anything that unblocks a child, run `test/schedule-test.sh` too.
+
+If you touch the firewall sets, the gateway's reconcile or `kidnet-health`, run
+`test/tor-test.sh`. It also sweeps for `printf | grep -q` in any script that
+sets `pipefail`: grep exits on the first match, the producer dies of SIGPIPE,
+and pipefail reports the successful match as a failure. That one told a
+household its firewall was incomplete when it was fine.
 
 If you touch anything that raises an alert, run `test/alerts-test.sh`. It also
 sweeps every script for a `#` comment written inside a SQL string, which is

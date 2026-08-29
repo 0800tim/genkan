@@ -56,7 +56,9 @@ psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB" -tAF$'\t' -c
 # "nothing yet" when the query actually failed is the sort of lie that costs
 # somebody an afternoon.
 show(){ local out; out=$(psqll "$1" 2>&1 || true)
-        if printf '%s' "$out" | grep -q '^ERROR:'; then
+        # Bash matching rather than a pipe: pipefail plus grep -q's early exit
+        # turns a found error into "no error found". See DECISIONS.md.
+        if case "$out" in 'ERROR:'*|*$'\n''ERROR:'*) true;; *) false;; esac; then
           printf '%s' "$out" | grep '^ERROR:' | head -1 | sed 's/^/  could not read this: /'
         elif [ -n "$out" ]; then printf '%s\n' "$out" | fold -sw 74 | sed 's/^/  /'
         else echo "  ${2:-(nothing recorded yet)}"; fi; }
