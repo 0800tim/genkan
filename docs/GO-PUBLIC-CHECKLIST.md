@@ -19,8 +19,23 @@ Repo separation, verified:
   hearth-site        the marketing site. Separate repo, own decision to make.
 
 Working tree is now genericised: no household MAC, no tailnet address, no main
-LAN address, no real children's names (the docs use Ada, Ben and Cleo as
-examples; the real names live only in the database on the family's own box).
+LAN address, no real children's names. Every name in the repo is invented: most
+documents use Ada, Ben and Cleo, `docs/HOUSEHOLD-ROLES.md` uses Robin, Toby and
+Elsie, and the public demo's household is Piper, Rangi and Nova. The real names
+live only in the database on the family's own box.
+
+`tools/publish.sh` is the scanner that checks this before a push. It was
+quietened on 2026-08-29 (it had been failing on the author's name in `LICENSE`,
+the `guest-adult` and `guest-kid` role labels, and the MAC-shaped test
+fixtures), and with those out of the way it immediately found real example
+parent names in the voice documentation. The author's name is now pinned in the
+script rather than read from git's `user.name`, allowed only in `LICENSE` and
+`DECISIONS.md`, and a hard failure anywhere else.
+
+There is also public surface beyond the repo now: `hearth-demo.appspurt.dev`
+and `hearth-portal.appspurt.dev`. Both run the repo's code against an invented
+household on its own database, with no docker socket and no `bin/` mounted.
+`demo/README.md` lists what stops them reaching anything real.
 
 ## Must do (blocking)
 
@@ -69,7 +84,17 @@ examples; the real names live only in the database on the family's own box).
       current nft sets, so without it the "has anything changed" comparison
       never matches and both sets are rewritten every fifteen seconds.
 
-## Verified solid (security review, 2026-08-29)
+## Verified solid (security review, 2026-08-29), with one caveat
+
+**Read the caveat first.** Much of what follows is "covered by tests", and on
+2026-08-29 eleven of those isolation assertions were found to be passing without
+running: they probed with netcat, a missing netcat exits 127, and a negative
+assertion whose probe fails reports PASS. The probes have been moved to bash's
+own `/dev/tcp` and the suites re-run (firewall 31/31, container 26/26,
+iot-policy 39/39), so the guarantees below are now genuinely tested rather than
+merely reported. The claims are the same; the evidence for them is younger than
+the review. DECISIONS.md has the detail.
+
 
 Namespace isolation is genuine (cap_drop ALL, no privileged, no host net,
 only eth0 + kids0). The house network, main LAN, tailnet and Postgres are all

@@ -22,29 +22,37 @@ with `GRANT ... TO kids_app` and will fail otherwise.
 
 ## Schema load order
 
-The files are additive and idempotent (`CREATE TABLE IF NOT EXISTS`, `ALTER
-TABLE ... ADD COLUMN IF NOT EXISTS`, `ON CONFLICT DO NOTHING`), so re-running
-the whole set is safe. The order matters though: later files reference and
-redefine things earlier ones create.
+Each file is additive and idempotent on its own (`CREATE TABLE IF NOT EXISTS`,
+`ALTER TABLE ... ADD COLUMN IF NOT EXISTS`, `ON CONFLICT DO NOTHING`), so
+re-running any one of them is safe. The **whole set** is not re-runnable over a
+database that already has it: `schema-people.sql` does `CREATE OR REPLACE VIEW
+people`, and `schema-roles.sql` has since widened that view, so the second pass
+fails with "cannot drop columns from view". A household box loads them once and
+never meets it. `demo/reseed.sh` reloads nightly, so it drops the schema first.
+
+The order matters too: later files reference and redefine things earlier ones
+create.
 
 | # | File | What it adds |
 |---|---|---|
 | 1 | `schema.sql` | children, policies, devices, schedules, dhcp_leases, dns_log, alerts, block_events, always_allow |
-| 2 | `schema-categories.sql` | category_state, category_domains, category_ips, category_usage, category_budgets |
+| 2 | `schema-categories.sql` | category_state, category_domains, category_ips, category_usage, category_budgets, and the seeded domain map (about 175 domains across gaming, video, download, social, audio, messaging and schoolwork) |
 | 3 | `schema-time.sql` | time_ledger, time_events, tasks, the time_remaining view |
 | 4 | `schema-safety.sql` | the always_allow scope split: safety versus category |
 | 5 | `schema-earn.sql` | earn_claims, for parent-approved chores |
 | 6 | `schema-people.sql` | children.kind, device hostnames, the people and device_roster views |
 | 7 | `schema-devices.sql` | devices.category and vendor, and device_roster rebuilt to carry them |
 | 8 | `schema-flags.sql` | flag_domains: the Tor, darknet, self-harm and VPN alert patterns |
-| 9 | `schema-services.sql` | services, service_domains, service_ips, service_usage, and the seed service list |
+| 9 | `schema-services.sql` | services, service_domains, service_ips, service_usage, and the seeded service list: 30 services over 103 domains, CDN names included |
 | 10 | `schema-voice.sql` | voice_events and the voice_recent view, for the optional voice module |
 | 11 | `schema-goals.sql` | goals: one agreed weekly target per child, read by the dashboard's Week and kid pages |
 | 12 | `schema-policies.sql` | the household security layer: vendor clouds and their domains, per-class and per-device IoT policy, parent grants, and the `device_policy_effective` view |
 | 13 | `schema-tasks.sql` | per-child job offers and quiz bank settings: `task_offers`, `quiz_settings`, two more columns on `tasks`, and the `task_offer_effective` view the dashboard's Learn to earn screen and the portal both read |
 | 14 | `schema-quizresults.sql` | `quiz_rounds` and `quiz_answers`, every graded quiz round including the failed ones, plus the `quiz_form` and `quiz_difficulty_form` views the portal's difficulty ramp reads |
 | 15 | `seed.sql` | the three policy tiers, placeholder children, and the always_allow rows |
-| 16 | `schema-roles.sql` | the four household roles (child, guest-child, guest-adult, adult), the `people` view with the role flags, the `people_in_scope()` and `ips_in_scope()` scope functions, and `household_roster` |
+| 16 | `schema-presence.sql` | `devices.present_at`: "on the wire right now", as distinct from `last_seen`, which comes from the lease list and outlives the device |
+| 17 | `schema-appliance.sql` | a fourth device class, `appliance`: not a person's and not smart-home kit, so full internet, no owner, no time limits, never caught by a kids control |
+| 18 | `schema-roles.sql` | the four household roles (child, guest-child, guest-adult, adult), the `people` view with the role flags, the `people_in_scope()` and `ips_in_scope()` scope functions, and `household_roster` |
 
 These ordering constraints are load-bearing:
 
@@ -62,6 +70,10 @@ These ordering constraints are load-bearing:
   runs quizzes and still pays out minutes, just without the difficulty ramp.
 - `schema-tasks.sql` must come **after** `schema-time.sql`, because it adds columns
   to `tasks`, and after `schema-people.sql`, because every offer is per child.
+- `schema-presence.sql` and `schema-appliance.sql` must come **after**
+  `schema-devices.sql`, because both alter the `devices` table that file
+  finishes shaping. Neither touches a view, so they sit safely between the seed
+  and the roles file.
 - `schema-roles.sql` must come **last**. It rebuilds the `people` view that
   `schema-people.sql` created, adds the `adult` filter level to the `policies`
   table that `seed.sql` fills, and migrates any old `kind='guest'` row to
@@ -73,10 +85,14 @@ Load them:
 for f in schema schema-categories schema-time schema-safety schema-earn \
          schema-people schema-devices schema-flags schema-services \
          schema-voice schema-goals schema-policies schema-tasks \
-         schema-quizresults seed schema-roles; do
+         schema-quizresults seed schema-presence schema-appliance \
+         schema-roles; do
   psql "$KIDS_DB_URL" -v ON_ERROR_STOP=1 -f config/db/$f.sql
 done
 ```
+
+`demo/reseed.sh` runs exactly this list, in this order, every night, which is
+the closest thing this project has to a test of the load order.
 
 `schema-voice.sql` is only needed if you run the optional voice module
 (`voice/`). It is harmless to load either way, and the table it creates is the

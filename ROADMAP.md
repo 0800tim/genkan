@@ -18,18 +18,28 @@ the holes are.
 - Containerised gateway with proven isolation (a bad rule cannot reach the
   host, the main LAN or a VPN, and there is a packet-level test that proves it)
 - Per-child age tiers, per-category control (gaming, video, social) via DNS
-- Per-category active-time metering with daily budgets, and per-category grants
+- Per-category active-time metering with daily budgets, and per-category grants.
+  Downloads are split out from gaming, counted and deliberately never charged
+- A seeded domain map: about 175 category domains and 30 services over 103
+  domains, so a fresh install meters something on day one
 - Per-service byte accounting (YouTube, Netflix, Roblox and friends), measured
   from real firewall counters rather than guessed from lookups
 - Learn to earn: eight quiz banks, server-side grading, cooldowns and daily caps
 - Chore claims with parent approval
 - Captive portal that explains, and a warm "come and talk to me" page for the
   serious categories
-- Device discovery and classification (personal, smart home, infrastructure),
-  so pausing the kids never darkens a camera or a door lock
+- Device discovery and classification (personal, smart home, unrestricted
+  appliance, infrastructure), so pausing the kids never darkens a camera, a door
+  lock or the media server. Presence is read from the gateway's neighbour table,
+  so "online" means on the wire rather than holding a lease
 - Tor and darknet blocking with a daily relay refresh
 - Safety net: NZ youth help lines stay reachable through any block
-- Analytics dashboard: tonight, trends, per kid, weekly digest, goals
+- Analytics dashboard: tonight, live traffic, family, week, trends, learn to
+  earn, devices, per kid, and the health of the box itself
+- A speed test on the island, measuring the wifi leg and the internet leg
+  separately, proxied into the dashboard at `/speed`
+- Two public demos running the real code against an invented household:
+  `hearth-demo.appspurt.dev` and `hearth-portal.appspurt.dev`
 - Household bug bounty
 
 ## Half built, and honest about it
@@ -41,6 +51,8 @@ the holes are.
 | Voice assistant | Designed in detail (`voice/`), including the impersonation Easter egg, but not built. |
 | Weekly digest delivery | The page and the CLI exist; nothing emails or messages it to you yet. |
 | Social metering | `METERING.md` says social is not metered; the dashboard counts it. Needs a deliberate decision either way. |
+| Household IoT policy | The model, the generator and 39 packet-level tests are real, and it is installed with its timer left disabled on purpose. It was also, until 2026-08-29, storing none of the vendor addresses it resolved, so every restricted device had an empty allowlist and was not restricted at all. Fixed, but nobody has yet run it enforcing for long enough to say what it breaks in an ordinary house. |
+| Vendor cloud lists | `vendor_clouds` covers a handful of brands. A device whose brand Hearth cannot identify is not restricted, and now says so on the dashboard. Adding a brand is a database row. |
 
 ---
 

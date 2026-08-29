@@ -102,7 +102,7 @@ answers that category's domains with the portal address for that child only.
 
 ### Time
 
-    kidnet time    <kid>                    minutes left today
+    kidnet time    [kid]                    minutes left today, or everybody
     kidnet bonus   <kid> <min> [why]        grant general minutes, reopens the internet
     kidnet grant   <kid> <gaming|video> <min>   grant minutes to ONE category
     kidnet earn    <kid> <task|min>         credit a named task's minutes, or a raw number
@@ -125,6 +125,10 @@ number of minutes.
 A child on the teen tier has no daily budget. That is stored as 999 in
 `time_ledger`, which the meter treats as unlimited, and `kidnet time` prints
 "no daily limit (teen tier)".
+
+`kidnet time` with no name reports the whole house: one line per active child
+and guest child, in name order. It used to die with a raw bash parameter error,
+which reached the dashboard verbatim.
 
 ### The safety net
 
@@ -396,12 +400,29 @@ No arguments. Run every minute by `kids-devicescan.timer`.
 
 Reads AdGuard's DHCP status (both dynamic and static leases) and upserts a row
 per MAC into `devices`, owned by nobody until a parent assigns it. Refreshes
-`last_seen`, so the dashboard knows who is online, and refreshes `dhcp_leases`,
-which is what `kidnet leases` prints. Then it runs `kidnet-classify` on anything
-new.
+`last_seen` and `dhcp_leases`, which is what `kidnet leases` prints. Then it
+records presence, then it runs `kidnet-classify` on anything new.
+
+**"Seen before" and "here now" are different columns.** `last_seen` comes from
+the lease list, and a lease outlives the device that holds it by up to its full
+duration, so it can never mean "on the wire right now". Presence is read
+separately from the gateway's neighbour table (`ip neigh show dev kids0`, states
+REACHABLE, STALE, DELAY and PROBE), and written to `devices.present_at`. A
+device is in that table only if it has answered ARP recently. That is what the
+dashboard's green dot reads: before this, a phone that left the house in the
+morning showed as online for the rest of its lease.
+
+`DISTINCT ON` on both upserts is load bearing rather than tidiness. One device
+can hold more than one lease (a renewal onto a new address, or a static entry
+beside a dynamic one), and Postgres cannot apply `ON CONFLICT` to the same row
+twice within one statement. A duplicate used to abort the whole scan.
 
 It logs devices, not people. Assigning a device to a person is deliberately a
 manual step: only the parent knows whose phone is whose.
+
+| Variable | Default | Effect |
+|---|---|---|
+| `GW_CONTAINER` | `hearth-gw` | the container whose neighbour table is read for presence |
 
 ---
 
@@ -409,18 +430,24 @@ manual step: only the parent knows whose phone is whose.
 
 No arguments. Normally run by `kidnet-devicescan`; safe to run by hand.
 
-Puts every device into one of three classes, which decides how it is treated:
+Every device sits in one of four classes, which decides how it is treated:
 
 | Class | What it is | How Hearth treats it |
 |---|---|---|
 | `personal` | a phone, tablet, laptop, console, TV | assignable to a person, filtered and metered by their tier |
 | `iot` | cameras, locks, speakers, vacuums, lights, plugs, thermostats, appliances | never assigned, never metered, **never cut** by `kidnet off all` or `dinner` |
+| `appliance` | an SMS gateway, a build agent, a media server: nobody's device, but not smart-home kit either | full internet, no owner, no time limits, never caught by a kids control |
 | `infra` | the access point, switches, the gateway itself | not a client at all |
 
-That third row is the one worth saying out loud: your smart lock, your doorbell
+The `iot` row is the one worth saying out loud: your smart lock, your doorbell
 and your security camera stay online when you pause the kids at bedtime,
 because the group commands only ever touch `personal` devices. Nobody's front
 door goes offline because a fourteen year old ran out of time.
+
+`appliance` (`config/db/schema-appliance.sql`) is a parent's decision, made in
+the owner picker on the dashboard's Devices page. The classifier never guesses
+it, because the difference between "a server" and "somebody's laptop" is not
+visible from a hostname or a MAC prefix.
 
 It guesses in three passes, most reliable first:
 
@@ -432,10 +459,15 @@ It guesses in three passes, most reliable first:
 3. **The locally-administered bit.** A randomised MAC with no other signal is
    almost always a personal phone hiding its MAC, so it is classed personal.
 
-It only reclassifies devices still on defaults (`kind` unknown, not already
-`infra`), so a parent's decision is never overwritten. The vendor tables are
-curated rather than exhaustive, and extending them is a one-line change: most
-homes contain the same handful of vendors.
+**It only ever guesses about devices nobody has ruled on.** A row is a candidate
+only when its `kind` is still unknown, its class is still the default
+`personal`, it has no owner and it has no label. Anything a parent has touched
+is left exactly as they left it. Before this, an SMS gateway filed by hand as an
+appliance reverted to a personal device on the next sweep, which is worse than
+never guessing at all: a guess must never beat a decision.
+
+The vendor tables are curated rather than exhaustive, and extending them is a
+one-line change: most homes contain the same handful of vendors.
 
 If it guesses wrong, fix it by hand: `kidnet infra <mac>` for an access point,
 or update `devices.category` directly for anything else.
@@ -611,10 +643,34 @@ here can touch the safety net.
 | `IOTMAP_PAGES` | `15` | query-log pages read when learning vendor addresses |
 | `GW_CONTAINER` / `NFT_NS` / `NFT_DIRECT` / `PG_CONTAINER` | as for the meters | |
 
+`learn` resolves each vendor's domains and stores the answers in `vendor_ips`,
+then reads AdGuard's query log for the CDN names a static list cannot know. It
+reports how many addresses it resolved **and how many are now stored**, because
+those two numbers used to differ silently: several of a vendor's domains resolve
+to the same address, Postgres refuses an `ON CONFLICT DO UPDATE` that touches
+one row twice in a command, and the error went to `/dev/null`. Every
+vendor-restricted device therefore had an empty allow list, which the firewall
+reads as no restriction at all. If the write fails now, it says so and raises an
+urgent alert. Run `learn` a few times over a day or two before enforcing, and
+check the stored count is not zero.
+
+Alerts clear themselves. A successful `apply` retires the unacknowledged
+`iot-policy` alerts before it, so a validation failure that has since been fixed
+stops sitting on the dashboard claiming to be current. A validation or apply
+failure now carries the nft error rather than dropping it.
+
+After every successful apply it also checks for devices set to `internet_out=vendor`
+whose brand it cannot identify. Those devices are **not restricted at all**, so
+it raises a dashboard warning naming each one and the command that fixes it,
+`set <device> vendor <brand>`. That used to be a line in a terminal nobody
+reads. The alert text itself says `cloud <brand>`, which is not a valid field
+name: the field is `vendor`. That is a bug in the alert's wording, recorded here
+rather than papered over.
+
 Fail-safe, in order of importance: a database outage changes nothing; `observe`
 (the shipped default) turns every deny into a counter; a vendor with no learned
-addresses leaves its devices unrestricted and reports the gap; and a ruleset
-that does not validate is not applied at all.
+addresses leaves its devices unrestricted, reports the gap and warns on the
+dashboard; and a ruleset that does not validate is not applied at all.
 
 Honest limits, stated at length in
 [HOUSEHOLD-SECURITY.md](HOUSEHOLD-SECURITY.md): a vendor on a large shared CDN
@@ -673,6 +729,15 @@ instead of reloading it.
 Not in `bin/`, but part of the same surface. All seven need the stack or at
 least Postgres, and five of them need root because they build throwaway
 network namespaces.
+
+Every suite checks its tools up front and exits with `MISSING REQUIRED TOOL`
+rather than running, and every one that needs `nft` finds it with `command -v`
+rather than assuming `/usr/sbin/nft` (Debian and Ubuntu put it there, Arch puts
+it in `/usr/bin`). The TCP probes use bash's own `/dev/tcp` rather than netcat,
+so there is no external binary left to be missing, and `chk_not` treats exit 127
+as a hard failure. That combination matters more than it sounds: a negative
+assertion whose probe never ran reports PASS, and eleven isolation guarantees
+were doing exactly that on any machine without netcat. See DECISIONS.md.
 
     sudo test/firewall-test.sh        31 checks: the shipped ruleset, real packets, three namespaces
     sudo test/container-test.sh       26 checks: the real image, containment, replug, segment guard

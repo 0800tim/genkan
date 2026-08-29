@@ -74,6 +74,37 @@ The allowlist is built the same way the rest of Hearth learns things: Hearth is
 your DNS server, so it resolves the vendor's domains itself and also watches
 which addresses your own devices are given when they look those names up.
 
+### It was not working until 2026-08-29
+
+Said plainly, because it is the kind of thing a project is tempted to bury.
+`kidnet iot learn` resolved every vendor address correctly and then failed to
+store any of them. Several of a vendor's domains resolve to the same address,
+Postgres refuses an `ON CONFLICT DO UPDATE` that touches one row twice in a
+single command, and the error was being sent to `/dev/null`. So the tool
+reported "resolved 28 addresses" while writing none.
+
+The consequence is the one that matters: **every vendor-restricted device had an
+empty allowlist, and an empty allowlist means no restriction at all.** The
+camera lockdown described above had never actually been in force on any box.
+Nothing was blocked that should have been allowed, so nothing looked broken,
+which is exactly why it survived. A control that fails open and stays quiet is
+the worst failure mode a security feature has.
+
+Fixed, and the write no longer hides its own errors: a storage failure now logs
+the Postgres message and raises an urgent alert. `learn` now reports both how
+many addresses it resolved and how many are stored, so the two numbers can be
+compared. If you have been running with the IoT layer enforcing, run
+`kidnet iot learn` again and check the stored count:
+
+```sh
+kidnet iot learn
+docker exec -i postgres psql -U postgres -d kids_network -c \
+  "SELECT vc.vendor, count(*) FROM vendor_ips vi
+     JOIN vendor_clouds vc ON vc.id = vi.vendor_id GROUP BY 1 ORDER BY 1"
+```
+
+A vendor with zero rows is a vendor whose devices are not restricted.
+
 ## Turning it on
 
 It ships **off in all but name**. Installing the schema changes nothing. The
@@ -151,7 +182,24 @@ door. So:
   stay loaded. Hearth says so and does nothing.
 - **If a vendor's addresses have not been learned yet, that device is not
   restricted.** An empty allowlist means "we do not know yet", never "block
-  everything". Hearth reports the gap so you can fix it.
+  everything". That direction is deliberate and stays: a household must never be
+  locked out of its own front door because a name did not resolve. But it means
+  "not restricted" is a real state your house can be in, so Hearth now says so
+  where you will see it rather than only in a terminal.
+- **If a device is set to vendor-only and Hearth cannot tell what brand it is,
+  it is not restricted at all**, and a warning appears on the dashboard naming
+  that device and printing the command that fixes it:
+
+      kidnet iot set "Front door camera" vendor Reolink
+
+  Until you answer it, that device has the ordinary internet. This used to be a
+  line of terminal output nobody read. Note that the alert's own wording says
+  `cloud <brand>`; the field is called `vendor`, and the alert text is wrong.
+  Known, and not fixed in a documentation pass.
+- **Alerts clear themselves.** A successful run retires the IoT alerts before
+  it, so a validation failure that has since been fixed stops sitting on the
+  dashboard claiming to be current. A red banner that is no longer true teaches
+  a household to ignore the red ones.
 - **If the generated rules do not validate, nothing is applied** and you get an
   alert. There is no state where half a policy is loaded.
 - **If the gateway restarts**, the policy is gone until the next run, and being
@@ -199,6 +247,12 @@ routed cases only, not a guarantee.
 **We see addresses, not content.** Same as everywhere else in Hearth. We know
 your camera talked to its vendor. We do not know what it said.
 
+**"Enforcing" is not the same as "restricted".** Every device with an empty
+allowlist is wide open regardless of the mode, so `kidnet iot status` telling
+you the mode is `enforce` is not on its own evidence that anything is being
+enforced. Check the stored address counts, and check the dashboard for the
+unknown-brand warning. That gap is what hid the bug above for as long as it hid.
+
 **A device can lie about its address.** The same static-address defence the kid
 side uses applies here: a device using an address we never reserved is not
 recognised and gets nothing. That is a real defence, but a device that steals
@@ -215,8 +269,15 @@ gateway. What we can police is the hub's traffic, not the radio behind it.
 |---|---|
 | The policy model | `config/db/schema-policies.sql` |
 | The generator and the CLI | `bin/kidnet-iot-policy` (also `kidnet iot ...`) |
-| The proof, with real packets | `test/iot-policy-test.sh` |
+| The proof, with real packets | `test/iot-policy-test.sh` (39 checks) |
 | The island firewall it sits on | `config/nftables/kids.nft` |
+
+Six of those 39 checks were themselves passing without testing anything until
+2026-08-29: they probed with netcat, and a negative assertion whose probe never
+runs reports PASS. The probes now use bash's own `/dev/tcp`, so there is no
+external binary left to be missing. DECISIONS.md has the detail. If you are
+relying on this layer, run the suite yourself rather than taking the number on
+trust.
 
 Nothing here edits `kids.nft`. The policy is generated from database rows into
 a chain of its own, exactly the way per-service metering is, so adding a device

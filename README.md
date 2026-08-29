@@ -10,6 +10,25 @@ pleading.
 Filtering you control, and absolutely nothing sent to anyone else. Not to a
 cloud service, not to us.
 
+## See it running
+
+Both halves are live, with a made-up family in them. No sign-up, nothing to
+install, and nobody's real child:
+
+- **[The parent's dashboard](https://hearth-demo.appspurt.dev)** at
+  `hearth-demo.appspurt.dev`. Tonight's state and the controls, live traffic,
+  the week, trends per child, the device roster, and the health of the box.
+- **[The kid's portal](https://hearth-portal.appspurt.dev)** at
+  `hearth-portal.appspurt.dev`. The page a child meets when their time has run
+  out, and the quizzes that earn it back. One demo child is deliberately out of
+  minutes: pass a round of times tables and watch the clock change.
+
+Both run the real code from this repo, mounted read only against a throwaway
+database, so what you are looking at is the actual software rather than a
+mockup. Anything you change goes back overnight. The demos hold nothing real:
+no household, no device, no firewall (`demo/README.md` explains exactly what
+stops them touching anything).
+
 ---
 
 ## The problem
@@ -265,6 +284,7 @@ help lines survive a cut.
 | `BUG-BOUNTY.md` | the household bug bounty, written for kids |
 | `docs/playbooks/` | the Switcheroo and other practical guides |
 | `integrations/omarchy/` | the Omarchy desktop integration: a status bar item and a menu |
+| `demo/README.md` | the two public demos, and what makes them inert |
 | `RECOMMENDATIONS.md` | age-tiered policy and what to do beyond on/off |
 | `ROADMAP.md` | what is built, what is half built, and where to help |
 | `CONTRIBUTING.md` | what a change must not weaken |

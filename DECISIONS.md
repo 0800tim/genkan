@@ -412,3 +412,280 @@ quiet and showing its live rate (which may be zero) rather than a stale one,
 and rank changes move the existing rows instead of rebuilding them. Five
 minutes matches the roster's own "online" window, so a device leaves the list
 at about the moment it stops counting as online.
+
+## The speed test belongs inside the dashboard (2026-08-29)
+
+The Speed link pointed at the gateway's own address on the family network, port
+8877. The test has to run there, because the gateway is the only machine that
+can see the family's wifi from the inside. But a parent reading the dashboard is
+on the other side of the gateway, on the admin network, so the link was dead for
+exactly the person it was for.
+
+Two ways to fix that: publish the speed test on the admin side as well, or proxy
+it through the dashboard. We proxied it, at `/speed`. The dashboard already sits
+on both sides of the gateway and is already the one private front door a parent
+uses, so proxying adds no new listener and nothing new to secure. Publishing a second
+port would mean a second address to remember, on a page whose whole job is to be
+the one place a parent looks. The measurement endpoints stream through
+untouched, because they move tens of megabytes and buffering them in order to
+rewrite them would defeat both the measurement and the memory budget. The
+gateway's address is asked of docker rather than hardcoded, since it changes
+whenever the container is recreated, and it is looked up again on any connection
+failure, which is exactly the moment it has moved.
+
+Then two bugs, which together produced a confidently wrong number. That is worse
+than an obvious zero, because nobody goes looking for it.
+
+1. **The prefix was bypassed.** The page's own script asked for `/ping`,
+   `/download` and `/upload` as absolute paths. Right when the test is served at
+   its own root, wrong the moment it is proxied under `/speed`: every one of
+   those requests landed on the dashboard instead. The proxy now points them at
+   the prefix, naming the five endpoints explicitly rather than rewriting by
+   pattern, because a pattern eventually rewrites something that was not a
+   request.
+2. **A failed request counted as throughput.** The client booked 8 MB whenever
+   an upload fetch *resolved*, success or not. A 404 answered in nine
+   milliseconds was therefore recorded as 8 MB transferred, which scores at
+   roughly 7 Gbps per stream. That is how a wifi link reported 2.2 Gbps beside a
+   download of exactly zero: nothing was moving in either direction, and only
+   one of the two numbers looked obviously wrong. Uploads now count what the
+   server confirms it received, which is what the comment above them always
+   claimed. A non-2xx download or ping is an error rather than a slow link, and
+   a phase where every stream failed raises instead of returning a figure
+   computed from an elapsed time and no bytes.
+
+The bar also names the leg it measured. Through the dashboard that is this
+device to the box over whatever network you are on, which is not the family
+wifi, and the page should not let anybody assume otherwise.
+
+## A System page, on its own slow clock (2026-08-29)
+
+Hearth runs on a box, and the box is the single point of failure for the whole
+family's internet. There was nowhere to see whether it was full, hot or
+thrashing. `/system` shows CPU, memory, disk, load, uptime, the Hearth
+containers and temperature as tiles, then processor, memory and network over
+time, with download and upload as separate lines.
+
+Everything is read straight from `/proc`, `/sys` and `statfs`. Nothing shells
+out to `top`, `df` or `free` on a timer, because a family gateway can be a
+Raspberry Pi and a page that costs a process spawn every few seconds makes the
+thing it is measuring slower. One sample is about six small file reads.
+
+**Its own SSE stream, not the live wire.** The live wire samples the family
+network every 1.5 seconds through a `docker exec`, and it deliberately only runs
+while somebody has Right Now open, because each tick costs a container round
+trip. Box health wants the opposite: a slow sample, every ten seconds, that
+never stops, held in a three-hour ring buffer in memory. Then the charts have
+history the moment the page opens rather than starting from a blank plot.
+Bolting it onto the live wire would have meant either making the household
+stream carry numbers no other page uses, or tying the box's history to whether
+anyone happened to be watching traffic. So: its own sampler, its own buffer, its
+own `/api/system/stream`. Nothing is written to the database.
+
+The page answers before Postgres is consulted, so it still renders when the
+database is the thing that is broken, which is exactly when a parent goes
+looking at it.
+
+Two deliberate absences. Every metric degrades to "n/a" with a reason rather
+than to zero, because a health page that invents a zero is worse than one that
+admits it cannot see. And the private address the dashboard is reached over is
+not listed among the network cards, because this is the page that gets
+screenshotted.
+
+## Two public demos, running the real code (2026-08-29)
+
+A stranger arriving at the repo could read about Hearth but not see it. Both
+halves are now live: `hearth-demo.appspurt.dev` is the parent's dashboard and
+`hearth-portal.appspurt.dev` is the child's captive portal with playable
+quizzes.
+
+**The real code, read only, not a copy.** `demo/compose.yaml` bind-mounts
+`../dashboard` read only and runs `node server.mjs` and `node portal.mjs`, the
+same files the household runs. A demo built as a separate copy is a demo that
+drifts, and a drifted demo is a lie with a URL. Mounting the real thing means
+improving the dashboard improves the demo on the next restart, and it means the
+demo exercises the same code paths a household does, including the control API
+and its token cookie. The cost is that the demo has to be made inert by
+construction rather than by being a different program, which is a higher bar and
+worth meeting explicitly:
+
+- Its own Postgres, its own volume, its own docker network. No route to the
+  shared `postgres` container and no credentials for it.
+- No docker socket mounted. `docker exec` is the only way anything in a
+  container could reach `nft` or `hearth-gw`, so that path does not exist
+  whatever the code does.
+- `HEARTH_DEMO=1` replaces `runKidnet` and `runTool` in `server.mjs` with
+  functions that return "This is the demo, so nothing was actually changed", so
+  no path reaches `execFile`, and switches the live sampler to a synthetic one.
+- `bin/` is not mounted, so there would be no `kidnet` to run.
+- No `NET_ADMIN`, no host networking, no privileged flag.
+
+With the flag unset, which is every household install, all of that is a strict
+no-op: the guards are ternaries that evaluate to exactly the code that was there
+before.
+
+**The earn guard is relaxed only under the flag.** The portal's `?kid=` override
+lets a parent see what a child sees, and at home it is deliberately view only: a
+POST needs the request to come from that child's own device, because earning
+from somebody else's device would let one child farm another's minutes. The
+public demo has no real devices at all, so under that rule the quizzes could be
+read and never played, and a portal you cannot play is not a demo of anything.
+`HEARTH_DEMO` lifts the device match, and only that. The household's own portal
+is untouched, and the demo's database is invented and reseeded nightly, so there
+is nothing there to farm.
+
+**It says it is a demo.** A stranger landing on the portal saw a child's name
+and a real-looking clock with nothing to mark it as invented, and a screenshot
+of that would have travelled as the real thing. Every portal page now carries a
+banner. Nothing renders at home.
+
+One demo child is deliberately out of time, in the seed, so the nightly reseed
+keeps it that way. A demo where everybody has minutes left never shows the
+screen worth showing.
+
+## The tests were passing without testing (2026-08-29)
+
+`chk_not` reports PASS when its command fails. That is right for "the firewall
+refused the connection" and catastrophically wrong for "the probe binary was not
+installed". A missing binary exits 127, so on any machine without netcat these
+assertions went green having checked nothing:
+
+    kid cannot reach the main house LAN
+    kid cannot reach the host postgres network
+    kid cannot reach the tailnet
+    kid cannot use DoH
+    a static-IP squatter gets no internet
+    a blocked kid loses the internet
+    the vacuum cannot reach the rest of the internet
+    a phone cannot reach the main house LAN
+    a cut-off phone loses the internet
+    a cut-off phone cannot use the camera grant as a way around it
+    an unknown device gets no internet even under IoT policy
+
+Eleven assertions across `container-test.sh` and `iot-policy-test.sh`, and they
+are the guarantees the whole project rests on. Worse, the positive assertions
+using the same probe failed at the same time, so a run read as "a few failures
+on this distro" rather than "the harness is not executing", which is the most
+misleading presentation available.
+
+This was not hypothetical. A default Arch install has no netcat, and Arch is the
+intended production gateway platform. The first parent to run these suites on a
+minimal distro would have been told their children were isolated when nothing
+had been checked.
+
+Three changes, chosen to fix the class rather than the instance:
+
+1. `chk_not` treats exit 127 as a hard failure and says the probe did not run.
+2. **Every probe moved off netcat onto bash's own `/dev/tcp`.** Bash is already
+   running the suite, so there is no external binary left to be missing. That is
+   the actual fix: a guard against a missing tool only helps for the tools
+   somebody thought to guard.
+3. All seven suites fail loudly on a missing tool up front, and `nft` is
+   discovered with `command -v` rather than hardcoded to `/usr/sbin/nft`. Debian
+   and Ubuntu put it in `/usr/sbin`, Arch puts it in `/usr/bin` and keeps
+   `/usr/sbin` only as a compatibility symlink. A distro without that symlink
+   would have failed these suites in a way that reads as a firewall bug rather
+   than a missing binary, which is the worst thing to hand somebody validating a
+   new platform.
+
+`adguard-test.sh` was audited and left alone: it uses curl, but every assertion
+is a positive match against an expected value, so a broken probe fails rather
+than passes.
+
+The IoT half of this was found by a second agent auditing all seven suites after
+the first two had been fixed. The lesson recorded here is that "I fixed the ones
+I was looking at" is not a finished job when the defect is a pattern.
+
+## The IoT policy was protecting nothing (2026-08-29)
+
+`kidnet-iot-policy learn` resolved the vendor addresses correctly and then threw
+them away. Several of a vendor's domains routinely resolve to the same CDN
+address, and Postgres refuses an `ON CONFLICT DO UPDATE` that touches one row
+twice in a single command. The error went to `/dev/null`, so the tool logged
+"resolved 28 addresses" while storing none.
+
+Every vendor-restricted device therefore had an empty allow list, and an empty
+allow list is read by the firewall as no restriction at all. That fail-open is
+deliberate and still right: "we have not learned the addresses yet" must never
+mean "block the front door lock". But it means the camera lockdown this project
+advertises had never actually been in force. `SELECT DISTINCT` fixes the write,
+and the write no longer hides its own failures: a storage failure now logs the
+Postgres error and raises an urgent alert.
+
+Two related honesty fixes came with it:
+
+- **The alert never cleared.** "Policy failed to validate, the previous rules
+  are still in force" sat on the dashboard long after a later run succeeded. A
+  banner that is no longer true is worse than no banner, because it teaches a
+  parent to ignore the red ones. A good run now retires the failed runs before
+  it, and the alert carries the nft error instead of dropping it.
+- **A device on a lead that is not attached now says so.** A device set to
+  vendor-only whose brand Hearth cannot identify is not restricted at all. That
+  was a note in a terminal nobody reads. It is now a dashboard warning that
+  names the device and prints the command that fixes it.
+
+The general rule this is filed under: **a security control that silently does
+nothing is worse than one that is switched off**, because the household believes
+it is protected. Anything in this project that fails open must say so where a
+parent will see it.
+
+## Presence, ownership, and a cookie that switched itself on (2026-08-29)
+
+Five fixes to the Devices page and the controls, grouped because they share a
+cause: the page was confidently reporting things it did not know.
+
+**Online was reading the lease, not the wire.** `last_seen` is refreshed from
+the DHCP lease list, and a lease outlives the device that holds it by up to its
+full duration, so a phone that left the house in the morning showed a green dot
+all day. Presence now comes from the gateway's neighbour table, which only knows
+about kit that has answered ARP recently, and is stored separately in
+`present_at` (`config/db/schema-presence.sql`). "Seen before" and "here now" are
+different questions and now have different columns.
+
+**A duplicate lease crashed the scan.** One device can hold more than one lease,
+a renewal on a new address or a static plus a dynamic entry, and Postgres cannot
+apply `ON CONFLICT` to the same row twice in one statement. `DISTINCT ON` keeps
+the newest row per MAC and per address. The same defect as the IoT one above,
+found in a different tool on the same day, which is why both are written up
+rather than quietly patched.
+
+**The classifier was overwriting the parent.** An SMS gateway filed by hand as
+an appliance reverted to a personal device on the next sweep. The guesser now
+only touches devices nobody has ruled on: unknown kind, still on the default
+class, no owner and no label. A guess must never beat a decision.
+
+**The `dash` cookie was spelled `HttpOnly=false`.** Browsers key off the
+attribute name alone, so writing it at all switched HttpOnly on. The page's own
+script could then not read the token, every control POSTed to a 403, and the
+client reloaded 600ms later straight over the error message. Gaming, media,
+dinner, assignment: none of it worked, and none of it said so. The cookie is
+fixed, and no control call reloads over a failure any more. The lesson kept: a
+control that fails must never be allowed to erase the evidence that it failed.
+
+**Phones with a randomised address are named.** Both iOS and Android rotate
+their wifi MAC, and when they do the phone arrives as a new unnamed device and
+quietly loses its owner, its tier and its metering. Two of three children were
+uncovered this way and nothing had said so. The Devices page now flags those
+phones and explains how to turn the rotation off for this network.
+
+## The publish scanner had to stop crying wolf (2026-08-29)
+
+`tools/publish.sh` checks the repo for things that must not go public. It was
+failing on four things that are all fine: the author's name in `LICENSE` and the
+design notes, the `guest-adult` and `guest-kid` role labels (rows in `children`,
+but not anybody), and the MAC-shaped test fixtures. Its own comment warns that a
+scanner which cries wolf is one people learn to ignore, and it was well on the
+way to being exactly that.
+
+Quietened on those four, it immediately found what it is actually for: example
+parent names left in the voice documentation. Genericised.
+
+The author's name is now pinned in the script rather than read from git's
+`user.name`, which on this machine is an agency account. It is allowed in
+`LICENSE` and `DECISIONS.md` and is a hard failure anywhere else, so a future
+README rewrite cannot reintroduce it as an example.
+
+Every child's name anywhere in this repo is invented. Most documents use Ada,
+Ben and Cleo, `docs/HOUSEHOLD-ROLES.md` uses Robin, Toby and Elsie, and the
+public demo's household is Piper, Rangi and Nova. The real names live only in
+the database on the family's own box, and never in a tracked file.

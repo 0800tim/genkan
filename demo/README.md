@@ -1,26 +1,31 @@
-# The public demo
+# The public demos
 
-<https://hearth-demo.appspurt.dev>
+| | |
+|---|---|
+| <https://hearth-demo.appspurt.dev> | the parent's dashboard |
+| <https://hearth-portal.appspurt.dev> | the child's captive portal and the quizzes |
 
-The real Hearth dashboard, running against a database full of a household that
-does not exist. There is no second copy of the dashboard anywhere: this stack
-bind-mounts `../dashboard` read only and runs `node server.mjs`, the same file
-`kids-dashboard.service` runs at home. Improve the dashboard and the demo
-improves with it, on the next restart. That is the whole point of building it
+The real Hearth code, running against a database full of a household that does
+not exist. There is no second copy of anything: this stack bind-mounts
+`../dashboard` read only and runs `node server.mjs` and `node portal.mjs`, the
+same files a household runs. Improve the dashboard or the portal and the demos
+improve with them, on the next restart. That is the whole point of building it
 this way.
 
 ## What it is made of
 
 | Piece | What it does |
 |---|---|
-| `compose.yaml` | Two containers: `hearth-demo-db` (its own Postgres, its own volume, its own network) and `hearth-demo-dashboard` (node:22-slim, the repo's `dashboard/` mounted read only). |
-| `seed.sql` | The made-up household, six weeks of it, all written relative to `now()`. |
+| `compose.yaml` | Three containers: `hearth-demo-db` (its own Postgres, its own volume, its own network), `hearth-demo-dashboard` and `hearth-demo-portal` (both node:22-slim, the repo's `dashboard/` mounted read only). |
+| `seed.sql` | The made-up household, six weeks of it, all written relative to `now()`. One child is deliberately out of time. |
 | `reseed.sh` | Empties the demo database, loads every `config/db/schema*.sql` in order, then `seed.sql`. |
 | `../dashboard/live-demo.mjs` | The synthetic sampler that keeps the Right Now page moving. |
+| `../dashboard/sys-demo.mjs` | The invented box the System page describes: four cores, 8 GB, a 128 GB disk, three containers. Not this host. |
 
-Published on `127.0.0.1:9275`, fronted by the existing `hearth` Cloudflare
-tunnel (`~/.cloudflared/config-hearth.yml`, the same tunnel that serves
-`hearth.appspurt.dev`). The Postgres container publishes nothing at all.
+Published on `127.0.0.1:9275` (dashboard) and `127.0.0.1:9276` (portal), fronted
+by the existing `hearth` Cloudflare tunnel (`~/.cloudflared/config-hearth.yml`,
+the same tunnel that serves `hearth.appspurt.dev`). The Postgres container
+publishes nothing at all.
 
 ## Why it cannot touch the real network
 
@@ -49,6 +54,23 @@ With `HEARTH_DEMO` unset, which is every household installation, all of the
 above is a strict no-op: the guards are ternaries that evaluate to exactly the
 code that was there before, and the demo banner is the empty string.
 
+Three more things the flag changes, all of them so the demo shows something
+rather than nothing:
+
+- **The System page reads an invented box.** This container has no docker
+  socket, and its cgroup numbers describe a shared server in a datacentre rather
+  than a family's gateway. Reading them would be both meaningless and a small
+  leak of somebody else's machine, so `sys-demo.mjs` supplies the sample and
+  `/proc` is never opened.
+- **The portal's `?kid=` override may earn.** At home that override is view
+  only: a POST has to come from that child's own device, because earning from
+  somebody else's would let one child farm another's minutes. The demo has no
+  real devices at all, so under that rule the quizzes could be read and never
+  played. The flag lifts the device match, and only that.
+- **Every portal page carries a banner** saying it is a demo with an invented
+  family. Without it a screenshot of a child's name beside a real-looking clock
+  would travel as the real thing.
+
 Writes the demo *can* do are writes to its own throwaway database: setting a
 goal, acknowledging an alert, editing a job on the Learn to earn page. That is
 deliberate, because it lets a visitor actually use the thing. The nightly
@@ -70,7 +92,8 @@ docker compose -f demo/compose.yaml ps
 docker compose -f demo/compose.yaml logs -f demo-dashboard
 ```
 
-`restart: unless-stopped` on both containers is what actually survives a reboot.
+`restart: unless-stopped` on all three containers is what actually survives a
+reboot.
 `hearth-demo.service` is enabled as well, so a docker daemon that came up empty
 still gets a nudge.
 
@@ -93,13 +116,13 @@ schema files are individually idempotent but the whole set is not re-runnable
 over itself (`schema-people.sql` recreates the `people` view that
 `schema-roles.sql` has since widened).
 
-## Picking up dashboard changes
+## Picking up code changes
 
-The dashboard source is mounted, not copied, so a change to `dashboard/*.mjs`
-only needs the process restarted:
+The source is mounted, not copied, so a change to `dashboard/*.mjs` (which is
+where `portal.mjs` lives too) only needs the processes restarted:
 
 ```sh
-docker compose -f demo/compose.yaml restart demo-dashboard
+docker compose -f demo/compose.yaml restart demo-dashboard demo-portal
 ```
 
 A change to `config/db/schema*.sql` needs `demo/reseed.sh` as well.

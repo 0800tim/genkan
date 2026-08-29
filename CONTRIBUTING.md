@@ -47,9 +47,18 @@ youth help lines reachable even when a child is fully cut off).
     sudo test/container-test.sh     # 26 checks, the real image
 
 Both must pass fully. They need root because they build network namespaces; they
-need no hardware. The other three suites are `meter-test.sh`,
+need no hardware. There are seven suites in total: the other five are
+`iot-policy-test.sh` (39 checks, the household IoT layer), `roles-test.sh` (51
+checks, who each scoped control reaches), `meter-test.sh`,
 `service-meter-test.sh` and `adguard-test.sh` (the last needs a running AdGuard
 and `ADGUARD_PASS`).
+
+**If you add an assertion, probe with bash, not an external binary.** A negative
+assertion whose probe never runs reports PASS, so a missing tool turns a safety
+guarantee into a green tick. Eleven of these assertions were doing exactly that
+until 2026-08-29, because they used netcat and Arch does not ship it. Use bash's
+own `/dev/tcp`, treat exit 127 as a hard failure, and find `nft` with
+`command -v` rather than assuming a path.
 
 **Never commit real values.** MACs, addresses, SSIDs, passwords and children's
 names live only in the gitignored `config.env` and `secrets.env`. Tracked files

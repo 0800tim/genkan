@@ -2,7 +2,7 @@
 // the per-kid analytics the charts read out of Postgres.
 // Binds to the tailnet so it is private to the operator.
 //
-// Seven views, all server rendered so the page works with no internet and with
+// Nine views, all server rendered so the page works with no internet and with
 // JavaScript disabled (the controls need JS, the charts and numbers do not):
 //   /          Home     - state and controls, unchanged behaviour
 //   /live      Right now - the live wire: SSE ticks, real-time traffic charts,
@@ -17,6 +17,9 @@
 //                          memory, disk, load, uptime, its containers and the
 //                          throughput of its own network cards
 //   /kid/:name Kid      - one child: their devices, time, goals and controls
+// Plus /speed, which is not a view of ours: it proxies the speed test running
+// in the gateway container, because that container is the only thing that can
+// see the family wifi and a parent on the admin side cannot reach its address.
 // The control API (/api/act, /api/assign, /api/claim) and its optional
 // DASH_TOKEN are untouched.
 import { createServer, request as httpRequest } from "node:http";
@@ -327,6 +330,16 @@ const server = createServer(async (req, res) => {
                   : (arg === undefined || arg === null || arg === "") ? []
                   : String(arg).split(/\s+/).filter(Boolean);
       const args = who ? [...base, who, ...extra.slice(0, 3)] : [...base, ...extra.slice(0, 3)];
+      // Defence in depth. kidnet gates every argument itself, but `topsites`
+      // and `recent` interpolated their LIMIT ungated and both are on the
+      // allowlist below, so a request could append arbitrary SQL to a query
+      // that psql runs as a superuser. That is fixed in kidnet, and this stops
+      // the same shape reaching a shell at all if a future verb forgets. These
+      // are control arguments: names, numbers and short labels. Nothing here
+      // legitimately contains a quote, a semicolon or a backslash.
+      if (args.some(a => !/^[A-Za-z0-9_:.,+ -]{0,64}$/.test(a))) {
+        res.writeHead(400, { "content-type": "application/json" });
+        res.end('{"ok":false,"out":"That is not something a control can be asked."}'); return; }
       // Allowlisted kidnet verbs. Read-only queries (status/time/recent/
       // topsites/devices) are safe to expose; the mutating ones are the
       // parent's own controls. Anything not listed here is refused outright.

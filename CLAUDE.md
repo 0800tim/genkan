@@ -64,9 +64,19 @@ kidnet-report is run from the repo. docs/CLI.md is the reference.
 ## Live state on this box
 
 Deployed and running. Containers hearth-gw, hearth-adguard, hearth-portal
-are up; kids-nic-warden plus the meter, metering, services, devicescan and
-dnslog timers are enabled. Dashboard: systemd --user kids-dashboard.service
-(tailnet :8899, unit lives on the box, not in the repo). Portal:
-kids-portal.service (:8890) is the pre-deploy host copy; production is the
-container on island :80. DB: kids_network on the shared postgres container
-(creds in secrets.env). Operational detail: docs/OPERATIONS.md.
+and hearth-speedtest are up; kids-nic-warden plus six timers (meter, metering,
+services, devicescan, dnslog, tor-sync). The seventh, kids-iot-policy.timer,
+is installed but left disabled on purpose. Dashboard: systemd --user
+kids-dashboard.service (private network :8899, unit lives on the box, not in
+the repo), with hearth-dashboard-tls.service fronting it on :8443. Its pages
+are Home, Right now, Week, Trends, Learn to earn, Devices, Family, System and
+Speed; /speed proxies the gateway's speed test, which can only run inside the
+island. Portal: kids-portal.service (:8890) is the pre-deploy host copy;
+production is the container on island :80. DB: kids_network on the shared
+postgres container (creds in secrets.env).
+
+Two PUBLIC demos run the same code read-only against a seeded fictional
+household, so they improve whenever the product does: hearth-demo.appspurt.dev
+(the dashboard) and hearth-portal.appspurt.dev (the kid's portal, with one
+child deliberately out of time). Both are demo/, both set HEARTH_DEMO=1, which
+turns every shell-out into a no-op. Operational detail: docs/OPERATIONS.md.

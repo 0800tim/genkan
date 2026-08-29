@@ -56,13 +56,44 @@ island, bound to your private network (Tailscale in the reference setup):
 Server-rendered pages, so they work with JavaScript off (the controls need it,
 the charts and numbers do not). The authoritative list is the header comment at
 the top of `dashboard/server.mjs`, because this is the part of the project that
-moves fastest. At the time of writing: `/` for tonight's state and controls,
-`/week` for the weekly digest with a plain-text version to send, `/trends` for
-per-child usage, services and the earn versus spend balance, `/devices` for the
-roster and the naming queue, `/system` for the health of the box itself (CPU,
-memory, disk, load, uptime, the Hearth containers and the throughput of the
-box's own network cards, all read straight out of `/proc` and `/sys`), and
-`/kid/<name>` for one child.
+moves fastest. At the time of writing:
+
+| Page | What it is for |
+|---|---|
+| `/` | tonight's state and the controls |
+| `/live` | Right Now: live traffic over SSE, filterable by person and device class |
+| `/family` | add, edit and remove people; rename and reassign devices |
+| `/week` | the weekly digest, with a plain-text version to send |
+| `/trends` | per-child usage, services, and the earn versus spend balance |
+| `/earn` | the jobs on offer per child, the quiz banks and the earning history |
+| `/devices` | the roster and the naming queue |
+| `/system` | the health of the box itself |
+| `/speed` | the island speed test, proxied from the gateway |
+| `/kid/<name>` | one child |
+
+**`/system`** reads CPU, memory, disk, load, uptime, temperature and the Hearth
+containers straight out of `/proc`, `/sys` and `statfs`. Nothing shells out to
+`top`, `df` or `free`, because a family box can be a Raspberry Pi. It runs on
+its own slow SSE stream (`/api/system/stream`, one sample every ten seconds,
+three hours held in memory) rather than on the live wire, which samples the
+family network every 1.5 seconds and only runs while somebody has Right Now
+open. `/api/system.json` returns the same sample as JSON if you want to script
+against it. Nothing from this page is written to the database, and the page
+renders before Postgres is consulted, so it still works when the database is the
+thing that is broken. Any metric it cannot read shows as "n/a" with a reason
+rather than as a zero. `HEARTH_SYS_TICK_MS` (default 10000, clamped to 2000 to
+60000) changes the sample interval.
+
+**`/speed`** proxies the speed test that runs inside the gateway container.
+The test has to run there, because the gateway is the only machine that can see
+the family wifi from the inside, but its own address is on the island and a
+parent reading the dashboard is on the other side of it. The dashboard sits on
+both sides, so it proxies rather than publishing a second port. The gateway's
+address is asked of docker rather than hardcoded, and looked up again on any
+connection failure. If the page says the speed test is not answering, check that
+the `hearth-speedtest` container is up. Note what it measures through the
+dashboard: this device to the box over whatever network you are on, which is
+**not** the family wifi. The bar on the page says so.
 
 The repo does not ship a systemd unit for the dashboard, because where it binds
 is household-specific. A minimal user unit:
@@ -103,6 +134,7 @@ $USER`.
 | `hearth-gw` | the network namespace, `kids0`, the whole nftables ruleset, and the supervisor loop |
 | `hearth-adguard` | DHCP, DNS and filtering, sharing the gateway's namespace |
 | `hearth-portal` | the kids' captive portal and quiz engine, same namespace, on port 80 |
+| `hearth-speedtest` | the island speed test, same namespace, on port 8877. Reachable directly by any device on the island, and proxied to the admin side by the dashboard at `/speed` |
 
 The portal and AdGuard join the gateway with `network_mode: service:gateway`.
 That is why a bad firewall rule can take the island down but cannot touch the
@@ -129,6 +161,11 @@ One service and six timers. That is the entire host footprint, besides the
 | `kids-devicescan.timer` | every minute | `kidnet-devicescan`: DHCP leases into the devices table, then `kidnet-classify` |
 | `kids-dnslog.timer` | every 2 minutes | `kidnet-dnslog`, then `kidnet-alerts` as an `ExecStartPost` |
 | `kids-tor-sync.timer` | daily, with up to 2h jitter | `kidnet-tor-sync sync`, then applies the snippet inside the gateway namespace |
+
+There is a seventh timer, `kids-iot-policy.timer`. `deploy.sh` installs it and
+deliberately does **not** enable it, because the household IoT layer is switched
+on by hand after you have watched it in observe mode. See
+[HOUSEHOLD-SECURITY.md](HOUSEHOLD-SECURITY.md).
 
 The timers stagger their first run after boot (60s, 90s, 2min, 3min) so they do
 not all wake at once while the stack is still coming up.
@@ -184,6 +221,120 @@ the gateway, the meter and `kidnet-alerts` all converge:
 The gateway acknowledges its own `category='gateway'` alerts when it comes up
 healthy, so the dashboard stops showing a solved problem as if it were still
 happening.
+
+---
+
+## Is the metering chain actually learning?
+
+Per-category metering is a chain of four links, and a break anywhere in it looks
+identical from the dashboard: the charts simply say "other". Walk the chain in
+order, and stop at the first number that is zero.
+
+**1. Is there a domain map at all?** This is the one that catches a fresh
+install. `category_domains` and `service_domains` come from
+`config/db/schema-categories.sql` and `config/db/schema-services.sql`. Before
+2026-08-29 neither file carried a seed: the reference box had about forty rows
+typed in by hand, and a fresh install had none at all, so it metered nothing and
+said so by drawing everything as "other".
+
+    docker exec -i postgres psql -U postgres -d kids_network -c \
+      "SELECT category, count(*) FROM category_domains GROUP BY 1 ORDER BY 1"
+
+Expect roughly 175 rows across `gaming`, `video`, `social`, `audio`,
+`download`, `messaging` and `schoolwork`. Zero means the schema files have not
+been loaded since the seed landed: load `schema-categories.sql` and
+`schema-services.sql` again, they are idempotent.
+
+**2. Is the mapper turning lookups into addresses?**
+
+    sudo systemctl start kids-metering.service
+    journalctl -u kids-metering.service --since "10 min ago"
+    docker exec -i postgres psql -U postgres -d kids_network -c \
+      "SELECT category, count(*) FROM category_ips
+        WHERE seen > now() - interval '24 hours' GROUP BY 1 ORDER BY 1"
+
+`kidnet-catmap` reads AdGuard's query log, so it needs `ADGUARD_PASS` and it can
+only learn from names the family has actually looked up. A category nobody used
+today is legitimately empty. A count that is zero across the board usually means
+AdGuard authentication is failing: check `secrets.env`.
+
+Some emptiness here is by design. The mapper drops any address that answered for
+more than one category, or for anything uncategorised, and never learns from a
+bare apex lookup. That is the guard that stopped one shared Google edge address
+colouring the whole house's traffic as video, and the honest cost is that a
+category can read low. METERING.md explains it in full.
+
+**3. Are those addresses reaching the firewall?**
+
+    docker exec hearth-gw nft list set inet kids gaming_ips | head
+    docker exec hearth-gw nft list set inet kids video_ips | head
+    docker exec hearth-gw nft list set inet kids download_ips | head
+
+`kidnet-catmeter` reconciles these every minute: it flushes and refills each set
+in one transaction, so what is in the firewall is exactly what was in
+`category_ips` at the last tick. If the sets are empty while step 2 has rows,
+the meter is not reaching either the database or the container: run it by hand
+and read what it says. If `download_ips` does not exist at all, the gateway is
+running a ruleset from before the download category; the meter creates the set
+and its counting rule itself on the next tick, so this heals on its own.
+
+**4. Are minutes being booked?**
+
+    docker exec -i postgres psql -U postgres -d kids_network -c \
+      "SELECT day, category, sum(minutes) FROM category_usage
+        WHERE day = CURRENT_DATE GROUP BY 1,2 ORDER BY 2"
+
+A device has to move more than the per-category threshold inside a minute to
+count, so idle keepalive books nothing. `download` will appear here and is
+deliberately never enforced against a budget.
+
+---
+
+## The public demos
+
+On the reference box, two public demos are the only part of Hearth reachable
+from the internet. Neither can touch the household, and a household install runs
+none of this.
+
+| Demo | What it shows |
+|---|---|
+| `hearth-demo.appspurt.dev` | the parent's dashboard |
+| `hearth-portal.appspurt.dev` | the child's captive portal and the quizzes |
+
+Both run the **real** code: `demo/compose.yaml` bind-mounts `../dashboard` read
+only and runs the same `server.mjs` and `portal.mjs` a household runs, against a
+throwaway Postgres full of an invented family. There is no second copy of
+anything, so improving the dashboard improves the demo. What makes it inert is
+listed in `demo/README.md` and none of it is a matter of trust: its own database
+on its own network, no docker socket mounted, `bin/` not mounted, no
+`NET_ADMIN`, and `HEARTH_DEMO=1`, which replaces every path that would shell out
+with a function that returns a polite refusal before `execFile` is reached.
+
+Restarting and re-seeding:
+
+    systemctl --user restart hearth-demo.service        # or: docker compose -f demo/compose.yaml up -d
+    docker compose -f demo/compose.yaml ps
+    docker compose -f demo/compose.yaml logs -f demo-dashboard
+
+    demo/reseed.sh                                      # rebuild the demo database now
+    systemctl --user start hearth-demo-reseed.service   # the same thing, logged
+
+`hearth-demo-reseed.timer` runs the reseed at about 03:40 nightly. Every
+timestamp in `demo/seed.sql` is relative to `now()`, so a nightly rebuild keeps
+the charts showing the last six weeks rather than the six weeks before whenever
+it was last touched, and it puts back anything a visitor changed. It drops the
+schema first, because the repo's schema files are individually idempotent but
+the whole set is not re-runnable over itself.
+
+After a change to `dashboard/*.mjs`, restart the container. After a change to
+`config/db/schema*.sql`, re-seed as well:
+
+    docker compose -f demo/compose.yaml restart demo-dashboard demo-portal
+    demo/reseed.sh
+
+The units (`hearth-demo.service`, `hearth-demo-reseed.service` and `.timer`)
+live on the box rather than in the repo, the same way `kids-dashboard.service`
+does, because where a demo is published is not a household concern.
 
 ---
 

@@ -55,10 +55,16 @@ NAMES=$(docker exec -i postgres psql -U postgres -d kids_network -tAc \
   "SELECT string_agg(name,'|') FROM children
     WHERE name !~ '^guest-'
       AND NOT (lower(name) = ANY (string_to_array(lower('${AUTHOR:-__none__}'), ' ')))" 2>/dev/null)
-[ -n "${NAMES:-}" ] && scan "\\b(${NAMES})\\b" "real people's names"
+if [ -z "${NAMES:-}" ]; then
+  printf '  \033[31mLEAK\033[0m  %-22s %s\n' "real people's names" \
+    "COULD NOT CHECK: the database did not answer. Refusing rather than guessing."; fail=1
+else scan "\\b(${NAMES})\\b" "real people's names"; fi
 # The author's name is allowed in the two files that are about authorship, and
 # nowhere else, so a README rewrite cannot quietly reintroduce it as an example.
-if [ -n "${AUTHOR:-}" ]; then
+if [ -z "${AUTHOR:-}" ]; then
+  printf '  \033[31mLEAK\033[0m  %-22s %s\n' "author name placement" \
+    "COULD NOT CHECK: HEARTH_AUTHOR is not set in config.env."; fail=1
+elif true; then
   hits=$(grep -riIlF "$AUTHOR" "$PUB" --exclude-dir=.git 2>/dev/null \
          | grep -vE '/(LICENSE|DECISIONS\.md|README\.md)$' | head -3)
   if [ -n "$hits" ]; then
@@ -73,6 +79,21 @@ done
 if [ "$fail" != 0 ]; then
   echo; echo "REFUSING TO PUBLISH. Fix the above, then run again."; exit 1
 fi
+# grep -I skips binary files, so every check above is blind to an image. A
+# screenshot of the dashboard is the single most likely way a child's name, a
+# MAC and a private address leave this house at once, so binaries are refused
+# outright rather than scanned. Add one deliberately and you add it here too.
+BIN=$(find "$PUB" -path "$PUB/.git" -prune -o -type f -print 2>/dev/null \
+      | while read -r f; do case "$(file -b --mime-type "$f" 2>/dev/null)" in
+          text/*|inode/x-empty|application/json|application/xml|application/javascript|image/svg+xml) ;;
+          *) echo "$f";; esac; done | head -5)
+if [ -n "$BIN" ]; then
+  printf '  \033[31mLEAK\033[0m  %-22s %s\n' "binary files present" \
+    "$(echo "$BIN" | sed "s|$PUB/||" | tr '\n' ' ')"
+  echo "        Binaries are never scanned for private data. Remove them or add an exception here."
+  fail=1
+else printf '  ok    %-22s\n' "no unscannable binaries"; fi
+
 echo; echo "Clean. Publishing..."
 cd "$PUB"
 git add -A

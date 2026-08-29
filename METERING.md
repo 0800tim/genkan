@@ -65,6 +65,41 @@ needed:
 The same threshold is applied on the live chart, so what a parent sees and what
 the meter books agree.
 
+## What the mapper refuses to learn
+
+Tagging an address by category is the whole basis of this, so a bad tag is not a
+small error: it mis-colours every byte anybody sends to that address until it is
+withdrawn. Three rules keep the map honest, and each of them costs coverage on
+purpose.
+
+**The CDN apex guard.** A content network lives on its subdomains. Its bare
+apex is a front door, and a front door answers from whatever generic edge is
+nearest, which is usually the same edge that serves the vendor's search, mail
+and app store. So a lookup of a bare apex like `googlevideo.com` can categorise
+traffic for reporting, but it can never teach the meter an address. This is not
+a theoretical worry: one row learned that way, a general Google edge address
+tagged `video`, booked every byte every phone in the house sent to Google as
+YouTube, and the live chart correctly showed the whole family watching video all
+day.
+
+**The ambiguity guard.** An address is tagged only when, across the window just
+scanned, it answered for exactly one category and for no uncategorised name at
+all. An address shared with anything else is never metered, and is deleted from
+`category_ips` if an earlier run had tagged it.
+
+**Routable answers only.** A blocked query is answered with `0.0.0.0` and a
+rewritten one with the portal's address. Neither is a destination anybody sends
+bytes to, and learning the null address would have let one blocked domain
+swallow the whole island's traffic.
+
+The firewall then has to be able to forget. `kidnet-catmeter` **reconciles**
+each category set rather than adding to it: flush and refill in one nftables
+transaction, every minute, from whatever `category_ips` holds for the last 24
+hours. Add-only was the third fault in the same bug, because an address the
+mapper had withdrawn kept colouring traffic until the gateway container was
+restarted. The gateway's own `reconcile_set` already worked this way; the meter
+now matches it.
+
 ## Turning a category OFF (enforcement, separate from metering)
 
 "Turn gaming off" = two moves on the gaming set:
@@ -96,21 +131,37 @@ Precise: kills Roblox/Fortnite/Steam while chess, music and homework stay up.
   doors: nobody streams from `netflix.com`, they stream from `nflxvideo.net`.
   A service whose CDN is not in `category_domains` lands in "other". That list
   lives in `config/db/schema-services.sql` and `config/db/schema-categories.sql`
-  and is meant to be extended.
+  and is meant to be extended. It is seeded with about 175 category domains and
+  30 services over 103 domains, which is a decent starting set for a New Zealand
+  household and nothing like exhaustive: regional streaming services in
+  particular are missing. Until 2026-08-29 there was no seed at all, and the
+  reference box's forty-odd hand-typed rows meant a fresh install metered
+  nothing.
+- **Under-counting is the deliberate failure direction.** Between naming
+  something wrongly and not naming it, this layer always chooses not to name it.
+  Traffic Hearth cannot attribute shows as "other" rather than being guessed
+  into a category, and a child is never charged a minute for a category the
+  meter is not sure about.
 
 ## Status: built and deployed (2026-08-29)
 
 1. `kidnet-catmap` reads AdGuard's query log, maps answer IPs of known
    category domains into `category_ips` (the "these IPs = gaming" learning).
-2. `config/nftables/kids.nft` has per-category IP sets (gaming_ips, video_ips)
-   and dynamic per-device byte counters (gaming_dev, video_dev) in a metering
-   chain that counts without changing any verdict.
-3. `kidnet-catmeter` (per minute) refreshes the IP sets from category_ips,
-   reads + resets the per-device counters, counts one active minute for any
-   device over a small byte threshold (so idle keepalive does not count),
-   attributes it to the child, and when a child reaches their
+2. `config/nftables/kids.nft` has per-category IP sets (gaming_ips, video_ips,
+   download_ips) and dynamic per-device byte counters (gaming_dev, video_dev,
+   download_dev) in a metering chain that counts without changing any verdict.
+   That ruleset is baked into the gateway image, so on an island that has not
+   been rebuilt since the download category landed, `kidnet-catmeter` creates
+   the two missing sets and the one counting rule itself on the next tick. It
+   only ever adds what is genuinely absent, so it cannot stack a duplicate rule.
+3. `kidnet-catmeter` (per minute) reconciles the IP sets to `category_ips`
+   (flush and refill in one transaction, so a withdrawn address leaves the
+   firewall too), reads + resets the per-device counters, counts one active
+   minute for any device over a small byte threshold (so idle keepalive does not
+   count), attributes it to the child, and when a child reaches their
    `category_budgets` daily_min blocks that category (DNS via kidnet-adguard
-   plus the category set). Music, schoolwork and chess are never metered.
+   plus the category set). Downloads are counted but never enforced. Music,
+   schoolwork and chess are never metered.
 4. `kids-metering.timer` runs both each minute. Proven by test/meter-test.sh
    (eight checks: active counts, idle ignored, budget reached, category
    blocked, others untouched, and the grant path below).

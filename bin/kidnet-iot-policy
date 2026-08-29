@@ -469,7 +469,7 @@ apply(){
   local loose; loose=$(psqll "SELECT string_agg(name,', ') FROM device_policy_effective
                               WHERE internet_out='vendor' AND NOT vendor_known")
   if [ -n "$loose" ]; then
-    alert warn "Not actually restricted yet: $loose. Hearth does not know which brand's cloud to allow, so it is letting them talk to anything. Set the brand: kidnet-iot-policy set <device> cloud <brand>"
+    alert warn "Not actually restricted yet: $loose. Hearth does not know which brand's cloud to allow, so it is letting them talk to anything. Set the brand: kidnet-iot-policy set <device> vendor <brand>"
   fi
   local n; n=$(psqll "SELECT count(*) FROM device_policy_effective")
   log "mode=$M, $n smart device(s) under policy$([ "$M" = observe ] && echo ' (counting only, nothing blocked)')"
