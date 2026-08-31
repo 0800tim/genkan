@@ -6,7 +6,7 @@
   "minutes_per_pass": 10,
   "pass_mark": 8,
   "questions_per_round": 10,
-  "source_note": "Written for HEARTH, August 2026. Covers the solar system, stars, basic cosmology, the southern sky and Matariki. Matariki content follows widely shared accounts (notably Professor Rangi Mātāmua's work); iwi traditions differ, and the questions say so where it matters.",
+  "source_note": "Written for Genkan, August 2026. Covers the solar system, stars, basic cosmology, the southern sky and Matariki. Matariki content follows widely shared accounts (notably Professor Rangi Mātāmua's work); iwi traditions differ, and the questions say so where it matters.",
   "questions": [
     {
       "id": "as-001",

@@ -8,7 +8,7 @@ Saturday that something concerning happened on Wednesday.
 
 **Status: two routes built and tested, two documented and refused.** ntfy and a
 webhook ship, with tests. Email and a first-class Home Assistant route do not,
-and `kidnet-notify` refuses to create them rather than accepting a route that
+and `genkan-notify` refuses to create them rather than accepting a route that
 would quietly never send anything. The extension points are at the end of this
 file. Nothing here is on until a household adds a route: a fresh install sends
 nothing to anybody, and `test/schema-test.sh` proves it.
@@ -136,9 +136,9 @@ to paste into a bug report.
 On the dashboard: **Notifications**. Or from the shell:
 
 ```
-kidnet-notify add ntfy dad-phone
+genkan-notify add ntfy dad-phone
   Target URL (an ntfy topic URL, or a webhook URL): ‹typed, not echoed›
-kidnet-notify test dad-phone
+genkan-notify test dad-phone
 ```
 
 Leave `--target` off and you are prompted, which keeps the URL out of your shell
@@ -152,11 +152,11 @@ that does not work, which is why both the CLI and the page push you at the test
 button the moment a route is added.
 
 ```
-kidnet-notify list                  the routes, their state, their last result
-kidnet-notify pending               what would go next, without sending it
-kidnet-notify set dad-phone --quiet 21:30-07:00
-kidnet-notify set dad-phone --severity urgent
-kidnet-notify log 20                the last attempts, good and bad
+genkan-notify list                  the routes, their state, their last result
+genkan-notify pending               what would go next, without sending it
+genkan-notify set dad-phone --quiet 21:30-07:00
+genkan-notify set dad-phone --severity urgent
+genkan-notify log 20                the last attempts, good and bad
 ```
 
 Everything is in `docs/CLI.md`.
@@ -180,10 +180,10 @@ Today the `alerts` table is written by four things:
 
 | category | raised by | severity |
 |---|---|---|
-| `self-harm`, `tor`, `darknet`, `drugs`, `proxy-vpn`, … | `bin/kidnet-alerts`, from flagged DNS lookups | from `flag_domains` |
-| `iot-policy` | `bin/kidnet-iot-policy` when the household policy does not apply cleanly | `warn` / `urgent` |
+| `self-harm`, `tor`, `darknet`, `drugs`, `proxy-vpn`, … | `bin/genkan-alerts`, from flagged DNS lookups | from `flag_domains` |
+| `iot-policy` | `bin/genkan-iot-policy` when the household policy does not apply cleanly | `warn` / `urgent` |
 | `gateway` | `gateway/entrypoint.sh`, mostly the segment guard | `urgent` |
-| `dns-ingest` | `bin/kidnet-dnslog` when it cannot read AdGuard's query log | `urgent` |
+| `dns-ingest` | `bin/genkan-dnslog` when it cannot read AdGuard's query log | `urgent` |
 
 Wording is seeded and ready for `devices` (a device nobody has claimed), `time`
 (a child out of time) and `earn` (a job waiting for approval), **but nothing
@@ -200,7 +200,7 @@ half-built route that accepts a configuration and then never sends anything is
 worse than no route, because a parent believes they are covered.
 
 **Email**, via a household's own SMTP server. The place for it is the sender in
-`bin/kidnet-notify` (`PY_SEND`), which already receives the title, the body, the
+`bin/genkan-notify` (`PY_SEND`), which already receives the title, the body, the
 priority and the target in its environment. It needs the server, port, username
 and password on the route, which means new columns on `notify_routes`, and it
 needs to keep the same rule as everything else: the body is the safe wording,

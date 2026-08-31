@@ -7,7 +7,7 @@
 -- we've got some appliance devices they wouldn't get included, but kid devices
 -- would."
 --
--- A television does not belong to one child, and Hearth identifies the device,
+-- A television does not belong to one child, and Genkan identifies the device,
 -- not the person holding the remote. Until now a family iPad had two homes and
 -- both were wrong. Give it to one child and that child pays for the family film
 -- out of their own minutes. Give it to nobody and it escapes every budget, every
@@ -90,7 +90,7 @@ SELECT d.id                                   AS device_id,
             THEN coalesce(d.caught_by_dinner, true) ELSE false END    AS in_dinner,
        CASE WHEN d.category IN ('personal','shared')
             THEN coalesce(d.caught_by_house_off, true) ELSE false END AS in_house_off,
-       -- true = nobody has ticked this yet, so the value above is Hearth's
+       -- true = nobody has ticked this yet, so the value above is Genkan's
        -- default rather than the parent's answer.
        (d.caught_by_dinner IS NULL)     AS dinner_default,
        (d.caught_by_house_off IS NULL)  AS house_off_default

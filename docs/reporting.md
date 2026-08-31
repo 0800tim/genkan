@@ -1,8 +1,8 @@
 # Weekly reporting: the family digest
 
-`bin/kidnet-report` turns a week of gateway data into a short plain-text
+`bin/genkan-report` turns a week of gateway data into a short plain-text
 digest per child. Note that `deploy.sh` deliberately does not install it into
-`/usr/local/bin`, so run it from the repo (`bin/kidnet-report`) or copy it
+`/usr/local/bin`, so run it from the repo (`bin/genkan-report`) or copy it
 yourself. It is the "section 8" piece from RECOMMENDATIONS.md: a
 weekly summary to the parent that keeps screen time a conversation, not a
 surveillance operation.
@@ -68,9 +68,9 @@ openness.
 Practical notes:
 
 - It is read-only. The script only ever runs SELECT.
-- `bin/kidnet-report <child>` shows the current week so far;
-  `bin/kidnet-report <child> last` shows the previous full week; a
-  `YYYY-MM-DD` date picks that date's week. `bin/kidnet-report all` covers
+- `bin/genkan-report <child>` shows the current week so far;
+  `bin/genkan-report <child> last` shows the previous full week; a
+  `YYYY-MM-DD` date picks that date's week. `bin/genkan-report all` covers
   every child with `kind='child'`.
 - Output is plain text, so it pipes cleanly into a file, an email, or a
   chat message.
@@ -80,7 +80,7 @@ Practical notes:
 Run it Monday morning over the finished week (`last`). Two host-side
 units, alongside the other kidnet timers:
 
-`/etc/systemd/system/hearth-digest.service`:
+`/etc/systemd/system/genkan-digest.service`:
 
 ```ini
 [Unit]
@@ -91,11 +91,11 @@ After=docker.service
 [Service]
 Type=oneshot
 # Write the digest somewhere the parents (and their agent) can read it.
-ExecStart=/bin/bash -c '/opt/kids-network/bin/kidnet-report all last \
-  > /var/lib/hearth/digest-$(date +%%G-W%%V).txt'
+ExecStart=/bin/bash -c '/opt/kids-network/bin/genkan-report all last \
+  > /var/lib/genkan/digest-$(date +%%G-W%%V).txt'
 ```
 
-`/etc/systemd/system/hearth-digest.timer`:
+`/etc/systemd/system/genkan-digest.timer`:
 
 ```ini
 [Unit]
@@ -109,13 +109,13 @@ Persistent=true
 WantedBy=timers.target
 ```
 
-Then `mkdir -p /var/lib/hearth`, `systemctl daemon-reload`, and
-`systemctl enable --now hearth-digest.timer`.
+Then `mkdir -p /var/lib/genkan`, `systemctl daemon-reload`, and
+`systemctl enable --now genkan-digest.timer`.
 
 To email it instead, swap the ExecStart for something like:
 
 ```ini
-ExecStart=/bin/bash -c '/opt/kids-network/bin/kidnet-report all last \
+ExecStart=/bin/bash -c '/opt/kids-network/bin/genkan-report all last \
   | mail -s "GENKAN weekly digest" parents@example.com'
 ```
 
@@ -128,8 +128,8 @@ The digest is designed to be agent-friendly: stable plain text, one block
 per child, predictable section headings. A parent's AI agent (see
 docs/AGENT.md and docs/VOICE.md) can:
 
-- Run `kidnet-report <child> last` (or read the saved
-  `/var/lib/hearth/digest-*.txt`) and summarise it out loud: "Cleo did
+- Run `genkan-report <child> last` (or read the saved
+  `/var/lib/genkan/digest-*.txt`) and summarise it out loud: "Cleo did
   about six hours, mostly YouTube and Roblox, passed three quizzes,
   nothing flagged."
 - Compare weeks by running the command with two different dates and

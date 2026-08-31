@@ -52,7 +52,7 @@ Docker normally switches `net.ipv4.ip_forward` on itself, but hardened
 images and some cloud bases pin it off, and a sysctl that silently flips
 after a kernel update is a miserable thing to debug. Make it explicit:
 
-    echo 'net.ipv4.ip_forward=1' | sudo tee /etc/sysctl.d/99-hearth.conf
+    echo 'net.ipv4.ip_forward=1' | sudo tee /etc/sysctl.d/99-genkan.conf
     sudo sysctl --system
 
 ## Step 3: the kids' NIC
@@ -66,7 +66,7 @@ The host must leave that interface alone so the NIC warden can hand it
 into the container. Which knob depends on what manages your network:
 
 **NetworkManager** (desktop installs, some Ubuntu variants). Create
-`/etc/NetworkManager/conf.d/99-hearth-kids-nic.conf`:
+`/etc/NetworkManager/conf.d/99-genkan-kids-nic.conf`:
 
     [keyfile]
     unmanaged-devices=mac:<the kids NIC MAC, lower case>
@@ -79,7 +79,7 @@ nmcli, despite its name.
 backend). An interface no `.network` file matches is already left alone.
 If you have a catch-all match (netplan often generates one for `en*`),
 pin the kids' NIC out of it with
-`/etc/systemd/network/05-hearth-kids-unmanaged.network`:
+`/etc/systemd/network/05-genkan-kids-unmanaged.network`:
 
     [Match]
     MACAddress=<the kids NIC MAC>
@@ -152,8 +152,8 @@ agent in it, and say:
 
 ## Verification
 
-    docker ps                              # hearth-gw, hearth-adguard, hearth-portal, postgres
-    docker logs hearth-gw | tail -20       # "safe to own it", "firewall loaded", "island is UP"
+    docker ps                              # genkan-gw, genkan-adguard, genkan-portal, postgres
+    docker logs genkan-gw | tail -20       # "safe to own it", "firewall loaded", "island is UP"
     systemctl status kids-nic-warden       # active; "handover done" in the journal
     kidnet status && kidnet allow-status   # CLI works, safety net populated
     sudo test/container-test.sh            # the full 26-check proof
@@ -167,9 +167,9 @@ blocked. AdGuard's admin UI is at `http://127.0.0.1:8853` on the host
 ## Troubleshooting
 
 - **No DHCP lease on the kids' side.** Work the chain: is `kids0` inside
-  the container (`docker exec hearth-gw ip link show kids0`)? Did AdGuard
+  the container (`docker exec genkan-gw ip link show kids0`)? Did AdGuard
   restart after the handover (the warden does this about 20 seconds after;
-  `docker logs hearth-adguard`)? On a host-side bridge, is ufw eating the
+  `docker logs genkan-adguard`)? On a host-side bridge, is ufw eating the
   broadcasts (step 4)? Is the AP secretly still running its own DHCP?
 - **Segment guard tripped.** Working as designed: the AP is still bridged
   to the house LAN or still serving DHCP. Factory reset it, AP/bridge

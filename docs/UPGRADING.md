@@ -11,11 +11,11 @@ built around that one fact.
 ## The short version
 
 ```bash
-kidnet-upgrade                 # is there anything new? Changes nothing.
-sudo kidnet-upgrade apply      # install it
-kidnet-health                  # is my household working?
-sudo kidnet-rollback list      # what I can go back to
-sudo kidnet-rollback to previous
+genkan-upgrade                 # is there anything new? Changes nothing.
+sudo genkan-upgrade apply      # install it
+genkan-health                  # is my household working?
+sudo genkan-rollback list      # what I can go back to
+sudo genkan-rollback to previous
 ```
 
 If an update breaks something, **you do not have to do anything**. Genkan
@@ -26,7 +26,7 @@ where the problem shows up later, or where you simply changed your mind.
 ## What am I running?
 
 ```bash
-kidnet-health
+genkan-health
 ```
 
 The first line is the version. It is also at the bottom of every page of the
@@ -42,7 +42,7 @@ developer's machine and unusual in a household.
 
 ## What an update actually does
 
-`sudo kidnet-upgrade apply` does these in order, and stops at the first one
+`sudo genkan-upgrade apply` does these in order, and stops at the first one
 that fails.
 
 1. **Fetches** the newest release. It follows releases, not the development
@@ -88,7 +88,7 @@ failed, with the output.
 ### The internet is broken and I do not know why
 
 ```bash
-kidnet-health
+genkan-health
 ```
 
 Read the lines marked FAIL. Each one says what to do. The most common answers
@@ -99,8 +99,8 @@ adapter has been knocked out of its socket.
 ### I want to go back
 
 ```bash
-sudo kidnet-rollback list        # what is available, and how old each one is
-sudo kidnet-rollback to previous # the most recent one
+sudo genkan-rollback list        # what is available, and how old each one is
+sudo genkan-rollback to previous # the most recent one
 ```
 
 By default this puts **the code** back and leaves your database alone, so
@@ -112,15 +112,15 @@ reaching for `--with-database`.
 Everything a rollback needs is in one directory and can be done by hand:
 
 ```bash
-ls /var/lib/hearth/releases/                  # the snapshots
-cat /var/lib/hearth/releases/<id>/manifest.env  # which commit to go back to
+ls /var/lib/genkan/releases/                  # the snapshots
+cat /var/lib/genkan/releases/<id>/manifest.env  # which commit to go back to
 
 cd /srv/.../kids-network                      # wherever your copy lives
 git checkout --force --detach <from_commit>   # from the manifest
 sudo ./deploy.sh
 
 # and only if you have decided you need the database back as well:
-gunzip -c /var/lib/hearth/releases/<id>/db.sql.gz \
+gunzip -c /var/lib/genkan/releases/<id>/db.sql.gz \
   | docker exec -i postgres psql -U postgres -d kids_network
 ```
 
@@ -162,12 +162,12 @@ Read this part before you need it.
 - **Recover anything older than the snapshots it kept.** Only the ten most
   recent are kept, so that a box does not fill its own disk with backups.
 - **Fix a problem that was never Genkan's.** If your broadband is down, every
-  version will look broken and none of them is the cause. `kidnet-health` says
+  version will look broken and none of them is the cause. `genkan-health` says
   plainly that it cannot check your broadband, precisely so that this is not
   confusing at 9pm.
 - **Undo anything on the AdGuard side that was changed by hand.** AdGuard
   keeps its own configuration in its own container volume, which is not part
-  of the snapshot. `kidnet-adguard apply` rebuilds the parts Genkan manages,
+  of the snapshot. `genkan-adguard apply` rebuilds the parts Genkan manages,
   from the database, and always did.
 
 A rollback is a way back to a version that worked. It is not a time machine,
@@ -182,7 +182,7 @@ is built so that a person can update in one command and get out of it in one
 command. That is the intended amount of automation.
 
 If you want to know when there is something new without installing it,
-`kidnet-upgrade check` changes nothing and is safe to run on a timer.
+`genkan-upgrade check` changes nothing and is safe to run on a timer.
 
 ---
 
@@ -197,10 +197,31 @@ The first numbered release. Everything before this was a working prototype
 with no version number, no way to know what you were running, and no way to go
 back.
 
-- Adds `VERSION`, `bin/kidnet-health`, `bin/kidnet-upgrade` and
-  `bin/kidnet-rollback`.
+- Adds `VERSION`, `bin/genkan-health`, `bin/genkan-upgrade` and
+  `bin/genkan-rollback`.
 - The dashboard now shows the version and the health of the household at the
   bottom of every page.
+- The product is called Genkan (it was Hearth). The command is `genkan`, with
+  `kidnet` kept as an alias. The tools are `genkan-health`, `genkan-upgrade`
+  and `genkan-rollback`, and the background workers are `genkan-*` too (they
+  were `kidnet-*`; the old names are removed from `/usr/local/bin` on deploy,
+  and `bin/` keeps shims for the three tools so an older box's installed
+  upgrader can finish its own run). The containers are `genkan-gw`,
+  `genkan-adguard`, `genkan-portal` and `genkan-speedtest`; the config keys
+  are `GENKAN_*`; state lives under `/var/lib/genkan`.
+
+**Coming from a box that said Hearth:** `sudo ./deploy.sh` does the whole
+rename in one run and prints each step. It renames the `HEARTH_*` keys in your
+config.env (keeping a copy as `config.env.pre-genkan`), moves
+`/var/lib/hearth` to `/var/lib/genkan`, copies AdGuard's settings and DHCP
+leases into the new volumes, removes the old containers and starts the new
+ones. The kids' network is down for about a minute while the new gateway
+starts and the warden hands it the NIC, so run it when nobody is on it. The
+database is not touched. Two things it cannot rename for you, because they
+are outside the checkout: a `hearth-dashboard-tls.service` you created from
+`tools/enable-https.sh` (re-run the script; it now writes
+`genkan-dashboard-tls.service` under `/var/lib/genkan/tls`), and any alias or
+bookmark of your own that says `hearth`.
 
 **Database:** adds one new table, `release_history`, and two views. Nothing is
 dropped or renamed, so a rollback from a later version to this one does not
@@ -208,5 +229,5 @@ need `--with-database`.
 
 **Coming from an unversioned box:** run `sudo ./deploy.sh` once from your
 checkout. It installs the three new commands and creates
-`/var/lib/hearth/releases`. There is nothing to roll back to until your first
-upgrade, and `kidnet-rollback list` will say so.
+`/var/lib/genkan/releases`. There is nothing to roll back to until your first
+upgrade, and `genkan-rollback list` will say so.

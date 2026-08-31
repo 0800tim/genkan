@@ -64,7 +64,7 @@ const FALLBACK_SERVICES = [
 ];
 
 // A device is attributed to a child by its reserved IP first (that is what
-// kidnet-dnslog uses when it stamps device_id), then by the current DHCP lease
+// genkan-dnslog uses when it stamps device_id), then by the current DHCP lease
 // for its MAC. Rows that match neither stay unattributed on purpose.
 const IPMAP = `
   ipmap AS (
@@ -231,7 +231,7 @@ export async function analytics(q, days = 7) {
       [win], [], notes, "service lookups"),
 
     // Real bytes and real active minutes, from the nftables per-service
-    // counters (bin/kidnet-servicemeter). Empty until the island is cabled.
+    // counters (bin/genkan-servicemeter). Empty until the island is cabled.
     safe(q, `SELECT child_id, service_id, day::text AS day, bytes, used_min
              FROM service_usage WHERE day > CURRENT_DATE - $1::int`,
       [win], [], notes, "service usage"),
@@ -446,7 +446,7 @@ export const fmt = {
 // Weeks
 //
 // A week here is Monday to Sunday, resolved by the DATABASE clock, exactly as
-// bin/kidnet-report resolves it. That matters: the /week page and the CLI
+// bin/genkan-report resolves it. That matters: the /week page and the CLI
 // digest must never disagree about which days they are talking about.
 // ---------------------------------------------------------------------------
 
@@ -544,7 +544,7 @@ export function goalProgress(goal, totals, elapsed = 7) {
 // ---------------------------------------------------------------------------
 // The weekly digest: docs/reporting.md, rendered as a page.
 //
-// Same week boundaries and the same source tables as bin/kidnet-report, so the
+// Same week boundaries and the same source tables as bin/genkan-report, so the
 // page and the CLI never tell a parent two different stories.
 // ---------------------------------------------------------------------------
 export async function digest(q, ref = null) {

@@ -2,7 +2,7 @@
 
 # omarchy:summary=Check a file the way the Omarchy menu parses JSONC
 # omarchy:args=<file>
-# omarchy:examples=hearth-jsonc-check ~/.config/omarchy/extensions/omarchy-menu.jsonc
+# omarchy:examples=genkan-jsonc-check ~/.config/omarchy/extensions/omarchy-menu.jsonc
 
 # Omarchy's menu does not use a real JSONC grammar. It strips WHOLE-LINE "//"
 # comments and trailing commas, then runs JSON.parse. A file that fails to
@@ -14,11 +14,11 @@ set -euo pipefail
 
 file="${1:-}"
 if [[ -z $file || $file == "-h" || $file == "--help" ]]; then
-  echo "Usage: hearth-jsonc-check <file>" >&2
+  echo "Usage: genkan-jsonc-check <file>" >&2
   exit 2
 fi
 [[ -r $file ]] || {
-  echo "hearth-jsonc-check: cannot read $file" >&2
+  echo "genkan-jsonc-check: cannot read $file" >&2
   exit 2
 }
 

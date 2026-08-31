@@ -1,19 +1,19 @@
-// Hearth module for a classic Waybar bar (Omarchy 2.x and 3.x).
+// Genkan module for a classic Waybar bar (Omarchy 2.x and 3.x).
 //
 // Omarchy 4 does NOT use Waybar. Its Quickshell bar reads the same JSON from a
 // "type": "command" module, so use integrations/omarchy/shell/module.json there
 // instead. install.sh picks the right one for you.
 //
-// Add "custom/hearth" to your "modules-right" array, then paste the object
+// Add "custom/genkan" to your "modules-right" array, then paste the object
 // below into the same config file.
 {
-  "custom/hearth": {
-    "exec": "$HOME/.local/bin/hearth-bar-status",
+  "custom/genkan": {
+    "exec": "$HOME/.local/bin/genkan-bar-status",
     "return-type": "json",
     "interval": 30,
     "tooltip": true,
-    "on-click": "omarchy-menu summon hearth",
-    "on-click-right": "$HOME/.local/bin/hearth-action dashboard",
-    "on-click-middle": "$HOME/.local/bin/hearth-action status"
+    "on-click": "omarchy-menu summon genkan",
+    "on-click-right": "$HOME/.local/bin/genkan-action dashboard",
+    "on-click-middle": "$HOME/.local/bin/genkan-action status"
   }
 }

@@ -6,7 +6,7 @@
 -- The remembering was the part that failed. This file gives that table the
 -- few columns it was missing, adds the three things a real household needs
 -- around it (a holiday window, tonight's extension, and a memory of what the
--- worker last did), and `bin/kidnet-schedule` reads the lot every minute.
+-- worker last did), and `bin/genkan-schedule` reads the lot every minute.
 --
 -- THE ONE RULE TO KNOW: a schedule owns only the blocks it applied itself,
 -- which are the ones marked set_by='bedtime'. It never lifts anybody else's.

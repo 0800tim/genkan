@@ -5,6 +5,11 @@ secrets.env
 config.env
 node_modules/
 dashboard/node_modules/
-# Commercial thinking lives in ../hearth-commercial, never here
+# Commercial thinking lives in ../genkan-commercial, never here
 COMMERCIAL*
 commercial/
+# Backups deploy.sh writes beside the real files carry the same real values.
+config.env.*
+!config.env.example
+secrets.env.*
+!secrets.env.example

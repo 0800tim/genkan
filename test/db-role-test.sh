@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hearth:summary=The CLI's database role must not be able to leave the database.
+# genkan:summary=The CLI's database role must not be able to leave the database.
 #
 # bin/kidnet and the timers used to connect as the Postgres superuser, on an
 # instance shared with unrelated projects. Any SQL injection in bin/ was
@@ -14,8 +14,8 @@
 set -u
 R="$(cd "$(dirname "$0")/.." && pwd)"
 PG="${PG_CONTAINER:-postgres}"
-DB="hearth_role_test_$$"
-ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB="genkan_role_test_$$"
+ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 for _t in docker; do command -v "$_t" >/dev/null || { echo "MISSING REQUIRED TOOL: $_t"; exit 1; }; done
 
 pass=0; fail=0
@@ -60,17 +60,17 @@ n=$(docker exec -i "$PG" psql -U postgres -tAc \
 # This is the finding. A superuser connection turns any injection in bin/ into
 # command execution inside the postgres container; this must be refused.
 refused "COPY ... TO PROGRAM is refused (no command execution)" \
-        "COPY (SELECT 1) TO PROGRAM 'touch /tmp/hearth-role-test-rce'"
-if docker exec -i "$PG" test -e /tmp/hearth-role-test-rce 2>/dev/null; then
+        "COPY (SELECT 1) TO PROGRAM 'touch /tmp/genkan-role-test-rce'"
+if docker exec -i "$PG" test -e /tmp/genkan-role-test-rce 2>/dev/null; then
   bad "COPY TO PROGRAM actually ran a command"
-  docker exec -i "$PG" rm -f /tmp/hearth-role-test-rce
+  docker exec -i "$PG" rm -f /tmp/genkan-role-test-rce
 else ok "no command ran: the file COPY TO PROGRAM would have made is absent"; fi
 # The exact shape the 2026-08-30 review proved end to end through `kidnet
 # topsites`: a second statement appended to the first.
 refused "the same thing appended as a second statement is refused too" \
-        "SELECT 1; COPY (SELECT 1) TO PROGRAM 'touch /tmp/hearth-role-test-rce2'; "
-docker exec -i "$PG" test -e /tmp/hearth-role-test-rce2 2>/dev/null \
-  && { bad "the appended statement ran"; docker exec -i "$PG" rm -f /tmp/hearth-role-test-rce2; } \
+        "SELECT 1; COPY (SELECT 1) TO PROGRAM 'touch /tmp/genkan-role-test-rce2'; "
+docker exec -i "$PG" test -e /tmp/genkan-role-test-rce2 2>/dev/null \
+  && { bad "the appended statement ran"; docker exec -i "$PG" rm -f /tmp/genkan-role-test-rce2; } \
   || ok "the appended statement ran nothing either"
 refused "COPY FROM a server file is refused (no reading /etc)" \
         "CREATE TEMP TABLE _rt(l text); COPY _rt FROM '/etc/passwd'"
@@ -87,7 +87,7 @@ refused "DELETE FROM time_events is refused" "DELETE FROM time_events WHERE fals
 
 # ---- no escalation ----------------------------------------------------------
 refused "it cannot make itself a superuser"  "ALTER ROLE $ROLE SUPERUSER"
-refused "it cannot create a role"            "CREATE ROLE hearth_role_test_evil LOGIN"
+refused "it cannot create a role"            "CREATE ROLE genkan_role_test_evil LOGIN"
 refused "it cannot grant itself pg_execute_server_program" \
         "GRANT pg_execute_server_program TO $ROLE"
 
@@ -101,8 +101,8 @@ p=$(docker exec -i "$PG" psql -U postgres -tAc \
 acl=$(docker exec -i "$PG" psql -U postgres -tAc \
         "SELECT coalesce(datacl::text,'') FROM pg_database WHERE datname='$DB'" 2>/dev/null)
 case "$acl" in
-  *"=Tc/"*|"") bad "PUBLIC can still CONNECT to the Hearth database";;
-  *)           ok "PUBLIC cannot CONNECT to the Hearth database (only kids_app and $ROLE)";;
+  *"=Tc/"*|"") bad "PUBLIC can still CONNECT to the Genkan database";;
+  *)           ok "PUBLIC cannot CONNECT to the Genkan database (only kids_app and $ROLE)";;
 esac
 
 # ---- and it can still do its actual job -------------------------------------
@@ -147,9 +147,9 @@ case "$out" in *ERROR*) bad "$ROLE cannot do the temp-table COPY the timers use:
 # 2026-08-30 review used, and must refuse it before it opens a connection.
 echo
 echo "Every kidnet argument is gated before it reaches SQL"
-PAYLOAD="1; COPY (SELECT 1) TO PROGRAM 'touch /tmp/hearth-gate-test'; --"
+PAYLOAD="1; COPY (SELECT 1) TO PROGRAM 'touch /tmp/genkan-gate-test'; --"
 gated(){ local what="$1"; shift; local out rc
-  out=$(HEARTH_DB="$DB" PG_CONTAINER="$PG" GW_CONTAINER=hearth-no-such-container \
+  out=$(GENKAN_DB="$DB" PG_CONTAINER="$PG" GW_CONTAINER=genkan-no-such-container \
         ADGUARD_PASS="" bash "$R/bin/kidnet" "$@" 2>&1); rc=$?
   case "$out" in
     *"bad name"*|*"bad number"*|*"bad text"*|*"bad id"*|*"is not a MAC"*|*"is not an IPv4"*|*usage:*)
@@ -177,9 +177,9 @@ gated "time refuses an injected name"             time "$PAYLOAD"
 gated "confirm refuses an injected device"        confirm "$PAYLOAD"
 gated "claim-mode refuses an injected mode"       claim-mode "$PAYLOAD"
 gated "guest leave refuses an injected name"      guest leave "$PAYLOAD"
-if docker exec -i "$PG" test -e /tmp/hearth-gate-test 2>/dev/null; then
+if docker exec -i "$PG" test -e /tmp/genkan-gate-test 2>/dev/null; then
   bad "one of the payloads reached the server and ran"
-  docker exec -i "$PG" rm -f /tmp/hearth-gate-test
+  docker exec -i "$PG" rm -f /tmp/genkan-gate-test
 else ok "no payload reached the server"; fi
 
 echo

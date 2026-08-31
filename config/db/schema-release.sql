@@ -1,5 +1,5 @@
--- Hearth: what version this household is running, and every version it has
--- ever run. Written by bin/kidnet-upgrade and bin/kidnet-rollback.
+-- Genkan: what version this household is running, and every version it has
+-- ever run. Written by bin/genkan-upgrade and bin/genkan-rollback.
 --
 -- WHY THIS TABLE EXISTS
 -- Before it, there was no way to answer "what am I running, and what was I
@@ -7,7 +7,7 @@
 -- the code says, not when this box last actually ran deploy.sh, and it says
 -- nothing at all about the rollbacks. A household that has just had its
 -- internet come back needs to be able to see, in one place, that an upgrade
--- happened at 9:14pm, that the health check failed, and that Hearth put the
+-- happened at 9:14pm, that the health check failed, and that Genkan put the
 -- old version back at 9:16pm.
 --
 -- It is deliberately an append-only log. Nothing here is ever updated: a row
@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS release_history (
   to_version   text,
   to_commit    text,
   -- The id of the snapshot directory this change can be undone from, under
-  -- /var/lib/hearth/releases. Null when nothing was snapshotted.
+  -- /var/lib/genkan/releases. Null when nothing was snapshotted.
   snapshot     text,
   -- Did the health check pass afterwards? false means the change was
   -- automatically undone, or that somebody is looking at a broken box.

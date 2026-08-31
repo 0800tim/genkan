@@ -1,12 +1,12 @@
 -- Notifications to parents.
 --
--- Hearth already knows things a parent needs to hear: a device nobody has
+-- Genkan already knows things a parent needs to hear: a device nobody has
 -- claimed, a camera that is not as restricted as the policy says, a Tor or
 -- self-harm signal, a child out of time. Until this file they all sat on a
 -- dashboard nobody was looking at, and a parent learned on Saturday that
 -- something concerning happened on Wednesday.
 --
--- THE CONSTRAINT THAT SHAPES ALL OF IT: Hearth has no telemetry and talks to
+-- THE CONSTRAINT THAT SHAPES ALL OF IT: Genkan has no telemetry and talks to
 -- no cloud, and that stays true. So a notification is never "we send your
 -- child's activity to a service". It is the household's own box posting a
 -- message the household configured, to an address the household chose, over a
@@ -20,7 +20,7 @@
 --   notify_log       every attempt, good and bad, with no secrets in it
 --   notify_pending   what each route still owes, which is what the worker reads
 --
--- bin/kidnet-notify is the worker. docs/NOTIFICATIONS.md is the long version.
+-- bin/genkan-notify is the worker. docs/NOTIFICATIONS.md is the long version.
 
 -- ---------------------------------------------------------------------------
 -- Routes
@@ -39,7 +39,7 @@
 --   email     needs the household's own SMTP server
 --   homeassistant  a first-class HA route, rather than HA behind a webhook
 --
--- bin/kidnet-notify refuses to create or send those two and says why. See
+-- bin/genkan-notify refuses to create or send those two and says why. See
 -- docs/NOTIFICATIONS.md, "Extension points", for where the code goes.
 CREATE TABLE IF NOT EXISTS notify_routes (
   id            serial PRIMARY KEY,
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS notify_routes (
   -- Empty means every category at or above min_severity. Non-empty narrows it.
   categories    text[] NOT NULL DEFAULT '{}',
   -- Quiet hours, minutes from midnight in the DATABASE's timezone, which
-  -- deploy.sh pins to the household's (HEARTH_TZ). Both NULL means no quiet
+  -- deploy.sh pins to the household's (GENKAN_TZ). Both NULL means no quiet
   -- hours. The window may cross midnight: 1290 to 420 is 21:30 to 07:00.
   quiet_start_min int,
   quiet_end_min   int,
@@ -142,64 +142,64 @@ INSERT INTO notify_wording(category, title, body_one, body_many, name_ok, detail
 -- It names nobody, says nothing about what was looked up, and does not use the
 -- word that would tell a stranger on the bus what happened. It says: this is
 -- care, not trouble; it is on the dashboard at home; read it privately.
- ('self-harm', 'Hearth: worth a quiet check in',
-  'One thing today needs your eyes, and it is a care thing, not a trouble thing. The detail is on the Hearth dashboard at home. Read it somewhere private.',
-  'A few things today need your eyes, and they are care things, not trouble things. The detail is on the Hearth dashboard at home. Read it somewhere private.',
+ ('self-harm', 'Genkan: worth a quiet check in',
+  'One thing today needs your eyes, and it is a care thing, not a trouble thing. The detail is on the Genkan dashboard at home. Read it somewhere private.',
+  'A few things today need your eyes, and they are care things, not trouble things. The detail is on the Genkan dashboard at home. Read it somewhere private.',
   false, false, 5, 'house'),
 
 -- The blocked-road signals. A kid who bounces off the Tor block is not in
 -- trouble (docs/tor-and-safety.md), so the message must not read as an
 -- accusation. No name, no domain.
- ('tor', 'Hearth: worth a conversation tonight',
-  'Someone tried to reach a part of the internet Hearth blocks. It was blocked. Nobody is in trouble. The detail is on the dashboard at home.',
-  'There were {n} attempts to reach parts of the internet Hearth blocks. They were blocked. Nobody is in trouble. The detail is on the dashboard at home.',
+ ('tor', 'Genkan: worth a conversation tonight',
+  'Someone tried to reach a part of the internet Genkan blocks. It was blocked. Nobody is in trouble. The detail is on the dashboard at home.',
+  'There were {n} attempts to reach parts of the internet Genkan blocks. They were blocked. Nobody is in trouble. The detail is on the dashboard at home.',
   false, false, 4, 'house'),
- ('darknet', 'Hearth: worth a conversation tonight',
-  'Someone tried to reach a part of the internet Hearth blocks. It was blocked. Nobody is in trouble. The detail is on the dashboard at home.',
-  'There were {n} attempts to reach parts of the internet Hearth blocks. They were blocked. Nobody is in trouble. The detail is on the dashboard at home.',
+ ('darknet', 'Genkan: worth a conversation tonight',
+  'Someone tried to reach a part of the internet Genkan blocks. It was blocked. Nobody is in trouble. The detail is on the dashboard at home.',
+  'There were {n} attempts to reach parts of the internet Genkan blocks. They were blocked. Nobody is in trouble. The detail is on the dashboard at home.',
   false, false, 4, 'house'),
- ('drugs', 'Hearth: worth a conversation tonight',
-  'Someone tried to reach a site Hearth blocks. It was blocked. Nobody is in trouble. The detail is on the dashboard at home.',
-  'There were {n} attempts to reach sites Hearth blocks. They were blocked. Nobody is in trouble. The detail is on the dashboard at home.',
+ ('drugs', 'Genkan: worth a conversation tonight',
+  'Someone tried to reach a site Genkan blocks. It was blocked. Nobody is in trouble. The detail is on the dashboard at home.',
+  'There were {n} attempts to reach sites Genkan blocks. They were blocked. Nobody is in trouble. The detail is on the dashboard at home.',
   false, false, 4, 'house'),
- ('extreme', 'Hearth: worth a conversation tonight',
-  'Someone tried to reach a site Hearth blocks. It was blocked. Nobody is in trouble. The detail is on the dashboard at home.',
-  'There were {n} attempts to reach sites Hearth blocks. They were blocked. Nobody is in trouble. The detail is on the dashboard at home.',
+ ('extreme', 'Genkan: worth a conversation tonight',
+  'Someone tried to reach a site Genkan blocks. It was blocked. Nobody is in trouble. The detail is on the dashboard at home.',
+  'There were {n} attempts to reach sites Genkan blocks. They were blocked. Nobody is in trouble. The detail is on the dashboard at home.',
   false, false, 4, 'house'),
 
 -- Filter bypass. Usually curiosity. Worded as a question, not a charge.
- ('proxy-vpn', 'Hearth: someone looked at a way round the filter',
+ ('proxy-vpn', 'Genkan: someone looked at a way round the filter',
   'A VPN or proxy was looked up on the kids network. Usually curiosity, occasionally a way round the filter. The detail is on the dashboard at home.',
   'VPN or proxy sites were looked up {n} times on the kids network. Usually curiosity, occasionally a way round the filter. The detail is on the dashboard at home.',
   false, false, 3, 'house'),
 
 -- The household and housekeeping ones. These may say what they are about,
 -- because none of them is about a child's private business.
- ('devices', 'Hearth: a device nobody has claimed joined the network',
+ ('devices', 'Genkan: a device nobody has claimed joined the network',
   'A device nobody has claimed joined the network. It has limited access until somebody names it.',
   '{n} devices nobody has claimed joined the network. They have limited access until somebody names them.',
   false, false, 3, 'house'),
- ('iot-policy', 'Hearth: a household device is not as restricted as it should be',
+ ('iot-policy', 'Genkan: a household device is not as restricted as it should be',
   'The household device policy did not apply cleanly, so something may have more access than the rules say. The detail is on the dashboard at home.',
   'The household device policy did not apply cleanly {n} times, so something may have more access than the rules say. The detail is on the dashboard at home.',
   false, true, 4, 'house'),
- ('gateway', 'Hearth: the gateway needs a look',
-  'The Hearth gateway raised something at start-up. The kids network may not be serving. The detail is on the dashboard at home.',
-  'The Hearth gateway raised {n} things at start-up. The kids network may not be serving. The detail is on the dashboard at home.',
+ ('gateway', 'Genkan: the gateway needs a look',
+  'The Genkan gateway raised something at start-up. The kids network may not be serving. The detail is on the dashboard at home.',
+  'The Genkan gateway raised {n} things at start-up. The kids network may not be serving. The detail is on the dashboard at home.',
   false, true, 4, 'house'),
- ('dns-ingest', 'Hearth: Hearth has stopped recording lookups',
-  'Hearth cannot read the DNS query log, so nothing is being recorded or metered right now. The detail is on the dashboard at home.',
-  'Hearth cannot read the DNS query log, so nothing is being recorded or metered right now. The detail is on the dashboard at home.',
+ ('dns-ingest', 'Genkan: Genkan has stopped recording lookups',
+  'Genkan cannot read the DNS query log, so nothing is being recorded or metered right now. The detail is on the dashboard at home.',
+  'Genkan cannot read the DNS query log, so nothing is being recorded or metered right now. The detail is on the dashboard at home.',
   false, true, 4, 'house'),
 
 -- Routine. Named, because "Nova has used today''s time" is useful and is
 -- nobody''s secret. Priority 2 and severity info, so on the default 'warn'
 -- route these never fire at all.
- ('time', 'Hearth: out of time',
+ ('time', 'Genkan: out of time',
   '{who} has used today''s screen time.',
   '{n} of them have used today''s screen time: {who}.',
   true, false, 2, 'hourglass'),
- ('earn', 'Hearth: a job is waiting for your yes',
+ ('earn', 'Genkan: a job is waiting for your yes',
   '{who} has finished a job and is waiting on you. It can wait until morning.',
   '{n} jobs are finished and waiting on you: {who}. They can wait until morning.',
   true, false, 2, 'house'),
@@ -207,15 +207,15 @@ INSERT INTO notify_wording(category, title, body_one, body_many, name_ok, detail
 -- Reserved. A category nobody has worded yet says the least it can, which is
 -- the safe direction to fail in: it never guesses that a new alert type is
 -- harmless enough to quote on a lock screen.
- ('@fallback', 'Hearth: something needs a look',
-  'Something needs your attention. The detail is on the Hearth dashboard at home.',
-  '{n} things need your attention. The detail is on the Hearth dashboard at home.',
+ ('@fallback', 'Genkan: something needs a look',
+  'Something needs your attention. The detail is on the Genkan dashboard at home.',
+  '{n} things need your attention. The detail is on the Genkan dashboard at home.',
   false, false, 3, 'house'),
- ('@summary', 'Hearth: a few things need a look',
-  'Something needs your attention. The detail is on the Hearth dashboard at home.',
-  '{n} things need your attention. The detail is on the Hearth dashboard at home.',
+ ('@summary', 'Genkan: a few things need a look',
+  'Something needs your attention. The detail is on the Genkan dashboard at home.',
+  '{n} things need your attention. The detail is on the Genkan dashboard at home.',
   false, false, 3, 'house'),
- ('@test', 'Hearth: this is a test',
+ ('@test', 'Genkan: this is a test',
   'Notifications are working. Nothing has happened.',
   'Notifications are working. Nothing has happened.',
   false, false, 3, 'house')
@@ -346,7 +346,7 @@ CREATE OR REPLACE VIEW notify_route_state AS
 -- decision and belongs on the page. It may read the ledger and the log so the
 -- page can say when a route last worked and what it said when it did not.
 -- notify_sent stays read-only to the web surface: a dashboard that could
--- delete from it could make Hearth send the same 2am alert again.
+-- delete from it could make Genkan send the same 2am alert again.
 GRANT SELECT, INSERT, UPDATE, DELETE ON notify_routes TO kids_app;
 GRANT USAGE ON SEQUENCE notify_routes_id_seq TO kids_app;
 GRANT SELECT, INSERT, UPDATE, DELETE ON notify_wording TO kids_app;

@@ -71,10 +71,10 @@ cd integrations/omarchy
 ./install.sh
 
 # The gateway is another box and you have ssh keys to it
-./install.sh --ssh you@hearth --url http://hearth:8899
+./install.sh --ssh you@genkan --url http://genkan:8899
 
 # You can only reach the dashboard, not a shell
-./install.sh --url http://hearth:8899 --token "$DASH_TOKEN"
+./install.sh --url http://genkan:8899 --token "$DASH_TOKEN"
 ```
 
 Useful flags: `--kids "Ada Ben Cleo"` to be exact about who the bar counts,
@@ -84,7 +84,7 @@ Useful flags: `--kids "Ada Ben Cleo"` to be exact about who the bar counts,
 What the installer does, and nothing else:
 
 1. Links five commands into `~/.local/bin`.
-2. Writes `~/.config/hearth/omarchy.conf` from `hearth.conf.example` if you do
+2. Writes `~/.config/genkan/omarchy.conf` from `genkan.conf.example` if you do
    not already have one.
 3. Adds a block of entries to `~/.config/omarchy/extensions/omarchy-menu.jsonc`
    between two marker comments, leaving everything else in that file alone.
@@ -92,7 +92,7 @@ What the installer does, and nothing else:
    `~/.config/waybar/` (older Omarchy).
 
 It is safe to run again. Every file it touches is copied to
-`<file>.hearth-backup-<timestamp>` first, and it only writes when the result
+`<file>.genkan-backup-<timestamp>` first, and it only writes when the result
 would actually be different, so a second run makes no backups and no changes.
 
 Run it again after adding a child, and the menu picks them up. Or use the
@@ -101,7 +101,7 @@ Run it again after adding a child, and the menu picks them up. Or use the
 ### Where the gateway is
 
 The scripts default to **local**: if `kidnet` is on your PATH, that is used.
-Otherwise `HEARTH_SSH`, otherwise `HEARTH_URL`. Set `HEARTH_MODE` in the config
+Otherwise `GENKAN_SSH`, otherwise `GENKAN_URL`. Set `GENKAN_MODE` in the config
 file to pin one.
 
 | Mode | How | What you lose |
@@ -111,17 +111,17 @@ file to pin one.
 | `http` | `POST /api/act` on the dashboard, with `DASH_TOKEN` | the unacknowledged-alert count, because the dashboard exposes no endpoint for it. The bar simply stops mentioning alerts |
 
 ssh mode must never prompt. Set up a key first and check
-`ssh you@hearth kidnet status` works from a plain terminal.
+`ssh you@genkan kidnet status` works from a plain terminal.
 
-All three go through `hearth-kidnet`, which is the only script that knows where
+All three go through `genkan-kidnet`, which is the only script that knows where
 the gateway is. It prints `kidnet`'s own output whichever route it took, so you
 can use it by hand:
 
 ```bash
-hearth-kidnet status
-hearth-kidnet game off Ada
-hearth-kidnet --kids
-hearth-kidnet --mode
+genkan-kidnet status
+genkan-kidnet game off Ada
+genkan-kidnet --kids
+genkan-kidnet --mode
 ```
 
 The HTTP route can only run what the dashboard's own allowlist permits. This
@@ -140,10 +140,10 @@ So:
 - The bar item **never writes to stderr and never exits non-zero**. If it
   cannot answer, it prints a valid JSON object saying so.
 - A short outage shows **the last good answer**, dimmed, for
-  `HEARTH_STALE_SEC` (three minutes by default). Brief blips do not make the
+  `GENKAN_STALE_SEC` (three minutes by default). Brief blips do not make the
   bar flap.
 - After that it falls back to a **dim home glyph** with the tooltip "Genkan:
-  the gateway is not reachable". Set `HEARTH_HIDE_WHEN_DOWN=1` and it shows
+  the gateway is not reachable". Set `GENKAN_HIDE_WHEN_DOWN=1` and it shows
   nothing at all, which makes the item vanish from the bar entirely.
 - Menu actions that cannot reach the gateway say so in one notification, once,
   when you click them.
@@ -173,14 +173,14 @@ Omarchy ships, and naming a colour a theme has not defined makes GTK reject the
 whole stylesheet. If you know your theme defines `@urgent`, there is a
 commented-out block at the bottom of that file to uncomment.
 
-The classes the script sets: `hearth` always, then `active`, `warn`, `paused`,
+The classes the script sets: `genkan` always, then `active`, `warn`, `paused`,
 `low`, `stale` or `down`.
 
 ## Uninstall
 
 ```bash
 ./uninstall.sh            # keeps your settings
-./uninstall.sh --purge    # deletes ~/.config/hearth/omarchy.conf too
+./uninstall.sh --purge    # deletes ~/.config/genkan/omarchy.conf too
 ```
 
 It removes the menu block, the bar module, the CSS block and the five command
@@ -191,16 +191,16 @@ not a link into this checkout is left alone. Nothing on the gateway is touched.
 
 | Path | What it is |
 |---|---|
-| `bin/hearth-kidnet` | the transport: local, ssh or http. Everything else calls this |
-| `bin/hearth-bar-status` | prints one line of Waybar-format JSON for the bar |
-| `bin/hearth-action` | runs one action and notifies the result; also the kid picker |
-| `bin/hearth-menu-jsonc` | generates the menu entries and writes them into the extension file |
-| `bin/hearth-jsonc-check` | parses a file the way the Omarchy menu parses JSONC |
+| `bin/genkan-kidnet` | the transport: local, ssh or http. Everything else calls this |
+| `bin/genkan-bar-status` | prints one line of Waybar-format JSON for the bar |
+| `bin/genkan-action` | runs one action and notifies the result; also the kid picker |
+| `bin/genkan-menu-jsonc` | generates the menu entries and writes them into the extension file |
+| `bin/genkan-jsonc-check` | parses a file the way the Omarchy menu parses JSONC |
 | `shell/module.json` | the Omarchy 4 bar module, to paste by hand if you prefer |
 | `waybar/config.jsonc` | the same module for a classic Waybar bar |
 | `waybar/style.css` | the Waybar styles |
-| `menu/hearth-menu.jsonc` | a sample of the generated menu, for reading |
-| `hearth.conf.example` | every setting, with what it does |
+| `menu/genkan-menu.jsonc` | a sample of the generated menu, for reading |
+| `genkan.conf.example` | every setting, with what it does |
 
 ## Which Omarchy mechanisms this uses
 
@@ -218,7 +218,7 @@ Worth stating plainly, because Omarchy 4 changed the answer.
 - **The menu** is the `omarchy.menu` Quickshell plugin, with content in
   `default/omarchy/omarchy-menu.jsonc` overlaid by
   `~/.config/omarchy/extensions/omarchy-menu.jsonc`. Entry ids are dotted and
-  the tree follows from the id, so `hearth.kid-ada.off` is a row inside a
+  the tree follows from the id, so `genkan.kid-ada.off` is a row inside a
   submenu inside Genkan, with no parent field to keep in sync.
 - That extension file is JSONC only in a narrow sense: the parser strips
   **whole-line** `//` comments and trailing commas, then runs `JSON.parse`. An

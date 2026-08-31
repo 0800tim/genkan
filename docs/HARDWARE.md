@@ -55,8 +55,8 @@ ethernet (`enp5s0`) as the uplink and an **ASIX AX88179** USB 3.0 gigabit
 adapter (USB ID `0b95:1790`, driver `ax88179_178a`) as the kids' side.
 
 This is the combination Genkan was developed on and runs on daily. The
-containers `hearth-gw`, `hearth-adguard`, `hearth-portal` and
-`hearth-speedtest` all run here, the timers run here, and the firewall and
+containers `genkan-gw`, `genkan-adguard`, `genkan-portal` and
+`genkan-speedtest` all run here, the timers run here, and the firewall and
 container test suites pass on this box.
 
 It is more machine than the job needs. The gateway idles at a small fraction of

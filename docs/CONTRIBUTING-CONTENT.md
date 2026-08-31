@@ -283,7 +283,7 @@ judgement on your content. It cannot read your content.
 
 **3. If you run Genkan, install it and take a round yourself:**
 
-    bin/kidnet-pack install my-package.json
+    bin/genkan-pack install my-package.json
 
 Then open the kid portal, press **Read up**, and read your own explanations on
 the screen a child will read them on. Several things that seem fine in a text
@@ -381,10 +381,10 @@ Two things to be sure of before you choose:
 
 For completeness, and so you know what happens to your file at the other end.
 
-    bin/kidnet-pack list                    what is installed, and what is on the shelf
-    bin/kidnet-pack validate <file>         check it before saying yes
-    bin/kidnet-pack install <file>          install it for the kids
-    bin/kidnet-pack remove <id>             take it out again
+    bin/genkan-pack list                    what is installed, and what is on the shelf
+    bin/genkan-pack validate <file>         check it before saying yes
+    bin/genkan-pack install <file>          install it for the kids
+    bin/genkan-pack remove <id>             take it out again
 
 An installed package goes into the household's **database**, not into the
 repository. That matters: updating Genkan cannot delete it, and removing it is
@@ -412,10 +412,10 @@ children, based on what that child actually likes.
 feature that is easy to describe in the present tense and hard to build.
 
 What exists today is the evidence half, and it already works without any AI at
-all. `bin/kidnet-quiz-suggest <child>` prints a briefing from the household's
+all. `bin/genkan-quiz-suggest <child>` prints a briefing from the household's
 own database: what that child passes, what they avoid, what they keep getting
 wrong, and what their devices have been looking up that nothing else explains.
-`bin/kidnet-pack list` prints what is installed and what is on the shelf. Paste
+`bin/genkan-pack list` prints what is installed and what is on the shelf. Paste
 both into whichever AI agent the parent already uses and it can say which
 package fits, and why. `docs/runbooks/quiz-suggestions.md` is the recipe.
 

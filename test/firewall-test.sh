@@ -3,7 +3,7 @@
 # without touching this machine's networking. Everything happens inside three
 # throwaway network namespaces:
 #
-#   hearth-kid (a kid's device) --- hearth-gw (the Hearth box) --- hearth-net (internet)
+#   genkan-kid (a kid's device) --- genkan-gw (the Genkan box) --- genkan-net (internet)
 #
 # The gateway namespace loads the real config/nftables/kids.nft, so what is
 # tested here is the file that ships. Run: sudo test/firewall-test.sh
@@ -20,9 +20,9 @@ for _t in ip nft python3; do
   command -v "$_t" >/dev/null || { echo "MISSING REQUIRED TOOL: $_t"; exit 1; }
 done
 [ -x "$NFT" ] || { echo "nft not found. Install nftables."; exit 1; }
-GW="ip netns exec hearth-gw"
-KID="ip netns exec hearth-kid"
-NET="ip netns exec hearth-net"
+GW="ip netns exec genkan-gw"
+KID="ip netns exec genkan-kid"
+NET="ip netns exec genkan-net"
 pass=0; fail=0
 
 pids=""
@@ -30,24 +30,24 @@ cleanup(){
   # Kill the listeners first: they hold the namespaces open, and they inherit
   # stdout, so leaving them alive wedges anything piping this script's output.
   [ -z "$pids" ] || kill $pids 2>/dev/null
-  for n in hearth-kid hearth-gw hearth-net; do ip netns del $n 2>/dev/null; done
+  for n in genkan-kid genkan-gw genkan-net; do ip netns del $n 2>/dev/null; done
 }
 trap cleanup EXIT
 [ "$(id -u)" = 0 ] || { echo "run with sudo"; exit 1; }
 cleanup
 
 # --- build the lab ---------------------------------------------------------
-ip netns add hearth-gw; ip netns add hearth-kid; ip netns add hearth-net
+ip netns add genkan-gw; ip netns add genkan-kid; ip netns add genkan-net
 ip link add kids0 type veth peer name k-eth0
 ip link add wan0  type veth peer name n-eth0
-ip link set kids0 netns hearth-gw;  ip link set k-eth0 netns hearth-kid
-ip link set wan0  netns hearth-gw;  ip link set n-eth0 netns hearth-net
+ip link set kids0 netns genkan-gw;  ip link set k-eth0 netns genkan-kid
+ip link set wan0  netns genkan-gw;  ip link set n-eth0 netns genkan-net
 
 $GW  ip addr add 192.168.60.1/24 dev kids0
 $GW  ip addr add 203.0.113.1/24  dev wan0
 $KID ip addr add 192.168.60.50/24 dev k-eth0
 $NET ip addr add 203.0.113.2/24   dev n-eth0
-for ns in gw kid net; do ip netns exec hearth-$ns ip link set lo up; done
+for ns in gw kid net; do ip netns exec genkan-$ns ip link set lo up; done
 $GW ip link set kids0 up; $GW ip link set wan0 up
 $KID ip link set k-eth0 up; $NET ip link set n-eth0 up
 $KID ip route add default via 192.168.60.1
@@ -58,7 +58,7 @@ $GW sysctl -qw net.ipv4.ip_forward=1
 # FORWARD isolation rule rather than the gateway's own input chain.
 $NET ip addr add 192.168.1.10/24  dev n-eth0
 $NET ip addr add 100.64.0.9/32  dev n-eth0
-$GW  ip addr add 198.51.100.1/24   dev wan0   # a second the Hearth box address
+$GW  ip addr add 198.51.100.1/24   dev wan0   # a second the Genkan box address
 # The gateway must be able to ROUTE to these, otherwise the packets die on an
 # unreachable-network error and the isolation checks pass without the firewall
 # ever seeing them. Give it the routes so the forward chain is what decides.
@@ -76,7 +76,7 @@ $GW $NFT -f "$R/config/nftables/kids.nft"
 # .50 is a known, reserved device. .77 (used later) is a static-IP squatter.
 $GW $NFT add element inet kids kids_known "{ 192.168.60.50 }"
 
-# Listeners: a fake site out on the internet, and the Hearth box's own DNS + portal.
+# Listeners: a fake site out on the internet, and the Genkan box's own DNS + portal.
 $NET python3 -c "
 import socket,threading
 def serve(p):
@@ -175,11 +175,11 @@ echo
 echo "A kid who is ALLOWED online"
 check "reaches the internet on :443"                 yes 203.0.113.2 443
 banner "reaches the REAL site on :80, not the portal" FAR 203.0.113.2 80
-check "reaches the DNS resolver on the Hearth box"          yes 192.168.60.1 53
+check "reaches the DNS resolver on the Genkan box"          yes 192.168.60.1 53
 check "cannot reach the main house LAN (isolation)"  no  192.168.1.10 80
 check "cannot reach the tailnet (isolation)"         no  100.64.0.9 80
-check "cannot reach the Hearth box's other addresses on :80" no 198.51.100.1 80
-check "cannot reach the Hearth box's admin dashboard"       no  192.168.60.1 8899
+check "cannot reach the Genkan box's other addresses on :80" no 198.51.100.1 80
+check "cannot reach the Genkan box's admin dashboard"       no  192.168.60.1 8899
 check "cannot use DNS-over-TLS on :853"              no  203.0.113.2 853
 banner "hardcoding 8.8.8.8 still lands on our resolver" GATEWAY 8.8.8.8 53
 check "cannot reach Cloudflare DoH on 1.1.1.1:443"   no  1.1.1.1 443
@@ -261,7 +261,7 @@ unblockkid
 echo
 echo "Tor and the darknet (the IP layer)"
 # 203.0.113.9 stands in for a public Tor relay. In production @tor_nodes holds
-# the ~7-8k addresses kidnet-tor-sync fetches; the rules are the same either way.
+# the ~7-8k addresses genkan-tor-sync fetches; the rules are the same either way.
 $NET ip addr add 203.0.113.9/24 dev n-eth0
 $GW $NFT add element inet kids tor_nodes "{ 203.0.113.9 }"
 check "an online kid cannot reach a Tor relay"        no  203.0.113.9 443

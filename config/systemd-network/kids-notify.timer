@@ -1,5 +1,5 @@
 [Unit]
-Description=Hearth notifications (every two minutes)
+Description=Genkan notifications (every two minutes)
 [Timer]
 OnBootSec=3min
 OnUnitActiveSec=2min

@@ -73,7 +73,7 @@ already happened once in this project: a single Google edge address, learned
 from a bare `googlevideo.com` lookup, was tagged `video`, and it then coloured
 every byte any phone in the house sent to Google (search, Gmail, the Play
 Store) as YouTube. Read the CDN-apex guard comment at the top of
-`bin/kidnet-catmap` for the full story.
+`bin/genkan-catmap` for the full story.
 
 So:
 
@@ -124,7 +124,7 @@ learns from real traffic:
 
 1. Have the child use the service for a few minutes, for real, on a device
    Genkan already knows.
-2. Run `kidnet-catmap` (or wait for `kids-services.timer`), then check the
+2. Run `genkan-catmap` (or wait for `kids-services.timer`), then check the
    address was learned:
 
        docker exec -i postgres psql -U postgres -d kids_network -c \
@@ -137,7 +137,7 @@ learns from real traffic:
    comes back empty.
 
 If the domain never appears in `category_ips` at all, re-read the ambiguity
-guard in `bin/kidnet-catmap`: the address may have answered for more than one
+guard in `bin/genkan-catmap`: the address may have answered for more than one
 category in the same window, in which case it is being correctly refused, not
 missed.
 

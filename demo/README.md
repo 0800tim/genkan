@@ -16,14 +16,14 @@ this way.
 
 | Piece | What it does |
 |---|---|
-| `compose.yaml` | Three containers: `hearth-demo-db` (its own Postgres, its own volume, its own network), `hearth-demo-dashboard` and `hearth-demo-portal` (both node:22-slim, the repo's `dashboard/` mounted read only). |
+| `compose.yaml` | Three containers: `genkan-demo-db` (its own Postgres, its own volume, its own network), `genkan-demo-dashboard` and `genkan-demo-portal` (both node:22-slim, the repo's `dashboard/` mounted read only). |
 | `seed.sql` | The made-up household, six weeks of it, all written relative to `now()`. One child is deliberately out of time. |
 | `reseed.sh` | Empties the demo database, loads every `config/db/schema*.sql` in order, then `seed.sql`. |
 | `../dashboard/live-demo.mjs` | The synthetic sampler that keeps the Right Now page moving. |
 | `../dashboard/sys-demo.mjs` | The invented box the System page describes: four cores, 8 GB, a 128 GB disk, three containers. Not this host. |
 
 Published on `127.0.0.1:9275` (dashboard) and `127.0.0.1:9276` (portal), fronted
-by the existing `hearth` Cloudflare tunnel (`~/.cloudflared/config-hearth.yml`,
+by the existing `genkan` Cloudflare tunnel (`~/.cloudflared/config-genkan.yml`,
 the same tunnel that serves `hearth.appspurt.dev`). The Postgres container
 publishes nothing at all.
 
@@ -37,9 +37,9 @@ hold for the demo to be inert, and none of them is a matter of trust:
    credentials for it.
 2. **No docker socket.** `dashboard/live.mjs` reaches the gateway with
    `docker exec`, and that is the only way anything in a container could get at
-   `nft` or `hearth-gw`. The socket is not mounted, so the call cannot succeed
+   `nft` or `genkan-gw`. The socket is not mounted, so the call cannot succeed
    whatever the code does.
-3. **`HEARTH_DEMO=1`.** In `dashboard/server.mjs` this replaces `runKidnet` and
+3. **`GENKAN_DEMO=1`.** In `dashboard/server.mjs` this replaces `runKidnet` and
    `runTool` with functions that return
    `{ok:true, out:"This is the demo, so nothing was actually changed."}`.
    Every path that would shell out, including `syncAdguard`, goes through one of
@@ -50,7 +50,7 @@ hold for the demo to be inert, and none of them is a matter of trust:
    `kidnet` in the container to run.
 5. **No capabilities.** No `NET_ADMIN`, no host networking, no privileged flag.
 
-With `HEARTH_DEMO` unset, which is every household installation, all of the
+With `GENKAN_DEMO` unset, which is every household installation, all of the
 above is a strict no-op: the guards are ternaries that evaluate to exactly the
 code that was there before, and the demo banner is the empty string.
 
@@ -80,12 +80,12 @@ re-seed puts it all back.
 
 ```sh
 # Start or restart
-systemctl --user restart hearth-demo.service
+systemctl --user restart genkan-demo.service
 # or, straight from the repo
 docker compose -f demo/compose.yaml up -d
 
 # Stop
-systemctl --user stop hearth-demo.service
+systemctl --user stop genkan-demo.service
 
 # What is it doing
 docker compose -f demo/compose.yaml ps
@@ -94,17 +94,17 @@ docker compose -f demo/compose.yaml logs -f demo-dashboard
 
 `restart: unless-stopped` on all three containers is what actually survives a
 reboot.
-`hearth-demo.service` is enabled as well, so a docker daemon that came up empty
+`genkan-demo.service` is enabled as well, so a docker daemon that came up empty
 still gets a nudge.
 
 ## Re-seeding
 
 ```sh
 demo/reseed.sh                                  # by hand
-systemctl --user start hearth-demo-reseed.service   # the same thing, logged
+systemctl --user start genkan-demo-reseed.service   # the same thing, logged
 ```
 
-`hearth-demo-reseed.timer` runs it at about 03:40 every night. Two reasons:
+`genkan-demo-reseed.timer` runs it at about 03:40 every night. Two reasons:
 
 - every timestamp in `seed.sql` is relative to `now()`, so a nightly rebuild
   means the charts are always showing the last six weeks rather than the six
@@ -150,4 +150,4 @@ the Right Now page would sit at zero saying the gateway did not answer.
 `dashboard/live-demo.mjs` synthesises the same tick shape instead: a slow random
 walk per device, clamped, multiplied by a daily rhythm and split across the
 categories that device's owner would plausibly be using. Real dashboard code,
-fake numbers. It is only ever loaded when `HEARTH_DEMO=1`.
+fake numbers. It is only ever loaded when `GENKAN_DEMO=1`.

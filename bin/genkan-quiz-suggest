@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hearth:summary=Gather what a child has been learning and reading about, as a briefing for writing new quizzes.
+# genkan:summary=Gather what a child has been learning and reading about, as a briefing for writing new quizzes.
 #
 # The research half of "keep feeding them new quizzes". An agent that is going
 # to write a bank for one child needs to know what that child already passes,
@@ -7,24 +7,24 @@
 # curious about lately. All of that is already in this household's database.
 # This script reads it and prints it as one briefing you can paste.
 #
-#   kidnet-quiz-suggest                 the children it can brief on
-#   kidnet-quiz-suggest <kid>           the briefing
-#   kidnet-quiz-suggest <kid> --days 60 a longer window (default 30)
-#   kidnet-quiz-suggest <kid> --top 15  more rows per section (default 10)
-#   kidnet-quiz-suggest <kid> --quiet   the briefing without the closing prompt
+#   genkan-quiz-suggest                 the children it can brief on
+#   genkan-quiz-suggest <kid>           the briefing
+#   genkan-quiz-suggest <kid> --days 60 a longer window (default 30)
+#   genkan-quiz-suggest <kid> --top 15  more rows per section (default 10)
+#   genkan-quiz-suggest <kid> --quiet   the briefing without the closing prompt
 #
 # IT TALKS TO NOTHING. No AI service, no cloud, no telemetry: it reads
-# Postgres and portal/quizzes and writes to your terminal. Hearth does not
+# Postgres and portal/quizzes and writes to your terminal. Genkan does not
 # phone home and this script is not the exception. Handing the output to an
 # agent is your decision, made by you, one paste at a time.
 #
 # The recipe for what to do with it is docs/runbooks/quiz-suggestions.md.
-# Write the bank, check it with `kidnet-quiz validate`, then either install it
+# Write the bank, check it with `genkan-quiz validate`, then either install it
 # as a file or type it into the dashboard's Learn to earn screen.
 set -euo pipefail
 
 SELF="$(readlink -f "$0")"
-REPO="${HEARTH_REPO:-$(cd "$(dirname "$SELF")/.." && pwd)}"
+REPO="${GENKAN_REPO:-$(cd "$(dirname "$SELF")/.." && pwd)}"
 QUIZ_DIR="${QUIZ_DIR:-$REPO/portal/quizzes}"
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
 DB="${KIDS_DB:-kids_network}"
@@ -39,16 +39,16 @@ while [ $# -gt 0 ]; do
     --top)  TOP="${2:?--top needs a number}"; shift 2;;
     --quiet) QUIET=1; shift;;
     -h|--help|help) awk 'NR>2 && /^#/ { sub(/^# ?/, ""); print; next } NR>2 { exit }' "$SELF"; exit 0;;
-    -*) echo "kidnet-quiz-suggest: unknown flag $1" >&2; exit 1;;
+    -*) echo "genkan-quiz-suggest: unknown flag $1" >&2; exit 1;;
     *)  KID="$1"; shift;;
   esac
 done
-[[ "$DAYS" =~ ^[0-9]{1,4}$ ]] || { echo "kidnet-quiz-suggest: --days must be a whole number" >&2; exit 1; }
-[[ "$TOP"  =~ ^[0-9]{1,3}$ ]] || { echo "kidnet-quiz-suggest: --top must be a whole number" >&2; exit 1; }
-command -v docker >/dev/null || { echo "kidnet-quiz-suggest: needs docker to reach Postgres" >&2; exit 1; }
+[[ "$DAYS" =~ ^[0-9]{1,4}$ ]] || { echo "genkan-quiz-suggest: --days must be a whole number" >&2; exit 1; }
+[[ "$TOP"  =~ ^[0-9]{1,3}$ ]] || { echo "genkan-quiz-suggest: --top must be a whole number" >&2; exit 1; }
+command -v docker >/dev/null || { echo "genkan-quiz-suggest: needs docker to reach Postgres" >&2; exit 1; }
 
 # Read only, and as kids_agent rather than the superuser: see config/db/grants.sql.
-DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB" -tAF$'\t' -c "$1"; }
 # A section that says something friendly when there is nothing in it yet. An
 # empty section is the normal state of a new install, not a fault.
@@ -65,7 +65,7 @@ show(){ local out; out=$(psqll "$1" 2>&1 || true)
 head2(){ echo; echo "== $1"; }
 
 if [ -z "$KID" ]; then
-  echo "kidnet-quiz-suggest <child>. Children on this network:"
+  echo "genkan-quiz-suggest <child>. Children on this network:"
   show "SELECT name || COALESCE(', ' || age::text, '') FROM children
          WHERE kind='child' AND active ORDER BY age" "no children set up yet"
   echo
@@ -95,14 +95,14 @@ if [ "$(psqll "SELECT to_regclass('public.quiz_banks') IS NOT NULL" 2>/dev/null 
   DBBANK_UNION="UNION SELECT id FROM quiz_banks WHERE active"
 fi
 
-[[ "$KID" =~ ^[A-Za-z0-9_-]{1,32}$ ]] || { echo "kidnet-quiz-suggest: bad name '$KID'" >&2; exit 1; }
+[[ "$KID" =~ ^[A-Za-z0-9_-]{1,32}$ ]] || { echo "genkan-quiz-suggest: bad name '$KID'" >&2; exit 1; }
 CID="$(psqll "SELECT id FROM children WHERE lower(name)=lower('$KID')" | head -1)"
-[ -n "$CID" ] || { echo "kidnet-quiz-suggest: unknown child '$KID'" >&2; exit 1; }
-[[ "$CID" =~ ^[0-9]{1,9}$ ]] || { echo "kidnet-quiz-suggest: bad id for '$KID'" >&2; exit 1; }
+[ -n "$CID" ] || { echo "genkan-quiz-suggest: unknown child '$KID'" >&2; exit 1; }
+[[ "$CID" =~ ^[0-9]{1,9}$ ]] || { echo "genkan-quiz-suggest: bad id for '$KID'" >&2; exit 1; }
 WHO="$(psqll "SELECT name || COALESCE(', aged ' || age::text, '') || ', on the ' || policy_tier || ' filter level'
                 FROM children WHERE id=$CID" | head -1)"
 
-echo "Hearth: a briefing for writing quizzes"
+echo "Genkan: a briefing for writing quizzes"
 echo "$WHO"
 echo "Window: the last $DAYS days. Every line below came out of this household's"
 echo "own database. Nothing was sent anywhere to produce it."
@@ -190,7 +190,7 @@ if not rows:
 PY
 
 head2 "What they have been reading about"
-echo "  Domains their own devices looked up, leaving out anything Hearth already"
+echo "  Domains their own devices looked up, leaving out anything Genkan already"
 echo "  files as a known service or a metered category. What is left is the"
 echo "  curiosity signal: sites they went to that nothing else explains."
 show "SELECT lpad(count(*)::text,5) || '  ' || dl.domain
@@ -231,10 +231,10 @@ Copy everything from here down, with the briefing above it, into your own AI
 agent. It never leaves this house until you paste it.
 ------------------------------------------------------------------------
 You are writing a learn-to-earn quiz bank for one child in a household that
-runs Hearth (github.com/0800tim/genkan). Above this line is a briefing about
+runs Genkan (github.com/0800tim/genkan). Above this line is a briefing about
 that child, generated from the household's own database.
 
-Read docs/runbooks/quiz-suggestions.md in the Hearth repo first. It has the
+Read docs/runbooks/quiz-suggestions.md in the Genkan repo first. It has the
 full recipe. In short:
 
 1. From the briefing, pick ONE topic this child is plainly interested in, or
@@ -247,7 +247,7 @@ full recipe. In short:
    on every question, and one friendly explanation on every question. Pitch
    difficulty 1 at what this child already gets right.
 4. Save it as /tmp/<bank-id>.json and run:
-      bin/kidnet-quiz validate /tmp/<bank-id>.json
+      bin/genkan-quiz validate /tmp/<bank-id>.json
    Fix anything it reports. Do not edit the validator.
 5. Tell the parent what you wrote, why, and what you could not verify.
    Do not install it. That is the parent's call.

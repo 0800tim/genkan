@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# hearth:summary=Refuse `printf | grep -q` in a script that sets pipefail.
+# genkan:summary=Refuse `printf | grep -q` in a script that sets pipefail.
 #
 # grep -q exits the instant it matches. If the producer is still writing it
 # dies of SIGPIPE with status 141, and `set -o pipefail` promotes that to the
@@ -7,7 +7,7 @@
 # data is bigger than the pipe buffer, which makes it look like an unrelated
 # change broke something far away.
 #
-# That is what happened here. kidnet-health checked its firewall with
+# That is what happened here. genkan-health checked its firewall with
 # `printf '%s' "$rules" | grep -q "set kids_block {"`. Adding 7299 Tor relay
 # addresses pushed the ruleset past 64KB, and every set check began failing
 # while every chain check kept passing, because nft prints the sets first and

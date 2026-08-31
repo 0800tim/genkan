@@ -1,4 +1,4 @@
--- How long Hearth keeps things, and what deletes them.
+-- How long Genkan keeps things, and what deletes them.
 --
 -- PRIVACY-CHARTER.md commits that nothing leaves the house. It does not commit
 -- that everything stays in it forever, and until now nothing pruned anything:
@@ -30,6 +30,6 @@ INSERT INTO retention (what, keep_days, note) VALUES
 ON CONFLICT (what) DO NOTHING;
 
 COMMENT ON TABLE retention IS
-  'How many days each table is kept. bin/kidnet-prune enforces it nightly. A household may change any row; see PRIVACY-CHARTER.md.';
+  'How many days each table is kept. bin/genkan-prune enforces it nightly. A household may change any row; see PRIVACY-CHARTER.md.';
 
 GRANT SELECT ON retention TO kids_app;

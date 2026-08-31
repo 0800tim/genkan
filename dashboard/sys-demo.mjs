@@ -10,7 +10,7 @@
 // 8 GB of memory, a 128 GB disk, up for a week and a half, sitting at a few
 // per cent with the evening's video pulling a couple of megabytes a second.
 // Real dashboard code, invented numbers. sysmon.mjs only calls this when
-// HEARTH_DEMO=1, so not one line of it ever runs in a household.
+// GENKAN_DEMO=1, so not one line of it ever runs in a household.
 
 const GB = 1024 ** 3;
 const MB = 1000 * 1000;
@@ -52,9 +52,9 @@ export function demoStatic() {
     cores: 4,
     disk: { total: DISK_TOTAL, used: DISK_TOTAL * 0.41, avail: DISK_TOTAL * 0.59, pct: 41 },
     containers: [
-      { name: "hearth-adguard", up: true, state: "running" },
-      { name: "hearth-gw", up: true, state: "running" },
-      { name: "hearth-portal", up: true, state: "running" },
+      { name: "genkan-adguard", up: true, state: "running" },
+      { name: "genkan-gw", up: true, state: "running" },
+      { name: "genkan-portal", up: true, state: "running" },
     ],
     ifaces: [
       { name: "demo-wired", label: "Wired to the router", wireless: false, state: "up" },

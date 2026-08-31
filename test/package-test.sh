@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hearth:summary=A community package is hostile input. Proves the validator refuses it and the portal escapes it anyway.
+# genkan:summary=A community package is hostile input. Proves the validator refuses it and the portal escapes it anyway.
 #
 # THE BUG THIS SUITE EXISTS TO PREVENT
 #
@@ -14,7 +14,7 @@
 # separately, which is the only way to know they are independent:
 #
 #   1. tools/validate-package.mjs refuses the payload on the way in, and
-#      bin/kidnet-pack refuses to install anything the validator refused.
+#      bin/genkan-pack refuses to install anything the validator refused.
 #   2. If a payload somehow got in anyway, past the validator, past the CLI and
 #      straight into the database, the portal STILL renders it inert, because
 #      every field goes through esc() on the way out. Part 3 forces exactly
@@ -26,7 +26,7 @@
 set -u
 R="$(cd "$(dirname "$0")/.." && pwd)"
 PG="${PG_CONTAINER:-postgres}"
-DB="hearth_pack_test_$$"
+DB="genkan_pack_test_$$"
 WORK="$(mktemp -d)"
 BASE="$R/portal/quizzes/community/paint-and-colour.json"
 
@@ -151,7 +151,7 @@ for f in "$WORK"/*.json; do
 done
 
 echo
-echo "2. kidnet-pack refuses to install one, and nothing reaches the database"
+echo "2. genkan-pack refuses to install one, and nothing reaches the database"
 docker exec -i "$PG" psql -U postgres -qc "CREATE DATABASE $DB;" >/dev/null 2>&1 \
   || { echo "could not create a test database"; exit 1; }
 out=$(bash "$R/config/db/load.sh" "$DB" "$PG" 2>&1)
@@ -162,11 +162,11 @@ else ok "the schema loads into a fresh database"; fi
 # schema is not, so grant it here. On a real box config/db/grants.sql does it.
 psql "GRANT USAGE ON SCHEMA public TO kids_agent;" >/dev/null 2>&1
 
-export HEARTH_DB="$DB" PG_CONTAINER="$PG" HEARTH_REPO="$R"
-if HEARTH_DB_ROLE=postgres "$R/bin/kidnet-pack" install "$WORK/xss-script-tag.json" >"$WORK/install.out" 2>&1; then
-  bad "kidnet-pack INSTALLED a package with a script tag in it"
+export GENKAN_DB="$DB" PG_CONTAINER="$PG" GENKAN_REPO="$R"
+if GENKAN_DB_ROLE=postgres "$R/bin/genkan-pack" install "$WORK/xss-script-tag.json" >"$WORK/install.out" 2>&1; then
+  bad "genkan-pack INSTALLED a package with a script tag in it"
 else
-  ok "kidnet-pack refused to install the script tag package"
+  ok "genkan-pack refused to install the script tag package"
 fi
 n=$(psql "SELECT count(*) FROM quiz_packages")
 [ "${n:-x}" = 0 ] && ok "nothing reached quiz_packages" || bad "quiz_packages has ${n} rows after a refused install"
@@ -175,8 +175,8 @@ n=$(psql "SELECT count(*) FROM quiz_bank_questions WHERE bank_id LIKE 'xss-%'")
 
 # The clean one does install, through the same command, as proof that the
 # refusals above are the validator working and not the command being broken.
-if HEARTH_DB_ROLE=postgres "$R/bin/kidnet-pack" install "$BASE" >"$WORK/good.out" 2>&1; then
-  ok "the worked example installs cleanly through kidnet-pack"
+if GENKAN_DB_ROLE=postgres "$R/bin/genkan-pack" install "$BASE" >"$WORK/good.out" 2>&1; then
+  ok "the worked example installs cleanly through genkan-pack"
 else
   bad "the worked example would not install"; sed 's/^/      /' "$WORK/good.out"
 fi
@@ -189,7 +189,7 @@ n=$(psql "SELECT questions FROM quiz_package_summary WHERE bank_id='paint-and-co
 
 # The least-privilege role has to be able to do this too, or the command only
 # works as a superuser and the grants in schema-packages.sql are decoration.
-if HEARTH_DB_ROLE=kids_agent "$R/bin/kidnet-pack" remove paint-and-colour >"$WORK/rm.out" 2>&1; then
+if GENKAN_DB_ROLE=kids_agent "$R/bin/genkan-pack" remove paint-and-colour >"$WORK/rm.out" 2>&1; then
   ok "kids_agent, with no write access to the quiz tables, can remove a package"
 else
   bad "kids_agent could not remove a package"; sed 's/^/      /' "$WORK/rm.out"

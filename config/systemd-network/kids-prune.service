@@ -1,5 +1,5 @@
 [Unit]
-Description=Delete Hearth data past its retention (PRIVACY-CHARTER.md)
+Description=Delete Genkan data past its retention (PRIVACY-CHARTER.md)
 [Service]
 Type=oneshot
-ExecStart=/srv/projects/internal/kids-network/bin/kidnet-prune
+ExecStart=/srv/projects/internal/kids-network/bin/genkan-prune

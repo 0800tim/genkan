@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# hearth:summary=Refuse a bash '#' comment written inside a SQL string.
+# genkan:summary=Refuse a bash '#' comment written inside a SQL string.
 #
 # Bash does not treat '#' as a comment inside double quotes, so a comment
 # written inside a multi-line SQL string is sent to Postgres verbatim. That
-# killed the whole flagged-domain alert path for a day: kidnet-alerts printed
+# killed the whole flagged-domain alert path for a day: genkan-alerts printed
 # a syntax error nobody was reading, counted zero rows, said "nothing new" and
 # exited 0, so systemd recorded success every minute while nothing was checked.
 #

@@ -69,7 +69,7 @@ BEGIN
   SELECT count(*) INTO bad FROM children
    WHERE kind NOT IN ('child','guest-child','guest-adult','adult');
   IF bad > 0 THEN
-    RAISE WARNING 'children.kind has % row(s) with a role Hearth does not know; leaving the check constraint off. Fix them, then run this file again.', bad;
+    RAISE WARNING 'children.kind has % row(s) with a role Genkan does not know; leaving the check constraint off. Fix them, then run this file again.', bad;
   ELSE
     ALTER TABLE children ADD CONSTRAINT children_kind_ck
       CHECK (kind IN ('child','guest-child','guest-adult','adult'));

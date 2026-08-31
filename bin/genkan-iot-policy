@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# hearth:summary=Generate and apply the household IoT security policy (nftables sets + chain) from the database.
+# genkan:summary=Generate and apply the household IoT security policy (nftables sets + chain) from the database.
 #
-# The household side of Hearth. The kid-facing layers ask "how long, and of
+# The household side of Genkan. The kid-facing layers ask "how long, and of
 # what"; this one asks "what is this thing allowed to talk to".
 #
 # The case that shapes everything: a security camera must be able to PUSH OUT
@@ -10,7 +10,7 @@
 # cannot wander around the household network. So policy is written in terms of
 # who may START a conversation, and replies are never re-judged.
 #
-# Like kidnet-servicemeter, this GENERATES its firewall from database rows
+# Like genkan-servicemeter, this GENERATES its firewall from database rows
 # (config/db/schema-policies.sql, view device_policy_effective) rather than
 # hand-editing kids.nft. It writes two things, and it is worth knowing both:
 #
@@ -32,7 +32,7 @@
 #     reverse-direction ones carry ct state established,related. The isolation
 #     that matters, the island being unable to reach the main house LAN, the
 #     tailnet or the Docker internals, is untouched. They carry the comment
-#     "hearth-iot-allow", they are replaced as a set on every run, and
+#     "genkan-iot-allow", they are replaced as a set on every run, and
 #     `mode off` removes them. See docs/HOUSEHOLD-SECURITY.md.
 #
 # Fail-safe, in order of how much it matters:
@@ -44,18 +44,18 @@
 # A household must never be locked out of its own front door because a resolver
 # blinked.
 #
-#   kidnet-iot-policy apply           regenerate and apply the policy chain
-#   kidnet-iot-policy learn           resolve vendor domains into vendor_ips
-#   kidnet-iot-policy status          what is enforced right now, and on what
-#   kidnet-iot-policy show <name|ip>  the effective policy for one device
-#   kidnet-iot-policy mode <off|observe|enforce>
-#   kidnet-iot-policy set <name|ip> <field> <value>
-#   kidnet-iot-policy allow <src-name|ip> <dst-name|ip> [note]   parent grant
-#   kidnet-iot-policy revoke <src> <dst>
-#   kidnet-iot-policy dryrun          print the ruleset that WOULD be applied
+#   genkan-iot-policy apply           regenerate and apply the policy chain
+#   genkan-iot-policy learn           resolve vendor domains into vendor_ips
+#   genkan-iot-policy status          what is enforced right now, and on what
+#   genkan-iot-policy show <name|ip>  the effective policy for one device
+#   genkan-iot-policy mode <off|observe|enforce>
+#   genkan-iot-policy set <name|ip> <field> <value>
+#   genkan-iot-policy allow <src-name|ip> <dst-name|ip> [note]   parent grant
+#   genkan-iot-policy revoke <src> <dst>
+#   genkan-iot-policy dryrun          print the ruleset that WOULD be applied
 set -uo pipefail
 
-GW="${GW_CONTAINER:-hearth-gw}"
+GW="${GW_CONTAINER:-genkan-gw}"
 KIDS_IF="${KIDS_IF:-kids0}"
 TABLE="inet kids"
 CHAIN=iotpolicy
@@ -73,7 +73,7 @@ PRIO="${IOT_POLICY_PRIORITY:--5}"
 KIDS_NET="${KIDS_SUBNET:-192.168.60.0/24}"
 # The comment every rule this tool inserts into kids.nft's own forward chain
 # carries, so they can be found again and replaced atomically.
-MARK="hearth-iot-allow"
+MARK="genkan-iot-allow"
 
 # nft access: the gateway container by default; NFT_NS=<netns> for the tests,
 # NFT_DIRECT=1 for a no-docker box. Same three-way switch as the meters.
@@ -83,10 +83,10 @@ nftx(){ if [ -n "${NFT_NS:-}" ]; then sudo ip netns exec "$NFT_NS" nft "$@"
 PG="${PG_CONTAINER:-postgres}"
 # Connects as kids_agent, a role with no superuser, no DDL and no
 # COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
-DB_NAME="${HEARTH_DB:-kids_network}"
-DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_NAME="${GENKAN_DB:-kids_network}"
+DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 psqll(){ docker exec -i "$PG" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
-log(){ echo "kidnet-iot-policy: $*"; }
+log(){ echo "genkan-iot-policy: $*"; }
 # Alerts land in the same table the dashboard reads. Never fatal.
 alert(){ psqll "INSERT INTO alerts(severity,category,detail) VALUES('$1','iot-policy','$(printf '%s' "$2" | sed "s/'/''/g")')" >/dev/null 2>&1 || true; }
 # The counterpart to alert(). "The previous rules are still in force" stops
@@ -95,11 +95,11 @@ alert(){ psqll "INSERT INTO alerts(severity,category,detail) VALUES('$1','iot-po
 # ones. A good run therefore retires the bad runs that came before it.
 alert_clear(){ psqll "UPDATE alerts SET acknowledged=true
                       WHERE category='iot-policy' AND NOT acknowledged" >/dev/null 2>&1 || true; }
-ERRF="$(mktemp -t kidnet-iot-policy.XXXXXX)"
+ERRF="$(mktemp -t genkan-iot-policy.XXXXXX)"
 trap 'rm -f "$ERRF"' EXIT
-ck_text(){ [[ "$1" =~ ^[A-Za-z0-9_:+.,\ -]{0,80}$ ]] || { echo "kidnet-iot-policy: bad text" >&2; exit 1; }; }
+ck_text(){ [[ "$1" =~ ^[A-Za-z0-9_:+.,\ -]{0,80}$ ]] || { echo "genkan-iot-policy: bad text" >&2; exit 1; }; }
 # A device id read back out of the database, on its way into a WHERE.
-ck_id(){ [[ "$1" =~ ^[0-9]{1,9}$ ]] || { echo "kidnet-iot-policy: bad device id '$1'" >&2; exit 1; }; }
+ck_id(){ [[ "$1" =~ ^[0-9]{1,9}$ ]] || { echo "genkan-iot-policy: bad device id '$1'" >&2; exit 1; }; }
 # A vendor name out of vendor_clouds, on its way into a SQL string and an nft
 # set name. Names in the shipped list are plain words; one that is not gets
 # skipped rather than interpolated.
@@ -107,7 +107,7 @@ ck_vendor(){ [[ "$1" =~ ^[A-Za-z0-9_.\ -]{1,40}$ ]]; }
 # The island subnet, from config.env. It is interpolated into every membership
 # query, so it has to be a CIDR and nothing else.
 [[ "${KIDS_NET:-}" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}/[0-9]{1,2}$ ]] || {
-  echo "kidnet-iot-policy: KIDS_NET '${KIDS_NET:-}' is not a CIDR like 192.168.60.0/24" >&2; exit 1; }
+  echo "genkan-iot-policy: KIDS_NET '${KIDS_NET:-}' is not a CIDR like 192.168.60.0/24" >&2; exit 1; }
 # A vendor name becomes part of an nft set name, so it has to be reduced to
 # something nft will accept. Lowercase, non-alphanumerics to underscores.
 slug(){ printf '%s' "$1" | tr 'A-Z' 'a-z' | tr -c 'a-z0-9' '_' | sed 's/_\{1,\}/_/g; s/^_//; s/_$//'; }
@@ -490,7 +490,7 @@ apply(){
   local loose; loose=$(psqll "SELECT string_agg(name,', ') FROM device_policy_effective
                               WHERE internet_out='vendor' AND NOT vendor_known")
   if [ -n "$loose" ]; then
-    alert warn "Not actually restricted yet: $loose. Hearth does not know which brand's cloud to allow, so it is letting them talk to anything. Set the brand: kidnet-iot-policy set <device> vendor <brand>"
+    alert warn "Not actually restricted yet: $loose. Genkan does not know which brand's cloud to allow, so it is letting them talk to anything. Set the brand: genkan-iot-policy set <device> vendor <brand>"
   fi
   local n; n=$(psqll "SELECT count(*) FROM device_policy_effective")
   log "mode=$M, $n smart device(s) under policy$([ "$M" = observe ] && echo ' (counting only, nothing blocked)')"
@@ -512,7 +512,7 @@ status(){
   echo
   echo "Vendor addresses learned"
   psqll "SELECT '  '||rpad(v.vendor,14)||count(*)||' address(es), newest '||coalesce(to_char(max(vi.seen),'YYYY-MM-DD HH24:MI'),'never')
-         FROM vendor_clouds v JOIN vendor_ips vi ON vi.vendor_id=v.id GROUP BY v.vendor ORDER BY v.vendor" | grep . || echo "  (none yet: run 'kidnet-iot-policy learn')"
+         FROM vendor_clouds v JOIN vendor_ips vi ON vi.vendor_id=v.id GROUP BY v.vendor ORDER BY v.vendor" | grep . || echo "  (none yet: run 'genkan-iot-policy learn')"
   echo
   if nftx list chain $TABLE $CHAIN >/dev/null 2>&1; then
     echo "Firewall counters (what the policy has actually refused)"
@@ -552,8 +552,8 @@ setfield(){ local id f v; id=$(dev_id "$1"); [ -n "$id" ] || { echo "unknown dev
   psqll "INSERT INTO device_policy(device_id,$f,set_by) VALUES($id,$v,'parent')
          ON CONFLICT (device_id) DO UPDATE SET $f=$v, set_by='parent', updated_ts=now()" >/dev/null
   psqll "INSERT INTO block_events(target_type,target_ref,action,source,actor)
-         VALUES('iot-policy','device $id',' $f=$v','manual','kidnet-iot-policy')" >/dev/null
-  echo "kidnet-iot-policy: $f set for device $id; run 'kidnet-iot-policy apply' to make it real"; }
+         VALUES('iot-policy','device $id',' $f=$v','manual','genkan-iot-policy')" >/dev/null
+  echo "genkan-iot-policy: $f set for device $id; run 'genkan-iot-policy apply' to make it real"; }
 
 grant(){ local s t; s=$(dev_id "$1"); t=$(dev_id "$2"); ck_text "${3:-}"
   [ -n "$s" ] || { echo "unknown device '$1'"; exit 1; }
@@ -562,20 +562,20 @@ grant(){ local s t; s=$(dev_id "$1"); t=$(dev_id "$2"); ck_text "${3:-}"
   psqll "INSERT INTO device_access_grants(src_device_id,dst_device_id,note,set_by)
          VALUES($s,$t,'${3:-}','parent') ON CONFLICT (src_device_id,dst_device_id)
          DO UPDATE SET note='${3:-}', set_by='parent'" >/dev/null
-  echo "kidnet-iot-policy: $1 may now reach $2; run 'kidnet-iot-policy apply' to make it real"; }
+  echo "genkan-iot-policy: $1 may now reach $2; run 'genkan-iot-policy apply' to make it real"; }
 
 revoke(){ local s t; s=$(dev_id "$1"); t=$(dev_id "$2")
   [ -n "$s" ] || { echo "unknown device '$1'"; exit 1; }
   [ -n "$t" ] || { echo "unknown device '$2'"; exit 1; }
   ck_id "$s"; ck_id "$t"
   psqll "DELETE FROM device_access_grants WHERE src_device_id=$s AND dst_device_id=$t" >/dev/null
-  echo "kidnet-iot-policy: grant removed; run 'kidnet-iot-policy apply' to make it real"; }
+  echo "genkan-iot-policy: grant removed; run 'genkan-iot-policy apply' to make it real"; }
 
 setmode(){ case "$1" in off|observe|enforce) ;; *) echo "mode must be off, observe or enforce"; exit 1;; esac
   psqll "UPDATE iot_policy_settings SET mode='$1', updated_ts=now(), set_by='parent' WHERE id=1" >/dev/null
   psqll "INSERT INTO block_events(target_type,target_ref,action,source,actor)
-         VALUES('iot-policy','household','mode=$1','manual','kidnet-iot-policy')" >/dev/null
-  echo "kidnet-iot-policy: mode=$1"; apply; }
+         VALUES('iot-policy','household','mode=$1','manual','genkan-iot-policy')" >/dev/null
+  echo "genkan-iot-policy: mode=$1"; apply; }
 
 # No default verb on purpose. This tool rewrites part of a live firewall, so
 # `kidnet iot` on its own prints the usage rather than quietly applying.

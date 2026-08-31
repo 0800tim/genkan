@@ -38,7 +38,7 @@ this one.
 One command. Run it from the repo root:
 
 ```
-bin/kidnet-quiz-suggest <child>
+bin/genkan-quiz-suggest <child>
 ```
 
 It prints a briefing: what is on that child's list, how they are going
@@ -175,7 +175,7 @@ Rules that are not negotiable:
 ## Step 5: validate
 
 ```
-bin/kidnet-quiz validate /tmp/how-an-f1-car-works.json
+bin/genkan-quiz validate /tmp/how-an-f1-car-works.json
 ```
 
 It checks the JSON, the ids, four choices per question, the answer
@@ -209,7 +209,7 @@ children is a different product and not this one.
 If the parent says yes, the two roads are:
 
 ```
-bin/kidnet-quiz install /tmp/how-an-f1-car-works.json
+bin/genkan-quiz install /tmp/how-an-f1-car-works.json
 ```
 
 which puts it in `portal/quizzes` as a file, tracked in git and
@@ -239,7 +239,7 @@ A bank you write from scratch is not always the right answer. Somebody
 may already have written it better, and it may already be sitting in
 this checkout.
 
-    bin/kidnet-pack list
+    bin/genkan-pack list
 
 That prints two lists: the community learning packages installed on this
 box, and the ones sitting in `portal/quizzes/community/` that nobody has
@@ -249,12 +249,12 @@ description of who it is for and sometimes a page to read first
 
 So the order of operations for an agent doing this job is:
 
-1. Run `bin/kidnet-quiz-suggest <child>` for the evidence.
-2. Run `bin/kidnet-pack list` for what is already available.
+1. Run `bin/genkan-quiz-suggest <child>` for the evidence.
+2. Run `bin/genkan-pack list` for what is already available.
 3. If something on the shelf fits the child, **recommend that instead of
    writing a bank.** Say which line of the briefing made you pick it,
    and give the parent the exact command:
-   `bin/kidnet-pack install portal/quizzes/community/<id>.json`.
+   `bin/genkan-pack install portal/quizzes/community/<id>.json`.
 4. Only write a new bank when nothing on the shelf fits.
 
 This matters more than it looks. The banks in `portal/quizzes` grew
@@ -265,7 +265,7 @@ Formula 1 lookups and a shelf with a model aeroplanes package on it is
 not a prompt to write anything.
 
 The same rule applies as everywhere else here: **you recommend, the
-parent installs.** Do not run `kidnet-pack install` yourself.
+parent installs.** Do not run `genkan-pack install` yourself.
 
 This is also the honest answer to "the dashboard should alert a parent
 to packages that suit their child". That alert does not exist. The
@@ -282,7 +282,7 @@ trust goes:
 
 - **Nothing here runs by itself.** There is no timer, no service and no
   scheduler in Genkan for this. You wire up the recurrence.
-- **Genkan never calls an AI.** `kidnet-quiz-suggest` gathers and
+- **Genkan never calls an AI.** `genkan-quiz-suggest` gathers and
   prints. Every model call happens in your agent, on your terms, with
   you pasting the briefing in. That is the design, not a gap to close.
 - **The DNS signal is coarse.** `dns_log` records the domains a device
@@ -295,11 +295,11 @@ trust goes:
   own last suggestion at the start of the next run. Nothing forces it
   to.
 - **The dashboard editor cannot bulk import a JSON bank.** A bank an
-  agent writes goes in as a file through `kidnet-quiz install`, or it
+  agent writes goes in as a file through `genkan-quiz install`, or it
   gets typed in question by question. Pasting a whole bank into the
   dashboard is not built.
 - **Nothing tells a parent about a package on its own.** Step 8 is a
   thing an agent does when somebody runs it. There is no line on the
   dashboard that says "this package would suit your daughter", and
   building one means building the matching, not the plumbing: the
-  plumbing (`kidnet-quiz-suggest`, `kidnet-pack list`) is already here.
+  plumbing (`genkan-quiz-suggest`, `genkan-pack list`) is already here.

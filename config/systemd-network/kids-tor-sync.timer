@@ -1,5 +1,5 @@
 [Unit]
-Description=Hearth Tor relay list refresh (daily)
+Description=Genkan Tor relay list refresh (daily)
 
 [Timer]
 OnBootSec=10min

@@ -22,7 +22,7 @@ for _t in nft python3 docker; do
 done
 R="$(cd "$(dirname "$0")/.." && pwd)"
 KN="$R/bin/kidnet"
-NS=hearth-roletest
+NS=genkan-roletest
 pass=0; fail=0
 ok(){  pass=$((pass+1)); printf '  \033[32mPASS\033[0m  %s\n' "$1"; }
 bad(){ fail=$((fail+1)); printf '  \033[31mFAIL\033[0m  %s\n' "$1"; }

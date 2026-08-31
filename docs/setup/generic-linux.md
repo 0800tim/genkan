@@ -68,7 +68,7 @@ would welcome a documented policy from anyone who does this properly.
 **Persistence.** Make the pieces survive reboots and upgrades the way
 your distro expects:
 
-- `net.ipv4.ip_forward=1` in `/etc/sysctl.d/99-hearth.conf` (Docker
+- `net.ipv4.ip_forward=1` in `/etc/sysctl.d/99-genkan.conf` (Docker
   usually sets it; pin it anyway).
 - `deploy.sh` already enables the warden and timers; confirm with
   `systemctl is-enabled docker kids-nic-warden`.

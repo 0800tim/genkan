@@ -22,7 +22,7 @@
 --
 -- What this file does NOT do, said plainly because the gaps matter:
 --   * It does not validate anything. tools/validate-package.mjs is the gate
---     and bin/kidnet-pack refuses to install a package that does not pass it.
+--     and bin/genkan-pack refuses to install a package that does not pass it.
 --     The constraints below are the second lock, not the first.
 --   * It stores no images and no video. read_first is text and links, and a
 --     link may only point at a domain already on the reading list
@@ -68,7 +68,7 @@ CREATE TABLE IF NOT EXISTS quiz_packages (
 CREATE INDEX IF NOT EXISTS quiz_packages_installed_idx ON quiz_packages (installed_ts DESC);
 
 -- One row per installed package, with the bank's own numbers alongside the
--- manifest, so the dashboard and kidnet-pack can both answer "what is on this
+-- manifest, so the dashboard and genkan-pack can both answer "what is on this
 -- box, who wrote it, and is it live" in a single query.
 DROP VIEW IF EXISTS quiz_package_summary;
 CREATE VIEW quiz_package_summary AS
@@ -87,7 +87,7 @@ JOIN quiz_bank_summary s ON s.id = p.bank_id;
 -- ---------------------------------------------------------------------------
 -- Installing and removing, as two functions
 -- ---------------------------------------------------------------------------
--- bin/kidnet-pack hands the whole validated package in as one jsonb value and
+-- bin/genkan-pack hands the whole validated package in as one jsonb value and
 -- calls install_quiz_package. Doing it here rather than as a script full of
 -- INSERT statements buys three things: the install is atomic, so a package can
 -- never land half in; the content never goes near string building in bash or
@@ -128,7 +128,7 @@ BEGIN
   END IF;
   -- A bank that is already here but is NOT a package belongs to the household:
   -- a parent wrote it on the dashboard. Overwriting it from a file would throw
-  -- away their work without asking, so refuse and let kidnet-pack explain.
+  -- away their work without asking, so refuse and let genkan-pack explain.
   IF EXISTS (SELECT 1 FROM quiz_banks WHERE id = bid)
      AND NOT EXISTS (SELECT 1 FROM quiz_packages WHERE bank_id = bid) THEN
     RAISE EXCEPTION 'install_quiz_package: % is a bank this household wrote, not a package', bid;

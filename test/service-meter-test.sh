@@ -34,7 +34,7 @@ psql "INSERT INTO service_ips(ip,service_id,seen) SELECT '203.0.113.55', id, now
       ON CONFLICT (ip,service_id) DO UPDATE SET seen=now()" >/dev/null
 
 echo "Per-service byte accounting"
-NFT_NS=$NS ADGUARD_PASS="${ADGUARD_PASS:-x}" bash "$R/bin/kidnet-servicemeter" >/dev/null 2>&1
+NFT_NS=$NS ADGUARD_PASS="${ADGUARD_PASS:-x}" bash "$R/bin/genkan-servicemeter" >/dev/null 2>&1
 ip netns exec $NS nft list set inet kids svc_youtube_ips 2>/dev/null | grep -q '203.0.113.55' \
   && ok "learned YouTube address loaded into the firewall set" || bad "service IP set not populated"
 ip netns exec $NS nft list chain inet kids servicemetering >/dev/null 2>&1 \
@@ -44,7 +44,7 @@ ip netns exec $NS nft list chain inet kids servicemetering 2>/dev/null | grep -q
 
 # Synthetic traffic: 5 MB from that device to YouTube.
 ip netns exec $NS nft add element inet kids svc_youtube_dev "{ 192.168.60.210 counter packets 400 bytes 5242880 }" 2>/dev/null
-NFT_NS=$NS ADGUARD_PASS="${ADGUARD_PASS:-x}" bash "$R/bin/kidnet-servicemeter" >/dev/null 2>&1
+NFT_NS=$NS ADGUARD_PASS="${ADGUARD_PASS:-x}" bash "$R/bin/genkan-servicemeter" >/dev/null 2>&1
 B=$(psql "SELECT bytes FROM service_usage u JOIN services s ON s.id=u.service_id
           WHERE u.child_id=$CID AND u.day=CURRENT_DATE AND s.name='youtube'")
 [ "${B:-0}" -ge 5000000 ] && ok "5MB attributed to $KID as YouTube (got ${B:-0} bytes)" || bad "bytes not recorded (got '${B:-0}')"
@@ -54,7 +54,7 @@ M=$(psql "SELECT used_min FROM service_usage u JOIN services s ON s.id=u.service
 
 # A trickle must NOT count as active use.
 ip netns exec $NS nft add element inet kids svc_youtube_dev "{ 192.168.60.210 counter packets 2 bytes 800 }" 2>/dev/null
-NFT_NS=$NS ADGUARD_PASS="${ADGUARD_PASS:-x}" bash "$R/bin/kidnet-servicemeter" >/dev/null 2>&1
+NFT_NS=$NS ADGUARD_PASS="${ADGUARD_PASS:-x}" bash "$R/bin/genkan-servicemeter" >/dev/null 2>&1
 M2=$(psql "SELECT used_min FROM service_usage u JOIN services s ON s.id=u.service_id
            WHERE u.child_id=$CID AND u.day=CURRENT_DATE AND s.name='youtube'")
 [ "${M2:-0}" = "${M:-0}" ] && ok "a background trickle adds bytes but no active minute" || bad "idle traffic wrongly counted as active"

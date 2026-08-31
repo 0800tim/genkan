@@ -1,15 +1,15 @@
 #!/bin/bash
 
-# omarchy:summary=Print the Hearth family state as Waybar-style JSON for the status bar
+# omarchy:summary=Print the Genkan family state as Waybar-style JSON for the status bar
 # omarchy:args=[--once]
-# omarchy:examples=hearth-bar-status
+# omarchy:examples=genkan-bar-status
 
 # Polled by the bar. Prints ONE line of Waybar-format JSON on stdout:
 #
-#   {"text":"...","tooltip":"...","class":["hearth","warn"]}
+#   {"text":"...","tooltip":"...","class":["genkan","warn"]}
 #
 # The same shape feeds the Omarchy 4 Quickshell bar (a "type": "command"
-# module) and a classic Waybar "custom/hearth" module.
+# module) and a classic Waybar "custom/genkan" module.
 #
 # Rules this script lives by, because it runs every few seconds forever:
 #   - it never writes to stderr and never exits non-zero
@@ -18,19 +18,19 @@
 
 set -uo pipefail
 
-readonly conf_file="${HEARTH_CONF:-${XDG_CONFIG_HOME:-$HOME/.config}/hearth/omarchy.conf}"
+readonly conf_file="${GENKAN_CONF:-${XDG_CONFIG_HOME:-$HOME/.config}/genkan/omarchy.conf}"
 if [[ -r $conf_file ]]; then
   # Quietly: a typo in the config must not turn into noise on the status bar.
   # shellcheck disable=SC1090
   source "$conf_file" 2>/dev/null || true
 fi
 
-: "${HEARTH_HIDE_WHEN_DOWN:=0}"
-: "${HEARTH_STALE_SEC:=180}"
-: "${HEARTH_LOW_MIN:=15}"
+: "${GENKAN_HIDE_WHEN_DOWN:=0}"
+: "${GENKAN_STALE_SEC:=180}"
+: "${GENKAN_LOW_MIN:=15}"
 
-readonly cache_file="${XDG_RUNTIME_DIR:-/tmp}/hearth-bar-status.json"
-readonly kidnet_cmd="${HEARTH_BIN:-$(dirname "$(readlink -f "$0")")}/hearth-kidnet"
+readonly cache_file="${XDG_RUNTIME_DIR:-/tmp}/genkan-bar-status.json"
+readonly kidnet_cmd="${GENKAN_BIN:-$(dirname "$(readlink -f "$0")")}/genkan-kidnet"
 
 # Nerd Font glyphs, written as escapes so no multi-byte character has to
 # survive being copied around. Left to right: home, warning triangle, pause.
@@ -43,7 +43,7 @@ kidnet() {
   if [[ -x $kidnet_cmd ]]; then
     "$kidnet_cmd" "$@" 2>/dev/null
   else
-    hearth-kidnet "$@" 2>/dev/null
+    genkan-kidnet "$@" 2>/dev/null
   fi
 }
 
@@ -57,17 +57,17 @@ emit() {
 # Nothing to talk to. Show the least we can get away with.
 emit_down() {
   local text="$glyph_home"
-  [[ $HEARTH_HIDE_WHEN_DOWN == 1 ]] && text=""
-  emit "$text" "Hearth: the gateway is not reachable" hearth down
+  [[ $GENKAN_HIDE_WHEN_DOWN == 1 ]] && text=""
+  emit "$text" "Genkan: the gateway is not reachable" genkan down
 }
 
 # A blip is not an outage. Reprint the last good answer, marked stale, for as
-# long as HEARTH_STALE_SEC allows.
+# long as GENKAN_STALE_SEC allows.
 emit_stale_or_down() {
   local age
   if [[ -s $cache_file ]]; then
     age=$(( $(date +%s) - $(stat -c %Y "$cache_file" 2>/dev/null || echo 0) ))
-    if ((age >= 0 && age < HEARTH_STALE_SEC)); then
+    if ((age >= 0 && age < GENKAN_STALE_SEC)); then
       jq -c '.class = ((.class // []) + ["stale"]) | .tooltip = (.tooltip + "\n(waiting for the gateway)")' \
         "$cache_file" 2>/dev/null && return 0
     fi
@@ -87,7 +87,7 @@ build() {
   local kid line mins blocked online
   local total=0 count_online=0 count_paused=0 count_out=0
   local low_kid="" low_min=-1 first_out=""
-  local tooltip="Hearth"
+  local tooltip="Genkan"
 
   while read -r kid; do
     [[ -n $kid ]] || continue
@@ -134,7 +134,7 @@ build() {
 
   ((total > 0)) || return 1
 
-  local -a classes=(hearth)
+  local -a classes=(genkan)
   local glyph="$glyph_home" head detail=""
 
   if ((alerts > 0 || count_out > 0)); then
@@ -145,7 +145,7 @@ build() {
     classes+=(paused active)
   elif ((count_paused > 0)); then
     classes+=(active)
-  elif ((low_min >= 0 && low_min <= HEARTH_LOW_MIN)); then
+  elif ((low_min >= 0 && low_min <= GENKAN_LOW_MIN)); then
     classes+=(low)
   fi
 
@@ -166,7 +166,7 @@ build() {
 
   tooltip="$tooltip"$'\n'"$count_online of $total online"
   ((count_paused == 0)) || tooltip="$tooltip, $count_paused paused"
-  tooltip="$tooltip"$'\n'"Click for the Hearth menu"
+  tooltip="$tooltip"$'\n'"Click for the Genkan menu"
 
   emit "${head}${detail:+${sep}${detail}}" "$tooltip" "${classes[@]}"
 }

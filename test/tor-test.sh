@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# hearth:summary=The Tor relay list must reach the firewall, and say so when it does not.
+# genkan:summary=The Tor relay list must reach the firewall, and say so when it does not.
 #
-# kidnet-tor-sync fetched the public relay list every day for the life of the
+# genkan-tor-sync fetched the public relay list every day for the life of the
 # first box, wrote a file and an `nft -f` snippet, and reported success. Nothing
 # applied the snippet. The @tor_nodes set was empty the whole time, the reject
-# rules in kids.nft matched nothing, and kidnet-health said "the Tor relay list
+# rules in kids.nft matched nothing, and genkan-health said "the Tor relay list
 # is current" because it was reading the age of a file rather than asking the
 # firewall what it held. Every piece worked; nothing owned the join.
 #
@@ -17,7 +17,7 @@
 set -u
 R="$(cd "$(dirname "$0")/.." && pwd)"
 PG="${PG_CONTAINER:-postgres}"
-DB="hearth_tor_test_$$"
+DB="genkan_tor_test_$$"
 WORK="$(mktemp -d)"
 for _t in docker; do command -v "$_t" >/dev/null || { echo "MISSING REQUIRED TOOL: $_t"; exit 1; }; done
 
@@ -32,13 +32,13 @@ trap cleanup EXIT
 # Tor Project's servers and can decide exactly what a "fetch" returned.
 sync_with(){  # $1 = file of addresses to pretend we fetched
   TOR_NODES_FILE="$WORK/nodes.txt" TOR_NFT_FILE="$WORK/nodes.nft" \
-  HEARTH_DB="$DB" PG_CONTAINER="$PG" HEARTH_DB_ROLE=postgres TOR_MIN_NODES="${TOR_MIN_NODES:-1}" \
+  GENKAN_DB="$DB" PG_CONTAINER="$PG" GENKAN_DB_ROLE=postgres TOR_MIN_NODES="${TOR_MIN_NODES:-1}" \
   FAKE_LIST="$1" bash -c '
     source_file="$FAKE_LIST"
     # Replace both fetchers; everything after them is the code under test.
     eval "$(sed -e "s|^fetch_onionoo(){|fetch_onionoo(){ cat \"$source_file\"; return 0; }\nunused_onionoo(){|" \
                 -e "s|^fetch_danme(){|fetch_danme(){ cat \"$source_file\"; return 0; }\nunused_danme(){|" \
-                "'"$R"'/bin/kidnet-tor-sync" | sed "s|^case \"\${1:-sync}\".*||; s|^  sync)   sync;;||; s|^  emit)   emit;;||; s|^  status) status;;||; s|^  \*) echo \"usage.*||; s|^esac||")"
+                "'"$R"'/bin/genkan-tor-sync" | sed "s|^case \"\${1:-sync}\".*||; s|^  sync)   sync;;||; s|^  emit)   emit;;||; s|^  status) status;;||; s|^  \*) echo \"usage.*||; s|^esac||")"
     sync' 2>&1
 }
 
@@ -146,12 +146,12 @@ grep -q 'sync_safety_net; sync_tor_nodes' "$R/gateway/entrypoint.sh" \
   || bad "the set is not filled at startup, so every restart unblocks Tor for an hour"
 
 # ---- health asks the firewall, not the file ---------------------------------
-grep -q 'list set inet kids tor_nodes' "$R/bin/kidnet-health" \
-  && ok "kidnet-health asks the firewall what it holds" \
-  || bad "kidnet-health is back to reading a file's age, which reported a block that was not there"
+grep -q 'list set inet kids tor_nodes' "$R/bin/genkan-health" \
+  && ok "genkan-health asks the firewall what it holds" \
+  || bad "genkan-health is back to reading a file's age, which reported a block that was not there"
 
 # ---- the bug that adding 7299 addresses actually caused ---------------------
-# Filling this set pushed the ruleset past the pipe buffer, and kidnet-health
+# Filling this set pushed the ruleset past the pipe buffer, and genkan-health
 # started reporting a complete firewall as incomplete. grep -q exits the moment
 # it matches, the producer dies of SIGPIPE with 141, and `set -o pipefail`
 # promotes that to the pipeline's status: a successful match reads as a
@@ -165,9 +165,9 @@ big=$(printf 'set kids_block {\n'; head -c 200000 /dev/zero | tr '\0' 'x')
 [ "$?" = 0 ] && ok "bash's own matching finds it regardless" \
              || bad "bash's own matching failed, which would break the firewall check"
 
-grep -q 'case "$rules" in' "$R/bin/kidnet-health" \
-  && ok "kidnet-health matches without a pipe" \
-  || bad "kidnet-health is back on printf|grep -q, which reports a working firewall as broken"
+grep -q 'case "$rules" in' "$R/bin/genkan-health" \
+  && ok "genkan-health matches without a pipe" \
+  || bad "genkan-health is back on printf|grep -q, which reports a working firewall as broken"
 
 if command -v python3 >/dev/null; then
   o=$(cd "$R" && python3 tools/lint-pipefail-grep.py 2>&1)

@@ -1,10 +1,10 @@
 {
-  "id": "hearth",
+  "id": "genkan",
   "type": "command",
-  "exec": "$HOME/.local/bin/hearth-bar-status",
+  "exec": "$HOME/.local/bin/genkan-bar-status",
   "interval": 30,
-  "tooltip": "Hearth",
-  "onClick": "omarchy menu summon hearth",
-  "onRightClick": "$HOME/.local/bin/hearth-action dashboard",
-  "onMiddleClick": "$HOME/.local/bin/hearth-action status"
+  "tooltip": "Genkan",
+  "onClick": "omarchy menu summon genkan",
+  "onRightClick": "$HOME/.local/bin/genkan-action dashboard",
+  "onMiddleClick": "$HOME/.local/bin/genkan-action status"
 }

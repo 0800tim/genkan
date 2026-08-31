@@ -111,7 +111,7 @@ SELECT g AS ago,
 FROM generate_series(0, 55) g;
 
 -- Daily time ledger. `budget_min` follows the tier and the day of the week,
--- exactly as bin/kidnet-daily would have written it.
+-- exactly as bin/genkan-daily would have written it.
 INSERT INTO time_ledger (child_id, day, budget_min, bonus_min, used_min)
 SELECT c.id, d.day,
   CASE WHEN d.weekend THEN p.daily_budget_weekend_min ELSE p.daily_budget_school_min END,
@@ -338,13 +338,13 @@ INSERT INTO category_state (child_id, category, blocked, since, set_by) VALUES
 INSERT INTO block_events (ts, target_type, target_ref, action, source, actor, reason) VALUES
  (now() - interval '40 minutes', 'child', 'Rangi',  'off', 'manual',   'Marama', 'gaming off until the dishes are done'),
  (now() - interval '3 hours',    'child', 'Piper',  'on',  'manual',   'Callum', 'homework finished'),
- (now() - interval '5 hours',    'child', 'Piper',  'off', 'schedule', 'hearth', 'study mode, weekday afternoon'),
+ (now() - interval '5 hours',    'child', 'Piper',  'off', 'schedule', 'genkan', 'study mode, weekday afternoon'),
  (now() - interval '1 day',      'all',   'kids',   'on',  'manual',   'Marama', 'dinner over'),
  (now() - interval '1 day' - interval '45 minutes', 'all', 'kids', 'off', 'dinner', 'Marama', 'family pause'),
  (now() - interval '2 days',     'child', 'Nova',   'on',  'manual',   'Callum', NULL),
- (now() - interval '2 days' - interval '2 hours', 'child', 'Nova', 'off', 'agent', 'hearth', 'out of time'),
- (now() - interval '3 days',     'child', 'Rangi',  'off', 'agent',    'hearth', 'video cap reached'),
- (now() - interval '4 days',     'all',   'kids',   'off', 'schedule', 'hearth', '9pm on a school night'),
+ (now() - interval '2 days' - interval '2 hours', 'child', 'Nova', 'off', 'agent', 'genkan', 'out of time'),
+ (now() - interval '3 days',     'child', 'Rangi',  'off', 'agent',    'genkan', 'video cap reached'),
+ (now() - interval '4 days',     'all',   'kids',   'off', 'schedule', 'genkan', '9pm on a school night'),
  (now() - interval '5 days',     'child', 'Piper',  'on',  'manual',   'Marama', NULL),
  (now() - interval '6 days',     'child', 'Ari',    'on',  'manual',   'Marama', 'guest arrived'),
  (now() - interval '7 days',     'all',   'kids',   'on',  'manual',   'Callum', 'Saturday');

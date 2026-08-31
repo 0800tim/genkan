@@ -23,7 +23,7 @@ setting to keep them, because there is no reason to keep them.
 Where it lives:
 
 ```
-docker volume: hearth-voice_speaker-prints
+docker volume: genkan-voice_speaker-prints
   /prints/Ada.emb
   /prints/Ben.emb
   /prints/Cleo.emb
@@ -140,7 +140,7 @@ To wipe every voiceprint in the house:
 
 ```
 docker compose -f voice/compose.yaml down
-docker volume rm hearth-voice_speaker-prints
+docker volume rm genkan-voice_speaker-prints
 ```
 
 Historical `voice_events` rows keep the name they were labelled with at the

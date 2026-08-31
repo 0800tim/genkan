@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Deploy Hearth: the containerised kids' gateway.
+# Deploy Genkan: the containerised kids' gateway.
 # Run with sudo on the gateway box. Idempotent. The ONLY host-side footprint
 # is: the kidnet CLI, one config dir, and the kids-nic-warden systemd unit
 # that hands the USB NIC to the gateway container. Everything else (firewall,
@@ -11,6 +11,38 @@ R="$(cd "$(dirname "$0")" && pwd)"
 
 [ -f "$R/config.env" ]  || { echo "copy config.env.example to config.env and set KIDS_NIC_MAC"; exit 1; }
 [ -f "$R/secrets.env" ] || { echo "copy secrets.env.example to secrets.env and set the DB URLs"; exit 1; }
+
+# ---- One-time migration from the Hearth-era names -------------------------
+# The product was called Hearth until 2026-08-31 (DECISIONS.md, "The product
+# is called Genkan"). A household that deployed before then has HEARTH_* keys
+# in config.env, state under /var/lib/hearth, and containers called hearth-*.
+# Every step below checks for the old thing and does nothing once it is gone,
+# so this block costs a fresh install nothing and an old one exactly one run.
+# Nothing is deleted before its replacement exists: the state directory is
+# moved, not copied and removed, and AdGuard's volumes are copied before the
+# old containers go. docs/UPGRADING.md describes what a parent will notice.
+MIGRATED=0
+if grep -q '^HEARTH_' "$R/config.env"; then
+  cp -a "$R/config.env" "$R/config.env.pre-genkan"
+  sed -i 's/^HEARTH_/GENKAN_/' "$R/config.env"
+  echo "config.env: HEARTH_* keys renamed to GENKAN_* (the old file is config.env.pre-genkan)."
+  MIGRATED=1
+fi
+if [ -d /var/lib/hearth ] && [ ! -e /var/lib/genkan ]; then
+  mv /var/lib/hearth /var/lib/genkan
+  echo "State moved from /var/lib/hearth to /var/lib/genkan (snapshots, health, Tor list)."
+  MIGRATED=1
+fi
+if [ -f /etc/kids-network/hearth-root ]; then rm -f /etc/kids-network/hearth-root; MIGRATED=1; fi
+# Moved, not deleted: a household may keep scripts of its own beside ours.
+if [ -d /usr/local/lib/hearth ] && [ ! -e /usr/local/lib/genkan ]; then
+  mv /usr/local/lib/hearth /usr/local/lib/genkan; MIGRATED=1
+fi
+# The worker and tool scripts were kidnet-*; the copies below are installed
+# under genkan-* further down, and the units point at those. `kidnet` itself
+# stays: it is the CLI's alias.
+if ls /usr/local/bin/kidnet-* >/dev/null 2>&1; then rm -f /usr/local/bin/kidnet-*; MIGRATED=1; fi
+
 . "$R/config.env"
 : "${KIDS_NIC_MAC:?set KIDS_NIC_MAC in config.env}"
 
@@ -32,19 +64,19 @@ fi
 # The daily budget must reset at local midnight, not UTC midnight. The
 # Postgres container runs UTC, so pin the database's timezone to the
 # household's or a NZ family's day rolls over at noon.
-if [ -n "${HEARTH_TZ:-}" ]; then
+if [ -n "${GENKAN_TZ:-}" ]; then
   # SUPERUSER PATH, deliberately, and one of only three left. ALTER DATABASE is
   # owner-or-superuser work, and kids_agent is neither by design. It runs once,
-  # at deploy, on a fixed string with one operator-supplied value (HEARTH_TZ
+  # at deploy, on a fixed string with one operator-supplied value (GENKAN_TZ
   # from config.env), so that value is checked to a timezone name's alphabet
   # before it goes anywhere near the statement.
-  case "$HEARTH_TZ" in
-    *[!A-Za-z0-9_/+-]*|"") echo "deploy: HEARTH_TZ '$HEARTH_TZ' is not a timezone name; skipping"; false;;
+  case "$GENKAN_TZ" in
+    *[!A-Za-z0-9_/+-]*|"") echo "deploy: GENKAN_TZ '$GENKAN_TZ' is not a timezone name; skipping"; false;;
     *) true;;
   esac &&
   docker exec -i postgres psql -U postgres -d kids_network \
-    -c "ALTER DATABASE kids_network SET timezone = '$HEARTH_TZ';" >/dev/null 2>&1 \
-    && echo "Database day boundary set to $HEARTH_TZ."
+    -c "ALTER DATABASE kids_network SET timezone = '$GENKAN_TZ';" >/dev/null 2>&1 \
+    && echo "Database day boundary set to $GENKAN_TZ."
 fi
 
 # The least-privilege role the CLI and the timers connect as. SUPERUSER PATH,
@@ -99,44 +131,44 @@ install -m 0755 "$R/bin/genkan"        /usr/local/bin/genkan
 # so the installed copy needs its own one-liner pointing at the installed CLI.
 printf '#!/usr/bin/env bash\n# The CLI is called genkan now; this name is kept for muscle memory.\nexec /usr/local/bin/genkan "$@"\n' > /usr/local/bin/kidnet
 chmod 0755 /usr/local/bin/kidnet
-install -m 0755 "$R/bin/kidnet-meter"    /usr/local/bin/kidnet-meter
-install -m 0755 "$R/bin/kidnet-adguard"  /usr/local/bin/kidnet-adguard
-install -m 0755 "$R/bin/kidnet-adguard-clients" /usr/local/bin/kidnet-adguard-clients
-install -m 0755 "$R/bin/kidnet-dnslog"   /usr/local/bin/kidnet-dnslog
-install -m 0755 "$R/bin/kidnet-catmap"   /usr/local/bin/kidnet-catmap
-install -m 0755 "$R/bin/kidnet-catmeter" /usr/local/bin/kidnet-catmeter
-install -m 0755 "$R/bin/kidnet-devicescan" /usr/local/bin/kidnet-devicescan
-install -m 0755 "$R/bin/kidnet-classify"    /usr/local/bin/kidnet-classify
-install -m 0755 "$R/bin/kidnet-alerts"      /usr/local/bin/kidnet-alerts
-install -m 0755 "$R/bin/kidnet-servicemap"   /usr/local/bin/kidnet-servicemap
-install -m 0755 "$R/bin/kidnet-servicemeter" /usr/local/bin/kidnet-servicemeter
-install -m 0755 "$R/bin/kidnet-tor-sync"    /usr/local/bin/kidnet-tor-sync
-install -m 0755 "$R/bin/kidnet-iot-policy"  /usr/local/bin/kidnet-iot-policy
-install -m 0755 "$R/bin/kidnet-schedule"    /usr/local/bin/kidnet-schedule
-install -m 0755 "$R/bin/kidnet-notify"      /usr/local/bin/kidnet-notify
-# The release tooling. kidnet-health is read-only and is the one a worried
+install -m 0755 "$R/bin/genkan-meter"    /usr/local/bin/genkan-meter
+install -m 0755 "$R/bin/genkan-adguard"  /usr/local/bin/genkan-adguard
+install -m 0755 "$R/bin/genkan-adguard-clients" /usr/local/bin/genkan-adguard-clients
+install -m 0755 "$R/bin/genkan-dnslog"   /usr/local/bin/genkan-dnslog
+install -m 0755 "$R/bin/genkan-catmap"   /usr/local/bin/genkan-catmap
+install -m 0755 "$R/bin/genkan-catmeter" /usr/local/bin/genkan-catmeter
+install -m 0755 "$R/bin/genkan-devicescan" /usr/local/bin/genkan-devicescan
+install -m 0755 "$R/bin/genkan-classify"    /usr/local/bin/genkan-classify
+install -m 0755 "$R/bin/genkan-alerts"      /usr/local/bin/genkan-alerts
+install -m 0755 "$R/bin/genkan-servicemap"   /usr/local/bin/genkan-servicemap
+install -m 0755 "$R/bin/genkan-servicemeter" /usr/local/bin/genkan-servicemeter
+install -m 0755 "$R/bin/genkan-tor-sync"    /usr/local/bin/genkan-tor-sync
+install -m 0755 "$R/bin/genkan-iot-policy"  /usr/local/bin/genkan-iot-policy
+install -m 0755 "$R/bin/genkan-schedule"    /usr/local/bin/genkan-schedule
+install -m 0755 "$R/bin/genkan-notify"      /usr/local/bin/genkan-notify
+# The release tooling. genkan-health is read-only and is the one a worried
 # parent runs; the other two are how a household updates and how it goes back.
 # The shared library is sourced by both, so it has to sit beside them.
-install -m 0755 "$R/bin/kidnet-health"      /usr/local/bin/kidnet-health
-install -m 0755 "$R/bin/kidnet-upgrade"     /usr/local/bin/kidnet-upgrade
-install -m 0755 "$R/bin/kidnet-rollback"    /usr/local/bin/kidnet-rollback
-install -m 0644 "$R/bin/kidnet-release-lib.sh" /usr/local/bin/kidnet-release-lib.sh
-install -d -m 0755 /usr/local/lib/hearth /etc/kids-network
-# Where kidnet-tor-sync keeps the relay list and the generated nft snippet.
-install -d -m 0755 /var/lib/hearth
-# Where kidnet-upgrade keeps the snapshots a rollback goes back to. Outside
+install -m 0755 "$R/bin/genkan-health"      /usr/local/bin/genkan-health
+install -m 0755 "$R/bin/genkan-upgrade"     /usr/local/bin/genkan-upgrade
+install -m 0755 "$R/bin/genkan-rollback"    /usr/local/bin/genkan-rollback
+install -m 0644 "$R/bin/genkan-release-lib.sh" /usr/local/bin/genkan-release-lib.sh
+install -d -m 0755 /usr/local/lib/genkan /etc/kids-network
+# Where genkan-tor-sync keeps the relay list and the generated nft snippet.
+install -d -m 0755 /var/lib/genkan
+# Where genkan-upgrade keeps the snapshots a rollback goes back to. Outside
 # the repo deliberately: a rollback checks the repo out to an older commit,
 # and the instructions for undoing that must not move when it happens.
-install -d -m 0755 /var/lib/hearth/releases
-install -m 0755 "$R/host/kids-nic-warden.sh" /usr/local/lib/hearth/kids-nic-warden.sh
+install -d -m 0755 /var/lib/genkan/releases
+install -m 0755 "$R/host/kids-nic-warden.sh" /usr/local/lib/genkan/kids-nic-warden.sh
 install -m 0600 "$R/config.env"        /etc/kids-network/config.env
-# Where this box's Hearth checkout lives, so the copies of kidnet-health,
-# kidnet-upgrade and kidnet-rollback in /usr/local/bin can find the code they
+# Where this box's Genkan checkout lives, so the copies of genkan-health,
+# genkan-upgrade and genkan-rollback in /usr/local/bin can find the code they
 # are meant to be managing. From /usr/local/bin the directory above is
 # /usr/local, which is not a checkout, and guessing wrong here would mean an
 # upgrade tool that cannot find the thing it upgrades.
-printf '%s\n' "$R" > /etc/kids-network/hearth-root
-chmod 0644 /etc/kids-network/hearth-root
+printf '%s\n' "$R" > /etc/kids-network/genkan-root
+chmod 0644 /etc/kids-network/genkan-root
 [ -f /etc/kids-network/devices.conf ] || install -m 0644 "$R/config/devices.conf" /etc/kids-network/devices.conf
 install -m 0644 "$R/host/kids-nic-warden.service" /etc/systemd/system/
 install -m 0644 "$R/config/systemd-network/kids-meter.service" /etc/systemd/system/
@@ -175,9 +207,34 @@ install -m 0644 "$R/config/systemd-network/kids-iot-policy.service" /etc/systemd
 install -m 0644 "$R/config/systemd-network/kids-iot-policy.timer"   /etc/systemd/system/
 systemctl daemon-reload
 
+# The rest of the Hearth-era migration: the containers. The compose project
+# is called genkan now, so `up` below would build a second stack beside the
+# old one, and the two would fight over the AdGuard port and the kids' NIC.
+# AdGuard's config and its DHCP leases live in named volumes that carry the
+# project name, so they are copied across first; the old containers and the
+# old volumes are then removed. The database is not touched by any of this:
+# it lives in the shared postgres container under its own name.
+if docker ps -a --format '{{.Names}}' | grep -qx 'hearth-gw'; then
+  echo "Migrating the hearth-* containers to genkan-* ..."
+  for v in adguard-conf adguard-work; do
+    if docker volume inspect "hearth_$v" >/dev/null 2>&1 && ! docker volume inspect "genkan_$v" >/dev/null 2>&1; then
+      docker volume create "genkan_$v" >/dev/null
+      docker run --rm -v "hearth_$v:/from:ro" -v "genkan_$v:/to" alpine:3 sh -c 'cp -a /from/. /to/'
+      echo "  volume hearth_$v copied to genkan_$v"
+    fi
+  done
+  docker rm -f hearth-adguard hearth-portal hearth-speedtest hearth-gw >/dev/null 2>&1 || true
+  docker volume rm hearth_adguard-conf hearth_adguard-work >/dev/null 2>&1 || true
+  docker network rm hearth_default >/dev/null 2>&1 || true
+  MIGRATED=1
+fi
+
 echo "Starting the stack..."
 docker compose -f "$R/compose.yaml" --profile island up -d
 systemctl enable --now kids-nic-warden.service
+# The warden is a long-running loop, so an edit to its unit or its script
+# (the migration above moved both) only takes effect on a restart.
+[ "$MIGRATED" = 1 ] && systemctl restart kids-nic-warden.service
 systemctl enable --now kids-meter.timer
 systemctl enable --now kids-dnslog.timer
 systemctl enable --now kids-metering.timer
@@ -199,9 +256,9 @@ systemctl start kids-tor-sync.service \
 
 echo
 echo "Deployed. Verify:"
-echo "  docker logs -f hearth-gw          # watch for 'segment guard' + 'island is UP'"
-echo "  kidnet allow-status               # safety net populated?"
-echo "  kidnet-tor-sync status            # Tor relay list age and size"
+echo "  docker logs -f genkan-gw          # watch for 'segment guard' + 'island is UP'"
+echo "  genkan allow-status               # safety net populated?"
+echo "  genkan-tor-sync status            # Tor relay list age and size"
 echo "  sudo $R/test/container-test.sh    # full packet-level proof"
 echo
 echo "The gateway will NOT serve the island until the segment guard sees a"

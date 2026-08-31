@@ -1,5 +1,5 @@
 [Unit]
-Description=Hearth device discovery (every minute)
+Description=Genkan device discovery (every minute)
 [Timer]
 OnBootSec=60s
 OnUnitActiveSec=1min

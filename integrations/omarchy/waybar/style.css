@@ -1,4 +1,4 @@
-/* Hearth status bar item.
+/* Genkan status bar item.
  *
  * Deliberately colourless. Omarchy repaints Waybar for every theme, so a
  * hardcoded hex here would be wrong on twenty-one of the twenty-two themes it
@@ -7,7 +7,7 @@
  * by naming a colour a theme has not defined.
  *
  * The script sets these classes:
- *   hearth   always
+ *   genkan   always
  *   active   somebody is paused or needs attention
  *   warn     somebody is out of time, or an alert is unacknowledged
  *   paused   every kid is paused (dinner)
@@ -16,35 +16,35 @@
  *   down     the gateway is not reachable
  */
 
-#custom-hearth {
+#custom-genkan {
   padding: 0 8px;
 }
 
-#custom-hearth.low {
+#custom-genkan.low {
   font-weight: bold;
 }
 
-#custom-hearth.warn {
+#custom-genkan.warn {
   font-weight: bold;
 }
 
-#custom-hearth.paused {
+#custom-genkan.paused {
   opacity: 0.75;
 }
 
 /* Quiet, not alarming. A gateway that is off or unreachable is a normal state
  * in a house: the box gets unplugged, the laptop leaves the network. */
-#custom-hearth.stale {
+#custom-genkan.stale {
   opacity: 0.55;
 }
 
-#custom-hearth.down {
+#custom-genkan.down {
   opacity: 0.35;
 }
 
 /* Optional. Uncomment only if your Omarchy theme's Waybar stylesheet defines
  * these named colours, otherwise GTK will refuse the whole file.
  *
- * #custom-hearth.warn { color: @urgent; }
- * #custom-hearth.down { color: @foreground; }
+ * #custom-genkan.warn { color: @urgent; }
+ * #custom-genkan.down { color: @foreground; }
  */

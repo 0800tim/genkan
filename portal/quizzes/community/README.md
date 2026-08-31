@@ -21,7 +21,7 @@ That is the important part.
 | Loaded by the portal | yes, automatically | **no** |
 | Where it lives once in use | it is already in use | the household's database |
 | Survives a `git pull` | it is part of the repo | yes, it is in the database |
-| How it gets to the kids | it ships with Genkan | somebody runs `kidnet-pack install` |
+| How it gets to the kids | it ships with Genkan | somebody runs `genkan-pack install` |
 
 The portal reads `*.json` at the top of `portal/quizzes` and nowhere else, so a
 package sitting here is invisible to every child in the house. It is an offer,
@@ -29,14 +29,14 @@ not content.
 
 A parent installs one deliberately:
 
-    bin/kidnet-pack list                                        what is here, and what is installed
-    bin/kidnet-pack validate portal/quizzes/community/<id>.json  check it first
-    bin/kidnet-pack install portal/quizzes/community/<id>.json   say yes to it
+    bin/genkan-pack list                                        what is here, and what is installed
+    bin/genkan-pack validate portal/quizzes/community/<id>.json  check it first
+    bin/genkan-pack install portal/quizzes/community/<id>.json   say yes to it
 
 An installed package goes into the **database**, alongside the banks a parent
 writes on the dashboard, and for the same reason: this directory is tracked in
 git, and a repository update that overwrote or deleted a family's content would
-be a bad day. `bin/kidnet-pack remove <id>` takes it out again and leaves
+be a bad day. `bin/genkan-pack remove <id>` takes it out again and leaves
 nothing behind, except the minutes the children earned, which stay earned.
 
 **Installing is a terminal command on purpose.** It is a stranger's writing

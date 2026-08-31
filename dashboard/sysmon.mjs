@@ -33,15 +33,15 @@ import { demoStatic, demoSample, demoBackfill } from "./sys-demo.mjs";
 // and a small leak of somebody else's machine, so with the flag set the whole
 // sampler runs off dashboard/sys-demo.mjs instead and never opens /proc at
 // all. Unset, which is every household install, nothing below changes.
-const DEMO = process.env.HEARTH_DEMO === "1";
+const DEMO = process.env.GENKAN_DEMO === "1";
 
-export const SYS_TICK_MS = Math.min(60000, Math.max(2000, Number(process.env.HEARTH_SYS_TICK_MS || 10000)));
+export const SYS_TICK_MS = Math.min(60000, Math.max(2000, Number(process.env.GENKAN_SYS_TICK_MS || 10000)));
 const KEEP = Math.ceil((3 * 3600 * 1000) / SYS_TICK_MS);   // three hours of samples
 const SLOW_MS = 30000;                                     // disk, containers, interface list
 const DOCKER_SOCK = process.env.DOCKER_HOST_SOCK || "/var/run/docker.sock";
 // The filesystem the tile reports on: the one this repo, and therefore the
 // database volume and the logs, actually sits on.
-const DATA_DIR = process.env.HEARTH_DATA_DIR || dirname(dirname(fileURLToPath(import.meta.url)));
+const DATA_DIR = process.env.GENKAN_DATA_DIR || dirname(dirname(fileURLToPath(import.meta.url)));
 
 const num = v => (Number.isFinite(v) ? v : null);
 const readText = p => readFile(p, "utf8").then(t => t.trim()).catch(() => null);
@@ -233,7 +233,7 @@ async function containers() {
     const name = String((c.Names || [])[0] || "").replace(/^\//, "");
     // Genkan's own containers only, and never the public demo's, which happen
     // to share the prefix on the box that hosts it.
-    if (!name.startsWith("hearth-") || name.startsWith("hearth-demo")) continue;
+    if (!name.startsWith("genkan-") || name.startsWith("genkan-demo")) continue;
     out.push({ name, up: c.State === "running", state: String(c.State || "unknown") });
   }
   return out.sort((a, b) => a.name.localeCompare(b.name));

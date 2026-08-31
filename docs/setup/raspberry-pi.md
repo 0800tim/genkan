@@ -62,14 +62,14 @@ Use Raspberry Pi Imager on any computer:
 1. Choose **Raspberry Pi OS Lite (64-bit)**. No desktop needed; this box
    is an appliance. (Pi 3: 64-bit Lite works and is what Docker wants.)
 2. In the Imager's customisation (the gear icon, or Ctrl+Shift+X): set a
-   hostname (e.g. `hearth`), enable SSH with your key or a password, set
+   hostname (e.g. `genkan`), enable SSH with your key or a password, set
    your username, and set the **WiFi country** (e.g. NZ). The country
    setting matters even if you skip WiFi credentials: without it the radio
    stays rfkill-blocked and hostapd cannot start.
 3. Do not join the Pi to your house WiFi. The uplink is ethernet.
 
 Boot the Pi with ethernet plugged into your router, find its IP from your
-router's client list (or `ssh hearth.local`), and SSH in.
+router's client list (or `ssh genkan.local`), and SSH in.
 
 ## Step 2: base packages and Docker
 
@@ -137,7 +137,7 @@ previously followed such a guide, disable it first:
 
 ### 5A.1 The bridge and virtual cable
 
-Create `/etc/systemd/system/hearth-kids-bridge.service`:
+Create `/etc/systemd/system/genkan-kids-bridge.service`:
 
     [Unit]
     Description=Genkan kids bridge + veth pair (WiFi AP topology)
@@ -163,7 +163,7 @@ Create `/etc/systemd/system/hearth-kids-bridge.service`:
 Then:
 
     sudo systemctl daemon-reload
-    sudo systemctl enable --now hearth-kids-bridge.service
+    sudo systemctl enable --now genkan-kids-bridge.service
 
 `02:68:65:61:72:74` is a fixed locally-administered MAC. It is how the NIC
 warden finds the container end of the virtual cable, so it goes into
@@ -178,7 +178,7 @@ warden finds the container end of the virtual cable, so it goes into
 
 Raspberry Pi OS (Bookworm and later) uses NetworkManager. It must not
 touch the radio, the bridge, or the veth pair. Create
-`/etc/NetworkManager/conf.d/99-hearth-kids.conf`:
+`/etc/NetworkManager/conf.d/99-genkan-kids.conf`:
 
     [keyfile]
     unmanaged-devices=interface-name:wlan0;interface-name:br-kids;interface-name:vk-*
@@ -226,11 +226,11 @@ is 2.4GHz only. Point Debian's service at the config and start it:
 
 Give hostapd a systemd drop-in so it waits for the bridge and disables
 WiFi power saving. Create
-`/etc/systemd/system/hostapd.service.d/hearth.conf`:
+`/etc/systemd/system/hostapd.service.d/genkan.conf`:
 
     [Unit]
-    Requires=hearth-kids-bridge.service
-    After=hearth-kids-bridge.service
+    Requires=genkan-kids-bridge.service
+    After=genkan-kids-bridge.service
 
     [Service]
     ExecStartPost=/usr/sbin/iw dev wlan0 set power_save off
@@ -263,14 +263,14 @@ before deploying, or the segment guard will (rightly) refuse the wire.
 
     # in a second shell: NAT out the uplink
     sudo sysctl -w net.ipv4.ip_forward=1
-    sudo nft add table ip hearthtest
-    sudo nft 'add chain ip hearthtest post { type nat hook postrouting priority srcnat; policy accept; }'
-    sudo nft add rule ip hearthtest post ip saddr 192.168.60.0/24 oifname "eth0" masquerade
+    sudo nft add table ip genkantest
+    sudo nft 'add chain ip genkantest post { type nat hook postrouting priority srcnat; policy accept; }'
+    sudo nft add rule ip genkantest post ip saddr 192.168.60.0/24 oifname "eth0" masquerade
 
 A phone on the SSID should now get a lease and browse. Then tear it down:
 
     # Ctrl+C the dnsmasq, then:
-    sudo nft delete table ip hearthtest
+    sudo nft delete table ip genkantest
     sudo ip addr del 192.168.60.1/24 dev br-kids
     sudo apt purge -y dnsmasq
 
@@ -288,7 +288,7 @@ Copy `config.env.example` to `config.env` and set:
 
 Keep NetworkManager away from it. The `install/omarchy-setup.sh` script
 writes this drop-in for you on any distro with nmcli (despite the name),
-or create `/etc/NetworkManager/conf.d/99-hearth-kids-nic.conf` by hand:
+or create `/etc/NetworkManager/conf.d/99-genkan-kids-nic.conf` by hand:
 
     [keyfile]
     unmanaged-devices=mac:<the dongle's MAC, lower case>
@@ -314,8 +314,8 @@ as `kids0`, and the segment guard listens before the island goes live.
 
 ## Verification
 
-    docker ps                                  # hearth-gw, hearth-adguard, hearth-portal, postgres
-    docker logs hearth-gw | tail -20           # "segment guard: wire is quiet", firewall loaded
+    docker ps                                  # genkan-gw, genkan-adguard, genkan-portal, postgres
+    docker logs genkan-gw | tail -20           # "segment guard: wire is quiet", firewall loaded
     systemctl status kids-nic-warden           # active, "handover done" in the journal
     kidnet status                              # CLI talks to the island
     kidnet allow-status                        # safety net domains resolved
@@ -330,9 +330,9 @@ SSH tunnel or your tailnet; credentials are in `secrets.env`).
 ## Troubleshooting
 
 - **Phone joins the WiFi but gets no IP address.** Check the chain in
-  order. Is `kids0` inside the container (`docker exec hearth-gw ip link
+  order. Is `kids0` inside the container (`docker exec genkan-gw ip link
   show kids0`)? Did the warden restart AdGuard after the handover (it does,
-  about 20 seconds later; `docker logs hearth-adguard`)? Topology A: is
+  about 20 seconds later; `docker logs genkan-adguard`)? Topology A: is
   `vk-host` in the bridge (`bridge link`), and is NetworkManager really
   leaving wlan0 and the veths alone (`nmcli device`)? If the host runs ufw
   or another firewall, see the DHCP-on-bridge gotcha in

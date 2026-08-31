@@ -6,7 +6,7 @@
 -- total passes) tells the youngest child in the house that they are losing,
 -- every single day, which is the opposite of what this project is for. So
 -- badges here are personal milestones, never a race against a sibling, and
--- the one comparison view Hearth ships (dashboard/badges.mjs: boardData)
+-- the one comparison view Genkan ships (dashboard/badges.mjs: boardData)
 -- deals only in things that do not simply favour whoever is oldest: how much
 -- somebody has improved lately, how many different things they have tried,
 -- how often they have bounced back from a flop, how much they read up. It is

@@ -1,8 +1,8 @@
 #!/bin/bash
 
-# omarchy:summary=Run one kidnet command against the Hearth gateway (local, ssh or http)
+# omarchy:summary=Run one kidnet command against the Genkan gateway (local, ssh or http)
 # omarchy:args=[--kids|--alerts|--mode] <kidnet args...>
-# omarchy:examples=hearth-kidnet status | hearth-kidnet game off Ada | hearth-kidnet --kids
+# omarchy:examples=genkan-kidnet status | genkan-kidnet game off Ada | genkan-kidnet --kids
 
 # The one place that knows WHERE the gateway is. Everything else in this
 # integration shells out to here, so the desktop scripts never care whether
@@ -18,24 +18,24 @@
 
 set -euo pipefail
 
-readonly conf_file="${HEARTH_CONF:-${XDG_CONFIG_HOME:-$HOME/.config}/hearth/omarchy.conf}"
+readonly conf_file="${GENKAN_CONF:-${XDG_CONFIG_HOME:-$HOME/.config}/genkan/omarchy.conf}"
 if [[ -r $conf_file ]]; then
   # shellcheck disable=SC1090
   source "$conf_file"
 fi
 
-: "${HEARTH_MODE:=auto}"
-: "${HEARTH_KIDNET:=kidnet}"
-: "${HEARTH_SSH:=}"
-: "${HEARTH_SSH_OPTS:=-o BatchMode=yes -o ConnectTimeout=4 -o ControlMaster=auto -o ControlPath=${XDG_RUNTIME_DIR:-/tmp}/hearth-ssh-%h-%p-%r -o ControlPersist=120}"
-: "${HEARTH_URL:=}"
-: "${HEARTH_DASH_TOKEN:=}"
-: "${HEARTH_TIMEOUT:=8}"
-: "${HEARTH_KIDS:=}"
-: "${HEARTH_ALERTS:=1}"
+: "${GENKAN_MODE:=auto}"
+: "${GENKAN_KIDNET:=kidnet}"
+: "${GENKAN_SSH:=}"
+: "${GENKAN_SSH_OPTS:=-o BatchMode=yes -o ConnectTimeout=4 -o ControlMaster=auto -o ControlPath=${XDG_RUNTIME_DIR:-/tmp}/genkan-ssh-%h-%p-%r -o ControlPersist=120}"
+: "${GENKAN_URL:=}"
+: "${GENKAN_DASH_TOKEN:=}"
+: "${GENKAN_TIMEOUT:=8}"
+: "${GENKAN_KIDS:=}"
+: "${GENKAN_ALERTS:=1}"
 # Read only, and as the restricted kids_agent role rather than the superuser:
-# see config/db/grants.sql in the Hearth repo for what that role may touch.
-: "${HEARTH_PSQL:=docker exec -i postgres psql -U kids_agent -d kids_network -tAc}"
+# see config/db/grants.sql in the Genkan repo for what that role may touch.
+: "${GENKAN_PSQL:=docker exec -i postgres psql -U kids_agent -d kids_network -tAc}"
 
 fail() {
   echo "${0##*/}: $*" >&2
@@ -43,45 +43,45 @@ fail() {
 }
 
 resolve_mode() {
-  case "$HEARTH_MODE" in
+  case "$GENKAN_MODE" in
     local | ssh | http)
-      echo "$HEARTH_MODE"
+      echo "$GENKAN_MODE"
       ;;
     auto)
-      if command -v "$HEARTH_KIDNET" >/dev/null 2>&1; then
+      if command -v "$GENKAN_KIDNET" >/dev/null 2>&1; then
         echo local
-      elif [[ -n $HEARTH_SSH ]]; then
+      elif [[ -n $GENKAN_SSH ]]; then
         echo ssh
-      elif [[ -n $HEARTH_URL ]]; then
+      elif [[ -n $GENKAN_URL ]]; then
         echo http
       else
         echo none
       fi
       ;;
     *)
-      fail "unknown HEARTH_MODE '$HEARTH_MODE' (local, ssh, http or auto)"
+      fail "unknown GENKAN_MODE '$GENKAN_MODE' (local, ssh, http or auto)"
       ;;
   esac
 }
 
 run_local() {
-  timeout "$HEARTH_TIMEOUT" "$HEARTH_KIDNET" "$@"
+  timeout "$GENKAN_TIMEOUT" "$GENKAN_KIDNET" "$@"
 }
 
 # ssh joins its arguments with spaces and hands the lot to the remote login
 # shell, so quote every word before it leaves this machine.
 run_ssh() {
   local remote
-  remote=$(printf '%q ' "$HEARTH_KIDNET" "$@")
+  remote=$(printf '%q ' "$GENKAN_KIDNET" "$@")
   # shellcheck disable=SC2086
-  timeout "$HEARTH_TIMEOUT" ssh $HEARTH_SSH_OPTS "$HEARTH_SSH" "$remote"
+  timeout "$GENKAN_TIMEOUT" ssh $GENKAN_SSH_OPTS "$GENKAN_SSH" "$remote"
 }
 
 # The dashboard's control API takes { cmd, who, arg }, where cmd may be one or
 # two words ("off", "game off") and the person goes after any subverb. Its own
 # allowlist decides what is permitted, so nothing here can widen it.
 run_http() {
-  [[ -n $HEARTH_URL ]] || fail "http mode needs HEARTH_URL"
+  [[ -n $GENKAN_URL ]] || fail "http mode needs GENKAN_URL"
   command -v jq >/dev/null 2>&1 || fail "http mode needs jq"
   command -v curl >/dev/null 2>&1 || fail "http mode needs curl"
 
@@ -104,13 +104,13 @@ run_http() {
     { cmd: $cmd, who: $who, arg: $ARGS.positional }' "$@")
 
   local -a auth=()
-  [[ -n $HEARTH_DASH_TOKEN ]] && auth=(-H "x-dash-token: $HEARTH_DASH_TOKEN")
+  [[ -n $GENKAN_DASH_TOKEN ]] && auth=(-H "x-dash-token: $GENKAN_DASH_TOKEN")
 
-  response=$(curl -sS --max-time "$HEARTH_TIMEOUT" \
-    -X POST "${HEARTH_URL%/}/api/act" \
+  response=$(curl -sS --max-time "$GENKAN_TIMEOUT" \
+    -X POST "${GENKAN_URL%/}/api/act" \
     -H 'content-type: application/json' \
     "${auth[@]}" \
-    --data "$payload") || fail "dashboard at $HEARTH_URL did not answer"
+    --data "$payload") || fail "dashboard at $GENKAN_URL did not answer"
 
   jq -r '.out // ""' <<<"$response"
   [[ $(jq -r '.ok // false' <<<"$response") == true ]]
@@ -121,7 +121,7 @@ run_kidnet() {
     local) run_local "$@" ;;
     ssh) run_ssh "$@" ;;
     http) run_http "$@" ;;
-    none) fail "no gateway configured: set HEARTH_SSH or HEARTH_URL in $conf_file" ;;
+    none) fail "no gateway configured: set GENKAN_SSH or GENKAN_URL in $conf_file" ;;
   esac
 }
 
@@ -129,28 +129,28 @@ run_kidnet() {
 # so this is the one query that goes straight to Postgres, and it only works
 # where the Docker socket is (local and ssh). Anything else answers 0 quietly.
 alert_count() {
-  [[ $HEARTH_ALERTS == 1 ]] || { echo 0; return 0; }
+  [[ $GENKAN_ALERTS == 1 ]] || { echo 0; return 0; }
   local sql="SELECT count(*) FROM alerts WHERE NOT acknowledged" out=""
   case "$(resolve_mode)" in
     local)
       # shellcheck disable=SC2086
-      out=$(timeout "$HEARTH_TIMEOUT" $HEARTH_PSQL "$sql" 2>/dev/null) || out=""
+      out=$(timeout "$GENKAN_TIMEOUT" $GENKAN_PSQL "$sql" 2>/dev/null) || out=""
       ;;
     ssh)
       # shellcheck disable=SC2086
-      out=$(timeout "$HEARTH_TIMEOUT" ssh $HEARTH_SSH_OPTS "$HEARTH_SSH" \
-        "$(printf '%q ' $HEARTH_PSQL "$sql")" 2>/dev/null) || out=""
+      out=$(timeout "$GENKAN_TIMEOUT" ssh $GENKAN_SSH_OPTS "$GENKAN_SSH" \
+        "$(printf '%q ' $GENKAN_PSQL "$sql")" 2>/dev/null) || out=""
       ;;
   esac
   [[ $out =~ ^[0-9]+$ ]] && echo "$out" || echo 0
 }
 
-# Who the bar and the menu should show. An explicit HEARTH_KIDS wins; otherwise
+# Who the bar and the menu should show. An explicit GENKAN_KIDS wins; otherwise
 # take every person who owns a device on the roster.
 kid_list() {
-  if [[ -n $HEARTH_KIDS ]]; then
+  if [[ -n $GENKAN_KIDS ]]; then
     # shellcheck disable=SC2086
-    printf '%s\n' $HEARTH_KIDS
+    printf '%s\n' $GENKAN_KIDS
     return 0
   fi
   run_kidnet devices | awk '
@@ -172,9 +172,9 @@ case "${1:-}" in
     ;;
   -h | --help | "")
     cat <<USAGE
-Usage: hearth-kidnet [--kids|--alerts|--mode] <kidnet args...>
+Usage: genkan-kidnet [--kids|--alerts|--mode] <kidnet args...>
 
-Runs one kidnet command against the Hearth gateway and prints its output.
+Runs one kidnet command against the Genkan gateway and prints its output.
 
   --kids     list the people the bar and menu should offer
   --alerts   count alerts nobody has acknowledged (local and ssh only)

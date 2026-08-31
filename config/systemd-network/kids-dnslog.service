@@ -1,9 +1,9 @@
 [Unit]
-Description=Hearth DNS log ingest (AdGuard querylog -> dns_log)
+Description=Genkan DNS log ingest (AdGuard querylog -> dns_log)
 After=docker.service
 [Service]
 Type=oneshot
 EnvironmentFile=/srv/projects/internal/kids-network/secrets.env
-ExecStart=/usr/local/bin/kidnet-dnslog
+ExecStart=/usr/local/bin/genkan-dnslog
 # Raise alerts on anything flagged in the rows just ingested.
-ExecStartPost=-/usr/local/bin/kidnet-alerts
+ExecStartPost=-/usr/local/bin/genkan-alerts

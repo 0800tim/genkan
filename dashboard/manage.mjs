@@ -7,8 +7,8 @@
 //
 // Two rules shape it:
 //   1. Where a change has to reach the DNS filter, we call the tools that
-//      already know how (bin/kidnet assign, bin/kidnet-adguard-clients,
-//      bin/kidnet-adguard). None of that logic is reimplemented here, so there
+//      already know how (bin/kidnet assign, bin/genkan-adguard-clients,
+//      bin/genkan-adguard). None of that logic is reimplemented here, so there
 //      is exactly one place where the AdGuard client mapping is decided.
 //   2. Nothing destructive happens without saying, in plain words, what will
 //      happen to the devices attached to it.

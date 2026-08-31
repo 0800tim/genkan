@@ -21,10 +21,10 @@ Create one profile file per kid, kept out of the public repo. Suggested
 location on the Genkan box:
 
 ```
-/srv/hearth-private/tutor/<kid-slug>/profile.md
+/srv/genkan-private/tutor/<kid-slug>/profile.md
 ```
 
-Add `/srv/hearth-private/` (or wherever you put it) to a `.gitignore`
+Add `/srv/genkan-private/` (or wherever you put it) to a `.gitignore`
 if it lives anywhere near a repo, and never use real full names in
 slugs if you might ever share a screen. The profile is the tutor's
 memory. Start it by interviewing the parent (and the kid, if they are

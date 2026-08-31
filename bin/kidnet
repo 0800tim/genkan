@@ -1,12 +1,8 @@
 #!/usr/bin/env bash
-# hearth:summary=Compatibility shim: the CLI is called genkan now.
+# genkan:summary=Compatibility shim: the CLI is called genkan now.
 #
 # The product was renamed from Hearth to Genkan on 2026-08-31, and the command
 # went with it. Everything that used to type `kidnet` still works through this
-# shim: the timers, the muscle memory, and every runbook written before the
-# rename. New writing should say `genkan`.
-#
-# The worker family (kidnet-meter, kidnet-dnslog, ...) keeps its prefix for
-# now. Those names are wired into systemd units on live boxes, and renaming
-# them is its own deliberate job, not a side effect of this one.
+# shim: the muscle memory, and every runbook written before the rename. New
+# writing should say `genkan`.
 exec "$(dirname "$(readlink -f "$0")")/genkan" "$@"

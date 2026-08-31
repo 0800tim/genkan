@@ -7,7 +7,7 @@
 -- blocks anything. Missing a goal produces a conversation, not a punishment.
 --
 -- Everything is measured in MINUTES over a Monday-to-Sunday week, so the goal
--- lines up with bin/kidnet-report and the /week digest. Metrics come straight
+-- lines up with bin/genkan-report and the /week digest. Metrics come straight
 -- from figures the dashboard already shows, so a goal can never quietly mean
 -- something different from the chart above it:
 --

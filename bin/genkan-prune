@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# hearth:summary=Delete data past its retention. Nightly. See PRIVACY-CHARTER.md.
+# genkan:summary=Delete data past its retention. Nightly. See PRIVACY-CHARTER.md.
 #
 # Nothing pruned anything before this existed. The charter promises nothing
 # leaves the house; it never promised everything stays in it forever, and a
 # complete record of a child's adolescence sitting in a cupboard is not what a
 # parent agreed to even if it never leaves the cupboard.
 #
-#   kidnet-prune            delete what is past its retention
-#   kidnet-prune --dry-run  say what would go, delete nothing
-#   kidnet-prune --status   how much is held, and how old
+#   genkan-prune            delete what is past its retention
+#   genkan-prune --dry-run  say what would go, delete nothing
+#   genkan-prune --status   how much is held, and how old
 #
 # Retention lives in the `retention` table, one row per thing, editable by the
 # household. Adding a table here without adding a row is deliberately a no-op:
@@ -49,7 +49,7 @@ total=0
 while IFS='|' read -r what days; do
   [ -n "$what" ] || continue
   col=$(tscol "$what")
-  if [ -z "$col" ]; then echo "kidnet-prune: no age column known for '$what', skipping" >&2; continue; fi
+  if [ -z "$col" ]; then echo "genkan-prune: no age column known for '$what', skipping" >&2; continue; fi
   # Existence check first: a fresh install may not have every table yet, and a
   # missing one must not abort the whole run and leave the rest unpruned.
   [ "$(psqll "SELECT to_regclass('public.$what') IS NOT NULL")" = t ] || continue
@@ -64,4 +64,4 @@ while IFS='|' read -r what days; do
   total=$((total+n))
 done < <(psqll "SELECT what||'|'||keep_days FROM retention ORDER BY what")
 
-[ "$total" -gt 0 ] || echo "kidnet-prune: nothing past its retention"
+[ "$total" -gt 0 ] || echo "genkan-prune: nothing past its retention"

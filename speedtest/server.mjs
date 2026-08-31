@@ -1,7 +1,7 @@
-// Hearth speed test server.
+// Genkan speed test server.
 //
 // Binds ONLY to the Tailscale IP so every measured byte travels the
-// device -> access point -> the Hearth box, with nothing in between. Zero
+// device -> access point -> the Genkan box, with nothing in between. Zero
 // dependencies; serves its own single-page Ookla-style UI.
 //
 //   GET  /          the test page
@@ -10,13 +10,13 @@
 //   POST /upload    discards body, returns { bytes }
 //   GET  /info      { serverHost, serverIp, clientIp, direct }
 //
-// Runs as the hearth-speedtest container, on the island (see compose.yaml).
-// Hearth speed test. Runs ON THE ISLAND, so any device can use it: a kid's
+// Runs as the genkan-speedtest container, on the island (see compose.yaml).
+// Genkan speed test. Runs ON THE ISLAND, so any device can use it: a kid's
 // tablet, a guest's phone, something with no VPN and no account.
 //
 // It measures BOTH legs separately, which is the whole point:
-//   local     your device to the Hearth box (your wifi and the access point)
-//   internet  the Hearth box out to the world (your actual connection)
+//   local     your device to the Genkan box (your wifi and the access point)
+//   internet  the Genkan box out to the world (your actual connection)
 // A parent can then tell "my wifi is the limit" from "my internet is the
 // limit" from "the gateway is costing me something", instead of guessing.
 //
@@ -33,7 +33,7 @@ const CHUNK = randomBytes(4 * 1024 * 1024); // incompressible 4 MB
 
 const PAGE = `<!doctype html><html><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Hearth Speed Test</title>
+<title>Genkan Speed Test</title>
 <style>
   :root { --bg:#0b1020; --card:#141a2d; --line:rgba(255,255,255,.08);
     --text:#f3f4f8; --dim:#a0a8c0; --blue:#3fc1f0; }
@@ -132,8 +132,8 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8">
     </div>
   </div>
   <div class="stfoot">
-    <div class="who"><b id="legname">Hearth direct</b><span id="path">measuring&hellip;</span></div>
-    <div class="loc">Hearth<small id="netname">home network</small></div>
+    <div class="who"><b id="legname">Genkan direct</b><span id="path">measuring&hellip;</span></div>
+    <div class="loc">Genkan<small id="netname">home network</small></div>
   </div>
   <div class="pbar"><div id="prog"></div></div>
 </div>
@@ -141,7 +141,7 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8">
 <div class="card"><table id="results"><tr><td colspan="2">No runs yet.</td></tr></table></div>
 <div class="card compare">
   <b>Comparing against the internet</b>
-  <p>The test above measures <em>this device to the Hearth box</em>, so it is
+  <p>The test above measures <em>this device to the Genkan box</em>, so it is
      your wifi and your access point. To measure the connection itself, run a
      public test and compare. If the public number is higher than the one
      above, your wifi is the limit rather than your internet.</p>
@@ -151,7 +151,7 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8">
     <a href="https://speed.cloudflare.com" target="_blank" rel="noopener noreferrer">Cloudflare</a>
   </div>
   <p class="tiny">These are outside services, so they see your household's public
-     address, as any website does. Hearth sends them nothing.</p>
+     address, as any website does. Genkan sends them nothing.</p>
 </div>
 </div><script>
 "use strict";
@@ -349,7 +349,7 @@ async function throughput(phase, seconds, streams, onRate){
 
 // ---- Orchestration ---------------------------------------------------
 async function internetLeg(){
-  // Ask the Hearth box what IT gets to the internet, so the page can say
+  // Ask the Genkan box what IT gets to the internet, so the page can say
   // which leg is actually the limit rather than leaving a parent guessing.
   try {
     const r = await fetch("/internet", { cache: "no-store" });
@@ -359,12 +359,12 @@ async function internetLeg(){
 }
 
 function verdict(localMbps, netMbps){
-  if (netMbps == null) return "Could not reach the internet from the Hearth box to compare.";
+  if (netMbps == null) return "Could not reach the internet from the Genkan box to compare.";
   const gap = localMbps / netMbps;
   if (localMbps < netMbps * 0.75)
     return "Your wifi to the box is the limit here (" + fmt(localMbps) + " vs " + fmt(netMbps) + " Mbps available). Moving closer to the access point, or a better one, would help.";
   if (gap > 0.9)
-    return "You are getting nearly all of your connection (" + fmt(netMbps) + " Mbps). Hearth is not costing you speed.";
+    return "You are getting nearly all of your connection (" + fmt(netMbps) + " Mbps). Genkan is not costing you speed.";
   return "Close to your connection speed (" + fmt(netMbps) + " Mbps available). Nothing obviously wrong.";
 }
 
@@ -402,7 +402,7 @@ async function run(){
 $("gofab").onclick = run;
 fetch("/info").then(function(r){ return r.json(); }).then(function(i){
   $("path").innerHTML = "you " + i.clientIp + " → " + i.serverHost + " (" + i.serverIp + ") " +
-    "this device to the Hearth box, nothing in between";
+    "this device to the Genkan box, nothing in between";
 });
 </script></body></html>`;
 

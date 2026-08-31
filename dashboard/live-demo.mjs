@@ -9,7 +9,7 @@
 // So the demo synthesises the same tick shape from the roster it already reads
 // out of its own database. Real dashboard code, fake numbers: nothing here is
 // ever loaded on a household box, because live.mjs only calls it when
-// HEARTH_DEMO=1.
+// GENKAN_DEMO=1.
 //
 // The numbers are not random noise. They are a slow random walk per device,
 // clamped, multiplied by a daily rhythm (quiet at 3am, busy after school,

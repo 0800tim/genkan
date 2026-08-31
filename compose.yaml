@@ -1,4 +1,4 @@
-# The Hearth stack. Everything island-facing lives in ONE network namespace:
+# The Genkan stack. Everything island-facing lives in ONE network namespace:
 # the gateway container owns it (and the physical kids0 NIC, handed in by
 # host/kids-nic-warden.sh); the portal and AdGuard join it with
 # network_mode: service:gateway. Nothing here runs privileged, nothing uses
@@ -7,14 +7,14 @@
 #
 # The admin dashboard is NOT here: it binds the tailnet on the host
 # (systemd --user kids-dashboard.service) and stays outside the island.
-name: hearth
+name: genkan
 
 services:
   gateway:
     build:
       context: .
       dockerfile: gateway/Dockerfile
-    container_name: hearth-gw
+    container_name: genkan-gw
     cap_add: [NET_ADMIN, NET_RAW]
     cap_drop: [ALL]
     sysctls:
@@ -35,7 +35,7 @@ services:
 
   portal:
     image: node:22-slim
-    container_name: hearth-portal
+    container_name: genkan-portal
     network_mode: "service:gateway"
     depends_on: [gateway]
     working_dir: /app
@@ -58,7 +58,7 @@ services:
   # separately, which is the only way a parent can tell which one is slow.
   speedtest:
     image: node:22-slim
-    container_name: hearth-speedtest
+    container_name: genkan-speedtest
     network_mode: "service:gateway"
     depends_on: [gateway]
     working_dir: /app
@@ -72,7 +72,7 @@ services:
 
   adguard:
     image: adguard/adguardhome:v0.107.79
-    container_name: hearth-adguard
+    container_name: genkan-adguard
     network_mode: "service:gateway"
     depends_on: [gateway]
     # DHCP raw sockets need NET_RAW + NET_BIND_SERVICE; the image chowns its

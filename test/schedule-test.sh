@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# hearth:summary=Proves scheduled bedtimes: the times, the morning restore, and who may lift what.
+# genkan:summary=Proves scheduled bedtimes: the times, the morning restore, and who may lift what.
 #
-# A bedtime is the one feature in Hearth that can leave a child with no internet
+# A bedtime is the one feature in Genkan that can leave a child with no internet
 # because nobody was watching. Nearly all of the risk is in two places:
 #
 #   1. THE TIME MATHS. A Friday night is not a Tuesday night, a window that
@@ -18,15 +18,15 @@
 #      below, because every one of them is a way to be wrong at eleven at night.
 #
 # IT NEVER TOUCHES THE HOUSEHOLD DATABASE. It creates its own, loads the real
-# schema files into it, invents a family, and points bin/kidnet-schedule and
-# bin/kidnet at that database with HEARTH_DB. The firewall is pointed at a
+# schema files into it, invents a family, and points bin/genkan-schedule and
+# bin/kidnet at that database with GENKAN_DB. The firewall is pointed at a
 # container that does not exist, so nothing can reach nftables either.
 #
 #   sudo not required. Needs docker and a running postgres container.
 set -u
 R="$(cd "$(dirname "$0")/.." && pwd)"
 PG="${PG_CONTAINER:-postgres}"
-DB="hearth_schedule_test_$$"
+DB="genkan_schedule_test_$$"
 for _t in docker; do command -v "$_t" >/dev/null || { echo "MISSING REQUIRED TOOL: $_t"; exit 1; }; done
 
 # The one line that matters if somebody edits this file later.
@@ -44,11 +44,11 @@ trap cleanup EXIT
 # that is not there. GW_CONTAINER is deliberately a name no container has: if a
 # future change made kidnet touch nftables on a path it should not, this suite
 # would fail rather than quietly reach into the live island.
-WORKER(){ PG_CONTAINER="$PG" HEARTH_DB="$DB" HEARTH_DB_ROLE="$ROLE" \
-          GW_CONTAINER=hearth-test-no-such-container ADGUARD_PASS="" \
-          bash "$R/bin/kidnet-schedule" "$@" 2>&1; }
-KIDNET(){ PG_CONTAINER="$PG" HEARTH_DB="$DB" HEARTH_DB_ROLE="$ROLE" \
-          GW_CONTAINER=hearth-test-no-such-container ADGUARD_PASS="" \
+WORKER(){ PG_CONTAINER="$PG" GENKAN_DB="$DB" GENKAN_DB_ROLE="$ROLE" \
+          GW_CONTAINER=genkan-test-no-such-container ADGUARD_PASS="" \
+          bash "$R/bin/genkan-schedule" "$@" 2>&1; }
+KIDNET(){ PG_CONTAINER="$PG" GENKAN_DB="$DB" GENKAN_DB_ROLE="$ROLE" \
+          GW_CONTAINER=genkan-test-no-such-container ADGUARD_PASS="" \
           bash "$R/bin/kidnet" "$@" 2>&1; }
 
 echo
@@ -88,9 +88,9 @@ OLD=901; YNG=902
 # these tables. The worker must say so in words and exit clean, because a timer
 # that fails every minute with a psql trace teaches a household to ignore its
 # own journal.
-bare="hearth_schedule_bare_$$"
+bare="genkan_schedule_bare_$$"
 docker exec -i "$PG" psql -U postgres -qc "CREATE DATABASE $bare;" >/dev/null 2>&1
-out=$(PG_CONTAINER="$PG" HEARTH_DB="$bare" HEARTH_DB_ROLE=postgres GW_CONTAINER=nope       bash "$R/bin/kidnet-schedule" apply 2>&1); rc=$?
+out=$(PG_CONTAINER="$PG" GENKAN_DB="$bare" GENKAN_DB_ROLE=postgres GW_CONTAINER=nope       bash "$R/bin/genkan-schedule" apply 2>&1); rc=$?
 docker exec -i "$PG" psql -U postgres -qc "DROP DATABASE IF EXISTS $bare;" >/dev/null 2>&1
 case "$out$rc" in *"no bedtime tables"*0) ok "a database without the tables gets a sentence, not a trace, and exit 0";;
   *) bad "a database without the bedtime tables produced: rc=$rc $out";; esac

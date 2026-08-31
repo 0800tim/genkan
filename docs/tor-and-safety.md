@@ -35,7 +35,7 @@ the portal IP, so the kid lands on the warm page. Every one of those
 lookups also matches the `flag_domains` table and raises an alert. Detail:
 config/adguard/tor-and-serious.md.
 
-**IP layer (nftables).** `bin/kidnet-tor-sync` fetches the full public Tor
+**IP layer (nftables).** `bin/genkan-tor-sync` fetches the full public Tor
 relay list (about 7,000 to 8,000 addresses, from the Tor Project's own
 Onionoo directory API, with dan.me.uk as fallback) and renders it into the
 `tor_nodes` set. The firewall then refuses connections from the island to
@@ -163,10 +163,10 @@ iifname $KIDS_IF ip daddr @tor_nodes reject
 
 Done:
 
-1. **The relay list.** `kidnet-tor-sync sync` runs at deploy and then daily
+1. **The relay list.** `genkan-tor-sync sync` runs at deploy and then daily
    from `kids-tor-sync.timer`, with up to two hours of jitter so we are not
    hammering the Tor Project's directory API on the stroke of midnight.
-2. **The apply step.** `kidnet-tor-sync` writes the addresses to the
+2. **The apply step.** `genkan-tor-sync` writes the addresses to the
    `tor_nodes` table, and the gateway rebuilds `@tor_nodes` from there at
    startup and on its hourly pass, flushing and refilling in a single nft
    transaction so the set is never momentarily empty.
@@ -183,7 +183,7 @@ Done:
    for, and a restart refills the set rather than losing it.
 3. **The DNS layer.** The `flag_domains` seed in `config/db/schema-flags.sql`
    carries the on-ramps, bridges, onion gateways and market directories, and
-   `kidnet-adguard` renders the `tor`, `darknet` and `drugs` patterns as a
+   `genkan-adguard` renders the `tor`, `darknet` and `drugs` patterns as a
    portal redirect for every child.
 4. **The tests.** `test/firewall-test.sh` proves an online kid cannot reach a
    relay, that the attempt is counted in `@tor_dev`, that the safety net still
@@ -194,7 +194,7 @@ Done:
 counter into an alert row. So the IP road blocks and counts, but only the DNS
 road actually tells a parent. A kid whose Tor client dials a baked-in relay
 address without ever making a lookup is refused and counted, silently. The
-natural home is `kidnet-catmeter`'s minute loop, using the same read-and-reset
+natural home is `genkan-catmeter`'s minute loop, using the same read-and-reset
 pattern as the byte counters: nonzero counter becomes an `alerts` row with
 category `tor` and severity `urgent`, noting how many relay addresses were
 attempted.

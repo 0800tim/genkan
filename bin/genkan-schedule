@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# hearth:summary=Applies scheduled bedtimes every minute, and lifts them in the morning.
+# genkan:summary=Applies scheduled bedtimes every minute, and lifts them in the morning.
 #
 # Bedtimes used to be a parent typing `kidnet off kids` at nine and remembering
 # to type `kidnet on kids` at seven. The remembering is the part that failed,
 # and a child who wakes to a dead network because nothing lifted it has been
 # punished by an oversight. The morning restore matters more than the bedtime.
 #
-#   kidnet-schedule [apply]              apply the schedules (what the timer runs)
-#   kidnet-schedule show [kid]           what is set, what is in force, when it lifts
-#   kidnet-schedule set <kid> <days> <HH:MM> <HH:MM> [categories]
-#   kidnet-schedule clear <kid>          remove that child's schedules
-#   kidnet-schedule enable|disable <kid> keep the times, stop or start them firing
-#   kidnet-schedule extend <kid> <min>   tonight only, no schedule edited
-#   kidnet-schedule holiday <from> <to> [name]   no bedtimes between those dates
-#   kidnet-schedule holiday late <from> <to> <min> [name]   bedtime N minutes later
-#   kidnet-schedule holiday clear        end every override window now
+#   genkan-schedule [apply]              apply the schedules (what the timer runs)
+#   genkan-schedule show [kid]           what is set, what is in force, when it lifts
+#   genkan-schedule set <kid> <days> <HH:MM> <HH:MM> [categories]
+#   genkan-schedule clear <kid>          remove that child's schedules
+#   genkan-schedule enable|disable <kid> keep the times, stop or start them firing
+#   genkan-schedule extend <kid> <min>   tonight only, no schedule edited
+#   genkan-schedule holiday <from> <to> [name]   no bedtimes between those dates
+#   genkan-schedule holiday late <from> <to> <min> [name]   bedtime N minutes later
+#   genkan-schedule holiday clear        end every override window now
 #
 # <days> is school | weekend | every | a list like 0,1,2,3,4 (0=Sunday).
 #   school  = Sunday to Thursday nights, the nights before a school day
@@ -40,36 +40,36 @@ set -euo pipefail
 # tables are on that list. The three overrides exist so test/schedule-test.sh
 # can point the whole worker at a throwaway database instead of the household's.
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
-DB_NAME="${HEARTH_DB:-kids_network}"
-DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_NAME="${GENKAN_DB:-kids_network}"
+DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 psqlq(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -q -v ON_ERROR_STOP=1 -c "$1" >/dev/null; }
 # Same gates as bin/kidnet. Every value that reaches SQL passes one of these.
-ck_name(){ [[ "$1" =~ ^[A-Za-z0-9_-]{1,32}$ ]] || { echo "kidnet-schedule: bad name '$1'" >&2; exit 1; }; }
-ck_int(){  [[ "$1" =~ ^[0-9]{1,4}$ ]] || { echo "kidnet-schedule: bad number '$1'" >&2; exit 1; }; }
-ck_date(){ [[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || { echo "kidnet-schedule: bad date '$1' (use YYYY-MM-DD)" >&2; exit 1; }; }
-ck_text(){ [[ "$1" =~ ^[A-Za-z0-9_:+.,\ -]{0,60}$ ]] || { echo "kidnet-schedule: bad text" >&2; exit 1; }; }
+ck_name(){ [[ "$1" =~ ^[A-Za-z0-9_-]{1,32}$ ]] || { echo "genkan-schedule: bad name '$1'" >&2; exit 1; }; }
+ck_int(){  [[ "$1" =~ ^[0-9]{1,4}$ ]] || { echo "genkan-schedule: bad number '$1'" >&2; exit 1; }; }
+ck_date(){ [[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || { echo "genkan-schedule: bad date '$1' (use YYYY-MM-DD)" >&2; exit 1; }; }
+ck_text(){ [[ "$1" =~ ^[A-Za-z0-9_:+.,\ -]{0,60}$ ]] || { echo "genkan-schedule: bad text" >&2; exit 1; }; }
 tid(){ ck_name "$1"; psqll "SELECT id FROM children WHERE lower(name)=lower('$1')"; }
 
 # HH:MM to minutes from midnight. 24:00 is allowed as an end time and means
 # midnight at the far end, which is not the same thing as 00:00 at the near end.
 hhmm(){ local h m
-  [[ "$1" =~ ^([0-9]{1,2}):([0-9]{2})$ ]] || { echo "kidnet-schedule: '$1' is not a time like 21:00" >&2; exit 1; }
+  [[ "$1" =~ ^([0-9]{1,2}):([0-9]{2})$ ]] || { echo "genkan-schedule: '$1' is not a time like 21:00" >&2; exit 1; }
   h=$((10#${BASH_REMATCH[1]})); m=$((10#${BASH_REMATCH[2]}))
-  [ "$h" -le 24 ] && [ "$m" -le 59 ] || { echo "kidnet-schedule: '$1' is not a real time" >&2; exit 1; }
+  [ "$h" -le 24 ] && [ "$m" -le 59 ] || { echo "genkan-schedule: '$1' is not a real time" >&2; exit 1; }
   echo $((h*60+m)); }
 
 daylist(){ case "$1" in
   school)  echo "0,1,2,3,4";;
   weekend) echo "5,6";;
   every|all|daily) echo "0,1,2,3,4,5,6";;
-  *) [[ "$1" =~ ^[0-6](,[0-6]){0,6}$ ]] || { echo "kidnet-schedule: '$1' is not school, weekend, every or a list like 0,1,2,3,4" >&2; exit 1; }
+  *) [[ "$1" =~ ^[0-6](,[0-6]){0,6}$ ]] || { echo "genkan-schedule: '$1' is not school, weekend, every or a list like 0,1,2,3,4" >&2; exit 1; }
      echo "$1";; esac; }
 
 catlist(){ local c out=""
   for c in $(echo "${1:-internet}" | tr ',' ' '); do
     case "$c" in internet|gaming|video|social|all) ;;
-      *) echo "kidnet-schedule: '$c' is not something a bedtime can switch off" >&2; exit 1;; esac
+      *) echo "genkan-schedule: '$c' is not something a bedtime can switch off" >&2; exit 1;; esac
     out="$out,'$c'"; done
   echo "ARRAY[${out#,}]::text[]"; }
 
@@ -77,7 +77,7 @@ catlist(){ local c out=""
 # so a change to one has to be pushed. Best effort and never fatal: the
 # database is still the truth and the reconcilers catch up.
 adguard_sync(){ [ -n "${ADGUARD_PASS:-}" ] || return 0
-  local d; d="$(dirname "$0")/kidnet-adguard"
+  local d; d="$(dirname "$0")/genkan-adguard"
   [ -x "$d" ] && "$d" apply >/dev/null 2>&1 || true; }
 
 # ---------------------------------------------------------------------------
@@ -99,7 +99,7 @@ adguard_sync(){ [ -n "${ADGUARD_PASS:-}" ] || return 0
 have_tables(){
   [ "$(psqll "SELECT to_regclass('public.schedule_state') IS NOT NULL" 2>/dev/null)" = t ]; }
 need_tables(){ have_tables && return 0
-  echo "kidnet-schedule: this database has no bedtime tables yet, so there is nothing to apply." >&2
+  echo "genkan-schedule: this database has no bedtime tables yet, so there is nothing to apply." >&2
   echo "  Load them with: config/db/load.sh $DB_NAME   (or re-run deploy.sh)" >&2
   return 1; }
 
@@ -160,7 +160,7 @@ apply(){
     ),
     aud AS (
       INSERT INTO block_events(target_type, target_ref, action, source, actor)
-      SELECT 'child', c.name||':'||i.category, 'off', 'schedule', 'kidnet-schedule'
+      SELECT 'child', c.name||':'||i.category, 'off', 'schedule', 'genkan-schedule'
         FROM ins i JOIN children c ON c.id=i.child_id
       RETURNING 1
     )
@@ -200,7 +200,7 @@ apply(){
     ),
     aud AS (
       INSERT INTO block_events(target_type, target_ref, action, source, actor)
-      SELECT 'child', c.name||':'||g.category, 'on', 'schedule', 'kidnet-schedule'
+      SELECT 'child', c.name||':'||g.category, 'on', 'schedule', 'genkan-schedule'
         FROM gone g JOIN children c ON c.id=g.child_id
       RETURNING 1
     )
@@ -213,11 +213,11 @@ apply(){
   # Quiet unless something changed, because this runs sixty times an hour and a
   # journal full of "nothing happened" is a journal nobody reads.
   if [ "${ass:-0}" != 0 ] || [ "${lift:-0}" != 0 ]; then
-    echo "kidnet-schedule: ${ass:-0} blocked, ${lift:-0} lifted"
+    echo "genkan-schedule: ${ass:-0} blocked, ${lift:-0} lifted"
     adguard_sync
   fi
   # A release is worth one line the moment it happens, and silence afterwards.
-  [ "${rel:-0}" = 0 ] || echo "kidnet-schedule: ${rel} left alone, a parent had turned them back on"
+  [ "${rel:-0}" = 0 ] || echo "genkan-schedule: ${rel} left alone, a parent had turned them back on"
 }
 
 # ---------------------------------------------------------------------------
@@ -262,7 +262,7 @@ case "${1:-apply}" in
   set)
     kid="${2:?kid}"; days=$(daylist "${3:?days}"); s=$(hhmm "${4:?start HH:MM}"); e=$(hhmm "${5:?end HH:MM}")
     cats=$(catlist "${6:-internet}")
-    cid=$(tid "$kid"); [ -n "$cid" ] || { echo "kidnet-schedule: nobody called '$kid'"; exit 1; }
+    cid=$(tid "$kid"); [ -n "$cid" ] || { echo "genkan-schedule: nobody called '$kid'"; exit 1; }
     label="$( [ "${3}" = weekend ] && echo "weekend bedtime" || { [ "${3}" = school ] && echo "school-night bedtime" || echo "bedtime"; } )"
     # One schedule per child per set of days: setting a school-night bedtime
     # twice must change it, not stack a second one on top of it.
@@ -272,25 +272,25 @@ case "${1:-apply}" in
     # Straight away, not up to a minute from now. A parent setting a bedtime at
     # half past nine means it from half past nine.
     apply
-    echo "kidnet-schedule: $kid off at ${4} back at ${5} on days [$days]"
+    echo "genkan-schedule: $kid off at ${4} back at ${5} on days [$days]"
     show "$kid";;
   clear)
-    cid=$(tid "${2:?kid}"); [ -n "$cid" ] || { echo "kidnet-schedule: nobody called '$2'"; exit 1; }
+    cid=$(tid "${2:?kid}"); [ -n "$cid" ] || { echo "genkan-schedule: nobody called '$2'"; exit 1; }
     psqlq "DELETE FROM schedules WHERE child_id=$cid"
     # Deleting the schedule cascades its state away, so the next apply lifts
     # anything it was holding. Run it now rather than leaving a child blocked
     # for up to a minute by a bedtime that no longer exists.
     apply
-    echo "kidnet-schedule: no bedtimes for $2 any more";;
+    echo "genkan-schedule: no bedtimes for $2 any more";;
   enable|disable)
-    cid=$(tid "${2:?kid}"); [ -n "$cid" ] || { echo "kidnet-schedule: nobody called '$2'"; exit 1; }
+    cid=$(tid "${2:?kid}"); [ -n "$cid" ] || { echo "genkan-schedule: nobody called '$2'"; exit 1; }
     on=$( [ "$1" = enable ] && echo true || echo false )
     psqlq "UPDATE schedules SET enabled=$on, updated_ts=now() WHERE child_id=$cid"
-    apply; echo "kidnet-schedule: $2's bedtimes are now $1d";;
+    apply; echo "genkan-schedule: $2's bedtimes are now $1d";;
   extend)
     cid=$(tid "${2:?kid}"); ck_int "${3:?minutes}"
-    [ -n "$cid" ] || { echo "kidnet-schedule: nobody called '$2'"; exit 1; }
-    [ "${3}" -le 720 ] || { echo "kidnet-schedule: an extension is for tonight, not twelve hours"; exit 1; }
+    [ -n "$cid" ] || { echo "genkan-schedule: nobody called '$2'"; exit 1; }
+    [ "${3}" -le 720 ] || { echo "genkan-schedule: an extension is for tonight, not twelve hours"; exit 1; }
     # From the later of now and tonight's bedtime, so granting twenty minutes
     # at half past eight gives twenty minutes past nine, not twenty past eight.
     u=$(psqll "
@@ -308,26 +308,26 @@ case "${1:-apply}" in
       # than the bedtime lasts, which would mean granting the whole night. Say
       # which, because they call for different answers.
       if [ -z "$(psqll "SELECT 1 FROM schedule_next WHERE child_id=$cid")" ]; then
-        echo "kidnet-schedule: $2 has no bedtime tonight to extend"
+        echo "genkan-schedule: $2 has no bedtime tonight to extend"
       else
-        echo "kidnet-schedule: ${3} minutes is longer than $2's bedtime lasts. To drop tonight entirely, use: kidnet-schedule holiday $(date +%F) $(date +%F)"
+        echo "genkan-schedule: ${3} minutes is longer than $2's bedtime lasts. To drop tonight entirely, use: genkan-schedule holiday $(date +%F) $(date +%F)"
       fi
       exit 1
     fi
     apply
-    echo "kidnet-schedule: $2 can stay on until $u tonight. Tomorrow is unchanged.";;
+    echo "genkan-schedule: $2 can stay on until $u tonight. Tomorrow is unchanged.";;
   holiday) case "${2:-}" in
       clear) psqlq "UPDATE schedule_overrides SET enabled=false WHERE enabled"
-             apply; echo "kidnet-schedule: override windows ended, normal bedtimes from now";;
+             apply; echo "genkan-schedule: override windows ended, normal bedtimes from now";;
       late)  ck_date "${3:?from}"; ck_date "${4:?to}"; ck_int "${5:?minutes}"; ck_text "${6:-later nights}"
              psqlq "INSERT INTO schedule_overrides(child_id,name,starts,ends,mode,shift_min,set_by)
                     VALUES(NULL,'${6:-later nights}','$3','$4','late',${5},'cli')"
-             apply; echo "kidnet-schedule: bedtimes start ${5} min later from $3 to $4";;
-      "")    echo "usage: kidnet-schedule holiday <from> <to> [name] | holiday late <from> <to> <min> [name] | holiday clear"; exit 1;;
+             apply; echo "genkan-schedule: bedtimes start ${5} min later from $3 to $4";;
+      "")    echo "usage: genkan-schedule holiday <from> <to> [name] | holiday late <from> <to> <min> [name] | holiday clear"; exit 1;;
       *)     ck_date "${2}"; ck_date "${3:?to}"; ck_text "${4:-school holidays}"
              psqlq "INSERT INTO schedule_overrides(child_id,name,starts,ends,mode,set_by)
                     VALUES(NULL,'${4:-school holidays}','$2','$3','off','cli')"
-             apply; echo "kidnet-schedule: no bedtimes from $2 to $3";;
+             apply; echo "genkan-schedule: no bedtimes from $2 to $3";;
     esac;;
   *) sed -n '3,/^set -euo/p' "$0" | sed '$d; s/^# \{0,1\}//';;
 esac

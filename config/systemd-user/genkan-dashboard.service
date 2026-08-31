@@ -1,19 +1,19 @@
 # Parent dashboard. Install to ~/.config/systemd/user/ and enable with
-#   systemctl --user enable --now hearth-dashboard
+#   systemctl --user enable --now genkan-dashboard
 # Bind it to a private interface (your VPN address or 127.0.0.1), never
 # 0.0.0.0: the dashboard can switch a child's internet on and off and has no
 # password unless you set DASH_TOKEN.
 [Unit]
-Description=Hearth parent dashboard
+Description=Genkan parent dashboard
 After=network-online.target docker.service
 
 [Service]
-EnvironmentFile=%h/hearth/secrets.env
+EnvironmentFile=%h/genkan/secrets.env
 Environment=BIND=127.0.0.1
 Environment=PORT=8899
 # Optional shared secret. With it set, every control call must carry it.
 # Environment=DASH_TOKEN=change-me
-WorkingDirectory=%h/hearth/dashboard
+WorkingDirectory=%h/genkan/dashboard
 ExecStart=/usr/bin/node server.mjs
 Restart=always
 RestartSec=3

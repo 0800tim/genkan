@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# hearth:summary=Proves the upgrade and rollback path, on a throwaway clone and a throwaway database.
+# genkan:summary=Proves the upgrade and rollback path, on a throwaway clone and a throwaway database.
 #
-# The whole point of bin/kidnet-upgrade is that it must never leave a
+# The whole point of bin/genkan-upgrade is that it must never leave a
 # household without internet. That claim is worth nothing untested, and it
 # cannot be tested on the household's own gateway, because the test IS the
 # outage. So this builds a complete fake: a local clone of the repo with two
@@ -11,26 +11,26 @@
 #
 #   sudo test/release-test.sh     all of it
 #   test/release-test.sh          the read-only half; everything that applies a
-#                                 version is skipped, because kidnet-upgrade
+#                                 version is skipped, because genkan-upgrade
 #                                 refuses to run without root and that refusal
 #                                 is itself one of the things worth keeping.
 #
 # One honest caveat. The health check the fake upgrade runs is the real
-# kidnet-health, and it looks at the real containers on this box, because
+# genkan-health, and it looks at the real containers on this box, because
 # there is no second gateway to point it at. So "the upgrade passed its health
 # check" here means "the tooling ran the check and believed it", not "the
 # clone is serving a household". The failure path is the one that is properly
 # proved: it points the health check at containers that do not exist, which is
 # indistinguishable from a genuinely broken upgrade.
 #
-# It NEVER touches: the repo you are sitting in, /var/lib/hearth, the
+# It NEVER touches: the repo you are sitting in, /var/lib/genkan, the
 # kids_network database, any container, or deploy.sh. Every path is redirected
-# with HEARTH_ROOT, HEARTH_STATE_DIR, HEARTH_DB and HEARTH_APPLY_CMD.
+# with GENKAN_ROOT, GENKAN_STATE_DIR, GENKAN_DB and GENKAN_APPLY_CMD.
 set -uo pipefail
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
 PG="${PG_CONTAINER:-postgres}"
-TDB="hearth_release_test_$$"
-TMP="$(mktemp -d "${TMPDIR:-/tmp}/hearth-release-test-XXXXXX")"
+TDB="genkan_release_test_$$"
+TMP="$(mktemp -d "${TMPDIR:-/tmp}/genkan-release-test-XXXXXX")"
 CLONE="$TMP/clone"
 STATE="$TMP/state"
 
@@ -86,7 +86,7 @@ git -C "$CLONE" checkout -q --detach v2026.09.0
 cat > "$TMP/fake-apply.sh" <<'EOS'
 #!/usr/bin/env bash
 echo "   (fake apply: pretending to run deploy.sh)"
-echo "applied $(cat VERSION)" >> "$HEARTH_STATE_DIR/apply.log"
+echo "applied $(cat VERSION)" >> "$GENKAN_STATE_DIR/apply.log"
 EOS
 chmod +x "$TMP/fake-apply.sh"
 
@@ -102,18 +102,18 @@ docker exec -i "$PG" psql -U postgres -d "$TDB" -q < "$REPO/config/db/schema-rel
   || bad "config/db/schema-release.sql does not load"
 psql "CREATE TABLE marker(v text); INSERT INTO marker VALUES ('before the upgrade');" >/dev/null 2>&1
 
-# HEARTH_HEALTH_FILE matters as much as the rest: without it the health checks
+# GENKAN_HEALTH_FILE matters as much as the rest: without it the health checks
 # this test runs would overwrite the real box's cached answer in
-# /var/lib/hearth, and the dashboard would show a made-up household's health.
-export HEARTH_ROOT="$CLONE" HEARTH_STATE_DIR="$STATE" HEARTH_DB="$TDB" \
-       PG_CONTAINER="$PG" HEARTH_APPLY_CMD="bash $TMP/fake-apply.sh" \
-       HEARTH_KEEP_SNAPSHOTS=3 HEARTH_HEALTH_FILE="$TMP/health.json" \
-       HEARTH_HEALTH_WAIT=0
-UP="$CLONE/bin/kidnet-upgrade"; RB="$CLONE/bin/kidnet-rollback"
+# /var/lib/genkan, and the dashboard would show a made-up household's health.
+export GENKAN_ROOT="$CLONE" GENKAN_STATE_DIR="$STATE" GENKAN_DB="$TDB" \
+       PG_CONTAINER="$PG" GENKAN_APPLY_CMD="bash $TMP/fake-apply.sh" \
+       GENKAN_KEEP_SNAPSHOTS=3 GENKAN_HEALTH_FILE="$TMP/health.json" \
+       GENKAN_HEALTH_WAIT=0
+UP="$CLONE/bin/genkan-upgrade"; RB="$CLONE/bin/genkan-rollback"
 
 # --- what it says before it does anything ---------------------------------
 out="$("$UP" check 2>&1)"
-printf '%s' "$out" | grep -q "Hearth 2026.10.0" \
+printf '%s' "$out" | grep -q "Genkan 2026.10.0" \
   && ok "check finds the newer release without changing anything" \
   || bad "check did not offer 2026.10.0" "$out"
 [ "$(git -C "$CLONE" rev-parse HEAD)" = "$V1" ] \
@@ -155,7 +155,7 @@ else
   skip "the code left alone by a refusal (needs sudo)"
 fi
 
-# Everything past here applies a version, and kidnet-upgrade refuses to do
+# Everything past here applies a version, and genkan-upgrade refuses to do
 # that without root. That refusal is deliberate and is not worth working
 # around, so the rest of the suite is skipped rather than failed.
 if [ "$(id -u)" != 0 ]; then
@@ -188,8 +188,8 @@ SNAPID="$(ls -1 "$STATE" | grep -E '^[0-9]{8}-[0-9]{6}$' | sort -r | head -1)"
 [ -s "$STATE/$SNAPID/db.sql.gz" ] && ok "the snapshot holds a real database backup" || bad "the database backup is missing or empty"
 grep -q "^from_commit=$V1" "$STATE/$SNAPID/manifest.env" \
   && ok "the snapshot records the commit to come back to" || bad "the manifest does not record from_commit"
-[ -x "$STATE/$SNAPID/kidnet-rollback" ] \
-  && ok "the undo tool was copied into the snapshot before the switchover" || bad "the snapshot has no copy of kidnet-rollback"
+[ -x "$STATE/$SNAPID/genkan-rollback" ] \
+  && ok "the undo tool was copied into the snapshot before the switchover" || bad "the snapshot has no copy of genkan-rollback"
 [ ! -f "$STATE/in-progress" ] && ok "the in-progress marker was cleared" || bad "an in-progress marker was left behind"
 [ "$(psql "SELECT count(*) FROM release_history WHERE action='upgrade' AND ok")" = 1 ] \
   && ok "the upgrade was written to the release log" || bad "nothing was written to release_history"
@@ -205,7 +205,7 @@ n="$(ls -1 "$STATE" | grep -cE '^[0-9]{8}-[0-9]{6}$')"
 # --- rollback, deliberately ------------------------------------------------
 out="$("$RB" list 2>&1)"
 printf '%s' "$out" | grep -q "$SNAPID" && ok "rollback lists what it can go back to" || bad "rollback list is empty" "$out"
-printf '%s' "$out" | grep -q "goes back to Hearth 2026.09.0" \
+printf '%s' "$out" | grep -q "goes back to Genkan 2026.09.0" \
   && ok "the list says which version each point goes back to" || bad "the list does not name the version"
 out="$("$RB" to previous --dry-run 2>&1)"
 printf '%s' "$out" | grep -q "would run" && ok "a rollback dry run describes the steps" || bad "rollback --dry-run did nothing recognisable"
@@ -236,10 +236,10 @@ ls "$STATE/$SNAPID"/pre-restore-*.sql.gz >/dev/null 2>&1 \
 # tooling has to notice and undo itself with nobody watching.
 git -C "$CLONE" checkout -q --detach "$V1"
 rm -f "$STATE/in-progress"
-out="$(GW_CONTAINER=hearth-does-not-exist ADGUARD_CONTAINER=hearth-does-not-exist \
-       PORTAL_CONTAINER=hearth-does-not-exist "$UP" apply --yes --wait 0 2>&1)"; rc=$?
+out="$(GW_CONTAINER=genkan-does-not-exist ADGUARD_CONTAINER=genkan-does-not-exist \
+       PORTAL_CONTAINER=genkan-does-not-exist "$UP" apply --yes --wait 0 2>&1)"; rc=$?
 [ "$rc" != 0 ] && ok "an upgrade that breaks the household exits non-zero" || bad "a broken upgrade reported success"
-printf '%s' "$out" | grep -q "Putting Hearth 2026.09.0 back" \
+printf '%s' "$out" | grep -q "Putting Genkan 2026.09.0 back" \
   && ok "it rolled itself back without being asked" || bad "no automatic rollback happened" "$(printf '%s' "$out" | tail -5)"
 [ "$(git -C "$CLONE" rev-parse HEAD)" = "$V1" ] \
   && ok "the household is back on the version that worked" || bad "the box was left on the broken version"
@@ -264,7 +264,7 @@ echo "somebody was editing this by hand" >> "$CLONE/README.md"
 out="$("$UP" apply --yes 2>&1)"; rc=$?
 [ "$rc" != 0 ] && printf '%s' "$out" | grep -q "not committed" \
   && ok "an upgrade refuses to overwrite uncommitted work" || bad "uncommitted work was not protected (rc=$rc)"
-git -C "$CLONE" rev-parse -q --verify refs/hearth/snapshots >/dev/null 2>&1 \
+git -C "$CLONE" rev-parse -q --verify refs/genkan/snapshots >/dev/null 2>&1 \
   && ok "the uncommitted work was snapshotted before refusing" || bad "no worktree snapshot was taken"
 git -C "$CLONE" checkout -q -- README.md 2>/dev/null
 
@@ -273,7 +273,7 @@ for i in 1 2 3 4 5; do mkdir -p "$STATE/2020010$i-000000"; printf 'id=2020010%s-
 git -C "$CLONE" checkout -q --detach "$V1"
 "$UP" apply --yes >/dev/null 2>&1
 n="$(ls -1 "$STATE" | grep -cE '^[0-9]{8}-[0-9]{6}$')"
-[ "$n" -le 3 ] && ok "old snapshots are pruned to HEARTH_KEEP_SNAPSHOTS ($n kept)" \
+[ "$n" -le 3 ] && ok "old snapshots are pruned to GENKAN_KEEP_SNAPSHOTS ($n kept)" \
   || bad "snapshots are not pruned ($n kept, expected 3)"
 
 echo

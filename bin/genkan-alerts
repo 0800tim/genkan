@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hearth:summary=Raise alerts when a device reaches a flagged domain.
+# genkan:summary=Raise alerts when a device reaches a flagged domain.
 #
 # Scans newly ingested dns_log rows against flag_domains and writes an alert
 # per match. This is the "tell me about the genuinely concerning stuff" layer,
@@ -13,15 +13,15 @@ set -uo pipefail
 # Connects as kids_agent, a role with no superuser, no DDL and no
 # COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
-DB_NAME="${HEARTH_DB:-kids_network}"
-DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_NAME="${GENKAN_DB:-kids_network}"
+DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 LOOKBACK="${ALERT_LOOKBACK:-15 minutes}"
 # It is an interval, and it is interpolated into SQL, so it has to look like
 # one. Operator-supplied rather than kid-supplied, but the whole point of the
 # gates is that "who supplies it" is not the thing keeping us safe.
 [[ "$LOOKBACK" =~ ^[0-9]{1,4}\ (second|minute|hour|day)s?$ ]] || {
-  echo "kidnet-alerts: ALERT_LOOKBACK must be like '15 minutes'" >&2; exit 1; }
+  echo "genkan-alerts: ALERT_LOOKBACK must be like '15 minutes'" >&2; exit 1; }
 
 # One alert per (child, pattern) per day, so a busy device does not spam.
 rows=$(psqll "
@@ -57,7 +57,7 @@ RETURNING 1" 2>&1)
 case "$rows" in
   *ERROR*)
     msg="The safety alert check failed, so no flagged domain has been noticed since: $(printf '%s' "$rows" | grep '^ERROR' | head -1 | tr -d "'" | cut -c1-150)"
-    echo "kidnet-alerts: $msg" >&2
+    echo "genkan-alerts: $msg" >&2
     # The systemd unit that runs this uses ExecStartPost=- , so a non-zero exit
     # is ignored by design: a failed alert check must not fail the DNS ingest
     # that feeds it. That makes the exit status the wrong place to raise this.
@@ -76,10 +76,10 @@ psqll "UPDATE alerts SET acknowledged=true
 n=$(printf '%s\n' "$rows" | grep -c '^1$' || true)
 
 if [ "${n:-0}" -gt 0 ]; then
-  echo "kidnet-alerts: raised $n new alert(s)"
+  echo "genkan-alerts: raised $n new alert(s)"
   psqll "SELECT coalesce(c.name,'unknown')||': '||a.severity||' '||a.category||' '||coalesce(a.domain,'')
          FROM alerts a LEFT JOIN children c ON c.id=a.child_id
          WHERE a.ts > now() - interval '2 minutes' ORDER BY a.ts DESC" | sed 's/^/  /'
 else
-  echo "kidnet-alerts: nothing new"
+  echo "genkan-alerts: nothing new"
 fi

@@ -17,8 +17,8 @@ NFT="$(command -v nft || echo /usr/sbin/nft)"
 for _t in ip nft python3 docker; do
   command -v "$_t" >/dev/null || { echo "MISSING REQUIRED TOOL: $_t"; exit 1; }
 done
-C=hearth-gw-test
-KIDNS=hearthtest-kid
+C=genkan-gw-test
+KIDNS=genkantest-kid
 pass=0; fail=0
 ok(){ pass=$((pass+1)); printf '  \033[32mPASS\033[0m  %s\n' "$1"; }
 bad(){ fail=$((fail+1)); printf '  \033[31mFAIL\033[0m  %s\n' "$1"; }
@@ -39,7 +39,7 @@ chk_not(){ eval "$2" >/dev/null 2>&1; local rc=$?
   else ok "$1"; fi; }
 KID="ip netns exec $KIDNS"
 cleanup(){
-  docker rm -f $C hearth-lst-test >/dev/null 2>&1
+  docker rm -f $C genkan-lst-test >/dev/null 2>&1
   ip netns del $KIDNS 2>/dev/null
   ip link del vkid0 2>/dev/null
 }
@@ -48,14 +48,14 @@ trap cleanup EXIT
 cleanup
 
 echo "Building image..."
-docker build -q -f "$R/gateway/Dockerfile" -t hearth-gw:test "$R" >/dev/null || { echo "BUILD FAILED"; exit 1; }
+docker build -q -f "$R/gateway/Dockerfile" -t genkan-gw:test "$R" >/dev/null || { echo "BUILD FAILED"; exit 1; }
 
 echo; echo "Section 1: containment"
 # Note: a bit-for-bit host ruleset comparison is the WRONG claim on a shared
 # Docker host, because Docker itself adds one isolation rule per container
 # (ours or anyone's). The claim we make is: nothing of OURS appears there.
 docker run -d --name $C --cap-add NET_ADMIN --cap-add NET_RAW --cap-drop ALL \
-  --sysctl net.ipv4.ip_forward=1 hearth-gw:test >/dev/null
+  --sysctl net.ipv4.ip_forward=1 genkan-gw:test >/dev/null
 PID=$(docker inspect -f '{{.State.Pid}}' $C)
 chk "container runs unprivileged (no SYS_ADMIN in CapEff)" \
   "! grep -q 'CapEff:.*0000003fffffffff' /proc/$PID/status && ! capsh --decode=\$(awk '/CapEff/{print \$2}' /proc/$PID/status) | grep -q sys_admin"
@@ -81,10 +81,10 @@ docker exec $C nft add element inet kids kids_known "{ 192.168.60.50 }" 2>/dev/n
 chk "segment guard passed on a quiet wire" "docker logs $C 2>&1 | grep -q 'safe to own it'"
 chk_not "no kids table appears in the HOST firewall" "$NFT list tables 2>/dev/null | grep -qw kids"
 # The containerised gateway must leave no trace on the host. The interim
-# internet-share service (hearth-share-gateway) deliberately does add host NAT
+# internet-share service (genkan-share-gateway) deliberately does add host NAT
 # for the island subnet, so skip this check while that is running rather than
 # report a false failure: it is superseded at cutover.
-if systemctl is-active --quiet hearth-share-gateway 2>/dev/null; then
+if systemctl is-active --quiet genkan-share-gateway 2>/dev/null; then
   printf '  \033[33mSKIP\033[0m  island subnet on host (interim share gateway is running by design)\n'
 else
   chk_not "the island subnet appears nowhere in the HOST ruleset" "$NFT -s list ruleset 2>/dev/null | grep -q 192.168.60"
@@ -95,7 +95,7 @@ echo; echo "Section 2: the island works, guarantees hold"
 INET443=$(getent ahostsv4 cloudflare.com 2>/dev/null | awk 'NR==1{print $1}')
 [ -n "$INET443" ] || { INET443=104.16.132.229; echo "  (offline? using pinned CF address)"; }
 # Listeners in the gateway namespace: portal on :80, resolver stand-in on :53.
-docker run -d --rm --name hearth-lst-test --network container:$C python:3.12-alpine python3 -c "
+docker run -d --rm --name genkan-lst-test --network container:$C python:3.12-alpine python3 -c "
 import socket,threading
 def serve(p):
     s=socket.socket(); s.setsockopt(socket.SOL_SOCKET,socket.SO_REUSEADDR,1)
@@ -147,9 +147,9 @@ for i in $(seq 1 25); do docker logs $C 2>&1 | grep -c "island is UP" | grep -q 
 chk "gateway re-adopted the NIC after replug" "docker logs $C 2>&1 | grep -c 'island is UP' | grep -q 2"
 
 # Fresh container, but this time the wire carries foreign house-LAN traffic.
-docker rm -f $C hearth-lst-test >/dev/null 2>&1; ip netns del $KIDNS 2>/dev/null; ip link del vkid0 2>/dev/null
+docker rm -f $C genkan-lst-test >/dev/null 2>&1; ip netns del $KIDNS 2>/dev/null; ip link del vkid0 2>/dev/null
 docker run -d --name $C --cap-add NET_ADMIN --cap-add NET_RAW --cap-drop ALL \
-  --sysctl net.ipv4.ip_forward=1 hearth-gw:test >/dev/null
+  --sysctl net.ipv4.ip_forward=1 genkan-gw:test >/dev/null
 PID=$(docker inspect -f '{{.State.Pid}}' $C)
 ip link add vkid0 type veth peer name vgw0
 ip link set vgw0 down; ip link set vgw0 netns "$PID" name kids0

@@ -186,7 +186,7 @@ would notice that a fresh install no longer loads.
 
 If you touch anything that unblocks a child, run `test/schedule-test.sh` too.
 
-If you touch the firewall sets, the gateway's reconcile or `kidnet-health`, run
+If you touch the firewall sets, the gateway's reconcile or `genkan-health`, run
 `test/tor-test.sh`. It also sweeps for `printf | grep -q` in any script that
 sets `pipefail`: grep exits on the first match, the producer dies of SIGPIPE,
 and pipefail reports the successful match as a failure. That one told a
@@ -197,7 +197,7 @@ sweeps every script for a `#` comment written inside a SQL string, which is
 legal bash, reads perfectly well, and once killed the whole flagged-domain
 alert path for a day without anything saying so.
 
-If you touch `tools/validate-package.mjs`, `bin/kidnet-pack`, the portal's
+If you touch `tools/validate-package.mjs`, `bin/genkan-pack`, the portal's
 `esc()` or anything a community package's text passes through, run
 `test/package-test.sh`. It builds fourteen hostile packages, proves each one is
 refused, then forces one into the database by hand and proves the portal still

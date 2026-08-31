@@ -365,18 +365,18 @@ it works.
 
 Genkan is versioned by date, so you can tell how old yours is at a glance.
 `2026.09.0` is the first release of September 2026. The version is the first
-line of `kidnet-health` and sits at the bottom of every dashboard page.
+line of `genkan-health` and sits at the bottom of every dashboard page.
 
 ```bash
-kidnet-health                    # is my household working? Read only, no root needed
-kidnet-upgrade                   # is there anything new? Changes nothing
-sudo kidnet-upgrade apply        # install it
-sudo kidnet-rollback list        # what I can go back to
+genkan-health                    # is my household working? Read only, no root needed
+genkan-upgrade                   # is there anything new? Changes nothing
+sudo genkan-upgrade apply        # install it
+sudo genkan-rollback list        # what I can go back to
 ```
 
 This software sits between a household and the internet, so an update that
 goes wrong does not mean a broken app: it means the children cannot do their
-homework and the dashboard is down too. So `kidnet-upgrade` checks the new
+homework and the dashboard is down too. So `genkan-upgrade` checks the new
 version in a throwaway copy before switching to it (the firewall ruleset has
 to parse, the database has to load from empty, every script has to be valid),
 takes a database backup and records the commit it came from, and if the

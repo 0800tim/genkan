@@ -133,7 +133,7 @@ of inconsistency nobody remembers six months later.
 ## What the validator checks
 
 `node tools/validate-quizzes.mjs` runs over every bank in this directory, or
-over the files you name. `bin/kidnet-quiz validate` calls the same thing, so a
+over the files you name. `bin/genkan-quiz validate` calls the same thing, so a
 generated bank can be checked before it is installed. It exits non-zero if any
 bank fails.
 
@@ -211,7 +211,7 @@ The two shelves differ in exactly two ways.
 | | File bank | Database bank |
 |---|---|---|
 | Size before it goes live | 4x `questions_per_round`, enforced by `tools/validate-quizzes.mjs` | one full round, `questions_per_round` |
-| Edited with | `bin/kidnet-quiz`, or a pull request | the dashboard, question by question |
+| Edited with | `bin/genkan-quiz`, or a pull request | the dashboard, question by question |
 
 The size difference is deliberate and it is the one rule that bends. A parent
 who has written twelve good questions should not be told to write twenty-eight
@@ -219,7 +219,7 @@ more before their child sees any of them. The dashboard says "live, but small"
 on a bank under 4x and shows how far off it is. Nothing else changes: same
 grading, same ramp, same cooldown, same cap.
 
-A bank an agent writes goes in as a file, through `bin/kidnet-quiz install`.
+A bank an agent writes goes in as a file, through `bin/genkan-quiz install`.
 There is no bulk import into the database side yet, so a whole bank cannot be
 pasted into the dashboard: it is typed in a question at a time or installed as
 a file. `docs/runbooks/quiz-suggestions.md` covers which to choose.

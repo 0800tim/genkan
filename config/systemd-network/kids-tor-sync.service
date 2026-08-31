@@ -1,5 +1,5 @@
 [Unit]
-Description=Hearth Tor relay list refresh (public relays -> the nft tor_nodes set)
+Description=Genkan Tor relay list refresh (public relays -> the nft tor_nodes set)
 Documentation=file:///srv/projects/internal/kids-network/docs/tor-and-safety.md
 After=docker.service network-online.target
 Wants=network-online.target
@@ -24,4 +24,4 @@ Type=oneshot
 # gateway's own reconcile and depending on a readiness check being right, is
 # worth nothing next to the database the gateway already reads. See
 # DECISIONS.md, "A list nobody applies is not a blocklist".
-ExecStart=/usr/local/bin/kidnet-tor-sync sync
+ExecStart=/usr/local/bin/genkan-tor-sync sync

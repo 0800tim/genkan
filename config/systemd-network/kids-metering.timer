@@ -1,5 +1,5 @@
 [Unit]
-Description=Hearth per-category metering (every minute)
+Description=Genkan per-category metering (every minute)
 [Timer]
 OnBootSec=2min
 OnUnitActiveSec=1min

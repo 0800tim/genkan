@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hearth:summary=Pull AdGuard's DNS query log into the dns_log table.
+# genkan:summary=Pull AdGuard's DNS query log into the dns_log table.
 # Timer-driven. Newest-first paging, stops at the last stored timestamp, maps
 # client IP -> device -> child, inserts. Powers the per-kid "what sites" view
 # and category metering. Logs DOMAINS only, never content.
@@ -9,8 +9,8 @@ PAGES="${DNSLOG_PAGES:-20}"
 # Connects as kids_agent, a role with no superuser, no DDL and no
 # COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
-DB_NAME="${HEARTH_DB:-kids_network}"
-DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_NAME="${GENKAN_DB:-kids_network}"
+DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 DB_EXEC=(docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME")
 SINCE=$("${DB_EXEC[@]}" -tAc "SELECT COALESCE(to_char(max(ts) AT TIME ZONE 'UTC','YYYY-MM-DD\"T\"HH24:MI:SS'),'') FROM dns_log")
 
@@ -25,7 +25,7 @@ def get(u):
     try:
         return json.load(urllib.request.urlopen(r,timeout=10))
     except Exception as e:
-        print(f"kidnet-dnslog: AdGuard unavailable ({e}); will retry next tick", file=sys.stderr)
+        print(f"genkan-dnslog: AdGuard unavailable ({e}); will retry next tick", file=sys.stderr)
         raise SystemExit(0)
 rows=[]; older=None; stop=False
 for _ in range(pages):
@@ -53,9 +53,9 @@ w=csv.writer(sys.stdout)
 for r in rows: w.writerow(r)
 PY
 )
-[ -z "$TSV" ] && { echo "kidnet-dnslog: nothing new"; exit 0; }
+[ -z "$TSV" ] && { echo "genkan-dnslog: nothing new"; exit 0; }
 # Stage + join client IP to device/child, then insert.
-ERRF="$(mktemp -t kidnet-dnslog.XXXXXX)"; trap 'rm -f "$ERRF"' EXIT
+ERRF="$(mktemp -t genkan-dnslog.XXXXXX)"; trap 'rm -f "$ERRF"' EXIT
 if ! printf '%s\n' "$TSV" | "${DB_EXEC[@]}" -qc "
 CREATE TEMP TABLE _dl(ts timestamptz, client_ip inet, domain text, action text);
 COPY _dl FROM STDIN WITH (FORMAT csv);
@@ -63,16 +63,16 @@ INSERT INTO dns_log(ts, device_id, client_ip, domain, action)
 SELECT dl.ts, d.id, dl.client_ip, dl.domain, dl.action
 FROM _dl dl LEFT JOIN devices d ON host(d.reserved_ip)=host(dl.client_ip);
 " 2>"$ERRF"; then
-  # Loud, because the damage of this failing is invisible. kidnet-alerts reads
+  # Loud, because the damage of this failing is invisible. genkan-alerts reads
   # dns_log, so while the ingest is stalled no Tor, darknet, drugs or self-harm
   # alert can fire and the parent's history simply stops, with nothing on the
   # dashboard to say why.
   msg="DNS ingest failed, so no safety alert can fire until it is fixed: $(head -1 "$ERRF" | tr -d "'" | cut -c1-150)"
-  echo "kidnet-dnslog: $msg" >&2
+  echo "genkan-dnslog: $msg" >&2
   "${DB_EXEC[@]}" -qc "INSERT INTO alerts(severity,category,detail) VALUES('urgent','dns-ingest','$(printf '%s' "$msg" | sed "s/'/''/g")')" >/dev/null 2>&1 || true
   exit 1
 fi
 # A good run retires the warnings from the bad ones before it.
 "${DB_EXEC[@]}" -qc "UPDATE alerts SET acknowledged=true WHERE category='dns-ingest' AND NOT acknowledged" >/dev/null 2>&1 || true
 N=$(printf '%s\n' "$TSV" | grep -c . || true)
-echo "kidnet-dnslog: ingested $N row(s)"
+echo "genkan-dnslog: ingested $N row(s)"

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# hearth:summary=Learn which IPs belong to which category from AdGuard answers.
+# genkan:summary=Learn which IPs belong to which category from AdGuard answers.
 #
 # The trick that makes per-category metering possible without decrypting
-# traffic: the Hearth box is the DNS server, so when a device resolves a gaming or
+# traffic: the Genkan box is the DNS server, so when a device resolves a gaming or
 # video domain we learn the IPs it will talk to, and tag those IPs by category
 # (category_ips). The firewall then meters bytes per category by destination
 # IP. Runs on a short timer. See METERING.md.
@@ -29,8 +29,8 @@ PAGES="${CATMAP_PAGES:-15}"
 # Connects as kids_agent, a role with no superuser, no DDL and no
 # COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
-DB_NAME="${HEARTH_DB:-kids_network}"
-DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_NAME="${GENKAN_DB:-kids_network}"
+DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 DB=(docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME")
 
 # domain -> category, longest-suffix match. Pulled once from the DB.
@@ -78,7 +78,7 @@ def get(u):
     try:
         return json.load(urllib.request.urlopen(r,timeout=10))
     except Exception as e:
-        print(f"kidnet-catmap: AdGuard unavailable ({e}); will retry next tick", file=sys.stderr)
+        print(f"genkan-catmap: AdGuard unavailable ({e}); will retry next tick", file=sys.stderr)
         raise SystemExit(0)
 def routable(ip):
     # A blocked query is answered with 0.0.0.0 and a rewritten one with the
@@ -116,7 +116,7 @@ for ip,cats in cats_for.items():
         w.writerow([ip,"!"])                  # shared or contested: never meter it
 PY
 )
-[ -z "$TSV" ] && { echo "kidnet-catmap: nothing new"; exit 0; }
+[ -z "$TSV" ] && { echo "genkan-catmap: nothing new"; exit 0; }
 printf '%s\n' "$TSV" | "${DB[@]}" -qc "
 CREATE TEMP TABLE _ci(ip inet, category text);
 COPY _ci FROM STDIN WITH (FORMAT text);
@@ -128,4 +128,4 @@ SELECT ip,category,now() FROM _ci WHERE category<>'!'
 ON CONFLICT (ip,category) DO UPDATE SET seen=now();"
 N=$(printf '%s\n' "$TSV" | grep -cv '	!$' || true)
 D=$(printf '%s\n' "$TSV" | grep -c '	!$' || true)
-echo "kidnet-catmap: tagged $N ip/category pair(s), dropped $D shared address(es)"
+echo "genkan-catmap: tagged $N ip/category pair(s), dropped $D shared address(es)"

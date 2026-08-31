@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The ONLY thing Hearth runs on the host: a tiny loop whose single job is to
+# The ONLY thing Genkan runs on the host: a tiny loop whose single job is to
 # find the kids' USB NIC (by MAC, from config.env) and hand it into the
 # gateway container's network namespace. Everything else, addresses, firewall,
 # DHCP, DNS, lives inside the container and cannot touch the host.
@@ -11,18 +11,37 @@ set -u
 CONF="${KIDS_CONF:-/etc/kids-network/config.env}"
 . "$CONF" || { echo "warden: cannot read $CONF" >&2; exit 1; }
 : "${KIDS_NIC_MAC:?KIDS_NIC_MAC must be set in config.env}"
-CONTAINER="${GW_CONTAINER:-hearth-gw}"
+CONTAINER="${GW_CONTAINER:-genkan-gw}"
 MAC="$(echo "$KIDS_NIC_MAC" | tr 'A-F' 'a-f')"
-# USB path of the adapter, discovered once, used to reset it if it disappears.
-USB_PATH="$(for d in /sys/bus/usb/devices/*/; do
+log(){ echo "warden: $*"; }
+
+# USB path of the adapter, used to reset it if it disappears. Discovered by
+# MAC, which only works while the netdev is visible on the host. It is also
+# written to a file, because the moment this matters most is the one where
+# discovery fails: the warden restarted (a deploy does that) while the NIC
+# was in a container namespace that had just been destroyed, so it was in
+# neither place, the path came back empty, and the loop below had no way to
+# reset the adapter. That left a household off the air until somebody
+# replugged the dongle. Seen on 2026-08-31; the file is the fix.
+USB_PATH_FILE="${KIDS_STATE_DIR:-/var/lib/genkan}/kids-nic-usb-path"
+find_usb_path(){
+  local d n
+  for d in /sys/bus/usb/devices/*/; do
     for n in "$d"net/*/; do
       [ -e "$n/address" ] || continue
-      [ "$(cat "$n/address" 2>/dev/null)" = "$MAC" ] && { basename "$d"; break 2; }
+      [ "$(cat "$n/address" 2>/dev/null)" = "$MAC" ] && { basename "$d"; return 0; }
     done
-  done 2>/dev/null)"
-[ -n "$USB_PATH" ] && echo "warden: adapter is USB device $USB_PATH (can auto-reset)"
-
-log(){ echo "warden: $*"; }
+  done 2>/dev/null
+  return 1
+}
+USB_PATH="$(find_usb_path || true)"
+if [ -n "$USB_PATH" ]; then
+  log "adapter is USB device $USB_PATH (can auto-reset)"
+  printf '%s\n' "$USB_PATH" > "$USB_PATH_FILE" 2>/dev/null || true
+elif [ -s "$USB_PATH_FILE" ]; then
+  USB_PATH="$(tr -d ' \t\r\n' < "$USB_PATH_FILE")"
+  log "adapter not visible right now; last seen as USB device $USB_PATH (can auto-reset)"
+fi
 
 host_iface_by_mac(){
   local d
@@ -43,11 +62,16 @@ while true; do
     # can vanish like this when a container namespace is destroyed (the device
     # does not always return to the default namespace). A driver-level reset
     # brings it straight back, which beats waiting for a human to replug it.
-    if [ -n "${USB_PATH:-}" ] && [ -w "/sys/bus/usb/devices/$USB_PATH/authorized" ]; then
-      log "NIC missing from host AND container; resetting the USB adapter ($USB_PATH)"
-      echo 0 > "/sys/bus/usb/devices/$USB_PATH/authorized" 2>/dev/null
-      sleep 2
-      echo 1 > "/sys/bus/usb/devices/$USB_PATH/authorized" 2>/dev/null
+    # The path found by MAC is the interface (2-6.2:1.0); the reset goes to
+    # the device above it (2-6.2), because de-authorising only the interface
+    # was seen to leave the netdev missing while the device reset brought it
+    # straight back.
+    DEV="${USB_PATH%%:*}"
+    if [ -n "${USB_PATH:-}" ] && [ -w "/sys/bus/usb/devices/$DEV/authorized" ]; then
+      log "NIC missing from host AND container; resetting the USB adapter ($DEV)"
+      echo 0 > "/sys/bus/usb/devices/$DEV/authorized" 2>/dev/null
+      sleep 3
+      echo 1 > "/sys/bus/usb/devices/$DEV/authorized" 2>/dev/null
       sleep 5
     fi
     sleep 5; continue
@@ -59,7 +83,7 @@ while true; do
     # AdGuard binds DHCP to kids0 by name at startup and does not retry, so
     # give it a fresh start now that the interface actually exists. Waits
     # briefly for the gateway to finish the segment guard + configure.
-    ( sleep 20; docker restart hearth-adguard >/dev/null 2>&1 ) &
+    ( sleep 20; docker restart genkan-adguard >/dev/null 2>&1 ) &
   else
     log "handover FAILED for $IF; retrying shortly"
   fi

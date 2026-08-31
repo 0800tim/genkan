@@ -3,7 +3,7 @@
 # that nothing must be able to hand a child the night back, and a box that
 # rebooted at eleven has to reassert the bedtime as soon as it is up.
 [Unit]
-Description=Hearth scheduled bedtimes (every minute)
+Description=Genkan scheduled bedtimes (every minute)
 [Timer]
 OnBootSec=45s
 OnUnitActiveSec=1min

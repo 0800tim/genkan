@@ -1,4 +1,4 @@
-# The Hearth gateway container. Owns the kids' island and NOTHING else.
+# The Genkan gateway container. Owns the kids' island and NOTHING else.
 #
 # Isolation model: this container runs with its own network namespace holding
 # exactly two interfaces: eth0 (an ordinary Docker bridge uplink) and kids0

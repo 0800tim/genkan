@@ -92,7 +92,7 @@ rewritten one with the portal's address. Neither is a destination anybody sends
 bytes to, and learning the null address would have let one blocked domain
 swallow the whole island's traffic.
 
-The firewall then has to be able to forget. `kidnet-catmeter` **reconciles**
+The firewall then has to be able to forget. `genkan-catmeter` **reconciles**
 each category set rather than adding to it: flush and refill in one nftables
 transaction, every minute, from whatever `category_ips` holds for the last 24
 hours. Add-only was the third fault in the same bug, because an address the
@@ -173,7 +173,7 @@ minutes back puts them straight back to full speed. Some families want the
 cliff and some want the slope. Neither is assumed and an upgrade never changes
 it.
 
-`bin/kidnet-meter` stops spending minutes for a child already on the slope. It
+`bin/genkan-meter` stops spending minutes for a child already on the slope. It
 has to: they are not cut, so without that their ledger would sink further into
 the red every minute and earning ten minutes back would not lift them out.
 
@@ -220,7 +220,7 @@ the red every minute and earning ten minutes back would not lift them out.
   lookup returns a general Google edge address that also answers for search and
   the Play Store. Metering it made every byte a phone sent to Google look like
   YouTube, which is what made the live chart show the whole house watching
-  video all day. `kidnet-catmap` now tags an address only when it answered for
+  video all day. `genkan-catmap` now tags an address only when it answered for
   exactly one category and for no uncategorised name in the window it scanned.
   The cost is real: a dedicated CDN host that appears once beside an
   uncategorised name is dropped too, so a category can be under-counted. Under
@@ -243,21 +243,21 @@ the red every minute and earning ten minutes back would not lift them out.
 
 ## Status: built and deployed (2026-08-29)
 
-1. `kidnet-catmap` reads AdGuard's query log, maps answer IPs of known
+1. `genkan-catmap` reads AdGuard's query log, maps answer IPs of known
    category domains into `category_ips` (the "these IPs = gaming" learning).
 2. `config/nftables/kids.nft` has per-category IP sets (gaming_ips, video_ips,
    download_ips) and dynamic per-device byte counters (gaming_dev, video_dev,
    download_dev) in a metering chain that counts without changing any verdict.
    That ruleset is baked into the gateway image, so on an island that has not
-   been rebuilt since the download category landed, `kidnet-catmeter` creates
+   been rebuilt since the download category landed, `genkan-catmeter` creates
    the two missing sets and the one counting rule itself on the next tick. It
    only ever adds what is genuinely absent, so it cannot stack a duplicate rule.
-3. `kidnet-catmeter` (per minute) reconciles the IP sets to `category_ips`
+3. `genkan-catmeter` (per minute) reconciles the IP sets to `category_ips`
    (flush and refill in one transaction, so a withdrawn address leaves the
    firewall too), reads + resets the per-device counters, counts one active
    minute for any device over a small byte threshold (so idle keepalive does not
    count), attributes it to the child, and when a child reaches their
-   `category_budgets` daily_min blocks that category (DNS via kidnet-adguard
+   `category_budgets` daily_min blocks that category (DNS via genkan-adguard
    plus the category set). Downloads are counted but never enforced. Music,
    schoolwork and chess are never metered.
 4. `kids-metering.timer` runs both each minute. Proven by test/meter-test.sh
@@ -272,9 +272,9 @@ the red every minute and earning ten minutes back would not lift them out.
 ## Bytes as well as minutes: per-service accounting
 
 Metering answers "how long". A second layer, built the same way, answers "how
-much, and of what". `kidnet-servicemap` learns which addresses belong to which
+much, and of what". `genkan-servicemap` learns which addresses belong to which
 named service (YouTube, Netflix, TikTok, Roblox, Steam and the rest) from the
-same DNS answers, and `kidnet-servicemeter` generates its own nftables sets and
+same DNS answers, and `genkan-servicemeter` generates its own nftables sets and
 a counting chain from the `services` table, then reads real byte counters per
 device per service into `service_usage`.
 
@@ -298,8 +298,8 @@ metering above.
 First, it only ever **reads**. It runs one command per tick,
 `nft -j list sets inet kids`, which returns every dynamic set with its counters
 in a single call. Listing a set does not reset it, so `gaming_dev`, `video_dev`
-and every `svc_*_dev` keep accruing exactly as `kidnet-catmeter` and
-`kidnet-servicemeter` expect. The dashboard never flushes, adds to or deletes
+and every `svc_*_dev` keep accruing exactly as `genkan-catmeter` and
+`genkan-servicemeter` expect. The dashboard never flushes, adds to or deletes
 any of those sets, and never edits a rule that feeds them. It also copes with
 the meters' own once-a-minute flush: when a counter reads lower than it did a
 tick ago, the live wire treats that as a reset rather than as negative traffic.
@@ -314,7 +314,7 @@ and accepts everything. Like the service chain it only counts: it cannot change
 a verdict, and it sits after the filter chain so blocked traffic is never
 counted. The sets carry a ten-minute timeout so they cannot grow without bound,
 and the chain is only ever created when it is genuinely absent, so a restart
-cannot stack duplicate rules. Set `HEARTH_LIVE_DEVICE_TOTALS=0` on the
+cannot stack duplicate rules. Set `GENKAN_LIVE_DEVICE_TOTALS=0` on the
 dashboard to turn it off; everything else keeps working, and per-device figures
 fall back to "traffic Genkan can put a name to".
 

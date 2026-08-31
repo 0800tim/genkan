@@ -98,7 +98,7 @@ nobody and it escapes every budget, every filter level and every control.
 A shared device:
 
 - **belongs to the household.** `child_id` is always NULL, so nothing about it
-  can reach a child's ledger. `people_devices`, `kidnet-meter` and the weekly
+  can reach a child's ledger. `people_devices`, `genkan-meter` and the weekly
   digest all filter on `category='personal'`, so it is invisible to every one of
   them by construction rather than by remembering to exclude it.
 - **is still filtered.** It carries its own `policy_tier` and gets its own
@@ -293,8 +293,8 @@ the unnamed list rather than disappearing.
 | The shared class, the tick boxes, the whole-house cut | `config/db/schema-shared.sql` |
 | The scoped controls | `bin/kidnet` (`ips_for`, `setcat`, `internet`, `house`) |
 | What the firewall should be blocking, all of it | the `blocked_device_ips` view |
-| Which filter level each role and each shared device gets in AdGuard | `bin/kidnet-adguard-clients` |
-| Metering household children only | `bin/kidnet-meter` |
+| Which filter level each role and each shared device gets in AdGuard | `bin/genkan-adguard-clients` |
+| Metering household children only | `bin/genkan-meter` |
 | The roles on screen, the guest buttons, the device classes, the ticks | `dashboard/household.mjs` |
 | The proof | `test/roles-test.sh`, `test/schema-test.sh` |
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hearth:summary=A fresh install must load. Proves the schema order on an empty database.
+# genkan:summary=A fresh install must load. Proves the schema order on an empty database.
 #
 # This exists because the order documented in docs/DATABASE.md was wrong, and
 # nothing noticed. Every existing suite runs against THIS box's database, which
@@ -10,7 +10,7 @@
 set -u
 R="$(cd "$(dirname "$0")/.." && pwd)"
 PG="${PG_CONTAINER:-postgres}"
-DB="hearth_schema_test_$$"
+DB="genkan_schema_test_$$"
 for _t in docker; do command -v "$_t" >/dev/null || { echo "MISSING REQUIRED TOOL: $_t"; exit 1; }; done
 
 pass=0; fail=0
@@ -93,7 +93,7 @@ n=$(psql "SELECT count(*) FROM vendor_clouds")
 # we only prove the function loaded and that a fresh install schedules nothing.
 [ "$(psql "SELECT count(*) FROM pg_proc WHERE proname='schedule_windows'")" = 1 ] \
   && ok "the schedule_windows() time function exists" \
-  || bad "schedule_windows() is missing, so bin/kidnet-schedule has nothing to read"
+  || bad "schedule_windows() is missing, so bin/genkan-schedule has nothing to read"
 n=$(psql "SELECT count(*) FROM schedules")
 [ "${n:-0}" = 0 ] && ok "a fresh install has no bedtimes set" \
   || bad "a fresh install ships ${n:-0} schedule(s), and a bedtime nobody asked for is somebody's kid offline"

@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# omarchy:summary=Install the Hearth desktop integration (status bar item and menu)
+# omarchy:summary=Install the Genkan desktop integration (status bar item and menu)
 # omarchy:args=[--ssh <user@host>] [--url <dashboard-url>] [--token <dash-token>] [--kids "<names>"] [--bin-dir <dir>] [--no-bar] [--no-menu]
-# omarchy:examples=./install.sh | ./install.sh --ssh you@hearth | ./install.sh --url http://hearth:8899 --token secret
+# omarchy:examples=./install.sh | ./install.sh --ssh you@genkan | ./install.sh --url http://genkan:8899 --token secret
 
-# Puts a Hearth item on the Omarchy status bar and a Hearth submenu in the
+# Puts a Genkan item on the Omarchy status bar and a Genkan submenu in the
 # Omarchy menu. Never needs root, never touches the gateway, and never
 # overwrites anything: every file it changes is backed up first, and it only
 # writes when the result would actually differ.
@@ -15,7 +15,7 @@ set -euo pipefail
 
 readonly source_dir="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
 readonly config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
-readonly conf_file="$config_home/hearth/omarchy.conf"
+readonly conf_file="$config_home/genkan/omarchy.conf"
 readonly stamp="$(date +%Y%m%d%H%M%S)"
 
 bin_dir="$HOME/.local/bin"
@@ -72,24 +72,24 @@ install_file() {
   if [[ -f $target ]] && cmp -s "$new" "$target"; then
     return 1
   fi
-  [[ ! -f $target ]] || cp -p "$target" "$target.hearth-backup-$stamp"
+  [[ ! -f $target ]] || cp -p "$target" "$target.genkan-backup-$stamp"
   mkdir -p "$(dirname "$target")"
   cat "$new" >"$target"
   return 0
 }
 
-echo "Hearth for Omarchy"
+echo "Genkan for Omarchy"
 echo
 
 # ---------------------------------------------------------------- commands
 
 mkdir -p "$bin_dir"
-for cmd in hearth-kidnet hearth-bar-status hearth-action hearth-menu-jsonc hearth-jsonc-check; do
+for cmd in genkan-kidnet genkan-bar-status genkan-action genkan-menu-jsonc genkan-jsonc-check; do
   src="$source_dir/bin/$cmd"
   [[ -x $src ]] || chmod +x "$src" 2>/dev/null || true
   dest="$bin_dir/$cmd"
   if [[ -e $dest && ! -L $dest ]]; then
-    mv "$dest" "$dest.hearth-backup-$stamp"
+    mv "$dest" "$dest.genkan-backup-$stamp"
     note "moved your existing $cmd aside"
   fi
   ln -sfn "$src" "$dest"
@@ -105,7 +105,7 @@ esac
 
 if [[ ! -f $conf_file ]]; then
   mkdir -p "$(dirname "$conf_file")"
-  cp "$source_dir/hearth.conf.example" "$conf_file"
+  cp "$source_dir/genkan.conf.example" "$conf_file"
   note "wrote $conf_file"
 fi
 
@@ -115,8 +115,8 @@ set_conf() {
   tmp=$(mktemp)
   # The value goes through the environment rather than the command line so a
   # token full of punctuation cannot turn into a substitution pattern.
-  HEARTH_SET_KEY="$key" HEARTH_SET_VALUE="$value" awk '
-    BEGIN { k = ENVIRON["HEARTH_SET_KEY"]; v = ENVIRON["HEARTH_SET_VALUE"]; written = 0 }
+  GENKAN_SET_KEY="$key" GENKAN_SET_VALUE="$value" awk '
+    BEGIN { k = ENVIRON["GENKAN_SET_KEY"]; v = ENVIRON["GENKAN_SET_VALUE"]; written = 0 }
     $0 ~ ("^#?" k "=") { if (!written) { print k "=\"" v "\""; written = 1 }; next }
     { print }
     END { if (!written) print k "=\"" v "\"" }
@@ -125,16 +125,16 @@ set_conf() {
   rm -f "$tmp"
 }
 
-[[ -z $opt_ssh ]] || { set_conf HEARTH_SSH "$opt_ssh"; note "gateway over ssh: $opt_ssh"; }
-[[ -z $opt_url ]] || { set_conf HEARTH_URL "$opt_url"; note "dashboard: $opt_url"; }
-[[ -z $opt_token ]] || { set_conf HEARTH_DASH_TOKEN "$opt_token"; chmod 600 "$conf_file"; }
-[[ -z $opt_kids ]] || { set_conf HEARTH_KIDS "$opt_kids"; note "kids: $opt_kids"; }
+[[ -z $opt_ssh ]] || { set_conf GENKAN_SSH "$opt_ssh"; note "gateway over ssh: $opt_ssh"; }
+[[ -z $opt_url ]] || { set_conf GENKAN_URL "$opt_url"; note "dashboard: $opt_url"; }
+[[ -z $opt_token ]] || { set_conf GENKAN_DASH_TOKEN "$opt_token"; chmod 600 "$conf_file"; }
+[[ -z $opt_kids ]] || { set_conf GENKAN_KIDS "$opt_kids"; note "kids: $opt_kids"; }
 
 # ------------------------------------------------------------------- check
 
 echo
-if out=$("$bin_dir/hearth-kidnet" status 2>&1); then
-  mode=$("$bin_dir/hearth-kidnet" --mode)
+if out=$("$bin_dir/genkan-kidnet" status 2>&1); then
+  mode=$("$bin_dir/genkan-kidnet" --mode)
   note "gateway reachable over $mode"
   [[ -z ${out//[[:space:]]/} ]] && note "nothing is blocked right now" || note "blocked now: ${out//$'\n'/; }"
 else
@@ -146,7 +146,7 @@ fi
 
 if ((do_menu)); then
   echo
-  "$bin_dir/hearth-menu-jsonc" --install | sed 's/^/  /'
+  "$bin_dir/genkan-menu-jsonc" --install | sed 's/^/  /'
 fi
 
 # --------------------------------------------------------------------- bar
@@ -171,9 +171,9 @@ install_shell_json() {
   # Normalized the way omarchy-shell-config normalizes it, so the result is a
   # well-shaped file whatever state it started in. The module is dropped in
   # front of the tray when there is one, which is where a status item belongs.
-  jq -S --arg exec "$bin_dir/hearth-bar-status" \
-        --arg dash "$bin_dir/hearth-action dashboard" \
-        --arg status "$bin_dir/hearth-action status" '
+  jq -S --arg exec "$bin_dir/genkan-bar-status" \
+        --arg dash "$bin_dir/genkan-action dashboard" \
+        --arg status "$bin_dir/genkan-action status" '
     def object_or_empty: if type == "object" then . else {} end;
     def array_or_empty: if type == "array" then . else [] end;
     def entry_id: if type == "object" then (.id // "" | tostring) else tostring end;
@@ -187,13 +187,13 @@ install_shell_json() {
     | .bar.layout.right = (.bar.layout.right | array_or_empty)
     | .plugins = (.plugins | array_or_empty)
 
-    | { id: "hearth", type: "command", exec: $exec, interval: 30,
-        tooltip: "Hearth", onClick: "omarchy menu summon hearth",
+    | { id: "genkan", type: "command", exec: $exec, interval: 30,
+        tooltip: "Genkan", onClick: "omarchy menu summon genkan",
         onRightClick: $dash, onMiddleClick: $status } as $module
 
-    | .bar.layout.left   = (.bar.layout.left   | map(select(entry_id != "hearth")))
-    | .bar.layout.center = (.bar.layout.center | map(select(entry_id != "hearth")))
-    | .bar.layout.right  = (.bar.layout.right  | map(select(entry_id != "hearth")))
+    | .bar.layout.left   = (.bar.layout.left   | map(select(entry_id != "genkan")))
+    | .bar.layout.center = (.bar.layout.center | map(select(entry_id != "genkan")))
+    | .bar.layout.right  = (.bar.layout.right  | map(select(entry_id != "genkan")))
 
     | (.bar.layout.right | map(entry_id) | index("omarchy.tray")) as $at
     | .bar.layout.right = (
@@ -203,10 +203,10 @@ install_shell_json() {
   ' "$source_json" >"$new" || { rm -f "$new"; return 2; }
 
   if install_file "$user_config" "$new"; then
-    note "added the Hearth module to $user_config"
+    note "added the Genkan module to $user_config"
     omarchy-shell -q shell reloadConfig >/dev/null 2>&1 || true
   else
-    note "the Hearth module is already in $user_config"
+    note "the Genkan module is already in $user_config"
   fi
   rm -f "$new"
   return 0
@@ -223,7 +223,7 @@ install_waybar() {
 
   # The stylesheet first: appending CSS is always safe, and the rules are
   # colourless on purpose so no theme can be broken by them.
-  local begin="/* >>> hearth >>> */" end="/* <<< hearth <<< */"
+  local begin="/* >>> genkan >>> */" end="/* <<< genkan <<< */"
   new=$(mktemp)
   if [[ -f $style ]] && grep -qF "$begin" "$style"; then
     awk -v b="$begin" -v e="$end" -v bf="$source_dir/waybar/style.css" '
@@ -235,8 +235,8 @@ install_waybar() {
   else
     { [[ -f $style ]] && cat "$style"; printf '\n%s\n' "$begin"; cat "$source_dir/waybar/style.css"; printf '%s\n' "$end"; } >"$new"
   fi
-  install_file "$style" "$new" && note "added the Hearth styles to $style" ||
-    note "the Hearth styles are already in $style"
+  install_file "$style" "$new" && note "added the Genkan styles to $style" ||
+    note "the Genkan styles are already in $style"
   rm -f "$new"
 
   # Then the module. A config with comments in it cannot be rewritten by jq
@@ -244,35 +244,35 @@ install_waybar() {
   # case say so and print the snippet, rather than flatten someone's file.
   if grep -qE '^[[:space:]]*//' "$config"; then
     note "$config has comments in it, so it was left exactly as it is."
-    note "Add \"custom/hearth\" to modules-right and paste this in:"
+    note "Add \"custom/genkan\" to modules-right and paste this in:"
     sed 's/^/    /' "$source_dir/waybar/config.jsonc"
     return 0
   fi
 
   new=$(mktemp)
-  if jq -S --arg exec "$bin_dir/hearth-bar-status" \
-          --arg dash "$bin_dir/hearth-action dashboard" \
-          --arg status "$bin_dir/hearth-action status" '
-      ."custom/hearth" = {
+  if jq -S --arg exec "$bin_dir/genkan-bar-status" \
+          --arg dash "$bin_dir/genkan-action dashboard" \
+          --arg status "$bin_dir/genkan-action status" '
+      ."custom/genkan" = {
         exec: $exec, "return-type": "json", interval: 30, tooltip: true,
-        "on-click": "omarchy-menu summon hearth",
+        "on-click": "omarchy-menu summon genkan",
         "on-click-right": $dash, "on-click-middle": $status }
       | ."modules-right" = (
-          ((."modules-right" // []) | map(select(. != "custom/hearth")))
+          ((."modules-right" // []) | map(select(. != "custom/genkan")))
           as $rest
-          | if ($rest | index("tray")) == null then ["custom/hearth"] + $rest
-            else $rest[0:($rest | index("tray"))] + ["custom/hearth"] + $rest[($rest | index("tray")):] end
+          | if ($rest | index("tray")) == null then ["custom/genkan"] + $rest
+            else $rest[0:($rest | index("tray"))] + ["custom/genkan"] + $rest[($rest | index("tray")):] end
         )
     ' "$config" >"$new" 2>/dev/null; then
     if install_file "$config" "$new"; then
-      note "added custom/hearth to $config"
+      note "added custom/genkan to $config"
       pkill -SIGUSR2 waybar 2>/dev/null || true
     else
-      note "custom/hearth is already in $config"
+      note "custom/genkan is already in $config"
     fi
   else
     note "could not safely rewrite $config, so it was left alone."
-    note "Add \"custom/hearth\" to modules-right and paste this in:"
+    note "Add \"custom/genkan\" to modules-right and paste this in:"
     sed 's/^/    /' "$source_dir/waybar/config.jsonc"
   fi
   rm -f "$new"
@@ -296,6 +296,6 @@ fi
 echo
 echo "Done."
 echo "  Bar item     polls every 30 seconds; click it for the menu."
-echo "  Menu         SUPER+SPACE, then Hearth. Or: omarchy menu summon hearth"
+echo "  Menu         SUPER+SPACE, then Genkan. Or: omarchy menu summon genkan"
 echo "  Settings     $conf_file"
 echo "  Remove it    $source_dir/uninstall.sh"

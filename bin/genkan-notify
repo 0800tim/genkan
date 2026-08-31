@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# hearth:summary=Send unacknowledged alerts to the phone routes a household set up.
+# genkan:summary=Send unacknowledged alerts to the phone routes a household set up.
 #
-# Hearth already knows the things a parent needs to hear. Until this worker they
+# Genkan already knows the things a parent needs to hear. Until this worker they
 # only ever appeared on a dashboard, which meant a parent could learn on Saturday
 # that something concerning happened on Wednesday. This is the piece that puts
 # the safety signals on a phone.
 #
-# THE CONSTRAINT: Hearth has no telemetry and talks to no cloud, and that stays
+# THE CONSTRAINT: Genkan has no telemetry and talks to no cloud, and that stays
 # true. Nothing here calls an Anthropic, Google or vendor service. It POSTs a
 # message the household worded, to an address the household typed in, from the
 # household's own box. With no routes configured it does nothing at all, which
@@ -35,8 +35,8 @@ set -uo pipefail
 # Connects as kids_agent, a role with no superuser, no DDL and no
 # COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
-DB_NAME="${HEARTH_DB:-kids_network}"
-DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_NAME="${GENKAN_DB:-kids_network}"
+DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 psqlq(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -qc "$1" >/dev/null; }
 # Fields come back separated by 0x1f, the ASCII unit separator, NOT by a tab.
@@ -57,7 +57,7 @@ sq(){ printf '%s' "${1-}" | sed "s/'/''/g"; }
 # Saturday, from firing a week of history at somebody's phone at once.
 MAX_AGE="${NOTIFY_MAX_AGE:-12 hours}"
 [[ "$MAX_AGE" =~ ^[0-9]{1,4}\ (second|minute|hour|day)s?$ ]] || {
-  echo "kidnet-notify: NOTIFY_MAX_AGE must look like '12 hours'" >&2; exit 1; }
+  echo "genkan-notify: NOTIFY_MAX_AGE must look like '12 hours'" >&2; exit 1; }
 HTTP_TIMEOUT="${NOTIFY_TIMEOUT:-10}"
 [[ "$HTTP_TIMEOUT" =~ ^[0-9]{1,3}$ ]] || HTTP_TIMEOUT=10
 
@@ -80,7 +80,7 @@ import json, os, sys, urllib.request, urllib.error
 kind   = os.environ["N_KIND"]
 target = os.environ["N_TARGET"]
 token  = os.environ.get("N_TOKEN") or ""
-title  = os.environ.get("N_TITLE") or "Hearth"
+title  = os.environ.get("N_TITLE") or "Genkan"
 body   = os.environ.get("N_BODY") or ""
 prio   = os.environ.get("N_PRIORITY") or "3"
 tags   = os.environ.get("N_TAGS") or ""
@@ -99,7 +99,7 @@ def scrub(s):
         out.append("<url>" if "://" in word else word)
     return " ".join(out)[:300]
 
-headers = {"User-Agent": "Hearth/1.0"}
+headers = {"User-Agent": "Genkan/1.0"}
 if kind == "ntfy":
     data = body.encode("utf-8")
     headers["Content-Type"] = "text/plain; charset=utf-8"
@@ -115,7 +115,7 @@ elif kind == "webhook":
     # raw alert row. A webhook is still a notification, and it may well end up
     # on the same lock screen.
     data = json.dumps({
-        "source": "hearth",
+        "source": "genkan",
         "title": title,
         "body": body,
         "severity": os.environ.get("N_SEVERITY") or "info",
@@ -179,7 +179,7 @@ compose(){
                  FROM notify_wording WHERE category = '$(sq "$cat")'")
   [ -z "$row" ] && row=$(psqlF "SELECT title, body_one, body_many, name_ok, detail_ok, priority, tags
                                   FROM notify_wording WHERE category = '@fallback'")
-  [ -z "$row" ] && { W_TITLE="Hearth"; W_BODY="Something needs your attention. The detail is on the Hearth dashboard at home."
+  [ -z "$row" ] && { W_TITLE="Genkan"; W_BODY="Something needs your attention. The detail is on the Genkan dashboard at home."
                      W_PRIORITY=3; W_TAGS="house"; return 0; }
   local t b1 bm nameok detok pri tags
   IFS="$FS" read -r t b1 bm nameok detok pri tags <<<"$row"
@@ -230,7 +230,7 @@ cmd_run(){
            retry_ok
       FROM notify_route_state WHERE enabled ORDER BY id" 2>/dev/null)
   if [ "${#routes[@]}" = 0 ]; then
-    echo "kidnet-notify: no routes configured, so nothing is sent anywhere."
+    echo "genkan-notify: no routes configured, so nothing is sent anywhere."
     return 0
   fi
   # A month of attempts is plenty to debug a route with, and this is the only
@@ -249,7 +249,7 @@ cmd_run(){
     # route answers again. The point is to stop a dead endpoint being re-POSTed
     # every minute forever and filling the log with the same line.
     if [ "$retry_ok" != t ] && [ "$dry" != dry ]; then
-      echo "kidnet-notify: $name: last attempt failed, waiting before the next try"
+      echo "genkan-notify: $name: last attempt failed, waiting before the next try"
       total_held=$((total_held + 1)); continue
     fi
 
@@ -264,7 +264,7 @@ cmd_run(){
       # ^1$ and not just 1: psql -tAc prints the returned rows AND the command
       # tag, so "INSERT 0 1" is a second line with a 1 in it and a loose grep
       # reports double what actually happened.
-      [ "${stale:-0}" -gt 0 ] && echo "kidnet-notify: $name: retired ${stale} alert(s) older than $MAX_AGE unsent"
+      [ "${stale:-0}" -gt 0 ] && echo "genkan-notify: $name: retired ${stale} alert(s) older than $MAX_AGE unsent"
     fi
 
     # 2. What is left, grouped by category. This is the burst collapse: twelve
@@ -335,7 +335,7 @@ cmd_run(){
       # what turning it off means.
       if [ "$in_quiet" = t ]; then
         if [ "$is_urgent" != t ] || [ "$q_urgent" != t ]; then
-          echo "kidnet-notify: $name: holding $cat ($n) until quiet hours end"
+          echo "genkan-notify: $name: holding $cat ($n) until quiet hours end"
           total_held=$((total_held + 1)); continue
         fi
       fi
@@ -343,16 +343,16 @@ cmd_run(){
       # run. Urgent has its own allowance and ignores the minimum gap.
       if [ "$is_urgent" = t ]; then
         if [ "$urg_hr" -ge "$max_urg" ]; then
-          echo "kidnet-notify: $name: urgent rate limit reached ($urg_hr/$max_urg this hour), holding $cat"
+          echo "genkan-notify: $name: urgent rate limit reached ($urg_hr/$max_urg this hour), holding $cat"
           total_held=$((total_held + 1)); continue
         fi
       else
         if [ "$sent_hr" -ge "$max_hr" ]; then
-          echo "kidnet-notify: $name: rate limit reached ($sent_hr/$max_hr this hour), holding $cat"
+          echo "genkan-notify: $name: rate limit reached ($sent_hr/$max_hr this hour), holding $cat"
           total_held=$((total_held + 1)); continue
         fi
         if [ "$gap_ok" != t ]; then
-          echo "kidnet-notify: $name: too soon after the last message, holding $cat"
+          echo "genkan-notify: $name: too soon after the last message, holding $cat"
           total_held=$((total_held + 1)); continue
         fi
       fi
@@ -378,7 +378,7 @@ cmd_run(){
         record_log "$id" "$name" "$kind" t "$status" "$n" "$is_urgent" "$W_TITLE" "sent"
         psqlq "UPDATE notify_routes SET last_ok_at = now(), last_error = NULL, last_error_at = NULL
                 WHERE id = $id" 2>/dev/null || true
-        echo "kidnet-notify: $name: sent $cat ($n alert(s))"
+        echo "genkan-notify: $name: sent $cat ($n alert(s))"
         total_sent=$((total_sent + 1))
         if [ "$is_urgent" = t ]; then urg_hr=$((urg_hr + 1)); else sent_hr=$((sent_hr + 1)); gap_ok=f; fi
       else
@@ -386,7 +386,7 @@ cmd_run(){
         # the alert stays unacknowledged and unsent and goes next time. A route
         # that is down must never lose an alert and must never break anything.
         local msg; msg=$(printf '%s' "$out" | cut -c1-240)
-        echo "kidnet-notify: $name ($kind): FAILED to send $cat: $msg" >&2
+        echo "genkan-notify: $name ($kind): FAILED to send $cat: $msg" >&2
         record_log "$id" "$name" "$kind" f "$status" "$n" "$is_urgent" "$W_TITLE" "$msg"
         psqlq "UPDATE notify_routes SET last_error = '$(sq "$msg")', last_error_at = now()
                 WHERE id = $id" 2>/dev/null || true
@@ -396,9 +396,9 @@ cmd_run(){
   done
   [ "$dry" = dry ] && return 0
   if [ "$total_sent" = 0 ] && [ "$total_held" = 0 ] && [ "$total_failed" = 0 ]; then
-    echo "kidnet-notify: nothing new to send"
+    echo "genkan-notify: nothing new to send"
   else
-    echo "kidnet-notify: $total_sent message(s) sent, $total_held held, $total_failed failed"
+    echo "genkan-notify: $total_sent message(s) sent, $total_held held, $total_failed failed"
   fi
   return 0
 }
@@ -407,33 +407,33 @@ cmd_run(){
 # Managing routes
 # ---------------------------------------------------------------------------
 ck_name(){ [[ "$1" =~ ^[A-Za-z0-9_-]{1,32}$ ]] || {
-  echo "kidnet-notify: a route name is letters, numbers, - and _, up to 32 characters" >&2; exit 1; }; }
+  echo "genkan-notify: a route name is letters, numbers, - and _, up to 32 characters" >&2; exit 1; }; }
 ck_kind(){ case " $KINDS_ALL " in *" $1 "*) ;; *)
-  echo "kidnet-notify: kind must be one of: $KINDS_ALL" >&2; exit 1;; esac
+  echo "genkan-notify: kind must be one of: $KINDS_ALL" >&2; exit 1;; esac
   case " $KINDS_BUILT " in *" $1 "*) ;; *)
-  echo "kidnet-notify: the '$1' route is documented but not built yet."
+  echo "genkan-notify: the '$1' route is documented but not built yet."
   echo "               Built and tested: $KINDS_BUILT."
   echo "               See docs/NOTIFICATIONS.md, 'Extension points'." >&2; exit 1;; esac; }
 # A target is a URL and nothing else. No whitespace, no quotes, no control
 # characters, and http(s) only: a route is not a place to smuggle a shell.
 ck_target(){ case "$1" in http://*|https://*) ;; *)
-  echo "kidnet-notify: a target must be an http:// or https:// URL" >&2; exit 1;; esac
+  echo "genkan-notify: a target must be an http:// or https:// URL" >&2; exit 1;; esac
   [[ "$1" =~ ^[A-Za-z0-9:/?#@!$\&*+,\;=._~%-]{8,400}$ ]] || {
-  echo "kidnet-notify: that URL has characters a URL cannot have" >&2; exit 1; }; }
+  echo "genkan-notify: that URL has characters a URL cannot have" >&2; exit 1; }; }
 ck_sev(){ case "$1" in info|warn|urgent) ;; *)
-  echo "kidnet-notify: severity must be info, warn or urgent" >&2; exit 1;; esac; }
+  echo "genkan-notify: severity must be info, warn or urgent" >&2; exit 1;; esac; }
 ck_cats(){ [ -z "$1" ] && return 0
   [[ "$1" =~ ^[a-z0-9@_-]+(,[a-z0-9@_-]+)*$ ]] || {
-  echo "kidnet-notify: categories are lower-case names separated by commas" >&2; exit 1; }; }
+  echo "genkan-notify: categories are lower-case names separated by commas" >&2; exit 1; }; }
 # 'HH:MM-HH:MM' into two minute counts. 'off' clears quiet hours.
 QS=""; QE=""
 ck_quiet(){
   if [ "$1" = off ] || [ -z "$1" ]; then QS=NULL; QE=NULL; return 0; fi
   [[ "$1" =~ ^([0-9]{1,2}):([0-9]{2})-([0-9]{1,2}):([0-9]{2})$ ]] || {
-    echo "kidnet-notify: quiet hours look like 21:30-07:00, or 'off'" >&2; exit 1; }
+    echo "genkan-notify: quiet hours look like 21:30-07:00, or 'off'" >&2; exit 1; }
   local h1=${BASH_REMATCH[1]} m1=${BASH_REMATCH[2]} h2=${BASH_REMATCH[3]} m2=${BASH_REMATCH[4]}
   { [ "$h1" -le 23 ] && [ "$h2" -le 23 ] && [ "$m1" -le 59 ] && [ "$m2" -le 59 ]; } || {
-    echo "kidnet-notify: that is not a time of day" >&2; exit 1; }
+    echo "genkan-notify: that is not a time of day" >&2; exit 1; }
   QS=$((10#$h1 * 60 + 10#$m1)); QE=$((10#$h2 * 60 + 10#$m2))
 }
 # Reads a secret without putting it in argv, where every user on the box can
@@ -457,16 +457,16 @@ cmd_add(){
       --categories) cats="${2:-}"; shift 2;;
       --quiet)      quiet="${2:-}"; shift 2;;
       --quiet-urgent) case "${2:-}" in yes) qurgent=true;; no) qurgent=false;;
-                      *) echo "kidnet-notify: --quiet-urgent takes yes or no" >&2; exit 1;; esac; shift 2;;
+                      *) echo "genkan-notify: --quiet-urgent takes yes or no" >&2; exit 1;; esac; shift 2;;
       --rate)       [[ "${2:-}" =~ ^[0-9]{1,3}$ ]] && [ "${2}" -ge 1 ] && [ "${2}" -le 120 ] \
-                      || { echo "kidnet-notify: --rate is 1 to 120 messages an hour" >&2; exit 1; }
+                      || { echo "genkan-notify: --rate is 1 to 120 messages an hour" >&2; exit 1; }
                     rate="$2"; shift 2;;
       --detail)     detail=true; shift;;
-      *) echo "kidnet-notify: no such option: $1" >&2; exit 1;;
+      *) echo "genkan-notify: no such option: $1" >&2; exit 1;;
     esac
   done
   if [ -n "$target" ]; then
-    echo "kidnet-notify: note, a --target on the command line lands in your shell" >&2
+    echo "genkan-notify: note, a --target on the command line lands in your shell" >&2
     echo "               history and in ps. Leave it off to be prompted instead." >&2
   else
     target=$(read_secret "Target URL (an ntfy topic URL, or a webhook URL): ")
@@ -481,9 +481,9 @@ cmd_add(){
                                    include_detail, max_per_hour)
          VALUES ('$(sq "$name")', '$(sq "$kind")', '$(sq "$target")', $toksql,
                  '$(sq "$sev")', $catsql, $QS, $QE, $qurgent, $detail, $rate)
-         RETURNING id" >/dev/null || { echo "kidnet-notify: could not add that route (is the name taken?)" >&2; exit 1; }
-  echo "kidnet-notify: added route '$name' ($kind, $sev and above)."
-  echo "               Nothing is proven until you test it: kidnet-notify test $name"
+         RETURNING id" >/dev/null || { echo "genkan-notify: could not add that route (is the name taken?)" >&2; exit 1; }
+  echo "genkan-notify: added route '$name' ($kind, $sev and above)."
+  echo "               Nothing is proven until you test it: genkan-notify test $name"
 }
 
 cmd_set(){
@@ -499,36 +499,36 @@ cmd_set(){
                     else sets+=("categories = string_to_array('$(sq "$2")', ',')"); fi; shift 2;;
       --quiet)      ck_quiet "${2:-}"; sets+=("quiet_start_min = $QS" "quiet_end_min = $QE"); shift 2;;
       --quiet-urgent) case "${2:-}" in yes) sets+=("quiet_urgent = true");; no) sets+=("quiet_urgent = false");;
-                      *) echo "kidnet-notify: --quiet-urgent takes yes or no" >&2; exit 1;; esac; shift 2;;
+                      *) echo "genkan-notify: --quiet-urgent takes yes or no" >&2; exit 1;; esac; shift 2;;
       --detail)     case "${2:-}" in yes) sets+=("include_detail = true");; no) sets+=("include_detail = false");;
-                    *) echo "kidnet-notify: --detail takes yes or no" >&2; exit 1;; esac; shift 2;;
-      --rate)       [[ "${2:-}" =~ ^[0-9]{1,3}$ ]] || { echo "kidnet-notify: --rate is a number of messages an hour" >&2; exit 1; }
+                    *) echo "genkan-notify: --detail takes yes or no" >&2; exit 1;; esac; shift 2;;
+      --rate)       [[ "${2:-}" =~ ^[0-9]{1,3}$ ]] || { echo "genkan-notify: --rate is a number of messages an hour" >&2; exit 1; }
                     sets+=("max_per_hour = $2"); shift 2;;
       --target)     ck_target "${2:-}"; sets+=("target = '$(sq "$2")'"); shift 2;;
       --token)      if [ -z "${2:-}" ]; then sets+=("token = NULL"); else sets+=("token = '$(sq "$2")'"); fi; shift 2;;
-      *) echo "kidnet-notify: no such option: $1" >&2; exit 1;;
+      *) echo "genkan-notify: no such option: $1" >&2; exit 1;;
     esac
   done
-  [ "${#sets[@]}" = 0 ] && { echo "kidnet-notify: nothing to change" >&2; exit 1; }
+  [ "${#sets[@]}" = 0 ] && { echo "genkan-notify: nothing to change" >&2; exit 1; }
   local n; n=$(psqll "UPDATE notify_routes SET $(IFS=,; echo "${sets[*]}")
                        WHERE name = '$(sq "$name")' RETURNING 1" | grep -c '^1$' || true)
-  [ "${n:-0}" = 0 ] && { echo "kidnet-notify: no route called '$name'" >&2; exit 1; }
-  echo "kidnet-notify: updated '$name'."
+  [ "${n:-0}" = 0 ] && { echo "genkan-notify: no route called '$name'" >&2; exit 1; }
+  echo "genkan-notify: updated '$name'."
 }
 
 cmd_toggle(){
   local on="$1" name="${2:-}"
   [ -z "$name" ] && { usage; exit 1; }; ck_name "$name"
   local n; n=$(psqll "UPDATE notify_routes SET enabled = $on WHERE name = '$(sq "$name")' RETURNING 1" | grep -c '^1$' || true)
-  [ "${n:-0}" = 0 ] && { echo "kidnet-notify: no route called '$name'" >&2; exit 1; }
-  [ "$on" = true ] && echo "kidnet-notify: '$name' is on." || echo "kidnet-notify: '$name' is off. Nothing will be sent to it."
+  [ "${n:-0}" = 0 ] && { echo "genkan-notify: no route called '$name'" >&2; exit 1; }
+  [ "$on" = true ] && echo "genkan-notify: '$name' is on." || echo "genkan-notify: '$name' is off. Nothing will be sent to it."
 }
 
 cmd_remove(){
   local name="${1:-}"; [ -z "$name" ] && { usage; exit 1; }; ck_name "$name"
   local n; n=$(psqll "DELETE FROM notify_routes WHERE name = '$(sq "$name")' RETURNING 1" | grep -c '^1$' || true)
-  [ "${n:-0}" = 0 ] && { echo "kidnet-notify: no route called '$name'" >&2; exit 1; }
-  echo "kidnet-notify: removed '$name', and everything Hearth remembered about sending to it."
+  [ "${n:-0}" = 0 ] && { echo "genkan-notify: no route called '$name'" >&2; exit 1; }
+  echo "genkan-notify: removed '$name', and everything Genkan remembered about sending to it."
 }
 
 cmd_list(){
@@ -548,8 +548,8 @@ cmd_list(){
                    ELSE 'last sent ' || to_char(last_ok_at, 'Dy HH24:MI') END
       FROM notify_route_state ORDER BY name")
   if [ -z "$out" ]; then
-    echo "  None. Hearth is sending nothing to anybody, which is the default."
-    echo "  Add one:  kidnet-notify add ntfy dad-phone"
+    echo "  None. Genkan is sending nothing to anybody, which is the default."
+    echo "  Add one:  genkan-notify add ntfy dad-phone"
   else
     printf '  %-16s%-10s%-8s%-11s%-16s%s\n' NAME KIND SENDS STATE QUIET LAST
     printf '%s\n' "$out"
@@ -575,7 +575,7 @@ cmd_test(){
   local row
   row=$(psqlF "SELECT id, name, kind, target, coalesce(token,'') FROM notify_routes
                 WHERE name = '$(sq "$name")'")
-  [ -z "$row" ] && { echo "kidnet-notify: no route called '$name'" >&2; exit 1; }
+  [ -z "$row" ] && { echo "genkan-notify: no route called '$name'" >&2; exit 1; }
   local id rname kind target token
   IFS="$FS" read -r id rname kind target token <<<"$row"
   # A test ignores quiet hours, the rate limit and the dedupe ledger, because
@@ -588,12 +588,12 @@ cmd_test(){
   if [ "$rc" = 0 ]; then
     record_log "$id" "$rname" "$kind" t "$status" 0 f "$W_TITLE" "test" t
     psqlq "UPDATE notify_routes SET last_ok_at = now(), last_error = NULL, last_error_at = NULL WHERE id = $id" 2>/dev/null || true
-    echo "kidnet-notify: test sent to '$rname'. Check the phone: it should say \"$W_TITLE\"."
+    echo "genkan-notify: test sent to '$rname'. Check the phone: it should say \"$W_TITLE\"."
   else
     local msg; msg=$(printf '%s' "$out" | cut -c1-240)
     record_log "$id" "$rname" "$kind" f "$status" 0 f "$W_TITLE" "test: $msg" t
     psqlq "UPDATE notify_routes SET last_error = '$(sq "$msg")', last_error_at = now() WHERE id = $id" 2>/dev/null || true
-    echo "kidnet-notify: test FAILED for '$rname': $msg" >&2
+    echo "genkan-notify: test FAILED for '$rname': $msg" >&2
     exit 1
   fi
 }
@@ -610,17 +610,17 @@ cmd_log(){
 }
 
 usage(){ cat <<'USAGE'
-kidnet-notify: put Hearth's alerts on a parent's phone.
+genkan-notify: put Genkan's alerts on a parent's phone.
 
-  kidnet-notify run                       send what is owed (the timer runs this)
-  kidnet-notify pending                   what would go next, without sending
-  kidnet-notify list                      the routes, their state and their last result
-  kidnet-notify test <route>              send a harmless test message now
-  kidnet-notify log [n]                   the last n attempts, good and bad
+  genkan-notify run                       send what is owed (the timer runs this)
+  genkan-notify pending                   what would go next, without sending
+  genkan-notify list                      the routes, their state and their last result
+  genkan-notify test <route>              send a harmless test message now
+  genkan-notify log [n]                   the last n attempts, good and bad
 
-  kidnet-notify add <kind> <name> [options]
-  kidnet-notify set <name> [options]
-  kidnet-notify on <name> | off <name> | remove <name>
+  genkan-notify add <kind> <name> [options]
+  genkan-notify set <name> [options]
+  genkan-notify on <name> | off <name> | remove <name>
 
 Kinds that are built and tested: ntfy, webhook.
 Kinds that are documented extension points, and refused: email, homeassistant.
@@ -657,5 +657,5 @@ case "${1:-run}" in
   test)    shift; cmd_test "${1:-}";;
   log)     shift; cmd_log "${1:-20}";;
   -h|--help|help) usage;;
-  *) echo "kidnet-notify: no such command: $1" >&2; usage; exit 1;;
+  *) echo "genkan-notify: no such command: $1" >&2; usage; exit 1;;
 esac

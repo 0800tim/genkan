@@ -79,7 +79,7 @@ the holes are.
 | Vendor cloud lists | `vendor_clouds` covers a handful of brands. A device whose brand Genkan cannot identify is not restricted, and now says so on the dashboard. Adding a brand is a database row. |
 | Paying for learning rather than recall | The reading list and the study pages mean a child can now genuinely go and learn before a round. Genkan still pays them exactly the same as a child who guessed well. The signals exist (`dns_log`, `quiz_study_visits`, `quiz_answers`, and the difficulty of every question served) and nothing prices any of them. `LEARN-TO-EARN.md` holds the open question. |
 | Curriculum coverage | Over 40 banks is a real curriculum and it is not an even one. Every New Zealand learning area has at least one bank now, but depth varies: maths has one per year band and te reo Māori has a single beginners bank. Languages beyond te reo have nothing, and no country outside NZ, the UK, the US, Australia, Canada and Ireland is covered. It is also not validated against any syllabus document, and nobody should say otherwise. |
-| Getting a bank into the dashboard | A parent types a database bank in one question at a time. There is no bulk import, so a whole bank written as JSON has to go in as a file through `kidnet-quiz install`. |
+| Getting a bank into the dashboard | A parent types a database bank in one question at a time. There is no bulk import, so a whole bank written as JSON has to go in as a file through `genkan-quiz install`. |
 | Device claiming in a real house | Off by default, with observe mode, 5 packet-level checks and the reasoning written up. Nobody has yet run it enforcing for a month in a house full of guests, so what it costs in day-to-day annoyance is genuinely unknown. |
 
 ---
@@ -106,7 +106,7 @@ These are real gaps, sized roughly, and each is genuinely useful.
   the well-known school sites that failed them, which is the part worth reading
   before you propose one.
 - **Translations.** The kid-facing portal is the part that matters most.
-- **Vendor detection.** `bin/kidnet-classify` guesses what a device is from its
+- **Vendor detection.** `bin/genkan-classify` guesses what a device is from its
   hostname and MAC. Add the devices your house has.
 - **Service definitions.** `config/db/schema-services.sql` maps domains to
   services. Regional streaming services are entirely missing.

@@ -1,13 +1,13 @@
 # Installed to /etc/systemd/system/ by deploy.sh. The single host-side piece
-# of Hearth: hands the kids' USB NIC into the gateway container and re-does
+# of Genkan: hands the kids' USB NIC into the gateway container and re-does
 # it after USB replugs, container restarts and Docker daemon restarts.
 [Unit]
-Description=Hearth kids-NIC warden (hands the USB NIC to the gateway container)
+Description=Genkan kids-NIC warden (hands the USB NIC to the gateway container)
 After=docker.service
 Wants=docker.service
 
 [Service]
-ExecStart=/usr/local/lib/hearth/kids-nic-warden.sh
+ExecStart=/usr/local/lib/genkan/kids-nic-warden.sh
 Restart=always
 RestartSec=5
 

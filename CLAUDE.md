@@ -56,18 +56,18 @@ the HOST, outside the island. bin/genkan is the CLI the agent drives; it was
 called kidnet until 2026-08-31 and bin/kidnet remains as a compat shim.
 
 bin/ holds eighteen scripts: genkan (the control surface), kidnet (the shim),
-kidnet-report (the weekly digest), kidnet-quiz (the learn-to-earn bank manager),
-kidnet-quiz-suggest (the evidence briefing for writing new banks, which calls
+genkan-report (the weekly digest), genkan-quiz (the learn-to-earn bank manager),
+genkan-quiz-suggest (the evidence briefing for writing new banks, which calls
 no AI service) and thirteen background workers driven by systemd timers.
 deploy.sh installs fifteen of them and enables six timers; the seventh,
 kids-iot-policy.timer, is installed but left disabled because the household
 IoT policy is switched on deliberately (docs/HOUSEHOLD-SECURITY.md).
-kidnet-report, kidnet-quiz and kidnet-quiz-suggest are run from the repo.
+genkan-report, genkan-quiz and genkan-quiz-suggest are run from the repo.
 docs/CLI.md is the reference.
 
 tools/ is not part of the running system and deploy.sh installs none of it:
 validate-quizzes.mjs (the bank checker), worktree-snapshot.sh (commits the
-whole tree to refs/hearth/snapshots so a bad git command cannot destroy
+whole tree to refs/genkan/snapshots so a bad git command cannot destroy
 uncommitted work; the timer lives on the box, not the repo), publish.sh (the
 pre-publish leak scan), validate-package.mjs (community packages),
 lint-sql-comments.py (refuses a bash '#' comment written inside a SQL string,
@@ -96,8 +96,8 @@ the kids_unclaimed nft set) are both OFF BY DEFAULT and must stay that way.
   is PUBLIC (github.com/0800tim/genkan), so assume anything you write here is
   read by strangers.
 - Never commit anything commercial; that lives outside this repo.
-- After ANY change to bin/kidnet-upgrade, bin/kidnet-rollback,
-  bin/kidnet-health or bin/kidnet-release-lib.sh: run sudo
+- After ANY change to bin/genkan-upgrade, bin/genkan-rollback,
+  bin/genkan-health or bin/genkan-release-lib.sh: run sudo
   test/release-test.sh (42 checks, throwaway clone and throwaway database).
   NEVER test an upgrade or a rollback against the live gateway.
 - After ANY change to kids.nft, gateway/ or genkan: run
@@ -115,27 +115,27 @@ the kids_unclaimed nft set) are both OFF BY DEFAULT and must stay that way.
 
 ## Live state on this box
 
-Deployed and running. Containers hearth-gw, hearth-adguard, hearth-portal
-and hearth-speedtest are up; kids-nic-warden.service plus FIVE timers (meter,
+Deployed and running. Containers genkan-gw, genkan-adguard, genkan-portal
+and genkan-speedtest are up; kids-nic-warden.service plus FIVE timers (meter,
 metering, services, devicescan, dnslog). deploy.sh enables six: this box has
 no kids-tor-sync.timer installed, so the daily relay refresh is not running
 here even though the repo ships it. kids-iot-policy.timer is installed by
 deploy.sh and left disabled on purpose. Dashboard: systemd --user
 kids-dashboard.service (private network :8899, unit lives on the box; the repo
-ships an EXAMPLE at config/systemd-user/hearth-dashboard.service that nothing
-installs), with hearth-dashboard-tls.service fronting it on :8443. Its pages
+ships an EXAMPLE at config/systemd-user/genkan-dashboard.service that nothing
+installs), with genkan-dashboard-tls.service fronting it on :8443. Its pages
 are Home, Right now, Week, Trends, Learn to earn, Devices, Family, System and
 Speed; /speed proxies the gateway's speed test, which can only run inside the
 island. Portal: kids-portal.service (:8890) is the pre-deploy host copy;
 production is the container on island :80. DB: kids_network on the shared
 postgres container (creds in secrets.env).
 
-hearth-snapshot.timer (systemd --user, every two minutes) runs
+genkan-snapshot.timer (systemd --user, every two minutes) runs
 tools/worktree-snapshot.sh save. Development safeguard, not a household one:
 the unit is on the box, not in the repo.
 
 Two PUBLIC demos run the same code read-only against a seeded fictional
 household, so they improve whenever the product does: demo.genkan.nz
 (the dashboard) and quiz-demo.genkan.nz (the kid's portal, with one
-child deliberately out of time). Both are demo/, both set HEARTH_DEMO=1, which
+child deliberately out of time). Both are demo/, both set GENKAN_DEMO=1, which
 turns every shell-out into a no-op. Operational detail: docs/OPERATIONS.md.

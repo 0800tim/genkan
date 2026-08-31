@@ -1,5 +1,5 @@
 [Unit]
-Description=Hearth notifications (send unacknowledged alerts to the household's own routes)
+Description=Genkan notifications (send unacknowledged alerts to the household's own routes)
 After=docker.service
 [Service]
 Type=oneshot
@@ -8,4 +8,4 @@ EnvironmentFile=/srv/projects/internal/kids-network/secrets.env
 # down must never mark a unit failed, never retry-storm, and never lose an
 # alert. Failures are written to notify_log and shouted into the journal, and
 # the alert stays unacknowledged so the next tick tries again.
-ExecStart=/usr/local/bin/kidnet-notify run
+ExecStart=/usr/local/bin/genkan-notify run

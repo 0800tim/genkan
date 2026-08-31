@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hearth:summary=Install, list and remove community learning packages written by other people.
+# genkan:summary=Install, list and remove community learning packages written by other people.
 #
 # A learning package is one JSON file: a quiz bank, plus who wrote it, what
 # licence it carries, who it is for, and optionally a short piece to read
@@ -8,21 +8,21 @@
 # lines saying who wrote it. The format is docs/CONTRIBUTING-CONTENT.md and
 # portal/quizzes/community/README.md.
 #
-#   kidnet-pack list                     what is installed, and what is on the shelf
-#   kidnet-pack validate <file>...       check a package without installing it
-#   kidnet-pack install <file> [--force] validate, then install it for the kids
-#   kidnet-pack remove <id> [--off]      remove it, or just take it off the list
+#   genkan-pack list                     what is installed, and what is on the shelf
+#   genkan-pack validate <file>...       check a package without installing it
+#   genkan-pack install <file> [--force] validate, then install it for the kids
+#   genkan-pack remove <id> [--off]      remove it, or just take it off the list
 #
-# WHY THIS IS NOT `kidnet-quiz install`. That command copies a bank file into
+# WHY THIS IS NOT `genkan-quiz install`. That command copies a bank file into
 # portal/quizzes, which is tracked in git: a `git pull` would delete a family's
 # installed content, and a repo update would silently overwrite it. A package
 # goes into the DATABASE instead, exactly like a bank a parent writes on the
-# dashboard (config/db/schema-packages.sql). Updating Hearth cannot touch it,
+# dashboard (config/db/schema-packages.sql). Updating Genkan cannot touch it,
 # and removing it is one row.
 #
 # NOTHING HERE TOUCHES THE NETWORK. There is no package registry, no download,
 # no update check and no telemetry. A package arrives as a file, because
-# somebody handed it to you or you pulled the repo. Hearth does not phone home
+# somebody handed it to you or you pulled the repo. Genkan does not phone home
 # and this script is not the exception.
 #
 # The portal notices an installed package within about half a minute, because
@@ -30,7 +30,7 @@
 set -euo pipefail
 
 SELF="$(readlink -f "$0")"
-REPO="${HEARTH_REPO:-$(cd "$(dirname "$SELF")/.." && pwd)}"
+REPO="${GENKAN_REPO:-$(cd "$(dirname "$SELF")/.." && pwd)}"
 QUIZ_DIR="${QUIZ_DIR:-$REPO/portal/quizzes}"
 SHELF="${PACK_SHELF:-$QUIZ_DIR/community}"
 VALIDATOR="${PACK_VALIDATOR:-$REPO/tools/validate-package.mjs}"
@@ -40,16 +40,16 @@ VALIDATOR="${PACK_VALIDATOR:-$REPO/tools/validate-package.mjs}"
 # it can install or remove, which is deliberate: one narrow, audited operation
 # instead of open write access to every bank in the house.
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
-DB_NAME="${HEARTH_DB:-kids_network}"
-DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_NAME="${GENKAN_DB:-kids_network}"
+DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 
 psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAF$'\t' -c "$1"; }
 psqlf(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tA -v ON_ERROR_STOP=1; }
-ck_id(){ [[ "$1" =~ ^[a-z0-9-]{1,48}$ ]] || { echo "kidnet-pack: bad package id '$1' (lowercase, digits and hyphens)" >&2; exit 1; }; }
-need(){ command -v "$1" >/dev/null || { echo "kidnet-pack: needs $1" >&2; exit 1; }; }
-need_validator(){ [ -f "$VALIDATOR" ] || { echo "kidnet-pack: no validator at $VALIDATOR (set HEARTH_REPO)" >&2; exit 1; }; }
+ck_id(){ [[ "$1" =~ ^[a-z0-9-]{1,48}$ ]] || { echo "genkan-pack: bad package id '$1' (lowercase, digits and hyphens)" >&2; exit 1; }; }
+need(){ command -v "$1" >/dev/null || { echo "genkan-pack: needs $1" >&2; exit 1; }; }
+need_validator(){ [ -f "$VALIDATOR" ] || { echo "genkan-pack: no validator at $VALIDATOR (set GENKAN_REPO)" >&2; exit 1; }; }
 have_table(){ [ "$(psqll "SELECT to_regclass('public.quiz_packages') IS NOT NULL" 2>/dev/null | head -1)" = "t" ]; }
-need_table(){ have_table || { echo "kidnet-pack: the quiz_packages table is not there yet." >&2
+need_table(){ have_table || { echo "genkan-pack: the quiz_packages table is not there yet." >&2
     echo "  Load it with: config/db/load.sh $DB_NAME $PG_CONTAINER   (or just schema-packages.sql)" >&2; exit 1; }; }
 
 # ---------------------------------------------------------------------------
@@ -59,8 +59,8 @@ need_table(){ have_table || { echo "kidnet-pack: the quiz_packages table is not 
 # licence. To check a plain bank with no manifest, run the validator directly:
 #   node tools/validate-package.mjs <file>
 cmd_validate(){ need_validator; need node
-  [ $# -gt 0 ] || { echo "usage: kidnet-pack validate <file.json>..." >&2; exit 1; }
-  for f in "$@"; do [ -f "$f" ] || { echo "kidnet-pack: no such file '$f'" >&2; exit 1; }; done
+  [ $# -gt 0 ] || { echo "usage: genkan-pack validate <file.json>..." >&2; exit 1; }
+  for f in "$@"; do [ -f "$f" ] || { echo "genkan-pack: no such file '$f'" >&2; exit 1; }; done
   node "$VALIDATOR" --strict "$@"
 }
 
@@ -71,27 +71,27 @@ cmd_install(){ need_validator; need node; need docker; need python3; need_table
   local force=0 src="" a
   for a in "$@"; do case "$a" in
     --force) force=1;;
-    -*) echo "kidnet-pack: unknown flag $a" >&2; exit 1;;
+    -*) echo "genkan-pack: unknown flag $a" >&2; exit 1;;
     *) src="$a";;
   esac; done
-  [ -n "$src" ] || { echo "usage: kidnet-pack install <file.json> [--force]" >&2; exit 1; }
-  [ -f "$src" ] || { echo "kidnet-pack: no such file '$src'" >&2; exit 1; }
+  [ -n "$src" ] || { echo "usage: genkan-pack install <file.json> [--force]" >&2; exit 1; }
+  [ -f "$src" ] || { echo "genkan-pack: no such file '$src'" >&2; exit 1; }
 
   local base id; base="$(basename "$src")"
-  case "$base" in *.json) ;; *) echo "kidnet-pack: a package file must be named <id>.json" >&2; exit 1;; esac
+  case "$base" in *.json) ;; *) echo "genkan-pack: a package file must be named <id>.json" >&2; exit 1;; esac
   id="${base%.json}"; ck_id "$id"
 
   # 1. It has to pass, every rule, before anything reaches the database. A
   #    package is a stranger's text on a page a child reads.
   echo "checking $src"
   node "$VALIDATOR" --strict "$src" || {
-    echo "kidnet-pack: not installed. Nothing above is a judgement on the content:" >&2
+    echo "genkan-pack: not installed. Nothing above is a judgement on the content:" >&2
     echo "  docs/CONTRIBUTING-CONTENT.md explains every rule and how to fix it." >&2; exit 1; }
 
   # 2. A file bank of the same id would win on the portal, so the package would
   #    install and then be invisible. Say so rather than doing it.
   if [ -f "$QUIZ_DIR/$id.json" ]; then
-    echo "kidnet-pack: portal/quizzes/$id.json already exists, and a file bank beats a" >&2
+    echo "genkan-pack: portal/quizzes/$id.json already exists, and a file bank beats a" >&2
     echo "  database one, so this package would install and never be seen." >&2
     echo "  Rename the package's id, or move the file bank out of the way first." >&2
     exit 1
@@ -101,7 +101,7 @@ cmd_install(){ need_validator; need node; need docker; need python3; need_table
   #    but it replaces every question, so it is not something to do by accident.
   local installed; installed="$(psqll "SELECT author FROM quiz_packages WHERE bank_id='$id'" | head -1)"
   if [ -n "$installed" ] && [ "$force" != 1 ]; then
-    echo "kidnet-pack: '$id' is already installed (by $installed)." >&2
+    echo "genkan-pack: '$id' is already installed (by $installed)." >&2
     echo "  Use --force to replace it with this file. Every question is replaced;" >&2
     echo "  the kids' past rounds and the minutes they earned are untouched." >&2
     exit 1
@@ -125,7 +125,7 @@ print("SELECT install_quiz_package(%s::jsonb, %s, %s, %s);"
       % (lit(json.dumps(pkg, ensure_ascii=True, separators=(",", ":"))),
          lit(base), lit(who), lit(sha)))
 PY
-  ) || { echo "kidnet-pack: the database refused it. Nothing was installed." >&2; exit 1; }
+  ) || { echo "genkan-pack: the database refused it. Nothing was installed." >&2; exit 1; }
 
   echo "installed: $out"
   echo "The kids' portal picks it up within about half a minute. Nothing to restart."
@@ -139,17 +139,17 @@ cmd_remove(){ need docker; need_table
   local id="" keep=false a
   for a in "$@"; do case "$a" in
     --off) keep=true;;
-    -*) echo "kidnet-pack: unknown flag $a" >&2; exit 1;;
+    -*) echo "genkan-pack: unknown flag $a" >&2; exit 1;;
     *) id="$a";;
   esac; done
-  [ -n "$id" ] || { echo "usage: kidnet-pack remove <id> [--off]" >&2; exit 1; }
+  [ -n "$id" ] || { echo "usage: genkan-pack remove <id> [--off]" >&2; exit 1; }
   ck_id "$id"
   local out
   # remove_quiz_package refuses any bank that did not arrive as a package, so
   # this can never delete a bank a parent wrote on the dashboard.
   out=$(psqll "SELECT remove_quiz_package('$id', $keep)" 2>&1) || {
     echo "$out" | sed 's/^/  /' >&2
-    echo "kidnet-pack: nothing removed. 'kidnet-pack list' shows what is installed." >&2; exit 1; }
+    echo "genkan-pack: nothing removed. 'genkan-pack list' shows what is installed." >&2; exit 1; }
   echo "$out"
 }
 
@@ -203,8 +203,8 @@ PY
   fi
   [ "$n" -gt 0 ] || echo "  nothing on the shelf"
   echo
-  echo "  Install one with: kidnet-pack install $SHELF/<id>.json"
-  echo "  Read it first. Nobody at Hearth has checked a stranger's answers for you,"
+  echo "  Install one with: genkan-pack install $SHELF/<id>.json"
+  echo "  Read it first. Nobody at Genkan has checked a stranger's answers for you,"
   echo "  and a wrong answer takes minutes off a child for being right."
 }
 
@@ -214,5 +214,5 @@ case "${1:-}" in
   install)  shift; cmd_install "$@";;
   remove)   shift; cmd_remove "$@";;
   ""|-h|--help|help) awk 'NR>3 && /^#/ { sub(/^# ?/, ""); print; next } NR>3 { exit }' "$SELF";;
-  *) echo "kidnet-pack: unknown command '$1'. Try: kidnet-pack help" >&2; exit 1;;
+  *) echo "genkan-pack: unknown command '$1'. Try: genkan-pack help" >&2; exit 1;;
 esac

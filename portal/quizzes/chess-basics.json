@@ -6,7 +6,7 @@
   "minutes_per_pass": 10,
   "pass_mark": 8,
   "questions_per_round": 10,
-  "source_note": "Written for HEARTH, August 2026. Piece movement, values, tactics names, famous openings and mate patterns, all described in words so no diagrams are needed.",
+  "source_note": "Written for Genkan, August 2026. Piece movement, values, tactics names, famous openings and mate patterns, all described in words so no diagrams are needed.",
   "questions": [
     {
       "id": "ch-001",

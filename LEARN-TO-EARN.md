@@ -171,13 +171,13 @@ same cooldown, same cap.
 
 There is no bulk import into the database side, so a whole bank written as JSON
 cannot be pasted into the dashboard. It goes in as a file through
-`bin/kidnet-quiz install`, or it is typed in a question at a time.
+`bin/genkan-quiz install`, or it is typed in a question at a time.
 
 **As a package**, from somebody outside the house. A package is the same JSON
 bank with a short manifest on top: who wrote it, what licence it carries, who it
 is for, and optionally a page to read first that a child sees on the Read up
 screen. It installs into the database, so a Genkan update cannot delete it, and
-`bin/kidnet-pack` validates, installs, lists and removes them. Anybody can write
+`bin/genkan-pack` validates, installs, lists and removes them. Anybody can write
 one and it needs no code:
 [`docs/CONTRIBUTING-CONTENT.md`](docs/CONTRIBUTING-CONTENT.md) is the guide, and
 `portal/quizzes/community/` is the shelf, with one worked example to copy.
@@ -193,7 +193,7 @@ Two honest limits on packages, both stated fully in that guide. A package is
 no asset pipeline and a link to an outside image would be a broken box for the
 child who has run out of time and can only reach the reading list. And
 **nothing suggests a package to a parent yet**. The evidence half works
-(`bin/kidnet-quiz-suggest` and `bin/kidnet-pack list`, both of which call
+(`bin/genkan-quiz-suggest` and `bin/genkan-pack list`, both of which call
 nothing and print to a terminal), and the matching is a job for an agent the
 parent runs, never for a service Genkan calls.
 
@@ -240,7 +240,7 @@ ground. The road code bank exists because a teenager was learning to drive.
 | Paying more for what a child was reading about | not built |
 | Paying more for a harder round | not built, though the ramp now knows |
 | Bulk import of a JSON bank into the dashboard | not built |
-| An agent suggesting banks from a child's interests | `bin/kidnet-quiz-suggest` prints the briefing; the model call and the schedule are your own agent's |
+| An agent suggesting banks from a child's interests | `bin/genkan-quiz-suggest` prints the briefing; the model call and the schedule are your own agent's |
 
 ## Contributing
 

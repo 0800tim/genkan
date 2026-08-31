@@ -36,9 +36,9 @@
 --   device_policy         the parent's override for ONE device
 --   device_access_grants  "this phone may reach that camera", surgical
 --
--- Nothing in this file enforces anything. bin/kidnet-iot-policy reads
+-- Nothing in this file enforces anything. bin/genkan-iot-policy reads
 -- device_policy_effective and generates the nftables sets and chain, the same
--- way kidnet-servicemeter generates its own. See docs/HOUSEHOLD-SECURITY.md.
+-- way genkan-servicemeter generates its own. See docs/HOUSEHOLD-SECURITY.md.
 
 -- ---------------------------------------------------------------------------
 -- Vendor clouds: where a locked-down device is allowed to phone home.
@@ -178,7 +178,7 @@ END $$;
 
 -- ---------------------------------------------------------------------------
 -- The resolved policy: class defaults, overridden per device, with the vendor
--- cloud worked out. This is the ONE thing bin/kidnet-iot-policy reads.
+-- cloud worked out. This is the ONE thing bin/genkan-iot-policy reads.
 -- ---------------------------------------------------------------------------
 -- Only category='iot' devices appear. Personal devices are governed by the
 -- kid-facing layers (time, categories, the safety net) and infrastructure (the
@@ -324,7 +324,7 @@ SELECT v.id, x.domain FROM (VALUES
 ) AS x(vname, domain) JOIN vendor_clouds v ON v.vendor = x.vname
 ON CONFLICT DO NOTHING;
 
--- What kidnet-classify actually writes in devices.vendor, mapped onto a cloud.
+-- What genkan-classify actually writes in devices.vendor, mapped onto a cloud.
 INSERT INTO vendor_aliases (alias, vendor_id)
 SELECT x.alias, v.id FROM (VALUES
  ('amazon','Amazon'),('ring','Ring'),('google-nest','Google-Nest'),('nest','Google-Nest'),
@@ -340,7 +340,7 @@ SELECT x.alias, v.id FROM (VALUES
 ON CONFLICT (alias) DO NOTHING;
 
 -- The dashboard reads policy to show it. It never writes it: the only audited
--- path to the firewall is bin/kidnet and bin/kidnet-iot-policy.
+-- path to the firewall is bin/kidnet and bin/genkan-iot-policy.
 GRANT SELECT ON vendor_clouds, vendor_domains, vendor_ips, vendor_aliases,
                 device_class_policy, device_policy, device_access_grants,
                 iot_policy_settings, device_policy_effective, device_access_pairs

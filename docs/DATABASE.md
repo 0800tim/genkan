@@ -63,7 +63,7 @@ create.
 | 23 | `schema-shared.sql` | the fifth device class, `shared`: the household's device rather than one child's. Adds `devices.policy_tier`, the two sweep columns `caught_by_dinner` and `caught_by_house_off`, the `device_sweeps` view that computes them and forces smart home, appliances and infrastructure out of every sweep, `device_state` (block state for a device with no owner), `house_state` plus `house_status` (the whole-house cut and the clock that lifts it), and `blocked_device_ips`, which is now the single query the gateway reconciles `kids_block` from. Replaces `device_roster`, `people_in_scope()` and `ips_in_scope()` |
 | 24 | `schema-learn.sql` | the reading list, part one: fifteen `always_allow` rows with `scope='learn'`, reachable through a total cut so a child out of time can go and read |
 | 25 | `schema-learn-intl.sql` | the reading list, part two: the New Zealand, Australian, UK and US curriculum bodies, libraries, museums and science agencies. About forty `learn` domains between the two files |
-| 26 | `schema-schedule.sql` | scheduled bedtimes. Gives the long-unread `schedules` table the columns it was missing (`categories`, `updated_ts`, `set_by`) and its constraints, adds `schedule_overrides` (a holiday window), `schedule_extensions` (tonight only), `schedule_state` (the worker's memory of what it has asserted), the `schedule_windows(at)` time function and the `schedule_next` and `schedule_holding` views. Read by `bin/kidnet-schedule`, the dashboard and the kid portal. **A fresh install has no rows, so it schedules nothing** |
+| 26 | `schema-schedule.sql` | scheduled bedtimes. Gives the long-unread `schedules` table the columns it was missing (`categories`, `updated_ts`, `set_by`) and its constraints, adds `schedule_overrides` (a holiday window), `schedule_extensions` (tonight only), `schedule_state` (the worker's memory of what it has asserted), the `schedule_windows(at)` time function and the `schedule_next` and `schedule_holding` views. Read by `bin/genkan-schedule`, the dashboard and the kid portal. **A fresh install has no rows, so it schedules nothing** |
 | 27 | `schema-slow.sql` | the slow lane. Adds `category_state.speed` (the third state between on and off), `slow_settings` (how slow, and whether running out of time cuts or slows), the `slow_lane_ips` view the gateway reconciles the four `slow_*` sets from, and `slow_lane_children`. `slow_lane_ips` returns **personal devices only**, which is the iron rule that stops a camera or a smart lock ever being throttled. **A fresh install throttles nobody and still cuts at zero** |
 
 These ordering constraints are load-bearing:
@@ -135,7 +135,7 @@ These ordering constraints are load-bearing:
   `category_state` table it adds the `speed` column to, and after
   `schema.sql`, whose `devices` table its `slow_lane_ips` view reads. It goes
   last because nothing else reads it at load time. `gateway/entrypoint.sh`,
-  `bin/kidnet-meter` and the dashboard all read it, and all three cope with it
+  `bin/genkan-meter` and the dashboard all read it, and all three cope with it
   being absent: the gateway keeps the throttle sets exactly as they are, and
   the dashboard and portal simply never mention a slow lane.
 - `schema-learn.sql` and `schema-learn-intl.sql` must come **after**
@@ -211,7 +211,7 @@ tables. It has no rights over enforcement: the only audited path to the
 firewall is `bin/genkan`.
 
 **`kids_agent`** is the CLI and timer role, added on 2026-08-30. `bin/genkan`,
-every `bin/kidnet-*` worker and the two operator tools that read the database
+every `bin/genkan-*` worker and the two operator tools that read the database
 (`tools/publish.sh`, the Omarchy widget) connect as it, over the local socket
 inside the Postgres container. Its grants are in `config/db/grants.sql`, one
 line per table, with a comment saying which script needs it.
@@ -260,11 +260,11 @@ for that phrase is how you audit the list.
    `CREATE ROLE` that makes `kids_agent` exist at all.
 2. `deploy.sh`: `ALTER DATABASE ... SET timezone` (owner-or-superuser work),
    and applying `config/db/grants.sql`. Its one operator-supplied value,
-   `HEARTH_TZ`, is checked to a timezone name's alphabet first.
+   `GENKAN_TZ`, is checked to a timezone name's alphabet first.
 3. `demo/reseed.sh`: drops and rebuilds the whole public schema nightly. It
-   only ever talks to `hearth-demo-db`, a throwaway container on its own
+   only ever talks to `genkan-demo-db`, a throwaway container on its own
    network with its own volume and a made-up family in it.
-4. `bin/kidnet-upgrade` and `bin/kidnet-rollback --with-db`: `pg_dump` before an
+4. `bin/genkan-upgrade` and `bin/genkan-rollback --with-db`: `pg_dump` before an
    upgrade, and restoring that dump afterwards. A backup has to read every
    table, and a restore recreates tables, views and grants. Fixed command
    lines, no operator-supplied values, and the rollback copies what it is about
@@ -296,7 +296,7 @@ Both live in the gitignored `secrets.env`.
 
 Daily budgets reset at midnight in the **database's** timezone, and the Postgres
 container runs UTC by default. Without pinning it, a New Zealand family's screen
-time rolls over at noon. `deploy.sh` sets it from `HEARTH_TZ` in `config.env`:
+time rolls over at noon. `deploy.sh` sets it from `GENKAN_TZ` in `config.env`:
 
     ALTER DATABASE kids_network SET timezone = 'Pacific/Auckland';
 

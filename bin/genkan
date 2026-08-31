@@ -14,7 +14,7 @@
 #   genkan full <kid> <category>   back to full speed (and unblocked)
 #   genkan slow-rate [kbit]        how slow the slow lane is (default 256)
 #   genkan slow-timeout [cut|slow] what running out of time does. 'cut' is the
-#                                  default and is what Hearth has always done.
+#                                  default and is what Genkan has always done.
 #   genkan slow-status             who is in the slow lane, and the settings
 #   genkan bonus <kid> <min> [why] grant extra general time (turns net back on)
 #   genkan grant <kid> <cat> <min>  grant time to ONE category (clears its block)
@@ -28,7 +28,7 @@
 #                                  family devices ticked for dinner
 #   genkan schedule <set|show|extend|holiday|clear>  scheduled bedtimes: the
 #                                  times go off and come back on their own.
-#                                  See docs/CLI.md and bin/kidnet-schedule.
+#                                  See docs/CLI.md and bin/genkan-schedule.
 #   genkan house off [min]|on|status  the whole-house cut: every device ticked
 #                                  for it goes off, and it LIFTS ITSELF after
 #                                  min minutes (default 60) so nothing stays
@@ -70,7 +70,7 @@ set -euo pipefail
 # exact list and for why. It matters because Postgres here is shared with
 # unrelated projects, and because a superuser connection turns any injection
 # below into COPY ... TO PROGRAM, which is command execution on the box. As
-# kids_agent that same injection can at worst scribble on Hearth's own rows.
+# kids_agent that same injection can at worst scribble on Genkan's own rows.
 # The two operations that genuinely need more (creating the role, loading the
 # schema) live in config/db/load.sh and stay on the superuser path there.
 # The three overrides exist so the test suite can point at a throwaway database
@@ -78,14 +78,14 @@ set -euo pipefail
 # dashboard runs this script with execFile and a fixed argument list, so nothing
 # arriving over HTTP can reach them.
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
-DB_NAME="${HEARTH_DB:-kids_network}"
-DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_NAME="${GENKAN_DB:-kids_network}"
+DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 TABLE="inet kids"; SET="kids_block"; ALLOWSET="kids_allow"
 # The firewall lives INSIDE the gateway container's network namespace, so
 # every nft call execs in there. Override GW_CONTAINER (or NFT_DIRECT=1 for
 # the no-docker variant) if your layout differs.
-GW="${GW_CONTAINER:-hearth-gw}"
+GW="${GW_CONTAINER:-genkan-gw}"
 nftx(){ if [ "${NFT_DIRECT:-0}" = 1 ]; then "${NFT:-/usr/sbin/nft}" "$@"; else docker exec "$GW" nft "$@"; fi; }
 have_nft(){ nftx list set $TABLE $SET >/dev/null 2>&1; }
 # Everything user-supplied that touches SQL goes through these gates. The
@@ -149,12 +149,12 @@ ips_for(){ ck_scope "$1"; psqll "SELECT ip FROM ips_in_scope('$1')"; }
 # or a literal case arm, so ck_text here narrows nothing in practice and closes
 # the hole if a future verb forgets.
 audit(){ ck_text "$1"; ck_text "$2"; ck_text "$3"; ck_text "${4:-agent}"
-  psqll "INSERT INTO block_events(target_type,target_ref,action,source,actor) VALUES('$1','$2','$3','${4:-agent}','the Hearth box')" >/dev/null; }
+  psqll "INSERT INTO block_events(target_type,target_ref,action,source,actor) VALUES('$1','$2','$3','${4:-agent}','the Genkan box')" >/dev/null; }
 # Push category_state to AdGuard's DNS layer. Best-effort and non-fatal: if
 # AdGuard is down the DB is still the source of truth and the container
 # reconciler will catch up. Silent unless it fails.
 adguard_sync(){ [ -n "${ADGUARD_PASS:-}" ] || return 0
-  local d; d="$(dirname "$0")/kidnet-adguard"
+  local d; d="$(dirname "$0")/genkan-adguard"
   [ -x "$d" ] && "$d" apply >/dev/null 2>&1 || true; }
 # One person, by database id. Ids come from the database, never from a parent's
 # typing, so a group can be expanded without every name having to survive a
@@ -422,7 +422,7 @@ case "${1:-}" in
   penalty) cid=$(tid "${2:?kid}"); ck_int "${3:?min}"; ck_text "${4:-}"; addtime "$cid" "-${3}" penalty "${4:-}"; echo "genkan: -$3 min from $2 (now $(remaining "$cid") left)";;
   spend)  cid=$(tid "${2:?kid}"); ck_id "$cid"; ck_int "${3:?min}"; ensure_day "$cid"; psqll "UPDATE time_ledger SET used_min=used_min+${3} WHERE child_id=$cid AND day=CURRENT_DATE" >/dev/null
           if [ "$(remaining "$cid")" = 0 ]; then
-            # The cliff or the slope. 'cut' is the default and is what Hearth
+            # The cliff or the slope. 'cut' is the default and is what Genkan
             # has always done at zero; a household has to choose the other one,
             # because changing what happens when time runs out without being
             # asked would be somebody's evening changed by an upgrade.
@@ -515,7 +515,7 @@ case "${1:-}" in
                  policy_tier='$tier'$lblset WHERE $col RETURNING 1) SELECT count(*) FROM u")
     [ "${n:-0}" = 0 ] && { echo "genkan: no device matching '$key'"; exit 1; }
     audit device "$key" shared agent
-    d="$(dirname "$0")/kidnet-adguard-clients"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
+    d="$(dirname "$0")/genkan-adguard-clients"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
     echo "genkan: $n device(s) are now a shared family device on the '$tier' filter level."
     echo "  Nobody's minutes pay for it. It goes off at dinner and in a whole-house cut"
     echo "  unless you untick it: genkan sweep $key dinner off";;
@@ -551,10 +551,10 @@ case "${1:-}" in
   allow-sync)   allow_sync;;
   # The household security layer lives in its own script, the same way the
   # meters do. Passed straight through so there is one control surface.
-  iot) shift; exec "$(dirname "$0")/kidnet-iot-policy" "$@";;
+  iot) shift; exec "$(dirname "$0")/genkan-iot-policy" "$@";;
   # Bedtimes live in their own script, the same way the IoT policy does, and
   # are passed straight through so there is one control surface.
-  schedule) shift; exec "$(dirname "$0")/kidnet-schedule" "$@";;
+  schedule) shift; exec "$(dirname "$0")/genkan-schedule" "$@";;
   allow-status) if have_nft; then nftx list set $TABLE $ALLOWSET | sed -n 's/.*elements = //p'; else echo "(firewall not loaded)"; fi;;
   status) psqll "SELECT c.name||': '||string_agg(cs.category||CASE WHEN cs.blocked THEN '' ELSE ' (slow)' END,
                         ', ' ORDER BY cs.category)
@@ -598,7 +598,7 @@ case "${1:-}" in
     audit device "$4" assigned agent
     # AdGuard applies the age tier by client IP, so it has to follow the
     # assignment immediately or the tier lands on the wrong device.
-    d="$(dirname "$0")/kidnet-adguard-clients"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
+    d="$(dirname "$0")/genkan-adguard-clients"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
     adguard_sync
     echo "genkan: assigned $n device(s) to $3 as '$4' (filtering tier applied)";;
   infra) key="${2:?mac}"; ck_addr "$key"; psqll "UPDATE devices SET kind='ap', child_id=NULL, notes='infrastructure, do not assign or block' WHERE mac::text='$key'" >/dev/null; echo "genkan: marked $key as infrastructure";;
@@ -643,15 +643,15 @@ case "${1:-}" in
       psqll "DELETE FROM category_state WHERE child_id=$cid" >/dev/null
       psqll "UPDATE children SET active=false, departed=now() WHERE id=$cid" >/dev/null
       psqll "INSERT INTO block_events(target_type,target_ref,action,source,actor)
-             SELECT 'child', name, 'left', 'manual', 'the Hearth box' FROM children WHERE id=$cid" >/dev/null
-      d="$(dirname "$0")/kidnet-adguard-clients"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
+             SELECT 'child', name, 'left', 'manual', 'the Genkan box' FROM children WHERE id=$cid" >/dev/null
+      d="$(dirname "$0")/genkan-adguard-clients"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
       adguard_sync
       echo "genkan: $(psqll "SELECT name FROM children WHERE id=$cid") has gone home. $n device(s) let go, nothing left blocked, filtering tier retired.";;
     back) cid=$(pid_of "${3:?name-or-id}"); [ -n "$cid" ] || { echo "genkan: nobody called '$3'"; exit 1; }
       ck_id "$cid"
       psqll "UPDATE children SET active=true, departed=NULL, arrived=now() WHERE id=$cid" >/dev/null
       # Their AdGuard client was removed when they left, so build it again.
-      d="$(dirname "$0")/kidnet-adguard-clients"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
+      d="$(dirname "$0")/genkan-adguard-clients"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
       echo "genkan: $(psqll "SELECT name FROM children WHERE id=$cid") is back. Assign their device again: genkan assign <mac> <name> '<label>'";;
     list) psqll "
       SELECT role_label||'  '||name||'  '||devices_online||' device(s) online'
@@ -700,7 +700,7 @@ case "${1:-}" in
                  RETURNING 1) SELECT count(*) FROM u")
     if [ "${n:-0}" = 0 ]; then echo "genkan: nothing waiting called '$2'"; exit 1; fi
     audit device "$2" claim-confirmed agent
-    d="$(dirname "$0")/kidnet-adguard-clients"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
+    d="$(dirname "$0")/genkan-adguard-clients"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
     echo "genkan: confirmed $2. It has its owner's settings now.";;
   # Who is on the wire that nobody has claimed. Smart home kit, appliances and
   # the access point are the household's and are never expected to announce

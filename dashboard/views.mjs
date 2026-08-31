@@ -478,11 +478,11 @@ function copyText(id){
 }
 
 /* theme: follow the system unless the operator picks a side */
-(function(){try{var t=localStorage.getItem('hearth-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}})();
+(function(){try{var t=localStorage.getItem('genkan-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}})();
 function toggleTheme(){var d=document.documentElement;
   var cur=d.dataset.theme||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
   var next=cur==='dark'?'light':'dark';d.dataset.theme=next;
-  try{localStorage.setItem('hearth-theme',next);}catch(e){}}
+  try{localStorage.setItem('genkan-theme',next);}catch(e){}}
 
 /* chart tooltips. Values are also on screen as direct labels and in the table
    view below every chart, so this only ever adds convenience. */
@@ -525,9 +525,9 @@ export { livePage, family, systemPage };
 
 // The public demo (demo/compose.yaml) runs this same code against a made-up
 // household, so every page has to say so plainly and in the house style. With
-// HEARTH_DEMO unset, which is every real installation, DEMO_BAR is the empty
+// GENKAN_DEMO unset, which is every real installation, DEMO_BAR is the empty
 // string and DEMO_CSS never reaches the page.
-const DEMO = process.env.HEARTH_DEMO === "1";
+const DEMO = process.env.GENKAN_DEMO === "1";
 const DEMO_CSS = DEMO ? `
 .demobar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   background:var(--ember-soft);border:1px solid var(--line);border-left:3px solid var(--ember);
@@ -1326,7 +1326,7 @@ export function digestText(dg) {
   const w = dg.week;
   const last = shiftDay(w.end, -1);
   const L = [];
-  L.push(`HEARTH weekly digest`);
+  L.push(`GENKAN weekly digest`);
   L.push(`${fmt.dayFull(w.start)} to ${fmt.dayFull(last)} ${last.slice(0, 4)}${w.current ? " (this week so far)" : ""}`);
   L.push(`Something to talk about together, not a report card.`);
   for (const k of dg.kids) {

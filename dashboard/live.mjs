@@ -14,7 +14,7 @@
 //
 // READ ONLY on everything the metering owns. This module never flushes, adds
 // to or deletes gaming_dev, video_dev, tor_dev or any svc_*_dev set, and never
-// touches an existing rule. kidnet-catmeter and kidnet-servicemeter own those
+// touches an existing rule. genkan-catmeter and genkan-servicemeter own those
 // counters and reset them on their own once-a-minute schedule; flushing them
 // here would silently steal minutes from the family's metering. The only
 // consequence of their schedule for us is that a counter can go DOWN between
@@ -28,10 +28,10 @@
 // chain that contains nothing but two `update` statements and accepts
 // everything. It cannot change a verdict, cannot drop or allow a packet, and
 // runs after the filter chain so blocked traffic is never counted. It is the
-// same pattern bin/kidnet-servicemeter already uses, with two differences that
+// same pattern bin/genkan-servicemeter already uses, with two differences that
 // matter: the sets carry a timeout so they cannot grow without bound, and the
 // chain is only ever created when it is genuinely absent, so repeated runs
-// cannot stack duplicate rules. Set HEARTH_LIVE_DEVICE_TOTALS=0 to turn the
+// cannot stack duplicate rules. Set GENKAN_LIVE_DEVICE_TOTALS=0 to turn the
 // whole thing off; everything else still works, per-device figures just fall
 // back to "traffic we can name".
 import { execFile } from "node:child_process";
@@ -41,11 +41,11 @@ import { demoTick } from "./live-demo.mjs";
 // reach either with, so it synthesises the same tick shape from its own roster
 // (dashboard/live-demo.mjs). Unset, which is every household installation, this
 // flag is false and not one line below behaves differently.
-const DEMO = process.env.HEARTH_DEMO === "1";
+const DEMO = process.env.GENKAN_DEMO === "1";
 
-const GW = process.env.GW_CONTAINER || "hearth-gw";
+const GW = process.env.GW_CONTAINER || "genkan-gw";
 const IFACE = process.env.KIDS_IFACE || "kids0";
-const WANT_TOTALS = process.env.HEARTH_LIVE_DEVICE_TOTALS !== "0";
+const WANT_TOTALS = process.env.GENKAN_LIVE_DEVICE_TOTALS !== "0";
 // A tick every 1.5s: fast enough that a speed test shows up while it is still
 // running, slow enough that the docker exec is a rounding error on the box.
 export const TICK_MS = Math.min(5000, Math.max(700, Number(process.env.LIVE_TICK_MS || 1500)));
@@ -67,9 +67,9 @@ export const LIVE_CATS = ["other", "gaming", "video", "social", "download"];
 // an address we know as gaming is content delivery, so it is charted as a
 // download instead. Roughly 7 Mbit/s: gameplay rarely passes 1 Mbit/s, while
 // an update takes everything the line will give. The same rule and the same
-// figure live in bin/kidnet-catmeter, which books the minutes.
+// figure live in bin/genkan-catmeter, which books the minutes.
 // Deliberately NOT applied to video, where 4K streaming is legitimately fast.
-const DOWNLOAD_BPS = Math.max(65536, Number(process.env.HEARTH_DOWNLOAD_BPS || 873813));
+const DOWNLOAD_BPS = Math.max(65536, Number(process.env.GENKAN_DOWNLOAD_BPS || 873813));
 
 const UP_SET = "live_up_dev", DOWN_SET = "live_down_dev", LIVE_CHAIN = "livemetering";
 const LIVE_RULES = [

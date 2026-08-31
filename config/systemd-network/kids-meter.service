@@ -4,4 +4,4 @@ Description=Kids-network time meter tick
 [Service]
 Type=oneshot
 EnvironmentFile=/srv/projects/internal/kids-network/secrets.env
-ExecStart=/usr/local/bin/kidnet-meter
+ExecStart=/usr/local/bin/genkan-meter

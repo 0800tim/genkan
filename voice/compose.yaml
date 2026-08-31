@@ -1,4 +1,4 @@
-# Hearth voice: the optional "Hey Claudia" stack.
+# Genkan voice: the optional "Hey Claudia" stack.
 #
 # Deliberately a SEPARATE compose file from the repo root. The gateway,
 # AdGuard and the portal are the things a family depends on; a microphone is
@@ -20,14 +20,14 @@
 #     dashboard's audited /api/act, carrying DASH_TOKEN.
 #   - models and voiceprints live in NAMED VOLUMES, not bind mounts into the
 #     repo, so nothing personal can ever end up staged for a commit.
-name: hearth-voice
+name: genkan-voice
 
 services:
   # Wake word. Listens continuously, emits a Wyoming detection event and
   # nothing else. This is the only service that touches the mic.
   wakeword:
     image: rhasspy/wyoming-openwakeword:1.10.0
-    container_name: hearth-voice-wake
+    container_name: genkan-voice-wake
     cap_drop: [ALL]
     # The mic. Comment this out when audio arrives from a Pi satellite over
     # the network instead of from a USB mic on this box.
@@ -50,7 +50,7 @@ services:
   # machine's day job is the firewall.
   whisper:
     image: rhasspy/wyoming-whisper-cpp:2.5.0
-    container_name: hearth-voice-stt
+    container_name: genkan-voice-stt
     cap_drop: [ALL]
     volumes:
       - whisper-models:/data
@@ -66,7 +66,7 @@ services:
   # anything happened. Piper is small and fast enough to be instant.
   piper:
     image: rhasspy/wyoming-piper:1.6.2
-    container_name: hearth-voice-tts
+    container_name: genkan-voice-tts
     cap_drop: [ALL]
     volumes:
       - piper-voices:/data
@@ -90,8 +90,8 @@ services:
     build:
       context: .
       dockerfile: speakerid/Dockerfile   # not written yet, see voice/README.md
-    image: hearth/speakerid:dev
-    container_name: hearth-voice-speakerid
+    image: genkan/speakerid:dev
+    container_name: genkan-voice-speakerid
     cap_drop: [ALL]
     read_only: true
     tmpfs: [/tmp]
@@ -111,8 +111,8 @@ services:
     build:
       context: .
       dockerfile: agent/Dockerfile      # not written yet, see voice/README.md
-    image: hearth/voice-agent:dev
-    container_name: hearth-voice-agent
+    image: genkan/voice-agent:dev
+    container_name: genkan-voice-agent
     cap_drop: [ALL]
     read_only: true
     tmpfs: [/tmp]

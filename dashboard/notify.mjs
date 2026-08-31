@@ -1,7 +1,7 @@
 // Genkan dashboard: notifications to a parent's phone.
 //
 // The page that turns "Genkan knows" into "a parent knows". Everything Genkan
-// raises already sits in the alerts table; bin/kidnet-notify sends the ones a
+// raises already sits in the alerts table; bin/genkan-notify sends the ones a
 // household asked for, and this is where a household asks.
 //
 // THE PROMISE THE PAGE HAS TO KEEP SAYING OUT LOUD: Genkan has no telemetry and
@@ -40,7 +40,7 @@ const NAME_RE = /^[A-Za-z0-9_-]{1,32}$/;
 const CATS_RE = /^[a-z0-9@_-]+(,[a-z0-9@_-]+)*$/;
 const QUIET_RE = /^([0-9]{1,2}):([0-9]{2})-([0-9]{1,2}):([0-9]{2})$/;
 
-// A target is a URL and nothing else. Same gate as bin/kidnet-notify's
+// A target is a URL and nothing else. Same gate as bin/genkan-notify's
 // ck_target, because the two surfaces must not disagree about what is allowed.
 function badTarget(t) {
   if (typeof t !== "string" || !/^https?:\/\//.test(t)) return "A target must be an http:// or https:// URL.";
@@ -162,7 +162,7 @@ export async function notifyApi(q, body, { runTool }) {
     if (!NAME_RE.test(name)) return bad("which route?");
     const [r] = await q("SELECT 1 FROM notify_routes WHERE name=$1", [name]);
     if (!r) return bad("No route by that name.");
-    const out = await runTool("kidnet-notify", ["test", name]);
+    const out = await runTool("genkan-notify", ["test", name]);
     return { ok: out.ok, out: (out.out || "").trim() || (out.ok ? "Test sent." : "The test did not send.") };
   }
 

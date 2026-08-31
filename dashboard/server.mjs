@@ -61,14 +61,14 @@ const DASH_TOKEN = process.env.DASH_TOKEN || "";
 const pool = new pg.Pool({ connectionString: process.env.IN_CONTAINER ? process.env.KIDS_DB_URL_DOCKER : process.env.KIDS_DB_URL });
 const q = (t, p) => pool.query(t, p).then(r => r.rows);
 // The public demo (demo/compose.yaml) runs THIS file, unchanged, against a
-// throwaway database full of a made-up family. HEARTH_DEMO=1 is the one switch
+// throwaway database full of a made-up family. GENKAN_DEMO=1 is the one switch
 // that makes that safe: every path that would shell out goes through runKidnet
 // or runTool below, and with the flag set neither of them reaches execFile at
 // all. There is no firewall, no kidnet and no AdGuard behind a demo, so a
 // control answers honestly instead of failing in a way nobody can read.
 // Unset (the household default) this is a strict no-op: the two consts below
 // are exactly what they always were.
-const DEMO = process.env.HEARTH_DEMO === "1";
+const DEMO = process.env.GENKAN_DEMO === "1";
 const DEMO_REPLY = () => ({ ok: true, out: "This is the demo, so nothing was actually changed." });
 const runKidnet = DEMO ? async () => DEMO_REPLY() : args => new Promise(res => execFile("bash", [KIDNET, ...args], { timeout: 8000 },
   (e, so, se) => res({ ok: !e, out: (so || "") + (se || "") })));
@@ -82,8 +82,8 @@ const runTool = DEMO ? async () => DEMO_REPLY() : (name, args = []) => new Promi
   execFile("bash", [join(BINDIR, name), ...args], { timeout: 25000 },
     (e, so, se) => res({ ok: !e, out: ((so || "") + (se || "")).trim() })));
 async function syncAdguard() {
-  const a = await runTool("kidnet-adguard-clients");
-  const b = await runTool("kidnet-adguard", ["apply"]);
+  const a = await runTool("genkan-adguard-clients");
+  const b = await runTool("genkan-adguard", ["apply"]);
   const lines = [a.out, b.out].filter(Boolean).join(" ");
   return { ok: a.ok && b.ok, out: lines };
 }
@@ -206,14 +206,14 @@ const SPEED_NAV = `<div style="display:flex;gap:18px;align-items:center;padding:
 // The speed test lives in the gateway container, on the docker bridge. In the
 // demo there is no gateway at all, so the page says so rather than hanging.
 // The dashboard runs on the host, outside docker, so it cannot resolve
-// "hearth-gw" by name. Ask docker for the gateway's bridge address instead and
+// "genkan-gw" by name. Ask docker for the gateway's bridge address instead and
 // cache it, because that address changes whenever the container is recreated.
 // Re-resolved on any connection failure, which is exactly when it has moved.
 const SPEED_PORT = Number(process.env.SPEEDTEST_PORT || 8877);
 let speedHost = process.env.SPEEDTEST_HOST || "";
 const resolveSpeedHost = () => new Promise(res => {
   if (speedHost) return res(speedHost);
-  execFile("docker", ["inspect", "hearth-gw", "-f",
+  execFile("docker", ["inspect", "genkan-gw", "-f",
     "{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}"], { timeout: 5000 },
     (e, so) => { speedHost = e ? "" : String(so).trim().split(/\s+/)[0] || ""; res(speedHost); });
 });
@@ -272,7 +272,7 @@ async function proxySpeed(req, res) {
     res.end('<!doctype html><meta charset="utf-8"><title>Speed test</title>'
       + '<body style="font:16px/1.6 system-ui;padding:40px;max-width:36em">'
       + '<h1>The speed test is not answering</h1><p>It runs inside the gateway '
-      + 'container. Check that <code>hearth-speedtest</code> is up.</p><p><small>'
+      + 'container. Check that <code>genkan-speedtest</code> is up.</p><p><small>'
       + String(e.message || e).replace(/[<>&]/g, "") + '</small></p>');
   });
   req.pipe(up);
@@ -336,7 +336,7 @@ const server = createServer(async (req, res) => {
       return;
     }
     // Scheduled bedtimes. Rows only: this writes what the times are, and
-    // bin/kidnet-schedule is the only thing that ever touches a block, so the
+    // bin/genkan-schedule is the only thing that ever touches a block, so the
     // set_by precedence rules live in exactly one place. The nudge at the end
     // of each op runs that same worker, so a change a parent just made is in
     // force now rather than up to a minute from now.
@@ -423,7 +423,7 @@ const server = createServer(async (req, res) => {
     // ---- notifications ----------------------------------------------------
     // Adding a phone is a parent's decision and belongs on the page. Everything
     // except "send a test" is a database write; the test shells out to
-    // bin/kidnet-notify so the page and the timer prove the SAME code path.
+    // bin/genkan-notify so the page and the timer prove the SAME code path.
     if (req.method === "POST" && req.url === "/api/notify") {
       const r = await notifyApi(q, await readJson(req), { runTool });
       res.writeHead(r.ok ? 200 : 400, { "content-type": "application/json" });

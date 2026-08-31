@@ -14,8 +14,8 @@ Every command here is real and runs against this repo. Where a command needs
 
 One command, about five seconds, and it is the one to reach for first:
 
-    kidnet-health            # everything below, in plain language, with an exit code
-    kidnet-health --details  # and what each line actually checked
+    genkan-health            # everything below, in plain language, with an exit code
+    genkan-health --details  # and what each line actually checked
 
 It is read only and needs no root, so it is safe on a household in use and
 safe to run as often as you like. It checks the three containers, the firewall
@@ -29,13 +29,13 @@ The version is its first line, and the same line sits at the bottom of every
 dashboard page. If something broke after an update, docs/UPGRADING.md is the
 next thing to read.
 
-The four checks below are what `kidnet-health` automates, and they are still
+The four checks below are what `genkan-health` automates, and they are still
 worth knowing by hand for the day it is the thing that is broken.
 
 Four checks, about thirty seconds.
 
-    docker ps --filter name=hearth                 # gateway, adguard, portal, speedtest: all Up
-    docker logs --tail 20 hearth-gw                # the gateway's own account of itself
+    docker ps --filter name=genkan                 # gateway, adguard, portal, speedtest: all Up
+    docker logs --tail 20 genkan-gw                # the gateway's own account of itself
     genkan allow-status                            # the safety net and reading list have addresses in them
     systemctl list-timers 'kids-*'                 # six timers, all waiting, none failed
 
@@ -109,7 +109,7 @@ open. `/api/system.json` returns the same sample as JSON if you want to script
 against it. Nothing from this page is written to the database, and the page
 renders before Postgres is consulted, so it still works when the database is the
 thing that is broken. Any metric it cannot read shows as "n/a" with a reason
-rather than as a zero. `HEARTH_SYS_TICK_MS` (default 10000, clamped to 2000 to
+rather than as a zero. `GENKAN_SYS_TICK_MS` (default 10000, clamped to 2000 to
 60000) changes the sample interval.
 
 **`/speed`** proxies the speed test that runs inside the gateway container.
@@ -119,11 +119,11 @@ parent reading the dashboard is on the other side of it. The dashboard sits on
 both sides, so it proxies rather than publishing a second port. The gateway's
 address is asked of docker rather than hardcoded, and looked up again on any
 connection failure. If the page says the speed test is not answering, check that
-the `hearth-speedtest` container is up. Note what it measures through the
+the `genkan-speedtest` container is up. Note what it measures through the
 dashboard: this device to the box over whatever network you are on, which is
 **not** the family wifi. The bar on the page says so.
 
-`config/systemd-user/hearth-dashboard.service` is an example unit, not an
+`config/systemd-user/genkan-dashboard.service` is an example unit, not an
 installed one: `deploy.sh` does not touch it, because where the dashboard binds
 is household-specific and getting that wrong publishes a panel that can switch a
 child's internet off. Copy it to `~/.config/systemd/user/` and edit the paths and
@@ -135,8 +135,8 @@ Description=Genkan admin dashboard
 After=network-online.target
 
 [Service]
-WorkingDirectory=/path/to/hearth/dashboard
-EnvironmentFile=/path/to/hearth/secrets.env
+WorkingDirectory=/path/to/genkan/dashboard
+EnvironmentFile=/path/to/genkan/secrets.env
 Environment=BIND=<your tailnet address>
 Environment=PORT=8899
 # Optional: require a shared secret on every /api/* call, for defence beyond
@@ -162,10 +162,10 @@ $USER`.
 
 | Container | What it holds |
 |---|---|
-| `hearth-gw` | the network namespace, `kids0`, the whole nftables ruleset, and the supervisor loop |
-| `hearth-adguard` | DHCP, DNS and filtering, sharing the gateway's namespace |
-| `hearth-portal` | the kids' captive portal and quiz engine, same namespace, on port 80 |
-| `hearth-speedtest` | the island speed test, same namespace, on port 8877. Reachable directly by any device on the island, and proxied to the admin side by the dashboard at `/speed` |
+| `genkan-gw` | the network namespace, `kids0`, the whole nftables ruleset, and the supervisor loop |
+| `genkan-adguard` | DHCP, DNS and filtering, sharing the gateway's namespace |
+| `genkan-portal` | the kids' captive portal and quiz engine, same namespace, on port 80 |
+| `genkan-speedtest` | the island speed test, same namespace, on port 8877. Reachable directly by any device on the island, and proxied to the admin side by the dashboard at `/speed` |
 
 The portal and AdGuard join the gateway with `network_mode: service:gateway`.
 That is why a bad firewall rule can take the island down but cannot touch the
@@ -186,13 +186,13 @@ One service and seven timers. That is the entire host footprint, besides the
 | Unit | Cadence | What it runs |
 |---|---|---|
 | `kids-nic-warden.service` | always on | hands the kids' USB NIC into the gateway container, and re-does it after replugs, container restarts and Docker daemon restarts |
-| `kids-meter.timer` | every minute | `kidnet-meter`: ticks a minute off each active child's daily budget |
-| `kids-metering.timer` | every minute | `kidnet-catmap` then `kidnet-catmeter`: learn category addresses, count active minutes, enforce category budgets |
-| `kids-services.timer` | every minute | `kidnet-servicemap` then `kidnet-servicemeter`: learn service addresses, count real bytes per service |
-| `kids-devicescan.timer` | every minute | `kidnet-devicescan`: DHCP leases into the devices table, then `kidnet-classify` |
-| `kids-dnslog.timer` | every 2 minutes | `kidnet-dnslog`, then `kidnet-alerts` as an `ExecStartPost` |
-| `kids-schedule.timer` | every minute | `kidnet-schedule apply`: puts scheduled bedtimes on, and lifts them in the morning |
-| `kids-tor-sync.timer` | daily, with up to 2h jitter | `kidnet-tor-sync sync`: fetches the relay list into the `tor_nodes` table. The gateway rebuilds the nft set from there. |
+| `kids-meter.timer` | every minute | `genkan-meter`: ticks a minute off each active child's daily budget |
+| `kids-metering.timer` | every minute | `genkan-catmap` then `genkan-catmeter`: learn category addresses, count active minutes, enforce category budgets |
+| `kids-services.timer` | every minute | `genkan-servicemap` then `genkan-servicemeter`: learn service addresses, count real bytes per service |
+| `kids-devicescan.timer` | every minute | `genkan-devicescan`: DHCP leases into the devices table, then `genkan-classify` |
+| `kids-dnslog.timer` | every 2 minutes | `genkan-dnslog`, then `genkan-alerts` as an `ExecStartPost` |
+| `kids-schedule.timer` | every minute | `genkan-schedule apply`: puts scheduled bedtimes on, and lifts them in the morning |
+| `kids-tor-sync.timer` | daily, with up to 2h jitter | `genkan-tor-sync sync`: fetches the relay list into the `tor_nodes` table. The gateway rebuilds the nft set from there. |
 
 There is an eighth timer, `kids-iot-policy.timer`. `deploy.sh` installs it and
 deliberately does **not** enable it, because the household IoT layer is switched
@@ -245,7 +245,7 @@ hourly. `genkan allow-sync` exists to force it from the host.
 
 ### The weekly digest
 
-`kidnet-report` is not installed by `deploy.sh` and has no timer. If you want it
+`genkan-report` is not installed by `deploy.sh` and has no timer. If you want it
 on a schedule, [reporting.md](reporting.md) has the two units to create.
 
 ---
@@ -254,8 +254,8 @@ on a schedule, [reporting.md](reporting.md) has the two units to create.
 
 **The gateway.** Everything the island does about itself:
 
-    docker logs -f hearth-gw
-    docker logs hearth-gw 2>&1 | grep -E 'ALERT|TRIPPED|vanished|FAILED'
+    docker logs -f genkan-gw
+    docker logs genkan-gw 2>&1 | grep -E 'ALERT|TRIPPED|vanished|FAILED'
 
 The lines worth knowing:
 
@@ -271,12 +271,12 @@ The lines worth knowing:
 | `safety net: N addresses loaded` | the help lines resolved and are in the firewall |
 | `reconcile ... database unreachable, keeping the existing set` | Postgres is down; the firewall holds its last known good state |
 
-**AdGuard.** `docker logs hearth-adguard`, or its web UI on the host's loopback
+**AdGuard.** `docker logs genkan-adguard`, or its web UI on the host's loopback
 at `http://127.0.0.1:8853` (published loopback-only on purpose; reach it over
 your tailnet by tunnelling to the host, never from the island).
 
 **The alerts table** is the thing to read rather than logs, because it is where
-the gateway, the meter and `kidnet-alerts` all converge:
+the gateway, the meter and `genkan-alerts` all converge:
 
     docker exec -i postgres psql -U postgres -d kids_network -c \
       "SELECT ts, severity, category, domain, detail FROM alerts
@@ -298,7 +298,7 @@ Either one means no flagged look-up is being noticed. Both retire themselves on
 the next good run, so an unacknowledged one is a live problem, not history.
 After fixing one, sweep the window you lost rather than waiting for the timer:
 
-    ALERT_LOOKBACK="2 days" kidnet-alerts
+    ALERT_LOOKBACK="2 days" genkan-alerts
 
 They exist because the failure of a safety check has no symptom of its own. No
 alerts is what a good night looks like, so silence had to be made to mean
@@ -336,7 +336,7 @@ been loaded since the seed landed: load `schema-categories.sql` and
       "SELECT category, count(*) FROM category_ips
         WHERE seen > now() - interval '24 hours' GROUP BY 1 ORDER BY 1"
 
-`kidnet-catmap` reads AdGuard's query log, so it needs `ADGUARD_PASS` and it can
+`genkan-catmap` reads AdGuard's query log, so it needs `ADGUARD_PASS` and it can
 only learn from names the family has actually looked up. A category nobody used
 today is legitimately empty. A count that is zero across the board usually means
 AdGuard authentication is failing: check `secrets.env`.
@@ -349,11 +349,11 @@ category can read low. METERING.md explains it in full.
 
 **3. Are those addresses reaching the firewall?**
 
-    docker exec hearth-gw nft list set inet kids gaming_ips | head
-    docker exec hearth-gw nft list set inet kids video_ips | head
-    docker exec hearth-gw nft list set inet kids download_ips | head
+    docker exec genkan-gw nft list set inet kids gaming_ips | head
+    docker exec genkan-gw nft list set inet kids video_ips | head
+    docker exec genkan-gw nft list set inet kids download_ips | head
 
-`kidnet-catmeter` reconciles these every minute: it flushes and refills each set
+`genkan-catmeter` reconciles these every minute: it flushes and refills each set
 in one transaction, so what is in the firewall is exactly what was in
 `category_ips` at the last tick. If the sets are empty while step 2 has rows,
 the meter is not reaching either the database or the container: run it by hand
@@ -397,7 +397,7 @@ The enforcement is the `kids_unclaimed` nft set, reconciled from the
 `unclaimed_devices` view on the gateway's usual fifteen second tick, so switching
 the mode takes effect within a tick and needs no restart:
 
-    docker exec hearth-gw nft list set inet kids kids_unclaimed
+    docker exec genkan-gw nft list set inet kids kids_unclaimed
 
 Smart home kit, appliances and infrastructure are never expected to announce
 themselves and never appear in that set. Only `category='personal'` devices do.
@@ -408,7 +408,7 @@ marked `claim_pending` and **stays restricted** until a parent agrees:
     genkan claims                        what is waiting
     genkan confirm <device|address>      say yes
 
-`confirm` clears the pending flag and re-runs `kidnet-adguard-clients`, so the
+`confirm` clears the pending flag and re-runs `genkan-adguard-clients`, so the
 device picks up its owner's filter tier and clock straight away. The same queue
 and the same button are on the dashboard.
 
@@ -472,7 +472,7 @@ The list only works while it stays dull.
 ## The working-tree snapshot (development boxes only)
 
 `tools/worktree-snapshot.sh` commits the entire working tree, tracked and
-untracked, to `refs/hearth/snapshots` every couple of minutes. It exists because
+untracked, to `refs/genkan/snapshots` every couple of minutes. It exists because
 one `git checkout` discarded an agent's uncommitted work and there was nothing to
 recover from.
 
@@ -486,11 +486,11 @@ household unit refers to it.
 
 The timer is not in the repo, for the same reason the dashboard's is not: how
 often you want it is not Genkan's business. On the reference box it is a user
-timer (`hearth-snapshot.timer`) firing every two minutes, with a `Type=oneshot`
+timer (`genkan-snapshot.timer`) firing every two minutes, with a `Type=oneshot`
 service running `tools/worktree-snapshot.sh save`. `docs/CLI.md` has the unit.
 
-    systemctl --user list-timers hearth-snapshot.timer
-    journalctl --user -u hearth-snapshot.service --since "1 hour ago"
+    systemctl --user list-timers genkan-snapshot.timer
+    journalctl --user -u genkan-snapshot.service --since "1 hour ago"
 
 It uses its own git index file, so it never disturbs what you have staged, and it
 skips the commit entirely when nothing has changed. The ref is local and is never
@@ -513,19 +513,19 @@ throwaway Postgres full of an invented family. There is no second copy of
 anything, so improving the dashboard improves the demo. What makes it inert is
 listed in `demo/README.md` and none of it is a matter of trust: its own database
 on its own network, no docker socket mounted, `bin/` not mounted, no
-`NET_ADMIN`, and `HEARTH_DEMO=1`, which replaces every path that would shell out
+`NET_ADMIN`, and `GENKAN_DEMO=1`, which replaces every path that would shell out
 with a function that returns a polite refusal before `execFile` is reached.
 
 Restarting and re-seeding:
 
-    systemctl --user restart hearth-demo.service        # or: docker compose -f demo/compose.yaml up -d
+    systemctl --user restart genkan-demo.service        # or: docker compose -f demo/compose.yaml up -d
     docker compose -f demo/compose.yaml ps
     docker compose -f demo/compose.yaml logs -f demo-dashboard
 
     demo/reseed.sh                                      # rebuild the demo database now
-    systemctl --user start hearth-demo-reseed.service   # the same thing, logged
+    systemctl --user start genkan-demo-reseed.service   # the same thing, logged
 
-`hearth-demo-reseed.timer` runs the reseed at about 03:40 nightly. Every
+`genkan-demo-reseed.timer` runs the reseed at about 03:40 nightly. Every
 timestamp in `demo/seed.sql` is relative to `now()`, so a nightly rebuild keeps
 the charts showing the last six weeks rather than the six weeks before whenever
 it was last touched, and it puts back anything a visitor changed. It drops the
@@ -538,7 +538,7 @@ After a change to `dashboard/*.mjs`, restart the container. After a change to
     docker compose -f demo/compose.yaml restart demo-dashboard demo-portal
     demo/reseed.sh
 
-The units (`hearth-demo.service`, `hearth-demo-reseed.service` and `.timer`)
+The units (`genkan-demo.service`, `genkan-demo-reseed.service` and `.timer`)
 live on the box rather than in the repo, the same way `kids-dashboard.service`
 does, because where a demo is published is not a household concern.
 
@@ -605,7 +605,7 @@ connection. `genkan bonus <kid> 15` reopens it.
 
     genkan leases
     genkan devices
-    docker exec hearth-gw nft list set inet kids kids_known
+    docker exec genkan-gw nft list set inet kids kids_known
 
 The island is default-deny by source address. A device only gets internet if its
 address is in `kids_known`, which is every active DHCP reservation plus every
@@ -615,15 +615,15 @@ deliberate: it closes the static-IP dodge, and it is one of the checks in the
 container suite.
 
 If a genuinely new device is stuck, it is usually because the lease has not
-reached the database yet. `kidnet-devicescan` runs every minute, and the gateway
+reached the database yet. `genkan-devicescan` runs every minute, and the gateway
 also reads AdGuard's leases directly to close that gap. Force it:
 
     sudo systemctl start kids-devicescan.service
-    docker logs --tail 5 hearth-gw          # look for kids_known going up
+    docker logs --tail 5 genkan-gw          # look for kids_known going up
 
 **3. Is it actually blocked?**
 
-    docker exec hearth-gw nft list set inet kids kids_block
+    docker exec genkan-gw nft list set inet kids kids_block
 
 If an address is in there and the database disagrees, wait fifteen seconds: the
 gateway reconciles from the database, and the database wins. If it does not
@@ -643,8 +643,8 @@ classed personal and went dark at bedtime, reclassify it:
 
 **5. Is the island up at all?**
 
-    docker logs --tail 5 hearth-gw
-    docker exec hearth-gw ip addr show kids0
+    docker logs --tail 5 genkan-gw
+    docker exec genkan-gw ip addr show kids0
 
 No `kids0` inside the container means the warden has not handed it over.
 `systemctl status kids-nic-warden` and check the dongle is plugged in and that
@@ -698,21 +698,21 @@ kids-schedule.timer` shows when it last fired.
 
 That prints the bedtimes, what is in force right now, when it lifts, and any
 holiday window. If the times are right and the child is still blocked, run
-`kidnet-schedule apply` by hand and read what it says.
+`genkan-schedule apply` by hand and read what it says.
 
 **4. Is the database on the household's clock?**
 
     docker exec -i postgres psql -U postgres -tAc "SHOW timezone" -d kids_network
 
 A bedtime is a local-time idea. If that says UTC, the day boundary and the
-bedtime are both twelve hours out. `deploy.sh` sets it from `HEARTH_TZ` in
+bedtime are both twelve hours out. `deploy.sh` sets it from `GENKAN_TZ` in
 `config.env`.
 
 **5. Did the firewall follow?** The block is a row; the gateway rebuilds the
 firewall from it every 15 seconds. If the database says unblocked and the child
 is still off, that is a reconcile problem, not a schedule problem:
 
-    docker logs hearth-gw 2>&1 | grep reconcile | tail
+    docker logs genkan-gw 2>&1 | grep reconcile | tail
 
 ---
 
@@ -731,7 +731,7 @@ itself, so rotation is a two-place change.
     HASH="${HASH/\$2y\$/\$2b\$}"
 
     # 3. Put the hash in AdGuard's LIVE config, inside its volume.
-    docker exec hearth-adguard sh -c \
+    docker exec genkan-adguard sh -c \
       "sed -i 's|^\( *password: \).*|\1$HASH|' /opt/adguardhome/conf/AdGuardHome.yaml"
 
     # 4. Put the plaintext in secrets.env, which is what the genkan tools read.
@@ -739,7 +739,7 @@ itself, so rotation is a two-place change.
 
     # 5. Restart AdGuard and re-run the timers' next tick.
     docker compose --profile island restart adguard
-    ADGUARD_PASS="$NEW" bin/kidnet-adguard apply
+    ADGUARD_PASS="$NEW" bin/genkan-adguard apply
 
 Then check it took:
 
@@ -755,7 +755,7 @@ ever restore a backup onto different hardware.
 
 ## "genkan says permission denied for table ..."
 
-Since 2026-08-30 `bin/genkan` and every `bin/kidnet-*` worker connect as
+Since 2026-08-30 `bin/genkan` and every `bin/genkan-*` worker connect as
 `kids_agent`, a role with no superuser, no ownership and no DDL, instead of as
 the Postgres superuser. `permission denied for table X` means that role has not
 been granted what the command needs. Two causes, in order of likelihood.
@@ -815,16 +815,16 @@ the audit trail.
 
     # Back up (compressed custom format, restorable table by table).
     docker exec postgres pg_dump -U postgres -Fc kids_network \
-      > hearth-$(date +%F).dump
+      > genkan-$(date +%F).dump
 
     # Restore into an empty database.
     docker exec -i postgres psql -U postgres -c "CREATE DATABASE kids_network"
     docker exec -i postgres pg_restore -U postgres -d kids_network --no-owner \
-      < hearth-2026-08-29.dump
+      < genkan-2026-08-29.dump
 
 A plain-text dump is easier to read and diff, if you prefer:
 
-    docker exec postgres pg_dump -U postgres kids_network | gzip > hearth-$(date +%F).sql.gz
+    docker exec postgres pg_dump -U postgres kids_network | gzip > genkan-$(date +%F).sql.gz
 
 Restoring onto a fresh box, remember the `kids_app` role has to exist before the
 grants in the dump will apply:
@@ -854,12 +854,12 @@ URLs and the AdGuard password. Copy them somewhere safe. Without them a rebuild
 needs a fresh `deploy.sh`, which is fine, but AdGuard's password and the
 database credentials would then need re-syncing by hand.
 
-**3. AdGuard's own config and query log**, in the `hearth_adguard-conf` and
-`hearth_adguard-work` Docker volumes. Optional: the query log is already
-mirrored into `dns_log` by `kidnet-dnslog`, and the config is regenerated from
-the database by `kidnet-adguard apply`. If you want it anyway:
+**3. AdGuard's own config and query log**, in the `genkan_adguard-conf` and
+`genkan_adguard-work` Docker volumes. Optional: the query log is already
+mirrored into `dns_log` by `genkan-dnslog`, and the config is regenerated from
+the database by `genkan-adguard apply`. If you want it anyway:
 
-    docker run --rm -v hearth_adguard-conf:/c -v "$PWD:/out" debian:trixie-slim \
+    docker run --rm -v genkan_adguard-conf:/c -v "$PWD:/out" debian:trixie-slim \
       tar czf /out/adguard-conf-$(date +%F).tgz -C /c .
 
 Backups belong on the same principle as everything else here: they are yours,
@@ -902,8 +902,8 @@ before it costs somebody a night's backup.
 child, a reassigned device):
 
     genkan allow-sync                 # if you touched always_allow scope='safety'
-    bin/kidnet-adguard apply          # re-render the DNS rules from the database
-    bin/kidnet-adguard-clients        # re-point the age tiers at the right addresses
+    bin/genkan-adguard apply          # re-render the DNS rules from the database
+    bin/genkan-adguard-clients        # re-point the age tiers at the right addresses
 
 **Upgrading AdGuard.** The image is pinned in `compose.yaml` on purpose, and
 `config/adguard/INTEGRATION.md` records the exact version its API notes were
@@ -944,7 +944,7 @@ To bring it back:
     sudo systemctl start kids-nic-warden.service
     docker compose --profile island up -d
     sudo systemctl start 'kids-*.timer'
-    docker logs -f hearth-gw
+    docker logs -f genkan-gw
 
 Nothing above touches the host's own firewall, because Genkan never installs
 rules there. That is the point of the whole namespace design, and

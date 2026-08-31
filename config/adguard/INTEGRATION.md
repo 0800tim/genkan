@@ -253,7 +253,7 @@ blocklists, `$dnsrewrite` to beat the portal catch-all.
 `/rewrite/add`, `/rewrite/update`, `/rewrite/delete` in the API) are a third
 mechanism again: global, not per-client, and not cancelled by allowlist
 rules. `$dnsrewrite` rules take precedence over them. We use legacy rewrites
-only for stable infrastructure names (`hearth.home`, `portal.hearth.home`)
+only for stable infrastructure names (`genkan.home`, `portal.genkan.home`)
 and never for policy, precisely so allowlist reasoning stays in one place.
 
 ## Version caveats and deliberate omissions

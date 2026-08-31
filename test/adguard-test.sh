@@ -29,7 +29,7 @@ psql "INSERT INTO devices(mac,label,child_id,reserved_ip,kind,category,is_active
 psql "INSERT INTO devices(mac,label,child_id,reserved_ip,kind,category,is_active,last_seen)
       VALUES('fe:ed:00:00:00:03','adgtest-kid3',(SELECT id FROM children WHERE name='$KID3'),'192.168.60.243','phone','personal',true,now())
       ON CONFLICT (mac) DO UPDATE SET child_id=(SELECT id FROM children WHERE name='$KID3'), reserved_ip='192.168.60.243', is_active=true" >/dev/null
-"$KN/kidnet-adguard-clients" >/dev/null 2>&1
+"$KN/genkan-adguard-clients" >/dev/null 2>&1
 
 # Hermetic: clear ALL category blocks, then block gaming+video for the first child.
 # The test restores nothing else, so run it on a resting system.
@@ -38,7 +38,7 @@ psql "INSERT INTO category_state(child_id,category,blocked,set_by)
       SELECT id,'gaming',true,'adgtest' FROM children WHERE name='$KID1'
       UNION ALL SELECT id,'video',true,'adgtest' FROM children WHERE name='$KID1'
       ON CONFLICT(child_id,category) DO UPDATE SET blocked=true,set_by='adgtest'" >/dev/null
-"$KN/kidnet-adguard" apply >/dev/null; sleep 2
+"$KN/genkan-adguard" apply >/dev/null; sleep 2
 
 echo "DNS-layer enforcement (child-11=.101 gaming+video blocked; child-16=.121 clear)"
 want fortnite.com    192.168.60.241 RewriteRule           "11 gaming -> portal"
@@ -52,12 +52,12 @@ want pornhub.com     192.168.60.243 FilteredBlackList     "16 adult blocked"
 
 # Unblock and confirm it clears.
 psql "UPDATE category_state SET blocked=false WHERE set_by='adgtest'" >/dev/null
-"$KN/kidnet-adguard" apply >/dev/null; sleep 2
+"$KN/genkan-adguard" apply >/dev/null; sleep 2
 want fortnite.com 192.168.60.241 NotFilteredNotFound "11 gaming restored after unblock"
 
 psql "DELETE FROM category_state WHERE set_by='adgtest'" >/dev/null
 # Remove the fixture devices and put AdGuard's clients back as they were.
 psql "DELETE FROM devices WHERE label LIKE 'adgtest-%'" >/dev/null
-"$KN/kidnet-adguard-clients" >/dev/null 2>&1
-"$KN/kidnet-adguard" apply >/dev/null 2>&1
+"$KN/genkan-adguard-clients" >/dev/null 2>&1
+"$KN/genkan-adguard" apply >/dev/null 2>&1
 echo; printf 'passed %d, failed %d\n' "$pass" "$fail"; [ "$fail" = 0 ]

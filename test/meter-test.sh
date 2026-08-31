@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Proves per-category active-time metering + budget enforcement, no hardware.
 # Loads the real ruleset in a netns, injects synthetic per-device byte counters
-# (standing in for real traffic), runs kidnet-catmeter against that netns, and
+# (standing in for real traffic), runs genkan-catmeter against that netns, and
 # checks category_usage ticks and that a child over budget gets the category
 # blocked (music/schoolwork untouched).
 set -u
@@ -30,7 +30,7 @@ ip netns exec $NS nft -f "$R/config/nftables/kids.nft"
 psql "INSERT INTO devices(child_id,label,reserved_ip,kind,is_active) VALUES(1,'meter-test-dev','192.168.60.101','console',true) ON CONFLICT (reserved_ip) DO UPDATE SET child_id=1,is_active=true,label='meter-test-dev'" >/dev/null
 psql "INSERT INTO category_budgets(child_id,category,daily_min) VALUES(1,'gaming',3) ON CONFLICT (child_id,category) DO UPDATE SET daily_min=3" >/dev/null
 
-meter(){ NFT_NS=$NS GAMING_THRESH=1000 VIDEO_THRESH=1000 ADGUARD_PASS="${ADGUARD_PASS:-x}" bash "$R/bin/kidnet-catmeter" >/dev/null 2>&1; }
+meter(){ NFT_NS=$NS GAMING_THRESH=1000 VIDEO_THRESH=1000 ADGUARD_PASS="${ADGUARD_PASS:-x}" bash "$R/bin/genkan-catmeter" >/dev/null 2>&1; }
 inject(){ # <bytes> into gaming_dev for .101
   ip netns exec $NS nft add element inet kids gaming_dev "{ 192.168.60.101 counter packets 5 bytes $1 }" 2>/dev/null; }
 

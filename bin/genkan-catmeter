@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# hearth:summary=Meter active minutes per category (gaming, video, download) and enforce budgets.
+# genkan:summary=Meter active minutes per category (gaming, video, download) and enforce budgets.
 #
 # Runs every minute. Reconciles the category IP sets from category_ips (learned
 # from DNS answers), reads and RESETS the per-device byte counters, and for any
 # device that pulled more than a small threshold this minute counts one active
 # minute for that child + category. When a child hits their category budget,
-# that category is blocked (DNS via kidnet-adguard, plus the category set), and
+# that category is blocked (DNS via genkan-adguard, plus the category set), and
 # music/schoolwork are never touched. See METERING.md.
 #
 # DOWNLOADS ARE NOT SCREEN TIME. A game update is bandwidth, not play, and
@@ -24,7 +24,7 @@
 # Download minutes are recorded (so the week's report and the live chart can
 # show them) but never given a budget, so they cannot cut a child off.
 set -euo pipefail
-GW="${GW_CONTAINER:-hearth-gw}"
+GW="${GW_CONTAINER:-genkan-gw}"
 # nft access: container by default; NFT_NS=<netns> for tests, NFT_DIRECT=1 for host.
 nftx(){ if [ -n "${NFT_NS:-}" ]; then sudo ip netns exec "$NFT_NS" nft "$@"
         elif [ "${NFT_DIRECT:-0}" = 1 ]; then nft "$@"
@@ -32,16 +32,16 @@ nftx(){ if [ -n "${NFT_NS:-}" ]; then sudo ip netns exec "$NFT_NS" nft "$@"
 # Connects as kids_agent, a role with no superuser, no DDL and no
 # COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
-DB_NAME="${HEARTH_DB:-kids_network}"
-DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_NAME="${GENKAN_DB:-kids_network}"
+DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 # Every value here is interpolated, so every value is checked. The child id
 # comes back out of the database and the category is one of this script's own
 # three words, but neither is trusted on that basis: see config/db/grants.sql.
-ck_id(){ [[ "$1" =~ ^[0-9]{1,9}$ ]] || { echo "kidnet-catmeter: bad id '$1'" >&2; return 1; }; }
+ck_id(){ [[ "$1" =~ ^[0-9]{1,9}$ ]] || { echo "genkan-catmeter: bad id '$1'" >&2; return 1; }; }
 ck_cat(){ case "$1" in gaming|video|download|social|audio|messaging) return 0;; esac
-          echo "kidnet-catmeter: bad category '$1'" >&2; return 1; }
-ck_ip4(){ [[ "$1" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || { echo "kidnet-catmeter: bad address '$1'" >&2; return 1; }; }
+          echo "genkan-catmeter: bad category '$1'" >&2; return 1; }
+ck_ip4(){ [[ "$1" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || { echo "genkan-catmeter: bad address '$1'" >&2; return 1; }; }
 # Bytes/minute that count as "actively using" (not idle keepalive).
 : "${GAMING_THRESH:=51200}"   # ~50 KB/min
 : "${VIDEO_THRESH:=256000}"   # ~250 KB/min, video is high bitrate
@@ -50,7 +50,7 @@ ck_ip4(){ [[ "$1" =~ ^([0-9]{1,3}\.){3}[0-9]{1,3}$ ]] || { echo "kidnet-catmeter
 # address it is content delivery, not play. Gameplay rarely passes 1 Mbit/s.
 : "${DOWNLOAD_BYTES_PER_MIN:=52428800}"
 
-nftx list set inet kids gaming_ips >/dev/null 2>&1 || { echo "kidnet-catmeter: firewall/sets not loaded"; exit 0; }
+nftx list set inet kids gaming_ips >/dev/null 2>&1 || { echo "genkan-catmeter: firewall/sets not loaded"; exit 0; }
 
 # 0. The download sets and their counting rule. config/nftables/kids.nft ships
 #    them, so on a fresh gateway this is a no-op; it exists so an already
@@ -81,7 +81,7 @@ if [ "$(psqll "SELECT 1" 2>/dev/null)" = 1 ]; then
       true; } | nftx -f - 2>/dev/null || true
   done
 else
-  echo "kidnet-catmeter: database unreachable, keeping the existing address sets"
+  echo "genkan-catmeter: database unreachable, keeping the existing address sets"
 fi
 
 # 2. Read + reset the per-device counters (reset => this read is the minute's delta).
@@ -144,7 +144,7 @@ while IFS='|' read -r cid cat used budget; do
       psqll "INSERT INTO category_state(child_id,category,blocked,set_by) VALUES($cid,'$cat',true,'over-budget')
              ON CONFLICT (child_id,category) DO UPDATE SET blocked=true, since=now(), set_by='over-budget'" >/dev/null
       name=$(psqll "SELECT name FROM children WHERE id=$cid")
-      echo "kidnet-catmeter: $name hit their $cat budget ($used/$budget min); blocking $cat"
+      echo "genkan-catmeter: $name hit their $cat budget ($used/$budget min); blocking $cat"
       enforce=1
     fi
   fi
@@ -153,6 +153,6 @@ done < <(psqll "SELECT u.child_id||'|'||u.category||'|'||u.used_min||'|'||b.dail
   WHERE u.day=CURRENT_DATE AND u.category <> 'download'")
 
 # Push any new category blocks to the DNS layer.
-[ "$enforce" = 1 ] && [ -n "${ADGUARD_PASS:-}" ] && { d="$(dirname "$0")/kidnet-adguard"; [ -x "$d" ] && "$d" apply >/dev/null 2>&1 || true; }
+[ "$enforce" = 1 ] && [ -n "${ADGUARD_PASS:-}" ] && { d="$(dirname "$0")/genkan-adguard"; [ -x "$d" ] && "$d" apply >/dev/null 2>&1 || true; }
 n_active=${#active[@]}
-echo "kidnet-catmeter: tick done ($n_active active child/category this minute)"
+echo "genkan-catmeter: tick done ($n_active active child/category this minute)"

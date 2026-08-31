@@ -6,18 +6,18 @@ Tor/darknet blocking and to the genuinely serious categories, and how each
 domain maps to the `flag_domains` alert table (config/db/schema-flags.sql).
 
 Division of labour, one line: **nftables blocks the Tor network itself**
-(the `tor_nodes` IP set, fed by `bin/kidnet-tor-sync`); **AdGuard blocks
+(the `tor_nodes` IP set, fed by `bin/genkan-tor-sync`); **AdGuard blocks
 the on-ramps** (downloads, bridges, onion gateways, directories) and gives
 us the DNS lookups that drive the alerts. Neither layer is complete alone.
 
 ## a. Tor on-ramps: block AND portal-redirect
 
-These are rendered by `bin/kidnet-adguard` as one `$client=<child name>`
+These are rendered by `bin/genkan-adguard` as one `$client=<child name>`
 dnsrewrite rule per child, pointed at the portal address, so a kid who tries
 them gets the warm "come talk to me" page (docs/tor-and-safety.md has the
 copy), not a silent NXDOMAIN. `.onion` patterns are excluded from the render,
 since there is nothing to redirect. Every one of them also raises an alert on
-the query-log ingestion pass, via `bin/kidnet-alerts`.
+the query-log ingestion pass, via `bin/genkan-alerts`.
 
 Self-harm patterns are deliberately NOT rendered here. That category is
 alert-only by policy and must never route a child to any blocking page.

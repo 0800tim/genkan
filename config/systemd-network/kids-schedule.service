@@ -1,8 +1,8 @@
 # Installed to /etc/systemd/system/ by deploy.sh.
 [Unit]
-Description=Hearth scheduled bedtimes (apply and lift)
+Description=Genkan scheduled bedtimes (apply and lift)
 After=docker.service
 [Service]
 Type=oneshot
 EnvironmentFile=/srv/projects/internal/kids-network/secrets.env
-ExecStart=/usr/local/bin/kidnet-schedule apply
+ExecStart=/usr/local/bin/genkan-schedule apply

@@ -1,4 +1,4 @@
-# HEARTH: AdGuard Home seed configuration for the kids' island.
+# GENKAN: AdGuard Home seed configuration for the kids' island.
 # Target: AdGuard Home v0.107.79 (config schema_version 34). Pin the container
 # image to this version; the schema migrates forward automatically but not back.
 #
@@ -28,11 +28,11 @@ http:
 users:
   # Placeholder credentials: admin / change-me-on-deploy.
   # NOTE: client names must match the `children.name` values in Postgres,
-  # because kidnet-adguard renders per-child rules as $client=<name>. Rename
-  # these to the real household names at setup (kidnet-adguard then matches).
+  # because genkan-adguard renders per-child rules as $client=<name>. Rename
+  # these to the real household names at setup (genkan-adguard then matches).
   # REPLACE AT DEPLOY. deploy.sh does this automatically: it generates a
   # random password, writes the bcrypt hash here in the seed copy, and stores
-  # the plaintext in secrets.env (ADGUARD_PASS) for kidnet-adguard. This
+  # the plaintext in secrets.env (ADGUARD_PASS) for genkan-adguard. This
   # tracked file must NEVER contain a real or known hash: it is public.
   # kidnet reads the real credentials from secrets.env (gitignored).
   - name: admin
@@ -73,7 +73,7 @@ dns:
     - 149.112.112.10
     - 1.1.1.1
 
-  # Per-device logs are the point of HEARTH, so do not anonymise client IPs.
+  # Per-device logs are the point of GENKAN, so do not anonymise client IPs.
   anonymize_client_ip: false
 
   # Do not serve the host's /etc/hosts entries to the kids' island.
@@ -115,9 +115,9 @@ filtering:
 
   # Stable local names for the gateway and the captive portal.
   rewrites:
-    - domain: hearth.home
+    - domain: genkan.home
       answer: 192.168.60.1
-    - domain: portal.hearth.home
+    - domain: portal.genkan.home
       answer: 192.168.60.1
 
   # No global service blocks; services are blocked per client (per tier).
@@ -207,7 +207,7 @@ dhcp:
   # and must never run DHCP (see PLAN.md).
   enabled: true
   interface_name: kids0
-  local_domain_name: hearth
+  local_domain_name: genkan
   dhcpv4:
     gateway_ip: 192.168.60.1
     subnet_mask: 255.255.255.0

@@ -30,7 +30,7 @@ COMMENT ON COLUMN category_state.speed IS
 --            a search result and a small page all still arrive, and video
 --            cannot hold a stream at any quality. See DECISIONS.md.
 --
--- on_timeout what happens when a child runs out of time. 'cut' is what Hearth
+-- on_timeout what happens when a child runs out of time. 'cut' is what Genkan
 --            has always done and stays the default, because changing what
 --            happens at zero without a household choosing it would be wrong.
 --            'slow' drops them into the slow lane instead: the evening tails

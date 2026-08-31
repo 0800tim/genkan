@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hearth:summary=Sync AdGuard's per-child clients to the real assigned device IPs.
+# genkan:summary=Sync AdGuard's per-child clients to the real assigned device IPs.
 #
 # AdGuard applies the age tier (SafeSearch, blocked services, per-client rules)
 # by CLIENT, and a client is identified by IP. Those IPs must therefore track
@@ -40,8 +40,8 @@ set -uo pipefail
 # Connects as kids_agent, a role with no superuser, no DDL and no
 # COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
-DB_NAME="${HEARTH_DB:-kids_network}"
-DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_NAME="${GENKAN_DB:-kids_network}"
+DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 
 MAP=$(psqll "
@@ -61,7 +61,7 @@ MAP=$(psqll "
   WHERE d.category='shared' AND d.is_active AND d.reserved_ip IS NOT NULL
     AND d.label IS NOT NULL AND d.label <> '' AND d.label NOT LIKE '%|%'
     AND NOT EXISTS (SELECT 1 FROM children c WHERE lower(c.name)=lower(d.label))")
-[ -n "$MAP" ] || { echo "kidnet-adguard-clients: nobody who needs a client of their own"; exit 0; }
+[ -n "$MAP" ] || { echo "genkan-adguard-clients: nobody who needs a client of their own"; exit 0; }
 
 ADGUARD_URL="$ADGUARD_URL" ADGUARD_USER="$ADGUARD_USER" ADGUARD_PASS="$ADGUARD_PASS" MAP="$MAP" python3 <<'PY'
 import os,json,base64,urllib.request
@@ -91,7 +91,7 @@ TEMPLATES={
   # guest level makes.
   "guest":  dict(parental=True,  safesearch=False, services=[], private=True),
 }
-# AdGuard's own tag vocabulary, so a client Hearth creates looks like one a
+# AdGuard's own tag vocabulary, so a client Genkan creates looks like one a
 # person created in the UI. Nothing here depends on the tag; it is there so the
 # AdGuard query log reads sensibly.
 TAGS={"young":["user_child"],"standard":["user_child"],"teen":["user_child"],
@@ -206,5 +206,5 @@ for name,(tier,role,active,ips) in want.items():
     call("/control/clients/update",{"name":name,"data":new})
     print(f"  {name}: ids -> {', '.join(ips)}")
     changed+=1
-print(f"kidnet-adguard-clients: {changed} client(s) updated")
+print(f"genkan-adguard-clients: {changed} client(s) updated")
 PY

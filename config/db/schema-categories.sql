@@ -165,7 +165,7 @@ ON CONFLICT (category, domain) DO NOTHING;
 -- first box; they belong here so a fresh deploy builds them too.
 --
 -- category_ips: "these addresses are gaming/video", learned from DNS answers
--- and TTL'd by `seen`. kidnet-catmeter loads them into the nftables sets.
+-- and TTL'd by `seen`. genkan-catmeter loads them into the nftables sets.
 CREATE TABLE IF NOT EXISTS category_ips (
   ip       inet NOT NULL,
   category text NOT NULL,
@@ -194,7 +194,7 @@ CREATE TABLE IF NOT EXISTS category_budgets (
 );
 
 -- The portal and dashboard connect as the limited kids_app role. Usage and the
--- learned addresses stay read-only: the meter (kidnet-catmeter) and kidnet own
+-- learned addresses stay read-only: the meter (genkan-catmeter) and kidnet own
 -- every write to those. Budgets are the exception, because a per-category
 -- budget is a parent's decision and the dashboard's manage-children area has
 -- to be able to set one; changing a budget cannot corrupt any measurement.

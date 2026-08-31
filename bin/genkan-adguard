@@ -15,8 +15,8 @@ set -euo pipefail
 # Connects as kids_agent, a role with no superuser, no DDL and no
 # COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
-DB_NAME="${HEARTH_DB:-kids_network}"
-DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_NAME="${GENKAN_DB:-kids_network}"
+DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 
 render(){
@@ -61,14 +61,14 @@ auth=base64.b64encode(f'{os.environ["ADGUARD_USER"]}:{os.environ["ADGUARD_PASS"]
 req.add_header("Authorization","Basic "+auth); req.add_header("Content-Type","application/json")
 try:
     urllib.request.urlopen(req,timeout=8)
-    print(f"kidnet-adguard: applied {len(rules)} rules")
+    print(f"genkan-adguard: applied {len(rules)} rules")
 except Exception as e:
-    print(f"kidnet-adguard: FAILED to apply rules: {e}",file=sys.stderr); sys.exit(1)
+    print(f"genkan-adguard: FAILED to apply rules: {e}",file=sys.stderr); sys.exit(1)
 PYEOF
 }
 
 case "${1:-apply}" in
   apply)  apply;;
   render) render;;
-  *) echo "usage: kidnet-adguard [apply|render]"; exit 1;;
+  *) echo "usage: genkan-adguard [apply|render]"; exit 1;;
 esac

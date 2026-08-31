@@ -1,7 +1,7 @@
 -- Quiz banks a parent wrote, and the numbers that tune what earning is worth.
 --
 -- Two separate jobs live in this file because they arrived together, from the
--- same complaint: the learn-to-earn half of Hearth could only be changed by
+-- same complaint: the learn-to-earn half of Genkan could only be changed by
 -- editing files in the repo, which is fine for an agent and useless for a
 -- parent on the couch with a phone.
 --
@@ -143,7 +143,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS earn_settings_house_idx ON earn_settings ((chi
 CREATE UNIQUE INDEX IF NOT EXISTS earn_settings_child_idx ON earn_settings (child_id) WHERE child_id IS NOT NULL;
 
 -- The one place the fallback chain is written down: this child, then the
--- household, then the numbers Hearth has always shipped. The portal and the
+-- household, then the numbers Genkan has always shipped. The portal and the
 -- dashboard both read this view, so they cannot disagree.
 CREATE OR REPLACE VIEW earn_settings_effective AS
 SELECT c.id   AS child_id,

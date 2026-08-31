@@ -1,5 +1,5 @@
 [Unit]
-Description=Hearth household IoT policy (learn vendor addresses, reapply the policy)
+Description=Genkan household IoT policy (learn vendor addresses, reapply the policy)
 After=docker.service
 [Service]
 Type=oneshot
@@ -7,4 +7,4 @@ EnvironmentFile=/srv/projects/internal/kids-network/secrets.env
 # learn refreshes the vendor address lists and then applies. In observe mode
 # (the default) applying changes nothing a device can feel: it only loads the
 # counters that show what enforcement would refuse.
-ExecStart=/usr/local/bin/kidnet-iot-policy learn
+ExecStart=/usr/local/bin/genkan-iot-policy learn

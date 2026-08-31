@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hearth:summary=Learn which IPs belong to which service (YouTube, Netflix, ...) from DNS answers.
+# genkan:summary=Learn which IPs belong to which service (YouTube, Netflix, ...) from DNS answers.
 #
 # The same trick the category meter uses, one level finer. Because we are the
 # resolver, a device resolving googlevideo.com tells us those IPs are YouTube.
@@ -14,12 +14,12 @@ PAGES="${SERVICEMAP_PAGES:-15}"
 # Connects as kids_agent, a role with no superuser, no DDL and no
 # COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
-DB_NAME="${HEARTH_DB:-kids_network}"
-DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_NAME="${GENKAN_DB:-kids_network}"
+DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 DB=(docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME")
 
 MAP=$("${DB[@]}" -tAc "SELECT s.name||' '||d.domain FROM service_domains d JOIN services s ON s.id=d.service_id")
-[ -n "$MAP" ] || { echo "kidnet-servicemap: no service domains configured"; exit 0; }
+[ -n "$MAP" ] || { echo "genkan-servicemap: no service domains configured"; exit 0; }
 
 TSV=$(ADGUARD_URL="$ADGUARD_URL" ADGUARD_USER="$ADGUARD_USER" ADGUARD_PASS="$ADGUARD_PASS" PAGES="$PAGES" MAP="$MAP" python3 <<'PY'
 import os,json,urllib.request,urllib.parse,base64,sys,csv
@@ -60,7 +60,7 @@ w=csv.writer(sys.stdout,delimiter="\t")
 for ip,s in rows: w.writerow([ip,s])
 PY
 )
-[ -z "$TSV" ] && { echo "kidnet-servicemap: nothing new"; exit 0; }
+[ -z "$TSV" ] && { echo "genkan-servicemap: nothing new"; exit 0; }
 printf '%s\n' "$TSV" | "${DB[@]}" -qc "
 CREATE TEMP TABLE _si(ip inet, sname text);
 COPY _si FROM STDIN WITH (FORMAT text);
@@ -68,4 +68,4 @@ INSERT INTO service_ips(ip, service_id, seen)
 SELECT i.ip, s.id, now() FROM _si i JOIN services s ON s.name=i.sname
 ON CONFLICT (ip, service_id) DO UPDATE SET seen=now();"
 N=$(printf '%s\n' "$TSV" | grep -c . || true)
-echo "kidnet-servicemap: tagged $N ip/service pair(s)"
+echo "genkan-servicemap: tagged $N ip/service pair(s)"

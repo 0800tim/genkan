@@ -204,7 +204,7 @@ kid. It never sets them up to fail.
 From the repo root, on the file wherever you wrote it:
 
 ```
-bin/kidnet-quiz validate /tmp/madagascar-animals.json
+bin/genkan-quiz validate /tmp/madagascar-animals.json
 ```
 
 It checks JSON parses, ids are unique and match the filename, exactly
@@ -224,7 +224,7 @@ make it pass.
 ## Step 7: install it
 
 ```
-bin/kidnet-quiz install /tmp/madagascar-animals.json
+bin/genkan-quiz install /tmp/madagascar-animals.json
 ```
 
 That validates the file again, copies it into `portal/quizzes/`,
@@ -235,12 +235,12 @@ file comes straight back out.
 Then check your work:
 
 ```
-bin/kidnet-quiz list                  # it should be there, with its ramp
-bin/kidnet-quiz stats <kid>           # after they have had a go
+bin/genkan-quiz list                  # it should be there, with its ramp
+bin/genkan-quiz stats <kid>           # after they have had a go
 ```
 
-Other commands: `bin/kidnet-quiz remove <id>` takes a bank off the
-portal (earned minutes and past results stay), and `bin/kidnet-quiz
+Other commands: `bin/genkan-quiz remove <id>` takes a bank off the
+portal (earned minutes and past results stay), and `bin/genkan-quiz
 reload` re-reads the directory if you edited a file by hand.
 
 Take the quiz yourself before the kid does. It is their time you are
@@ -433,7 +433,7 @@ The topic is the easy part. These are what make a kid come back:
   can name every lemur, their level 1 is not "what is a lemur".
 - **Two focused banks beat one sprawling one.** "Animals of Madagascar"
   and "Madagascar's forests" are better than "Madagascar".
-- **Watch the stats.** `kidnet-quiz stats <kid>` shows accuracy per
+- **Watch the stats.** `genkan-quiz stats <kid>` shows accuracy per
   difficulty level. If they are at 30% on level 3, the level 3
   questions are really level 4 and you should relabel them. If they are
   at 95% on level 5, write harder ones.

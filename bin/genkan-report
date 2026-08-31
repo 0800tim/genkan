@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# kidnet-report - weekly per-child digest from the HEARTH gateway's Postgres.
+# genkan-report - weekly per-child digest from the GENKAN gateway's Postgres.
 # A conversation starter for the family, not a spy report: time totals, top
 # sites and things worth a chat. It never shows message content, because the
 # network cannot see inside encrypted apps and would not print it if it could.
 # Read-only: this script only ever SELECTs.
 #
-#   kidnet-report <child> [week]   one child's week
-#   kidnet-report all [week]       every child (kind='child')
+#   genkan-report <child> [week]   one child's week
+#   genkan-report all [week]       every child (kind='child')
 #
 #   [week] picks the Monday-to-Sunday week to report:
 #     (blank)      the current week, so far
@@ -18,13 +18,13 @@ set -euo pipefail
 # Connects as kids_agent, a role with no superuser, no DDL and no
 # COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
-DB_NAME="${HEARTH_DB:-kids_network}"
-DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_NAME="${GENKAN_DB:-kids_network}"
+DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 # Same input gates as kidnet: names and dates only, nothing else reaches SQL.
-ck_name(){ [[ "$1" =~ ^[A-Za-z0-9_-]{1,32}$ ]] || { echo "kidnet-report: bad name '$1'" >&2; exit 1; }; }
-ck_date(){ [[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || { echo "kidnet-report: bad week '$1' (use last, or YYYY-MM-DD)" >&2; exit 1; }; }
-ck_id(){ [[ "$1" =~ ^[0-9]{1,9}$ ]] || { echo "kidnet-report: bad id '$1'" >&2; exit 1; }; }
+ck_name(){ [[ "$1" =~ ^[A-Za-z0-9_-]{1,32}$ ]] || { echo "genkan-report: bad name '$1'" >&2; exit 1; }; }
+ck_date(){ [[ "$1" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]] || { echo "genkan-report: bad week '$1' (use last, or YYYY-MM-DD)" >&2; exit 1; }; }
+ck_id(){ [[ "$1" =~ ^[0-9]{1,9}$ ]] || { echo "genkan-report: bad id '$1'" >&2; exit 1; }; }
 tid(){ ck_name "$1"; psqll "SELECT id FROM children WHERE lower(name)=lower('$1')"; }
 hm(){ local m="${1:-0}"; if [ "$m" -lt 60 ]; then echo "${m} min"; else echo "$((m/60))h $((m%60))m"; fi; }
 
@@ -34,7 +34,7 @@ week_bounds(){ local ref
     "")   ref=$(date +%F);;
     last) ref=$(date -d '7 days ago' +%F);;
     *)    ck_date "$1"; ref="$1"
-          date -d "$ref" >/dev/null 2>&1 || { echo "kidnet-report: '$ref' is not a real date" >&2; exit 1; };;
+          date -d "$ref" >/dev/null 2>&1 || { echo "genkan-report: '$ref' is not a real date" >&2; exit 1; };;
   esac
   W0=$(date -d "$ref -$(( $(date -d "$ref" +%u) - 1 )) days" +%F)
   W1=$(date -d "$W0 +7 days" +%F)
@@ -45,11 +45,11 @@ week_bounds(){ local ref
 
 report_one(){ local kid="$1" cid name total days busiest hrs gaming video
   local top blocked al fl qn qm qtopics ch tn tm any
-  cid=$(tid "$kid"); [ -n "$cid" ] || { echo "kidnet-report: unknown child '$kid'" >&2; return 1; }
+  cid=$(tid "$kid"); [ -n "$cid" ] || { echo "genkan-report: unknown child '$kid'" >&2; return 1; }
   ck_id "$cid"
   name=$(psqll "SELECT name FROM children WHERE id=$cid")
 
-  echo "HEARTH weekly digest: $name"
+  echo "GENKAN weekly digest: $name"
   echo "Week $(date -d "$W0" '+%a %-d %b') to $(date -d "$W1 -1 day" '+%a %-d %b %Y')"
   echo "Something to talk about together, not a report card."
   echo
@@ -180,7 +180,7 @@ case "${1:-}" in
       if [ "$first" = 1 ]; then first=0; else printf '\n%s\n\n' '----------------------------------------'; fi
       report_one "$c"
     done
-    if [ "$first" = 1 ]; then echo "kidnet-report: no children in the database yet"; fi;;
+    if [ "$first" = 1 ]; then echo "genkan-report: no children in the database yet"; fi;;
   *)
     ck_name "$1"
     week_bounds "${2:-}"

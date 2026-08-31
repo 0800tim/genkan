@@ -103,7 +103,7 @@ Walk me through, one step at a time, waiting for me after each:
    am writing to the stick and not to my own hard drive. Show me the exact
    command or tool, and make me confirm the device before anything is written.
 4. What to set during the installer or the imager's customisation: hostname
-   (use "hearth"), a user account, SSH enabled with my key if I have one, and
+   (use "genkan"), a user account, SSH enabled with my key if I have one, and
    on a Pi the wifi COUNTRY setting even if I am not using wifi.
 5. Do NOT join the box to my house wifi. Its uplink is an ethernet cable.
 
@@ -141,7 +141,7 @@ Prepare the host, and only the host. Do not clone anything yet.
    plugin. Use Docker's official installation for this distro, not a snap.
    The Docker snap breaks the network namespace handover Genkan relies on.
 4. Enable Docker at boot, and add me to the docker group.
-5. Set net.ipv4.ip_forward=1 persistently in /etc/sysctl.d/99-hearth.conf.
+5. Set net.ipv4.ip_forward=1 persistently in /etc/sysctl.d/99-genkan.conf.
 6. On a Raspberry Pi only: enable the memory cgroup by appending
    "cgroup_enable=cpuset cgroup_enable=memory cgroup_memory=1" to the single
    line in /boot/firmware/cmdline.txt, and tell me it needs a reboot.
@@ -185,7 +185,7 @@ Then do the interface work and nothing else:
    what I have to plug in or which topology I have to choose deliberately.
 3. Copy config.env.example to config.env and set KIDS_NIC_MAC to the kids'
    interface MAC and UPLINK_IFACE to the uplink's interface name. Set
-   HEARTH_TZ to <your IANA timezone, e.g. Pacific/Auckland> and KIDS_SSID to
+   GENKAN_TZ to <your IANA timezone, e.g. Pacific/Auckland> and KIDS_SSID to
    <the name you will give the kids' wifi>. chmod 600 config.env.
 4. Make this host's network manager leave the kids' interface alone: a
    NetworkManager drop-in matching that MAC, or a systemd-networkd
@@ -285,7 +285,7 @@ section, before running anything.
    If sudo needs a password, stop and tell me, and I will run it.
 4. Then verify, and show me the output of each:
      docker ps
-     docker logs hearth-gw | tail -30
+     docker logs genkan-gw | tail -30
      systemctl status kids-nic-warden
      genkan status
      genkan allow-status
@@ -297,8 +297,8 @@ Do not weaken anything in config/nftables/kids.nft to make a test pass. If a
 test fails, that is information, not an obstacle.
 ```
 
-**What you should see.** Containers `hearth-gw`, `hearth-adguard` and
-`hearth-portal` up; the gateway log reporting the segment guard verdict and the
+**What you should see.** Containers `genkan-gw`, `genkan-adguard` and
+`genkan-portal` up; the gateway log reporting the segment guard verdict and the
 firewall loading; the NIC warden active with a handover in its journal; and
 `genkan allow-status` listing addresses rather than nothing. `container-test.sh`
 prints its own pass count at the end, and all of them have to pass.
@@ -337,7 +337,7 @@ Talk me through, one step at a time:
    my main LAN of any kind. Explain why each one matters, briefly.
 2. Which cable goes where: my router to the uplink, and the kids' interface
    to the access point.
-3. After I plug it in, watch "docker logs -f hearth-gw" with me and tell me
+3. After I plug it in, watch "docker logs -f genkan-gw" with me and tell me
    what the segment guard says. If it refuses the wire, tell me exactly what
    it heard and what that means about my access point.
 
@@ -374,7 +374,7 @@ There is an example unit in the repo and you adapt it.
 
 ```
 Read docs/OPERATIONS.md, the section on the admin dashboard, and
-config/systemd-user/hearth-dashboard.service.
+config/systemd-user/genkan-dashboard.service.
 
 I want the parents' dashboard reachable from our phones and nowhere else.
 1. Explain my options for that, and be honest about the trade-offs. I am
@@ -490,7 +490,7 @@ Read docs/reporting.md, LEARN-TO-EARN.md and METERING.md.
 
 Genkan has been running for a week. Help me review it, and be honest rather
 than encouraging:
-1. Run "bin/kidnet-report all last" and walk me through it, one child at a
+1. Run "bin/genkan-report all last" and walk me through it, one child at a
    time. Tell me what is actually notable and what is just noise.
 2. Show me "genkan topsites" and anything in the alerts table. For any
    self-harm category flag, tell me plainly that it is a care conversation
@@ -498,7 +498,7 @@ than encouraging:
 3. Tell me where the time budgets are wrong: who is hitting the wall every
    day and who never gets near it. Recommend changes and tell me the command,
    but do not make the change until I say so.
-4. Show me "bin/kidnet-quiz stats" per child: what they have passed, what
+4. Show me "bin/genkan-quiz stats" per child: what they have passed, what
    they are failing, and where a bank is too easy or too hard.
 5. Tell me one thing that is not working the way the docs claim it should.
 
@@ -528,7 +528,7 @@ Optional, and the most rewarding part once the network side is boring.
 Read docs/runbooks/quiz-suggestions.md, docs/runbooks/quiz-on-demand.md and
 portal/quizzes/FORMAT.md.
 
-Run "bin/kidnet-quiz-suggest <kid>" and use the briefing to write one new
+Run "bin/genkan-quiz-suggest <kid>" and use the briefing to write one new
 quiz bank aimed at them: <subject or interest>, for age <n>.
 
 Rules, from CONTRIBUTING.md's section on what makes a good bank:
@@ -541,14 +541,14 @@ Rules, from CONTRIBUTING.md's section on what makes a good bank:
 - NZ English, correct macrons on any te reo Maori.
 
 Validate with "node tools/validate-quizzes.mjs", then install with
-"bin/kidnet-quiz install <file>".
+"bin/genkan-quiz install <file>".
 
 Then print every question and answer for me to check. I have to fact check
 every answer myself before my kids are paid screen time for it.
 ```
 
 **What you should see.** A bank that validates, installs, and appears in
-`bin/kidnet-quiz list` with a difficulty spread rather than `flat`.
+`bin/genkan-quiz list` with a difficulty spread rather than `flat`.
 
 **If it looks wrong.** `install` refuses anything that does not validate, and
 re-validates the whole directory afterwards, pulling the file back out if the

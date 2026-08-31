@@ -359,7 +359,7 @@ if (paths.length === 0) {
   process.exit(1);
 }
 if (LEARN_DOMAINS.size === 0) {
-  console.error("Could not read the reading list from config/db/schema-learn*.sql, so links cannot be checked. Run this from a Hearth checkout.");
+  console.error("Could not read the reading list from config/db/schema-learn*.sql, so links cannot be checked. Run this from a Genkan checkout.");
   process.exit(1);
 }
 

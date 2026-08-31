@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Hearth gateway supervisor. Runs as PID 1 inside the container.
+# Genkan gateway supervisor. Runs as PID 1 inside the container.
 #
 # Lifecycle: wait for the host warden to hand us kids0 -> run the segment
 # guard -> configure the interface -> load the firewall -> re-sync block and
@@ -242,7 +242,7 @@ sync_state(){
   reconcile_set slow_social "SELECT ip FROM slow_lane_ips WHERE category='social'"
   reconcile_set slow_all    "SELECT ip FROM slow_lane_ips WHERE category='internet'"
   # Where "social" is, learned from DNS answers exactly like gaming and video.
-  # kidnet-catmeter fills the other three destination sets on its own minute
+  # genkan-catmeter fills the other three destination sets on its own minute
   # timer; social has no meter, so it is filled here.
   reconcile_set social_ips "SELECT host(ip) FROM category_ips
      WHERE category='social' AND seen > now() - interval '24 hours'"
@@ -258,7 +258,7 @@ sync_state(){
 # seconds would be work for nothing.
 #
 # It reads the database like every other set, which is the whole point of the
-# change: kidnet-tor-sync used to write a file and an nft snippet that nothing
+# change: genkan-tor-sync used to write a file and an nft snippet that nothing
 # ever applied, so @tor_nodes was empty for the life of the box while the daily
 # job reported success. A set the firewall rebuilds from Postgres cannot drift
 # out of force, because a restart puts it back rather than losing it.
@@ -269,7 +269,7 @@ sync_tor_nodes(){
   # is the safe direction here too. An empty tor_nodes table is a household
   # that has not fetched the list yet, not an instruction to unblock Tor, and
   # it cannot be told from a fetch that failed, so it is left to say so in
-  # kidnet-health rather than acted on.
+  # genkan-health rather than acted on.
   reconcile_set tor_nodes "SELECT host(ip) FROM tor_nodes"
 }
 

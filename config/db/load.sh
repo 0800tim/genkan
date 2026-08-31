@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hearth:summary=Load every schema file into a database, in an order that works.
+# genkan:summary=Load every schema file into a database, in an order that works.
 #
 # The order matters and is not alphabetical, because several files build views
 # over tables and columns that other files add. A documented list drifts: the

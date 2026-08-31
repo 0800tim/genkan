@@ -34,5 +34,5 @@ body:
     id: logs
     attributes:
       label: Relevant logs
-      description: "`docker logs hearth-gw` is usually the place to start. Please remove anything identifying."
+      description: "`docker logs genkan-gw` is usually the place to start. Please remove anything identifying."
       render: shell

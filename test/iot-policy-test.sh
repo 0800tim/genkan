@@ -5,7 +5,7 @@
 # The lab, all in throwaway network namespaces:
 #
 #            camera .201 ---\
-#            vacuum .202 ----+--[ kids0 bridge ]-- hearth-iot-gw --- internet
+#            vacuum .202 ----+--[ kids0 bridge ]-- genkan-iot-gw --- internet
 #            speaker .203 --/                          |             203.0.113.x
 #            phone  .204 --/                      the real kids.nft
 #                                                 + the generated policy
@@ -19,7 +19,7 @@
 # can judge them, which the documentation says in as many words.
 #
 # The gateway namespace loads the REAL config/nftables/kids.nft and then the
-# REAL bin/kidnet-iot-policy generates the policy on top of it from the REAL
+# REAL bin/genkan-iot-policy generates the policy on top of it from the REAL
 # database rows, so what is tested here is what ships.
 #
 # Run: sudo test/iot-policy-test.sh
@@ -32,18 +32,18 @@ NFT="$(command -v nft || echo /usr/sbin/nft)"
 for _t in ip nft python3; do
   command -v "$_t" >/dev/null || { echo "MISSING REQUIRED TOOL: $_t"; exit 1; }
 done
-GWNS=hearth-iot-gw
-NETNS=hearth-iot-net
-DEVNS="hearth-iot-cam hearth-iot-vac hearth-iot-spk hearth-iot-phone"
+GWNS=genkan-iot-gw
+NETNS=genkan-iot-net
+DEVNS="genkan-iot-cam genkan-iot-vac genkan-iot-spk genkan-iot-phone"
 GW="ip netns exec $GWNS"
-CAM="ip netns exec hearth-iot-cam"
-VAC="ip netns exec hearth-iot-vac"
-SPK="ip netns exec hearth-iot-spk"
-PHONE="ip netns exec hearth-iot-phone"
+CAM="ip netns exec genkan-iot-cam"
+VAC="ip netns exec genkan-iot-vac"
+SPK="ip netns exec genkan-iot-spk"
+PHONE="ip netns exec genkan-iot-phone"
 NET="ip netns exec $NETNS"
 pass=0; fail=0; pids=""
 psql(){ docker exec -i postgres psql -U postgres -d kids_network -tAc "$1"; }
-policy(){ NFT_NS=$GWNS IOT_POLICY_MODE="$1" bash "$R/bin/kidnet-iot-policy" apply >"$TMP/apply.log" 2>&1; }
+policy(){ NFT_NS=$GWNS IOT_POLICY_MODE="$1" bash "$R/bin/genkan-iot-policy" apply >"$TMP/apply.log" 2>&1; }
 
 cleanup(){
   [ -z "$pids" ] || kill $pids 2>/dev/null
@@ -97,10 +97,10 @@ join(){ # join <netns> <last octet> <veth name>
   ip netns exec "$1" ip route add 192.168.60.1 dev e0
   ip netns exec "$1" ip route add default via 192.168.60.1
 }
-join hearth-iot-cam   201 v-cam
-join hearth-iot-vac   202 v-vac
-join hearth-iot-spk   203 v-spk
-join hearth-iot-phone 204 v-phone
+join genkan-iot-cam   201 v-cam
+join genkan-iot-vac   202 v-vac
+join genkan-iot-spk   203 v-spk
+join genkan-iot-phone 204 v-phone
 
 $NET ip link set lo up; $NET ip link set n-eth0 up
 $NET ip addr add 203.0.113.2/24 dev n-eth0      # the camera's vendor cloud
@@ -130,9 +130,9 @@ def serve(p):
 for p in (80,443): threading.Thread(target=serve,args=(p,),daemon=True).start()
 time.sleep(900)" >/dev/null 2>&1 & pids="$pids $!"; }
 listen $NETNS FAR
-listen hearth-iot-cam CAM
-listen hearth-iot-vac VAC
-listen hearth-iot-phone PHONE
+listen genkan-iot-cam CAM
+listen genkan-iot-vac VAC
+listen genkan-iot-phone PHONE
 sleep 1.5
 
 # --- the devices, as database rows -----------------------------------------
@@ -173,7 +173,7 @@ counted(){ # counted <description> <rule text fragment>
 
 echo
 echo "The generated ruleset"
-NFT_NS=$GWNS IOT_POLICY_MODE=enforce bash "$R/bin/kidnet-iot-policy" dryrun 2>/dev/null > "$TMP/rules.nft"
+NFT_NS=$GWNS IOT_POLICY_MODE=enforce bash "$R/bin/genkan-iot-policy" dryrun 2>/dev/null > "$TMP/rules.nft"
 [ -s "$TMP/rules.nft" ] && ok "policy generated from database rows" || bad "generator produced nothing"
 $GW $NFT -c -f "$TMP/rules.nft" >/dev/null 2>&1 \
   && ok "generated ruleset validates (nft -c -f)" || bad "generated ruleset does not validate"
@@ -185,8 +185,8 @@ grep -q 'ip daddr @kids_allow return' "$TMP/rules.nft" \
 echo
 echo "OBSERVE mode: the shipped default must change nothing"
 policy observe
-check "the camera still reaches anywhere on the internet"   yes hearth-iot-cam 203.0.113.3 443
-$GW $NFT list chain inet kids forward | grep -q 'hearth-iot-allow' \
+check "the camera still reaches anywhere on the internet"   yes genkan-iot-cam 203.0.113.3 443
+$GW $NFT list chain inet kids forward | grep -q 'genkan-iot-allow' \
   && bad "observe mode inserted rules into kids.nft's forward chain" \
   || ok  "observe mode leaves kids.nft's own forward chain alone"
 $GW $NFT list chain inet kids iotpolicy | grep -qE '\b(drop|reject)\b' \
@@ -196,51 +196,51 @@ counted "but it counts what enforcing WOULD have refused" "vendor-restricted dev
 echo
 echo "ENFORCE mode: a camera locked down"
 policy enforce
-banner "the camera reaches its VENDOR CLOUD (remote recording keeps working)" FAR hearth-iot-cam 203.0.113.2 443
-check  "the camera cannot reach anywhere else on the internet"    no  hearth-iot-cam 203.0.113.3 443
-check  "the camera cannot reach a phone"                          no  hearth-iot-cam 192.168.60.204 80
-check  "the camera cannot reach another smart device"             no  hearth-iot-cam 192.168.60.202 80
-check  "the camera cannot reach the main house LAN"               no  hearth-iot-cam 192.168.1.10 80
+banner "the camera reaches its VENDOR CLOUD (remote recording keeps working)" FAR genkan-iot-cam 203.0.113.2 443
+check  "the camera cannot reach anywhere else on the internet"    no  genkan-iot-cam 203.0.113.3 443
+check  "the camera cannot reach a phone"                          no  genkan-iot-cam 192.168.60.204 80
+check  "the camera cannot reach another smart device"             no  genkan-iot-cam 192.168.60.202 80
+check  "the camera cannot reach the main house LAN"               no  genkan-iot-cam 192.168.1.10 80
 check  "nothing on the internet can start a conversation with it" no  $NETNS 192.168.60.201 80
 counted "the refused lateral attempt is counted, so it can be reported" "lateral movement between smart devices"
 
 echo
 echo "The trap: a parent viewing their own camera must keep working"
-banner "the phone CAN reach the camera (class default allows it)" CAM hearth-iot-phone 192.168.60.201 80
-NFT_NS=$GWNS bash "$R/bin/kidnet-iot-policy" set iot-test-camera reachable_from_personal no >/dev/null
+banner "the phone CAN reach the camera (class default allows it)" CAM genkan-iot-phone 192.168.60.201 80
+NFT_NS=$GWNS bash "$R/bin/genkan-iot-policy" set iot-test-camera reachable_from_personal no >/dev/null
 policy enforce
-check  "after the parent closes it, the phone cannot"       no  hearth-iot-phone 192.168.60.201 80
-NFT_NS=$GWNS bash "$R/bin/kidnet-iot-policy" allow iot-test-phone iot-test-camera "parent phone" >/dev/null
+check  "after the parent closes it, the phone cannot"       no  genkan-iot-phone 192.168.60.201 80
+NFT_NS=$GWNS bash "$R/bin/genkan-iot-policy" allow iot-test-phone iot-test-camera "parent phone" >/dev/null
 policy enforce
-banner "with an explicit grant, that one phone gets back in" CAM hearth-iot-phone 192.168.60.201 80
-check  "and the camera still cannot reach the phone the other way" no hearth-iot-cam 192.168.60.204 80
+banner "with an explicit grant, that one phone gets back in" CAM genkan-iot-phone 192.168.60.201 80
+check  "and the camera still cannot reach the phone the other way" no genkan-iot-cam 192.168.60.204 80
 
 echo
 echo "Other classes"
-check "a speaker keeps the ordinary internet (class default)"  yes hearth-iot-spk 203.0.113.3 443
-check "a vacuum with no vendor addresses learned is NOT locked out (fail-safe)" yes hearth-iot-vac 203.0.113.3 443
+check "a speaker keeps the ordinary internet (class default)"  yes genkan-iot-spk 203.0.113.3 443
+check "a vacuum with no vendor addresses learned is NOT locked out (fail-safe)" yes genkan-iot-vac 203.0.113.3 443
 grep -q "no addresses known for vendor 'iRobot'" "$TMP/apply.log" \
   && ok "and the gap is reported rather than silently enforced" || bad "fail-safe not reported"
 psql "INSERT INTO vendor_ips(ip,vendor_id,seen) SELECT '203.0.113.4', id, now() FROM vendor_clouds WHERE vendor='iRobot'
       ON CONFLICT (ip,vendor_id) DO UPDATE SET seen=now()" >/dev/null
 policy enforce
-check "once its vendor is known the vacuum is pinned to it"    yes hearth-iot-vac 203.0.113.4 443
-check "and cannot reach the rest of the internet"              no  hearth-iot-vac 203.0.113.3 443
+check "once its vendor is known the vacuum is pinned to it"    yes genkan-iot-vac 203.0.113.4 443
+check "and cannot reach the rest of the internet"              no  genkan-iot-vac 203.0.113.3 443
 
 echo
 echo "Nothing the existing suites guarantee may break"
 $GW $NFT add element inet kids kids_allow "{ 203.0.113.3 }"
-check "the safety net still wins over a vendor lock"           yes hearth-iot-cam 203.0.113.3 443
+check "the safety net still wins over a vendor lock"           yes genkan-iot-cam 203.0.113.3 443
 $GW $NFT flush set inet kids kids_allow
-check "a phone still reaches the internet"                     yes hearth-iot-phone 203.0.113.2 443
-check "a phone still cannot reach the main house LAN"          no  hearth-iot-phone 192.168.1.10 80
+check "a phone still reaches the internet"                     yes genkan-iot-phone 203.0.113.2 443
+check "a phone still cannot reach the main house LAN"          no  genkan-iot-phone 192.168.1.10 80
 $GW $NFT add element inet kids kids_block "{ 192.168.60.204 }"
-check "a cut-off phone still loses the internet"               no  hearth-iot-phone 203.0.113.2 443
-check "and a cut-off phone cannot use the camera grant as a way around it" no hearth-iot-phone 192.168.60.201 80
+check "a cut-off phone still loses the internet"               no  genkan-iot-phone 203.0.113.2 443
+check "and a cut-off phone cannot use the camera grant as a way around it" no genkan-iot-phone 192.168.60.201 80
 $GW $NFT delete element inet kids kids_block "{ 192.168.60.204 }"
 $GW $NFT delete element inet kids kids_known "{ 192.168.60.202 }"
 policy enforce
-check "an unknown device gets no internet even under IoT policy" no hearth-iot-vac 203.0.113.4 443
+check "an unknown device gets no internet even under IoT policy" no genkan-iot-vac 203.0.113.4 443
 $GW $NFT add element inet kids kids_known "{ 192.168.60.202 }"
 
 echo
@@ -248,31 +248,31 @@ echo "Fail-safe: the household must not be locked out by our own outage"
 policy enforce
 before=$($GW $NFT list chain inet kids iotpolicy | grep -c .)
 NFT_NS=$GWNS IOT_POLICY_MODE=enforce PG_CONTAINER=no-such-database \
-  bash "$R/bin/kidnet-iot-policy" apply >"$TMP/dbdown.log" 2>&1
+  bash "$R/bin/genkan-iot-policy" apply >"$TMP/dbdown.log" 2>&1
 grep -q 'database unreachable' "$TMP/dbdown.log" \
   && ok "a database outage is reported, not acted on" || bad "database outage not handled"
 [ "$($GW $NFT list chain inet kids iotpolicy | grep -c .)" = "$before" ] \
   && ok "and the rules already loaded are left exactly as they were" || bad "outage changed the ruleset"
-banner "so the camera keeps talking to its cloud through the outage" FAR hearth-iot-cam 203.0.113.2 443
-banner "and the parent keeps their camera view"                      CAM hearth-iot-phone 192.168.60.201 80
+banner "so the camera keeps talking to its cloud through the outage" FAR genkan-iot-cam 203.0.113.2 443
+banner "and the parent keeps their camera view"                      CAM genkan-iot-phone 192.168.60.201 80
 
 echo
 echo "Reapplying is idempotent (a chain that grows every minute is a bug)"
 policy enforce; policy enforce; policy enforce
 [ "$($GW $NFT list chain inet kids iotpolicy | grep -c 'comment')" = "$($GW $NFT list chain inet kids iotpolicy | sort -u | grep -c 'comment')" ] \
   && ok "the policy chain has no duplicate rules after three passes" || bad "policy chain duplicated its rules"
-[ "$($GW $NFT list chain inet kids forward | grep -c 'hearth-iot-allow')" = 8 ] \
+[ "$($GW $NFT list chain inet kids forward | grep -c 'genkan-iot-allow')" = 8 ] \
   && ok "and exactly 8 exceptions sit in kids.nft's forward chain, not 24" \
-  || bad "forward-chain exceptions duplicated ($($GW $NFT list chain inet kids forward | grep -c 'hearth-iot-allow') found)"
+  || bad "forward-chain exceptions duplicated ($($GW $NFT list chain inet kids forward | grep -c 'genkan-iot-allow') found)"
 
 echo
 echo "Turning it off"
 policy off
 $GW $NFT list chain inet kids iotpolicy >/dev/null 2>&1 \
   && bad "mode=off left the policy chain loaded" || ok "mode=off removes the policy chain"
-$GW $NFT list chain inet kids forward | grep -q 'hearth-iot-allow' \
+$GW $NFT list chain inet kids forward | grep -q 'genkan-iot-allow' \
   && bad "mode=off left rules in kids.nft's forward chain" || ok "mode=off removes its forward-chain exceptions"
-check "and every device is back to the plain island rules"     yes hearth-iot-cam 203.0.113.3 443
+check "and every device is back to the plain island rules"     yes genkan-iot-cam 203.0.113.3 443
 
 echo
 printf 'passed %d, failed %d\n' "$pass" "$fail"

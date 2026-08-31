@@ -143,7 +143,7 @@ authority, and any default that mails a report to an address the parent did not
 type themselves.
 
 The one documented way a report leaves the house is a parent hand-editing a
-systemd unit to pipe `kidnet-report` through their own mailer to their own
+systemd unit to pipe `genkan-report` through their own mailer to their own
 address. That is a household decision made by a human, with a shell, once. It
 is not a recipients feature, and turning it into one is a charter change.
 
@@ -397,7 +397,7 @@ way past.
   for this exact shape.
 
 **What to build instead.** The need is real, so answer it inside the boundary
-the project already uses. `kidnet-quiz stats` and `kidnet-quiz-suggest` already
+the project already uses. `genkan-quiz stats` and `genkan-quiz-suggest` already
 read the local record of every round including the failures. Extend those into
 a proper local bank-quality report: which questions this household's children
 consistently get wrong, which explanations never get read, which difficulty

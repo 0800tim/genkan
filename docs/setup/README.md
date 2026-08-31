@@ -68,7 +68,7 @@ one:
       --network postgres \
       -e POSTGRES_PASSWORD=change-me \
       -p 127.0.0.1:5432:5432 \
-      -v hearth-pgdata:/var/lib/postgresql/data \
+      -v genkan-pgdata:/var/lib/postgresql/data \
       postgres:16
 
 Then create the database and app role, set both URLs in `secrets.env`, and
@@ -80,7 +80,7 @@ load the schema in order. The exact files and order are in
 From the repo root, once `config.env` and `secrets.env` exist:
 
     sudo ./deploy.sh                # validates, builds, installs, starts
-    docker logs -f hearth-gw        # watch for the segment guard verdict
+    docker logs -f genkan-gw        # watch for the segment guard verdict
     kidnet allow-status             # safety net populated?
     sudo test/container-test.sh     # full packet-level proof, 26 checks
 

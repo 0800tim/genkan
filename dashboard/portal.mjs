@@ -23,7 +23,7 @@ import pg from "pg";
 // dashboard shows the same rows; this file only wires it to the kid's side.
 import { BADGES, awardBadges, childBadges, boardEnabled, boardData, recordStudyVisit } from "./badges.mjs";
 
-const DEMO = process.env.HEARTH_DEMO === "1";
+const DEMO = process.env.GENKAN_DEMO === "1";
 // The ?kid= override lets a parent see what a child sees. At home it is
 // view-only: earning from somebody else's device would let one kid farm
 // another's minutes, which is why a POST requires a real device match.
@@ -49,7 +49,7 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "
 // Answers never leave the server, whichever shelf a bank came off.
 //
 //   files     portal/quizzes/*.json, shipped with Genkan and installed by
-//             `kidnet-quiz install`. SIGHUP re-reads the directory, so a new
+//             `genkan-quiz install`. SIGHUP re-reads the directory, so a new
 //             one appears without dropping anyone's in-flight round.
 //   database  quiz_banks / quiz_bank_questions, written by a parent on the
 //             dashboard's /earn screen. They live in the database on purpose:
@@ -648,7 +648,7 @@ const WARM_CATEGORIES = ["tor", "darknet", "drugs"];
 const FLAG_WINDOW_MIN = Number(process.env.PORTAL_FLAG_WINDOW_MIN || 20);
 
 // This page reads one thing: the alerts table. Only ONE road currently writes
-// into it for these categories, the DNS road, where kidnet-alerts matches a
+// into it for these categories, the DNS road, where genkan-alerts matches a
 // lookup against flag_domains. The IP road is not built: the firewall does
 // count Tor connection attempts in the nft tor_dev set, but nothing reads those
 // counters and nothing turns them into an alert, so a child who reaches a relay

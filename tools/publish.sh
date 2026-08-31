@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hearth:summary=Publish the audited tree to the public repo, refusing if anything private leaks.
+# genkan:summary=Publish the audited tree to the public repo, refusing if anything private leaks.
 #
 # The public repo is a SEPARATE git history from this working repo, because
 # this one contains the household's real values in its past. This script
@@ -17,9 +17,12 @@ SRC="$(cd "$(dirname "$0")/.." && pwd)"
 DRY=0
 case "${1:-}" in --check|-n|--dry-run) DRY=1; shift;; esac
 
-PUB="${HEARTH_PUBLIC_DIR:?set HEARTH_PUBLIC_DIR to the public repo clone}"
-[ -d "$PUB/.git" ] || { echo "no git repo at $PUB"; exit 1; }
+# config.env first: it is where GENKAN_PUBLIC_DIR and GENKAN_AUTHOR live, and
+# demanding the variable before reading the file only worked when a caller
+# happened to have exported it.
 . "$SRC/config.env" 2>/dev/null || true
+PUB="${GENKAN_PUBLIC_DIR:?set GENKAN_PUBLIC_DIR in config.env to the public repo clone}"
+[ -d "$PUB/.git" ] || { echo "no git repo at $PUB"; exit 1; }
 
 if [ "$DRY" = 1 ]; then echo "CHECK ONLY: this will scan and stop, and publish nothing."
 else echo "PUBLISHING: a clean scan will commit and PUSH to the public repo."
@@ -58,11 +61,11 @@ scan 'BEGIN [A-Z ]*PRIVATE KEY' "private key"
 # From config.env (gitignored), not git's user.name, which on this machine is
 # an agency account. Kept out of this file on purpose: hardcoding it would make
 # the scanner flag itself, and a fork would scan for the wrong person.
-AUTHOR="${HEARTH_AUTHOR:-}"
+AUTHOR="${GENKAN_AUTHOR:-}"
 # The author's own row is excluded here because the placement check below
 # covers it properly. Matched on any word of AUTHOR, since the household row
 # is usually a first name while the LICENSE carries the full one.
-NAMES=$(docker exec -i postgres psql -U "${HEARTH_DB_ROLE:-kids_agent}" -d kids_network -tAc \
+NAMES=$(docker exec -i postgres psql -U "${GENKAN_DB_ROLE:-kids_agent}" -d kids_network -tAc \
   "SELECT string_agg(name,'|') FROM children
     WHERE name !~ '^guest-'
       AND NOT (lower(name) = ANY (string_to_array(lower('${AUTHOR:-__none__}'), ' ')))" 2>/dev/null)
@@ -74,7 +77,7 @@ else scan "\\b(${NAMES})\\b" "real people's names"; fi
 # nowhere else, so a README rewrite cannot quietly reintroduce it as an example.
 if [ -z "${AUTHOR:-}" ]; then
   printf '  \033[31mLEAK\033[0m  %-22s %s\n' "author name placement" \
-    "COULD NOT CHECK: HEARTH_AUTHOR is not set in config.env."; fail=1
+    "COULD NOT CHECK: GENKAN_AUTHOR is not set in config.env."; fail=1
 elif true; then
   hits=$(grep -riIlF "$AUTHOR" "$PUB" --exclude-dir=.git 2>/dev/null \
          | grep -vE '/(LICENSE|DECISIONS\.md|README\.md)$' | head -3)

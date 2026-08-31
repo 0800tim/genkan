@@ -4,7 +4,7 @@
 //   node tools/validate-quizzes.mjs                 every bank in portal/quizzes/
 //   node tools/validate-quizzes.mjs a.json b.json   just these files, wherever
 //                                                   they are (used by
-//                                                   bin/kidnet-quiz validate,
+//                                                   bin/genkan-quiz validate,
 //                                                   so a generated bank can be
 //                                                   checked before it is
 //                                                   installed)

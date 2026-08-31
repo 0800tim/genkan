@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# hearth:summary=A flagged domain must raise exactly one alert, and a broken query must be loud.
+# genkan:summary=A flagged domain must raise exactly one alert, and a broken query must be loud.
 #
-# kidnet-alerts is the path that turns "a child looked up a self-harm site"
+# genkan-alerts is the path that turns "a child looked up a self-harm site"
 # into something a parent sees. It failed silently for a day: a bash comment
 # had been written inside a double-quoted SQL string, where '#' is not a
 # comment, so every run sent the comment to Postgres, printed a syntax error
@@ -17,15 +17,15 @@
 set -u
 R="$(cd "$(dirname "$0")/.." && pwd)"
 PG="${PG_CONTAINER:-postgres}"
-DB="hearth_alerts_test_$$"
+DB="genkan_alerts_test_$$"
 for _t in docker; do command -v "$_t" >/dev/null || { echo "MISSING REQUIRED TOOL: $_t"; exit 1; }; done
 
 pass=0; fail=0
 ok(){  pass=$((pass+1)); printf '  \033[32mPASS\033[0m  %s\n' "$1"; }
 bad(){ fail=$((fail+1)); printf '  \033[31mFAIL\033[0m  %s\n' "$1"; }
 sql(){ docker exec -i "$PG" psql -U postgres -d "$DB" -tAc "$1" 2>&1; }
-run_alerts(){ HEARTH_DB="$DB" PG_CONTAINER="$PG" HEARTH_DB_ROLE=postgres \
-              bash "$R/bin/kidnet-alerts" 2>&1; }
+run_alerts(){ GENKAN_DB="$DB" PG_CONTAINER="$PG" GENKAN_DB_ROLE=postgres \
+              bash "$R/bin/genkan-alerts" 2>&1; }
 cleanup(){ docker exec -i "$PG" psql -U postgres -qc "DROP DATABASE IF EXISTS $DB;" >/dev/null 2>&1; }
 trap cleanup EXIT
 
@@ -71,8 +71,8 @@ case "$o" in *"nothing new"*) ok "and it said nothing new";;
 # This is the regression that matters. Break the SQL and check the script
 # refuses to report calm: it must say so and exit non-zero, so systemd fails.
 broken="$(mktemp)"; trap 'rm -f "$broken"; cleanup' EXIT
-sed 's/RETURNING 1" 2>&1)/RETURNING 1 NOT VALID SQL" 2>\&1)/' "$R/bin/kidnet-alerts" > "$broken"
-o=$(HEARTH_DB="$DB" PG_CONTAINER="$PG" HEARTH_DB_ROLE=postgres bash "$broken" 2>&1); rc=$?
+sed 's/RETURNING 1" 2>&1)/RETURNING 1 NOT VALID SQL" 2>\&1)/' "$R/bin/genkan-alerts" > "$broken"
+o=$(GENKAN_DB="$DB" PG_CONTAINER="$PG" GENKAN_DB_ROLE=postgres bash "$broken" 2>&1); rc=$?
 [ "$rc" != 0 ] && ok "a broken alert query exits non-zero" \
                || bad "a broken alert query exited 0, so systemd would call it a success"
 case "$o" in *"no flagged domain has been noticed"*) ok "and it says no domain was checked";;
@@ -96,8 +96,8 @@ n=$(sql "SELECT count(*) FROM alerts WHERE category='alert-check' AND NOT acknow
              || bad "$n alert-check warning(s) survived a good run"
 
 # ---- the interval gate ------------------------------------------------------
-o=$(ALERT_LOOKBACK="15 minutes; DROP TABLE alerts" HEARTH_DB="$DB" PG_CONTAINER="$PG" \
-    HEARTH_DB_ROLE=postgres bash "$R/bin/kidnet-alerts" 2>&1); rc=$?
+o=$(ALERT_LOOKBACK="15 minutes; DROP TABLE alerts" GENKAN_DB="$DB" PG_CONTAINER="$PG" \
+    GENKAN_DB_ROLE=postgres bash "$R/bin/genkan-alerts" 2>&1); rc=$?
 [ "$rc" != 0 ] && ok "an injected lookback is refused" \
                || bad "an injected lookback was accepted"
 t=$(sql "SELECT to_regclass('public.alerts') IS NOT NULL" | head -1)

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hearth:summary=Snapshot uncommitted work so a bad git command cannot destroy it.
+# genkan:summary=Snapshot uncommitted work so a bad git command cannot destroy it.
 #
 # Written after `git checkout dashboard/portal.mjs` discarded an agent's
 # uncommitted work and there was nothing to recover from. Good intentions are
@@ -18,7 +18,7 @@
 set -euo pipefail
 R="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$R"
-REF=refs/hearth/snapshots
+REF=refs/genkan/snapshots
 KEEP="${SNAPSHOT_KEEP:-200}"
 
 case "${1:-save}" in
@@ -26,7 +26,7 @@ case "${1:-save}" in
     # An index of our own, so this never disturbs whatever is staged for a
     # real commit. That matters: a snapshot must never surprise the person
     # or agent working in the tree.
-    export GIT_INDEX_FILE="$R/.git/hearth-snapshot-index"
+    export GIT_INDEX_FILE="$R/.git/genkan-snapshot-index"
     rm -f "$GIT_INDEX_FILE"
     git add -A --force . 2>/dev/null || true
     tree=$(git write-tree)

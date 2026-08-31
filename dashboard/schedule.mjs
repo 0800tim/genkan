@@ -3,7 +3,7 @@
 // The times a child's internet goes off and comes back, per child, with
 // different school-night and weekend times, a holiday window that suspends the
 // lot, and tonight's extension. Everything here writes rows and nothing here
-// decides anything: bin/kidnet-schedule reads those rows every minute and is
+// decides anything: bin/genkan-schedule reads those rows every minute and is
 // the only thing that touches a block. That split is deliberate, because the
 // set_by precedence rules (DECISIONS.md) have to live in exactly one place.
 //

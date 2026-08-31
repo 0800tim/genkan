@@ -33,7 +33,7 @@ The rest of the reasoning:
 - **The compatibility question is answered elsewhere and better.** The only
   change here that can genuinely break an upgrade is a database change, and a
   major version number is far too blunt an instrument for that. The release
-  notes say it per release, `kidnet-upgrade check` says it out loud before you
+  notes say it per release, `genkan-upgrade check` says it out loud before you
   agree to anything, and `docs/UPGRADING.md` says what to do about it.
 - **It stays sortable.** Three dot separated numbers, so `sort -V`,
   `git tag --sort=-v:refname` and every tool that expects a version still
@@ -64,8 +64,8 @@ than pretending, because a version number that lies is worse than none:
 Genkan 2026.10.0 (12 change(s) since the release, edited on this box)
 ```
 
-`bin/kidnet-health`, `kidnet-upgrade status` and the dashboard footer all print
-that same line, from `hearth_version_line()` in `bin/kidnet-release-lib.sh`.
+`bin/genkan-health`, `genkan-upgrade status` and the dashboard footer all print
+that same line, from `genkan_version_line()` in `bin/genkan-release-lib.sh`.
 One implementation, so they cannot drift apart.
 
 ## Cutting a release
@@ -136,7 +136,7 @@ git tag -a v2026.09.0 -m "Genkan 2026.09.0"
 git push origin main --tags
 ```
 
-The tag is `v` plus the contents of `VERSION`. `bin/kidnet-upgrade` finds
+The tag is `v` plus the contents of `VERSION`. `bin/genkan-upgrade` finds
 releases with `git tag -l 'v[0-9]*' --sort=-v:refname`, so a tag in any other
 shape is invisible to every household.
 
@@ -149,7 +149,7 @@ git commit -am "open 2026.10.0"
 
 ## What a household actually receives
 
-`kidnet-upgrade` follows tags, not branches. A household never gets the tip of
+`genkan-upgrade` follows tags, not branches. A household never gets the tip of
 main unless somebody deliberately types `--to origin/main`. That is the whole
 of the release channel design, and it is deliberate: the default has to be
 "a version a person decided was finished", because the default is what runs
@@ -158,7 +158,7 @@ in houses with children in them.
 ## The release log
 
 Every install, upgrade and rollback appends a row to `release_history`
-(`config/db/schema-release.sql`). It is append only. `kidnet-upgrade status`
+(`config/db/schema-release.sql`). It is append only. `genkan-upgrade status`
 prints the last ten. It exists so that "it broke on Tuesday" can be turned
 into "it broke twenty minutes after 2026.10.0 went on, and here is the
 rollback that followed".
@@ -168,10 +168,10 @@ rollback that followed".
 | File | What it is |
 |---|---|
 | `VERSION` | one line, the version. The whole contract. |
-| `bin/kidnet-release-lib.sh` | shared helpers: where the code is, what version, the release log |
-| `bin/kidnet-health` | is this household working (read only) |
-| `bin/kidnet-upgrade` | check, snapshot, apply, undo itself if it breaks |
-| `bin/kidnet-rollback` | go back deliberately |
+| `bin/genkan-release-lib.sh` | shared helpers: where the code is, what version, the release log |
+| `bin/genkan-health` | is this household working (read only) |
+| `bin/genkan-upgrade` | check, snapshot, apply, undo itself if it breaks |
+| `bin/genkan-rollback` | go back deliberately |
 | `config/db/schema-release.sql` | the release log |
 | `test/release-test.sh` | proves the above on a throwaway clone |
 | `dashboard/version.mjs` | the quiet line at the bottom of every page |

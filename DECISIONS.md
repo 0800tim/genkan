@@ -310,8 +310,8 @@ present tense is indistinguishable from a document that describes behaviour,
 and only one of them is true.**
 
 1. **Shipped features were undocumented.** Per-service byte accounting
-   (kidnet-servicemap, kidnet-servicemeter, schema-services.sql) and device
-   classification (kidnet-classify, schema-devices.sql) both existed, were
+   (genkan-servicemap, genkan-servicemeter, schema-services.sql) and device
+   classification (genkan-classify, schema-devices.sql) both existed, were
    tested, and appeared in no prose anywhere. The second one is a genuine
    selling point: your smart lock is never cut when you pause the kids,
    because the group commands only touch devices classed `personal`.
@@ -366,7 +366,7 @@ other"*, and *"the 'who's using it right now' keeps flashing in and out"*.
    `config/db/schema-categories.sql`, with the CDN names that actually move the
    bytes rather than only the front doors: nobody streams from netflix.com,
    they stream from nflxvideo.net.
-2. **Shared front doors were metered.** `kidnet-catmap` tagged any address that
+2. **Shared front doors were metered.** `genkan-catmap` tagged any address that
    answered for a category domain. A bare `googlevideo.com` lookup returns a
    general Google edge address that also serves search, Gmail and the Play
    Store, so every byte a phone sent to Google was counted as video. That is
@@ -379,7 +379,7 @@ other"*, and *"the 'who's using it right now' keeps flashing in and out"*.
    appears once beside an uncategorised name is dropped too, so a category can
    read low. Under the true figure is a far smaller lie than colouring the
    whole house with it.
-3. **The address sets were add-only.** `kidnet-catmeter` added to `gaming_ips`
+3. **The address sets were add-only.** `genkan-catmeter` added to `gaming_ips`
    and `video_ips` and never removed, so a mis-tagged address kept colouring
    traffic until the container was restarted. It now reconciles: flush and
    refill in one transaction, the same pattern the gateway's `reconcile_set`
@@ -397,8 +397,8 @@ booked as a download regardless. The rate rule is not applied to video, where
 and by the meter, so what a parent sees and what gets booked agree.
 
 `config/nftables/kids.nft` is baked into the gateway image, so the new sets only
-reach a running island on a rebuild. `kidnet-catmeter` therefore creates them
-itself when they are absent, once, the same way `kidnet-servicemeter` creates
+reach a running island on a rebuild. `genkan-catmeter` therefore creates them
+itself when they are absent, once, the same way `genkan-servicemeter` creates
 its own chain. An island upgrades on the next minute tick instead of needing
 the container restarted.
 
@@ -598,7 +598,7 @@ I was looking at" is not a finished job when the defect is a pattern.
 
 ## The IoT policy was protecting nothing (2026-08-29)
 
-`kidnet-iot-policy learn` resolved the vendor addresses correctly and then threw
+`genkan-iot-policy learn` resolved the vendor addresses correctly and then threw
 them away. Several of a vendor's domains routinely resolve to the same CDN
 address, and Postgres refuses an `ON CONFLICT DO UPDATE` that touches one row
 twice in a single command. The error went to `/dev/null`, so the tool logged
@@ -735,7 +735,7 @@ goes to the browser so those lists mean something; the choices and the answer
 index still never leave the server.
 
 **The AI half is a runbook and a briefing command, not a service.**
-`bin/kidnet-quiz-suggest` gathers what one child passes, avoids, gets wrong and
+`bin/genkan-quiz-suggest` gathers what one child passes, avoids, gets wrong and
 has been looking up, and prints it with a prompt on the end.
 `docs/runbooks/quiz-suggestions.md` is the recipe. The script calls no AI and
 Genkan ships no scheduler for it: the recurrence and the model call are the
@@ -746,7 +746,7 @@ feature.
 Still not built, and said plainly in the runbook: nothing runs on a schedule,
 nothing measures whether a suggestion worked, and a whole bank written as JSON
 cannot be pasted into the dashboard. It goes in as a file through
-`kidnet-quiz install`, or it is typed a question at a time.
+`genkan-quiz install`, or it is typed a question at a time.
 
 ## Learn to earn was a memory test (2026-08-30)
 
@@ -917,10 +917,10 @@ for a second pass; that pass is the next entry.
 
 **One DNS lookup could switch off every safety alert.** A DNS label may
 legitimately contain a dot, and AdGuard stores that as a literal backslash-dot.
-`kidnet-dnslog` fed the stored name into `COPY ... FORMAT text`, whose backslash
+`genkan-dnslog` fed the stored name into `COPY ... FORMAT text`, whose backslash
 grammar aborts on it. The transaction rolled back, and because the next run keys
 off `max(ts)` in `dns_log`, the same poison was fetched and failed again, for
-good. `kidnet-alerts` reads `dns_log`, so while that was stalled no Tor,
+good. `genkan-alerts` reads `dns_log`, so while that was stalled no Tor,
 darknet, drugs, VPN or self-harm alert could fire and nothing on the dashboard
 said so. It also gave per-lookup evasion: send one poison query and the batch
 carrying the lookup you did not want seen goes with it. One `dig` from a laptop
@@ -987,7 +987,7 @@ seven. The remembering is the part that failed. **A child who wakes to a dead
 network because nothing lifted it has been punished by an oversight**, so the
 morning restore is the half that matters, not the bedtime.
 
-`bin/kidnet-schedule` runs every minute. What is new is not the timer, it is
+`bin/genkan-schedule` runs every minute. What is new is not the timer, it is
 the precedence rules, because that is the part somebody will get wrong later.
 
 ### The precedence table
@@ -998,11 +998,11 @@ may take it away.
 | `set_by` | who set it | who may lift it |
 |---|---|---|
 | `agent` | a parent, by hand or on the dashboard | a parent |
-| `out-of-time` | `kidnet-meter`, at zero minutes | earning, and a parent |
-| `over-budget` | `kidnet-catmeter`, a category over its cap | `genkan grant`, and a parent |
-| `bedtime` | `kidnet-schedule` | `kidnet-schedule`, and a parent |
+| `out-of-time` | `genkan-meter`, at zero minutes | earning, and a parent |
+| `over-budget` | `genkan-catmeter`, a category over its cap | `genkan grant`, and a parent |
+| `bedtime` | `genkan-schedule` | `genkan-schedule`, and a parent |
 | `earned-back` | the portal or `genkan reopen` | not a block |
-| `schedule-lifted` | `kidnet-schedule`, in the morning | not a block |
+| `schedule-lifted` | `genkan-schedule`, in the morning | not a block |
 
 Five rules fall out of it, and each one is a real failure that was possible
 before it:
@@ -1110,7 +1110,7 @@ it reached a WHERE clause" and "somebody owns the box" was one statement. The
 gates in `bin/genkan` were the only thing in the way, and a gate is a thing that
 can be forgotten: the 2026-08-30 review found four sites that had been.
 
-`bin/genkan`, every `bin/kidnet-*` worker and the two operator tools that read
+`bin/genkan`, every `bin/genkan-*` worker and the two operator tools that read
 the database now connect as **`kids_agent`**, whose grants are one line per
 table in `config/db/grants.sql`, each with a comment naming the script that
 needs it. It is not a superuser, owns nothing, is a member of no role, and has
@@ -1145,7 +1145,7 @@ the list entirely because of that.
 Creating the role and loading the schema (`config/db/load.sh`), pinning the
 database timezone and applying the grants (`deploy.sh`), rebuilding the public
 demo from nothing (`demo/reseed.sh`), and taking or restoring a dump
-(`kidnet-upgrade`, `kidnet-rollback --with-db`). Each is work a least-privilege
+(`genkan-upgrade`, `genkan-rollback --with-db`). Each is work a least-privilege
 role must not be able to do for itself, each is commented at the call site with
 the words SUPERUSER PATH and the reason, and the demo one only ever talks to a
 throwaway container with a made-up family in it. The convention is the point:
@@ -1169,13 +1169,13 @@ Fifty-five argument sites are now gated that were not. Twenty-four in
 boolean in `setcat_id`, the signed minutes and the reason in `addtime`, the
 child id in `ensure_day`, `remaining`, `spend`, `time`, `grant` and both guest
 verbs, and the MAC or address and the optional reservation in `assign` and
-`infra`. Then ten in `kidnet-iot-policy` (device ids, the vendor id, the vendor
+`infra`. Then ten in `genkan-iot-policy` (device ids, the vendor id, the vendor
 names that become nft set names, and the island subnet from `config.env`), six
-in `kidnet-catmeter` and four in `kidnet-servicemeter` (the category, the
+in `genkan-catmeter` and four in `genkan-servicemeter` (the category, the
 address off an nft counter, the byte count and the child id), three in
-`kidnet-report` (both week bounds and the child id), two in `kidnet-classify`,
-and one each in `kidnet-alerts` (the lookback window), `kidnet-devicescan` (the
-neighbour list), `kidnet-quiz`, `kidnet-quiz-suggest`, the gateway's `alert()`
+`genkan-report` (both week bounds and the child id), two in `genkan-classify`,
+and one each in `genkan-alerts` (the lookback window), `genkan-devicescan` (the
+neighbour list), `genkan-quiz`, `genkan-quiz-suggest`, the gateway's `alert()`
 severity and `deploy.sh`'s timezone.
 
 Three rules came out of doing it.
@@ -1224,7 +1224,7 @@ query that says `category='personal'` growing an `OR`, and there are eleven of
 them across `bin/` and `dashboard/`, each one a chance to forget.
 
 The shape falls out of that. `child_id` is always NULL on a shared device, so
-`people_devices`, `kidnet-meter`, `kidnet-adguard-clients` and the weekly digest
+`people_devices`, `genkan-meter`, `genkan-adguard-clients` and the weekly digest
 skip it by construction rather than by remembering to exclude it. The one thing
 that had to be added rather than inherited is filtering: a device with no owner
 has no tier, and a device with no tier falls through to the AdGuard household
@@ -1320,7 +1320,7 @@ television and no "the iPad has had two hours today".
 
 That was offered as optional and it is genuinely a lot more work, so it is not
 half built. Everything about time in Genkan is keyed on a child: `time_ledger`
-and `time_remaining`, `genkan spend` and `genkan bonus`, `kidnet-meter` walking
+and `time_remaining`, `genkan spend` and `genkan bonus`, `genkan-meter` walking
 children rather than devices, `category_budgets`, the earn and quiz paths that
 add minutes back, and the captive portal that explains to a named child what
 happened and what they can do about it. A device-level budget is a second full
@@ -1333,7 +1333,7 @@ A budget that silently does not enforce is worse than no budget at all, so:
 
 **Next step, written down rather than done.** A `device_budgets` table mirroring
 `category_budgets`, a `device_usage` day ledger, a device branch in
-`kidnet-meter`, a `genkan spend-device` verb, and a portal page for a device
+`genkan-meter`, a `genkan spend-device` verb, and a portal page for a device
 with no owner. Roughly the size of the metering work in METERING.md, and it
 should be done as one piece with tests, not bolted on.
 
@@ -1377,7 +1377,7 @@ error unless you pass `--strict`.
 
 Same reasoning as the dashboard's own bank editor: `portal/quizzes` is tracked
 in git and a `git pull` would delete a family's content. So
-`bin/kidnet-pack install` writes to `quiz_banks`, `quiz_bank_questions` and a
+`bin/genkan-pack install` writes to `quiz_banks`, `quiz_bank_questions` and a
 new `quiz_packages` manifest table, and `portal/quizzes/community/` becomes a
 **shelf** rather than a live directory. The portal reads only `*.json` at the
 top of `portal/quizzes`, so a package sitting on the shelf is invisible to every
@@ -1479,8 +1479,8 @@ piece rather than describing it in the present tense.
 The important half is the shape the missing piece has to take. **Genkan has no
 telemetry and calls no cloud**, so this will never be a service that watches a
 family and recommends things to them. The evidence half already exists and calls
-nothing: `bin/kidnet-quiz-suggest <child>` reads the household's own database
-and prints a briefing, `bin/kidnet-pack list` prints the shelf, and
+nothing: `bin/genkan-quiz-suggest <child>` reads the household's own database
+and prints a briefing, `bin/genkan-pack list` prints the shelf, and
 `docs/runbooks/quiz-suggestions.md` gained a step 8 telling an agent to check the
 shelf before writing anything and to recommend rather than install. The matching
 is done by an agent the parent runs, on the parent's box, with the parent
@@ -1638,7 +1638,7 @@ has learned nothing.
 
 The one change that genuinely breaks an upgrade is a database change, and a
 major version bump is far too blunt a way to say so. That gets said per release
-instead: `kidnet-upgrade check` calls it out before anybody agrees to anything,
+instead: `genkan-upgrade check` calls it out before anybody agrees to anything,
 and docs/UPGRADING.md says what to do about it.
 
 Rejected: plain dates (no room for a fix inside the same month), build numbers
@@ -1669,7 +1669,7 @@ learn what a git commit is.
 
 ### The undo tool travels inside the snapshot
 
-`kidnet-upgrade` copies `kidnet-rollback`, `kidnet-health` and the shared
+`genkan-upgrade` copies `genkan-rollback`, `genkan-health` and the shared
 library into the snapshot directory before the switchover, and it is that copy
 which runs an automatic rollback. If the new version is broken enough to fail
 its health check, its own rollback script is the last thing that should be
@@ -1696,7 +1696,7 @@ language as everything else, rather than implying a time machine.
 
 ### The health check is read only, and says what it cannot know
 
-`bin/kidnet-health` is what the upgrade trusts and what a worried parent runs.
+`bin/genkan-health` is what the upgrade trusts and what a worried parent runs.
 Those two audiences want the same thing: one honest answer. It puts real
 questions on the wire (a DNS query and an HTTP request from inside the island's
 network namespace, because from the host there is no route to either) rather
@@ -1804,7 +1804,7 @@ fix is 0x1f, the ASCII unit separator, which is not IFS whitespace.
 **`psql -tAc` prints the rows and the command tag.** A statement with
 `RETURNING 1` returns `1` on one line and `INSERT 0 1` on the next, so the
 `| grep -c 1` idiom this repo uses in several places reports double what
-actually happened. `grep -c '^1$'` is the fix. `bin/kidnet-alerts` had the same
+actually happened. `grep -c '^1$'` is the fix. `bin/genkan-alerts` had the same
 idiom and the same overcount; fixed on 2026-08-30, and `test/alerts-test.sh`
 now proves one new alert is reported as one.
 
@@ -1818,14 +1818,14 @@ whole URL in an exception message and that message ends up in the journal and in
 
 ## A check that cannot run must never look like a quiet night
 
-**2026-08-30.** `kidnet-alerts` is the path that turns "a child looked up a
+**2026-08-30.** `genkan-alerts` is the path that turns "a child looked up a
 self-harm site" into something a parent sees. It stopped working for a day and
 nothing said so.
 
 The cause was three lines of prose. A bash comment was written inside a
 double-quoted SQL string, and `#` is not a comment inside double quotes, so
 every run posted the comment to Postgres, got `syntax error at or near "^"`,
-matched no rows, printed `kidnet-alerts: nothing new` and exited 0. The unit
+matched no rows, printed `genkan-alerts: nothing new` and exited 0. The unit
 that runs it recorded success once a minute for a day. The previous entry in
 this file even mentions the script by name, and still nobody noticed, because
 the only symptom was the *absence* of alerts and absence is what a good night
@@ -1862,7 +1862,7 @@ outage window found no flagged look-up in it.
 
 ## A list nobody applies is not a blocklist
 
-**2026-08-30.** `kidnet-tor-sync` fetched the public Tor relay list, wrote 7299
+**2026-08-30.** `genkan-tor-sync` fetched the public Tor relay list, wrote 7299
 addresses to a file and rendered an `nft -f` snippet, and `kids-tor-sync.service`
 piped that snippet into the gateway. Measured on the live box, the `@tor_nodes`
 set held zero addresses, so the three reject rules in `kids.nft` that use it
@@ -1901,7 +1901,7 @@ set, racing the gateway's own reconcile and depending on a readiness check
 being right, is worth nothing next to the database the gateway already reads
 and already rebuilds from after every restart.
 
-**`kidnet-health` was the second half of the problem**, and the more important
+**`genkan-health` was the second half of the problem**, and the more important
 half. It reported "the Tor relay list is current" every day, and it was telling
 the truth about the only thing it was looking at: the modification time of a
 file. It now asks the firewall how many addresses it is holding, and only asks
@@ -1909,14 +1909,14 @@ about the file's age once the answer is more than zero. A check that measures
 the input to a system and reports on the output of it is worse than no check,
 because it is believed.
 
-`kidnet-tor-sync status` gained the same distinction, and prints all three
+`genkan-tor-sync status` gained the same distinction, and prints all three
 answers separately: what the file has, what the database has, and what the
 firewall is actually enforcing.
 
 ## grep -q and pipefail disagree about what success means
 
 **2026-08-30.** Filling `@tor_nodes` with 7299 addresses pushed the ruleset past
-64KB, and `kidnet-health` immediately began reporting a complete firewall as
+64KB, and `genkan-health` immediately began reporting a complete firewall as
 incomplete, naming the three device lists the iron rules depend on. Nothing was
 wrong with the firewall.
 
@@ -1939,15 +1939,40 @@ Bash's own matching has no pipe, no second process and no race:
 
 `tools/lint-pipefail-grep.py` refuses the pattern anywhere in a script that sets
 `pipefail`, and runs inside `test/tor-test.sh`. Four other places had it. One
-was `kidnet-upgrade`, checking a test suite's output for `FAIL` before allowing
+was `genkan-upgrade`, checking a test suite's output for `FAIL` before allowing
 a release through: there, a SIGPIPE would have read as "no failures found" and
 waved a broken release through the gate. It had not fired yet only because the
 suite's output was still smaller than the buffer.
 
 This is the second bug in one night whose whole damage was a check reporting
-calm it had not established. The first was `kidnet-alerts`. Both are the same
+calm it had not established. The first was `genkan-alerts`. Both are the same
 mistake in different clothes: **the failure of a check must never be able to
 look like the success of a check.**
+
+## The warden remembers where the dongle is
+
+**2026-08-31.** Three times in one night the kids' USB NIC was in neither the
+host nor the gateway container: a redeploy recreated `genkan-gw`, and the
+container suite restarts it on purpose. The AX88179 does not always return to
+the default namespace when a container namespace dies, and the warden's
+answer to that has always been a USB reset. The reset needs the adapter's
+sysfs path, and the warden found that path by MAC once, at start-up, which
+only works while the netdev is visible. So a warden restarted at exactly the
+wrong moment (a deploy restarts it) started with no path, could not reset,
+and the island stayed down until a person did it by hand.
+
+The path is now written to `/var/lib/genkan/kids-nic-usb-path` the first
+time it is seen and read back when discovery fails. The reset also goes to
+the device (`2-6.2`), not the interface (`2-6.2:1.0`): de-authorising only
+the interface was tried and left the netdev missing, while the device reset
+brought it straight back. The rule underneath: **anything the recovery path
+needs must be known before the failure, not discovered during it.**
+
+A related one for the runbooks: `genkan-portal` and `genkan-speedtest` share
+the gateway's network namespace and are not restarted with it, so after a
+gateway restart they point at a dead namespace and the health check says the
+children's page is not answering. The warden already restarts AdGuard for
+exactly that reason. Restart those two as well, or restart the stack.
 
 ## The product is called Genkan
 
@@ -1965,12 +1990,18 @@ and the domain. The site is **genkan.nz**, the repo is
 github.com/0800tim/genkan, and the CLI is `bin/genkan` with `kidnet` kept as a
 compatibility shim.
 
-What deliberately keeps the old names: the `kidnet-` worker scripts, the
-`hearth-gw`/`hearth-adguard`/`hearth-portal` container names, the
-`HEARTH_*` environment variables, `refs/hearth/snapshots`, and the host-side
-service names. Every one of them is wired into live boxes, and each rename is
-its own deliberate job with a household on the other end, not a side effect of
-a documentation sweep. `research/` also keeps the old name throughout: those
-files are dated snapshots, one of them records the naming exploration itself,
-and editing history to agree with a decision made later would falsify the
-record.
+The technical names followed the same night, as one deliberate job rather
+than a side effect of the documentation sweep: the containers are
+`genkan-gw`/`genkan-adguard`/`genkan-portal`/`genkan-speedtest`, the
+environment variables are `GENKAN_*`, the working-tree snapshots live at
+`refs/genkan/snapshots`, state is under `/var/lib/genkan`, the host-side
+units are `genkan-*`, and the demo stack is `genkan-demo`. deploy.sh carries
+the one-time migration for a household that deployed under the old names
+(config.env keys, the state directory, AdGuard's volumes, the old containers)
+and does nothing on a box that never had them. Two things keep the old name
+on purpose. The old public hostnames (`hearth.appspurt.dev` and the two demo
+hostnames) still resolve and redirect, because they are printed in a pitch
+document and a few posts. And `research/` keeps the old name throughout:
+those files are dated snapshots, one of them records the naming exploration
+itself, and editing history to agree with a decision made later would falsify
+the record.

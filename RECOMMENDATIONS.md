@@ -83,7 +83,7 @@ don't just surveil.)
 
 - Weekly per-kid summary to you: hours online, top domains, any flagged
   categories. Keeps it a conversation, not a spy report. [BUILT:
-  `bin/kidnet-report`, docs/reporting.md. Read-only, plain text, one block per
+  `bin/genkan-report`, docs/reporting.md. Read-only, plain text, one block per
   child. It is not installed by deploy.sh and has no timer by default; the
   two units to create are in that document.]
 - Live view for the parent: the dashboard's three pages (tonight's state and
@@ -110,7 +110,7 @@ don't just surveil.)
 Everything in this section shipped and is running.
 
 - **Daily budgets** per kid (time_ledger): 11yo 90 min school / 180 weekend,
-  14yo 120/240, 16yo no network limit (teen tier). The `kidnet-meter` timer
+  14yo 120/240, 16yo no network limit (teen tier). The `genkan-meter` timer
   ticks a minute off while a device is active; at 0 the kid is moved to the
   captive portal.
 - **Bonus / earn:** `kidnet bonus <kid> <min>` or the dashboard +15/+30/dishes
@@ -138,7 +138,7 @@ Aligns with the unrot ethos.
 
 ## 13. Device classification (built 2026-08-29)
 
-Every device is classed `personal`, `iot` or `infra` (`bin/kidnet-classify`,
+Every device is classed `personal`, `iot` or `infra` (`bin/genkan-classify`,
 `config/db/schema-devices.sql`). It matters for one reason worth stating
 plainly: **the group commands only ever touch personal devices.** "Dinner",
 "kids off" and bedtime cannot darken a security camera, a smart lock, a

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hearth:summary=Discover devices from AdGuard's DHCP leases into the devices table.
+# genkan:summary=Discover devices from AdGuard's DHCP leases into the devices table.
 #
 # When a phone/laptop joins the kids' wifi it gets a DHCP lease from AdGuard.
 # This pulls those leases (MAC, hostname, IP) and upserts a devices row per MAC,
@@ -10,8 +10,8 @@ set -euo pipefail
 # Connects as kids_agent, a role with no superuser, no DDL and no
 # COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
-DB_NAME="${HEARTH_DB:-kids_network}"
-DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_NAME="${GENKAN_DB:-kids_network}"
+DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 DB=(docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME")
 
 TSV=$(ADGUARD_URL="$ADGUARD_URL" ADGUARD_USER="$ADGUARD_USER" ADGUARD_PASS="$ADGUARD_PASS" python3 <<'PY'
@@ -27,7 +27,7 @@ for L in (d.get("leases") or [])+(d.get("static_leases") or []):
     if mac and ip: w.writerow([mac,ip,host])
 PY
 )
-[ -z "$TSV" ] && { echo "kidnet-devicescan: no DHCP leases (server not serving yet?)"; exit 0; }
+[ -z "$TSV" ] && { echo "genkan-devicescan: no DHCP leases (server not serving yet?)"; exit 0; }
 printf '%s\n' "$TSV" | "${DB[@]}" -qc "
 CREATE TEMP TABLE _lease(mac text, ip inet, hostname text);
 COPY _lease FROM STDIN WITH (FORMAT text);
@@ -64,7 +64,7 @@ UPDATE dhcp_leases SET active=false
 # Presence, from the gateway's neighbour table rather than the lease list. A
 # device in that table answered ARP recently, so it is genuinely on the wire.
 # A lease proves only that we gave it an address once.
-GW="${GW_CONTAINER:-hearth-gw}"
+GW="${GW_CONTAINER:-genkan-gw}"
 PRESENT=$(docker exec "$GW" ip neigh show dev kids0 2>/dev/null \
   | grep -iE 'REACHABLE|STALE|DELAY|PROBE' | awk '{print $1}' | grep -E '^[0-9]' | paste -sd, || true)
 # PRESENT is interpolated into SQL, so it must be nothing but addresses and
@@ -76,6 +76,6 @@ if [ -n "${PRESENT:-}" ]; then
 fi
 
 # Auto-classify anything new (personal / iot / infra).
-d="$(dirname "$0")/kidnet-classify"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
+d="$(dirname "$0")/genkan-classify"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
 N=$(printf '%s\n' "$TSV" | grep -c . || true)
-echo "kidnet-devicescan: saw $N device(s) on the network"
+echo "genkan-devicescan: saw $N device(s) on the network"

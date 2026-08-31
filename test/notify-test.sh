@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hearth:summary=Prove the notifier: never twice, never lost, quiet by default, nothing private on a lock screen.
+# genkan:summary=Prove the notifier: never twice, never lost, quiet by default, nothing private on a lock screen.
 #
 # Runs entirely against a throwaway database and a local HTTP listener this
 # script starts and stops itself. It NEVER touches the household database and
@@ -11,17 +11,17 @@
 set -u
 R="$(cd "$(dirname "$0")/.." && pwd)"
 PG="${PG_CONTAINER:-postgres}"
-DB="hearth_notify_test_$$"
+DB="genkan_notify_test_$$"
 PORT_OK="${NOTIFY_TEST_PORT:-18991}"
 PORT_BAD=$((PORT_OK + 1))
-TMP="$(mktemp -d -t hearth-notify-test.XXXXXX)"
+TMP="$(mktemp -d -t genkan-notify-test.XXXXXX)"
 for _t in docker python3; do command -v "$_t" >/dev/null || { echo "MISSING REQUIRED TOOL: $_t"; exit 1; }; done
 
 pass=0; fail=0
 ok(){  pass=$((pass+1)); printf '  \033[32mPASS\033[0m  %s\n' "$1"; }
 bad(){ fail=$((fail+1)); printf '  \033[31mFAIL\033[0m  %s\n' "$1"; }
 psql(){ docker exec -i "$PG" psql -U postgres -d "$DB" -tAc "$1" 2>&1; }
-notify(){ HEARTH_DB="$DB" HEARTH_DB_ROLE=postgres PG_CONTAINER="$PG" bash "$R/bin/kidnet-notify" "$@" 2>&1; }
+notify(){ GENKAN_DB="$DB" GENKAN_DB_ROLE=postgres PG_CONTAINER="$PG" bash "$R/bin/genkan-notify" "$@" 2>&1; }
 cleanup(){
   [ -n "${OKPID:-}" ] && kill "$OKPID" 2>/dev/null
   [ -n "${BADPID:-}" ] && kill "$BADPID" 2>/dev/null
@@ -84,7 +84,7 @@ printf '%s\n' "$OK_URL" | notify add ntfy testroute --severity info >/dev/null
 [ "$(psql "SELECT count(*) FROM notify_routes WHERE name='testroute'")" = 1 ] \
   && ok "a route can be added" || bad "the route was not added"
 notify test testroute >/dev/null
-grep -q '"title": "Hearth: this is a test"' "$TMP/ok.log" \
+grep -q '"title": "Genkan: this is a test"' "$TMP/ok.log" \
   && ok "'send a test' actually puts a message on the wire" \
   || bad "the test button sent nothing"
 [ "$(psql "SELECT count(*) FROM notify_log WHERE is_test")" -ge 1 ] \

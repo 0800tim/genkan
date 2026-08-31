@@ -158,7 +158,7 @@ export function systemPage(data) {
   // colour is never the only channel.
   const tint = (bad, normal) => (bad ? "crit" : normal);
   const boxSub = boxes
-    ? (boxes.length ? `${boxes.map(c => c.name.replace(/^hearth-/, "")).join(", ")}` : "none found")
+    ? (boxes.length ? `${boxes.map(c => c.name.replace(/^genkan-/, "")).join(", ")}` : "none found")
     : "";
 
   const tiles = [

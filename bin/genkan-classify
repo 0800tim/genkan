@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# hearth:summary=Classify devices (personal / IoT / infrastructure) by hostname + MAC vendor.
+# genkan:summary=Classify devices (personal / IoT / infrastructure) by hostname + MAC vendor.
 #
 # Runs after discovery. Guesses what each device IS so it can be treated right:
 # a security camera or smart lock must never be metered or cut with "kids off",
@@ -11,8 +11,8 @@ set -uo pipefail
 # Connects as kids_agent, a role with no superuser, no DDL and no
 # COPY ... TO PROGRAM. See config/db/grants.sql for what it may touch and why.
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
-DB_NAME="${HEARTH_DB:-kids_network}"
-DB_ROLE="${HEARTH_DB_ROLE:-kids_agent}"
+DB_NAME="${GENKAN_DB:-kids_network}"
+DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1"; }
 
 # Reclassify anything still on defaults (category personal + kind unknown), plus
@@ -27,7 +27,7 @@ rows=$(psqll "SELECT id||'|'||coalesce(lower(hostname),'')||'|'||lower(mac::text
                 AND category = 'personal'
                 AND child_id IS NULL
                 AND label IS NULL")
-[ -n "$rows" ] || { echo "kidnet-classify: no devices"; exit 0; }
+[ -n "$rows" ] || { echo "genkan-classify: no devices"; exit 0; }
 
 classify(){ # echoes: kind|category|vendor
   local host="$1" mac="$2" oui="${2:0:8}"
@@ -95,4 +95,4 @@ for line in "${_devs[@]}"; do
   psqll "UPDATE devices SET kind='$k', category='$c'$vset WHERE id=$id" >/dev/null
   n=$((n+1))
 done
-echo "kidnet-classify: classified $n device(s)"
+echo "genkan-classify: classified $n device(s)"

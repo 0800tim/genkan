@@ -268,7 +268,7 @@ gateway. What we can police is the hub's traffic, not the radio behind it.
 | Piece | File |
 |---|---|
 | The policy model | `config/db/schema-policies.sql` |
-| The generator and the CLI | `bin/kidnet-iot-policy` (also `genkan iot ...`) |
+| The generator and the CLI | `bin/genkan-iot-policy` (also `genkan iot ...`) |
 | The proof, with real packets | `test/iot-policy-test.sh` (39 checks) |
 | The island firewall it sits on | `config/nftables/kids.nft` |
 
@@ -291,5 +291,5 @@ space, and the island's own addresses are inside that space, so without them
 those exceptions can only ever permit traffic between two addresses on the
 island itself, so the isolation that matters, the island being unable to reach
 the main house network or the tailnet, is untouched. They carry the comment
-`hearth-iot-allow`, they are replaced as a set on every run, and `mode off`
+`genkan-iot-allow`, they are replaced as a set on every run, and `mode off`
 removes them.

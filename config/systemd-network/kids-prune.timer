@@ -1,5 +1,5 @@
 [Unit]
-Description=Prune Hearth data nightly
+Description=Prune Genkan data nightly
 [Timer]
 OnCalendar=*-*-* 03:20:00
 Persistent=true

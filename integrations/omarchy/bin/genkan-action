@@ -1,26 +1,26 @@
 #!/bin/bash
 
-# omarchy:summary=Run a Hearth action from the Omarchy menu or the status bar
+# omarchy:summary=Run a Genkan action from the Omarchy menu or the status bar
 # omarchy:args=run <kidnet args...> | pick <prompt> <kidnet args with KID> | status | dashboard | menu
-# omarchy:examples=hearth-action run dinner | hearth-action pick "Internet off" off KID | hearth-action dashboard
+# omarchy:examples=genkan-action run dinner | genkan-action pick "Internet off" off KID | genkan-action dashboard
 
 # Every menu row and every bar click lands here. It runs one kidnet command
-# through hearth-kidnet, then says what happened in a desktop notification, so
+# through genkan-kidnet, then says what happened in a desktop notification, so
 # the parent gets feedback without opening a terminal.
 
 set -euo pipefail
 
-readonly conf_file="${HEARTH_CONF:-${XDG_CONFIG_HOME:-$HOME/.config}/hearth/omarchy.conf}"
+readonly conf_file="${GENKAN_CONF:-${XDG_CONFIG_HOME:-$HOME/.config}/genkan/omarchy.conf}"
 if [[ -r $conf_file ]]; then
   # shellcheck disable=SC1090
   source "$conf_file"
 fi
 
-: "${HEARTH_URL:=}"
-: "${HEARTH_DASHBOARD_URL:=$HEARTH_URL}"
+: "${GENKAN_URL:=}"
+: "${GENKAN_DASHBOARD_URL:=$GENKAN_URL}"
 
-readonly bin_dir="${HEARTH_BIN:-$(dirname "$(readlink -f "$0")")}"
-readonly kidnet_cmd="$bin_dir/hearth-kidnet"
+readonly bin_dir="${GENKAN_BIN:-$(dirname "$(readlink -f "$0")")}"
+readonly kidnet_cmd="$bin_dir/genkan-kidnet"
 
 fail() {
   echo "${0##*/}: $*" >&2
@@ -31,7 +31,7 @@ kidnet() {
   if [[ -x $kidnet_cmd ]]; then
     "$kidnet_cmd" "$@"
   else
-    hearth-kidnet "$@"
+    genkan-kidnet "$@"
   fi
 }
 
@@ -40,9 +40,9 @@ kidnet() {
 notify() {
   local headline="$1" body="${2:-}" urgency="${3:-low}"
   if command -v omarchy-notification-send >/dev/null 2>&1; then
-    omarchy-notification-send --app-name Hearth -u "$urgency" "$headline" "$body" >/dev/null 2>&1 || true
+    omarchy-notification-send --app-name Genkan -u "$urgency" "$headline" "$body" >/dev/null 2>&1 || true
   elif command -v notify-send >/dev/null 2>&1; then
-    notify-send -a Hearth -u "$urgency" "$headline" "$body" >/dev/null 2>&1 || true
+    notify-send -a Genkan -u "$urgency" "$headline" "$body" >/dev/null 2>&1 || true
   fi
 }
 
@@ -79,9 +79,9 @@ run_action() {
   local out status=0
   out=$(kidnet "$@" 2>&1) || status=$?
   if ((status == 0)); then
-    notify "Hearth" "${out:-$*}"
+    notify "Genkan" "${out:-$*}"
   else
-    notify "Hearth could not do that" "${out:-$*}" normal
+    notify "Genkan could not do that" "${out:-$*}" normal
   fi
   printf '%s\n' "$out"
   return "$status"
@@ -129,31 +129,31 @@ case "${1:-}" in
       line=$(kidnet time "$kid" 2>/dev/null) || continue
       body="$body"$'\n'"$line"
     done < <(kidnet --kids 2>/dev/null)
-    notify "Hearth right now" "$body"
+    notify "Genkan right now" "$body"
     printf '%s\n' "$body"
     ;;
 
   dashboard)
-    [[ -n $HEARTH_DASHBOARD_URL ]] ||
-      fail "set HEARTH_DASHBOARD_URL (or HEARTH_URL) in $conf_file"
-    open_url "$HEARTH_DASHBOARD_URL"
+    [[ -n $GENKAN_DASHBOARD_URL ]] ||
+      fail "set GENKAN_DASHBOARD_URL (or GENKAN_URL) in $conf_file"
+    open_url "$GENKAN_DASHBOARD_URL"
     ;;
 
   menu)
     # Rebuild the menu entries against the current kid list, then reload it.
-    "$bin_dir/hearth-menu-jsonc" --install >/dev/null &&
-      notify "Hearth" "Menu rebuilt from the current kid list" ||
-      notify "Hearth" "Could not rebuild the menu" normal
+    "$bin_dir/genkan-menu-jsonc" --install >/dev/null &&
+      notify "Genkan" "Menu rebuilt from the current kid list" ||
+      notify "Genkan" "Could not rebuild the menu" normal
     ;;
 
   -h | --help | "")
     cat <<USAGE
-Usage: hearth-action <command>
+Usage: genkan-action <command>
 
   run <kidnet args...>            run a kidnet command and notify the result
   pick <prompt> <args with KID>   ask which child first, then run it
   status                          notify what is blocked and who has time left
-  dashboard                       open the Hearth dashboard in a browser
+  dashboard                       open the Genkan dashboard in a browser
   menu                            rebuild the Omarchy menu from the kid list
 
 Configuration lives in $conf_file.
@@ -161,6 +161,6 @@ USAGE
     ;;
 
   *)
-    fail "unknown command '$1'. Try 'hearth-action --help'."
+    fail "unknown command '$1'. Try 'genkan-action --help'."
     ;;
 esac

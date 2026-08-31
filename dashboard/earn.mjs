@@ -61,7 +61,7 @@ const EARN_DEFAULTS = { quiz_cooldown_min: 360, quiz_daily_cap_min: 30,
 // Quiz banks. Metadata only: this file never needs the answers, and never
 // sends anything from a bank to a browser except its title and its numbers.
 //
-// Re-read when the directory changes, because `kidnet-quiz install` can drop a
+// Re-read when the directory changes, because `genkan-quiz install` can drop a
 // new bank in while everything is running and the portal reloads on a HUP. If
 // the dashboard held a stale list, a parent could not switch on a bank their
 // kids can already see, which is exactly the gap this screen exists to close.
@@ -116,7 +116,7 @@ refreshBanks();
 // portal/quizzes/community holds learning packages other people wrote. Nothing
 // in there is live: the portal only reads *.json at the top of portal/quizzes,
 // so a package on the shelf is an offer, not content. A parent installs one
-// deliberately with `bin/kidnet-pack install`, and it lands in the database
+// deliberately with `bin/genkan-pack install`, and it lands in the database
 // where a repo update cannot touch it. See docs/CONTRIBUTING-CONTENT.md.
 //
 // Metadata only. No question, no answer and no read-first text from an
@@ -479,7 +479,7 @@ export async function bankApi(q, body, res) {
 
   if (!/^[a-z0-9-]{1,48}$/.test(bankId)) return bad(res, "bad bank");
   const [bank] = await q("SELECT * FROM quiz_bank_summary WHERE id=$1", [bankId]);
-  if (!bank) return bad(res, "That bank is not one of yours. The banks in portal/quizzes are files: edit them with kidnet-quiz.");
+  if (!bank) return bad(res, "That bank is not one of yours. The banks in portal/quizzes are files: edit them with genkan-quiz.");
 
   if (action === "update") {
     const m = readBankMeta(body);
@@ -912,7 +912,7 @@ export function earnPage(d) {
   // Two shelves in one list: the banks that shipped with Genkan, as files, and
   // the banks this household wrote, which live in the database. The second
   // kind can be edited here, question by question. The first kind cannot, on
-  // purpose: it is a file in git, and kidnet-quiz owns it.
+  // purpose: it is a file in git, and genkan-quiz owns it.
   const prompts = (b, qid) => b.source === "db"
     ? (dbQ.get(b.id) || []).find(x => x.question_id === qid)?.prompt || qid
     : filePrompts.get(b.id)?.get(qid)?.prompt || qid;
@@ -1045,7 +1045,7 @@ export function earnPage(d) {
             : '<div class="empty">No questions yet. The first one goes below.</div>'}</div>
           ${newQuestion(b)}`
           : `<p class="hint">This one shipped with Genkan as a file in <code>portal/quizzes</code>. Change it with
-             <code>kidnet-quiz</code>, or write your own version below and switch this one off per child.</p>`}
+             <code>genkan-quiz</code>, or write your own version below and switch this one off per child.</p>`}
       </div></details>`;
   };
 
@@ -1074,7 +1074,7 @@ export function earnPage(d) {
     <p class="hint">${quizOnCount} of ${kids.length * d.banks.length} bank and child pairs are switched on.
       ${mineCount ? `${mineCount} bank${mineCount === 1 ? " is" : "s are"} yours; the rest shipped with Genkan.` : ""}
       Want a whole bank written for you? <code>docs/runbooks/quiz-suggestions.md</code> tells your own AI agent how,
-      and <code>bin/kidnet-quiz-suggest &lt;child&gt;</code> gathers what it needs to know.</p></div>`;
+      and <code>bin/genkan-quiz-suggest &lt;child&gt;</code> gathers what it needs to know.</p></div>`;
 
   // ---- community packages -------------------------------------------------
   // A package is a quiz bank somebody else wrote, in one file, with an author
@@ -1099,7 +1099,7 @@ export function earnPage(d) {
       <p class="hint">Installed ${esc(ago(p.installed_ts))}${p.installed_by ? ` by ${esc(p.installed_by)}` : ""}.
         It lives in the database, so updating Genkan cannot delete it.
         Switch it on or off per child in <b>Quizzes they can pass</b> above.
-        To take it out altogether: <code>bin/kidnet-pack remove ${esc(p.bank_id)}</code>.</p>
+        To take it out altogether: <code>bin/genkan-pack remove ${esc(p.bank_id)}</code>.</p>
     </div></details>`;
 
   const shelfRow = p => `<details class="job off">
@@ -1112,7 +1112,7 @@ export function earnPage(d) {
       ${p.description ? `<p class="hint">${esc(p.description)}</p>` : ""}
       ${p.tags.length ? `<p class="hint">${p.tags.map(t => `<span class="tag">${esc(t)}</span>`).join(" ")}</p>` : ""}
       <p class="hint">Read it first, then install it from a terminal:
-        <code>bin/kidnet-pack install ${esc(p.file)}</code>.
+        <code>bin/genkan-pack install ${esc(p.file)}</code>.
         Nobody has checked a stranger's answers for you, and a wrong answer takes minutes off a child for being right.</p>
     </div></details>`;
 
@@ -1133,10 +1133,10 @@ export function earnPage(d) {
     <p class="hint">Writing one is the most useful thing anybody can do for this project and it needs no code:
       <code>docs/CONTRIBUTING-CONTENT.md</code> is written for a person who is not a programmer, and
       <code>portal/quizzes/community/</code> has a worked example to copy.
-      Check your own with <code>bin/kidnet-pack validate &lt;file&gt;</code>.</p>
+      Check your own with <code>bin/genkan-pack validate &lt;file&gt;</code>.</p>
     <table class="helptab">
       <tr><td>What is built</td><td>The format, the validator, and
-        <code>bin/kidnet-pack</code> to validate, install, list and remove. An installed package behaves like
+        <code>bin/genkan-pack</code> to validate, install, list and remove. An installed package behaves like
         any other bank: same grading on the server, same difficulty ramp, same cooldown, same daily cap.
         A package can carry a short read-first page, which the kids see on the bank's <b>Read up</b> screen.</td></tr>
       <tr><td>What is not built</td><td><b>Nothing suggests a package to you.</b> The plan is that a parent gets
@@ -1144,8 +1144,8 @@ export function earnPage(d) {
         does not exist. Genkan has no telemetry and talks to no cloud, so it will never be a service that
         watches your family and recommends things. It will be an agent that YOU run, on your box, reading your
         own database. The evidence half of that already works today:
-        <code>bin/kidnet-quiz-suggest &lt;child&gt;</code> prints what one child has been doing, and
-        <code>bin/kidnet-pack list</code> prints what is on the shelf. Paste both into your own AI agent and
+        <code>bin/genkan-quiz-suggest &lt;child&gt;</code> prints what one child has been doing, and
+        <code>bin/genkan-pack list</code> prints what is on the shelf. Paste both into your own AI agent and
         it can tell you which package fits. <code>docs/runbooks/quiz-suggestions.md</code> has the recipe.
         Turning that into a line on this page is a later job, and it is honest to say it is not here.</td></tr>
       <tr><td>What is not supported</td><td>Pictures, audio and video. A package is text and links, and a link

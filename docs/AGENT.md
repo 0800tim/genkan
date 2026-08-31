@@ -28,7 +28,7 @@ in the house.
 | "what's busy tonight?" | `kidnet topsites` |
 | "whose phone is that new one?" | `kidnet unclaimed`, then `kidnet claims` |
 | "yes, that one is Ada's" | `kidnet confirm <device>` |
-| "how was this week?" | `bin/kidnet-report all last` |
+| "how was this week?" | `bin/genkan-report all last` |
 | "what's been going on?" | reads alerts, block_events, time_events |
 
 The full reference, every command and every argument, is docs/CLI.md. Read it

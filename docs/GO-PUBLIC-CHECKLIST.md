@@ -15,8 +15,8 @@ accident.
 
 Repo separation, verified:
   kids-network       the intended PUBLIC repo. No commercial content.
-  hearth-commercial  PRIVATE. Revenue thinking, session transcripts.
-  hearth-site        the marketing site. Separate repo, own decision to make.
+  genkan-commercial  PRIVATE. Revenue thinking, session transcripts.
+  genkan-site        the marketing site. Separate repo, own decision to make.
 
 Working tree is now genericised: no household MAC, no tailnet address, no main
 LAN address, no real children's names. Every name in the repo is invented: most

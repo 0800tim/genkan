@@ -9,11 +9,11 @@
 # Guarantees:
 #  - island reaches the INTERNET (via NAT) ................ allowed
 #  - island reaches the MAIN LAN / tailnet / internals .... BLOCKED (isolation)
-#  - island reaches the Hearth box itself: DHCP, DNS, portal ..... allowed, rest dropped
+#  - island reaches the Genkan box itself: DHCP, DNS, portal ..... allowed, rest dropped
 #  - a device in kids_block set ........................... no internet, BUT it
 #    keeps DHCP + DNS + the captive portal, and keeps @kids_allow (help lines),
 #    so "off" means "explained and still safe", never "device falls off the net"
-#  - all DNS is forced through the Hearth box (no DoH/DoT bypass)
+#  - all DNS is forced through the Genkan box (no DoH/DoT bypass)
 #
 # Validate before installing:  nft -c -f config/nftables/kids.nft
 # Loaded at boot via /etc/nftables.conf include of /etc/nftables.d/.
@@ -99,8 +99,8 @@ table inet kids {
     # a household that has chosen it over the cliff (kidnet slow-timeout slow).
     set slow_all    { type ipv4_addr; }
 
-    # Public Tor relay addresses. Populated by bin/kidnet-tor-sync (deploy plus
-    # the daily kids-tor-sync.timer), which renders /var/lib/hearth/tor-nodes.nft
+    # Public Tor relay addresses. Populated by bin/genkan-tor-sync (deploy plus
+    # the daily kids-tor-sync.timer), which renders /var/lib/genkan/tor-nodes.nft
     # and has it applied inside this namespace. NEVER edited by hand: the whole
     # set is flushed and refilled in one transaction. flags interval so address
     # ranges can be added later without a redesign.
@@ -127,7 +127,7 @@ table inet kids {
         }
     }
 
-    chain input {                      # traffic FROM the island TO the Hearth box itself
+    chain input {                      # traffic FROM the island TO the Genkan box itself
         type filter hook input priority filter; policy accept;
         iifname != $KIDS_IF accept                        # only police the island here
         ct state established,related accept
@@ -139,7 +139,7 @@ table inet kids {
         # internet" into "the wifi is broken", which teaches nothing.
         iifname $KIDS_IF udp dport { 67, 68 } accept       # DHCP (broadcast, so no daddr)
         # Pinned to the gateway address on purpose. Without the daddr match these
-        # would accept the same ports on EVERY address the Hearth box holds, so a kid
+        # would accept the same ports on EVERY address the Genkan box holds, so a kid
         # could reach its main-LAN and tailnet addresses on :80 and :53.
         iifname $KIDS_IF ip daddr $KIDS_GW udp dport 53 accept              # DNS
         iifname $KIDS_IF ip daddr $KIDS_GW tcp dport 53 accept
@@ -151,7 +151,7 @@ table inet kids {
         iifname $KIDS_IF ip daddr $KIDS_GW tcp dport $SPEEDTEST_PORT accept
         iifname $KIDS_IF ip daddr $KIDS_GW icmp type echo-request accept
 
-        iifname $KIDS_IF drop                              # NOTHING else on the Hearth box (no SSH, no dashboard)
+        iifname $KIDS_IF drop                              # NOTHING else on the Genkan box (no SSH, no dashboard)
     }
 
     # Metering ("meter" is reserved, so the chain is "metering"). Priority just
@@ -229,7 +229,7 @@ table inet kids {
     # <<< slow lane rules
     }
 
-    chain forward {                    # traffic FROM the island THROUGH the Hearth box
+    chain forward {                    # traffic FROM the island THROUGH the Genkan box
         type filter hook forward priority filter; policy accept;
 
         # Isolation is absolute and comes first: nothing below can grant it away.
@@ -297,7 +297,7 @@ table inet kids {
     # ---- NAT ----------------------------------------------------------------
     chain prerouting {
         type nat hook prerouting priority dstnat; policy accept;
-        # Force all plain DNS to the Hearth box's resolver even if a device hardcodes 8.8.8.8.
+        # Force all plain DNS to the Genkan box's resolver even if a device hardcodes 8.8.8.8.
         iifname $KIDS_IF meta l4proto { tcp, udp } th dport 53 dnat ip to $KIDS_GW
         # Isolation wins over the portal: traffic aimed at the main LAN must be
         # dropped by the forward chain, not quietly answered by the portal.

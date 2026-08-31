@@ -8,41 +8,41 @@ is right and this file is a bug.
 control surface a parent or an agent drives by hand. It was called `kidnet`
 until 2026-08-31 and that name still works, as a shim, so old runbooks and
 muscle memory do not break; new writing should say `genkan`. The background
-workers keep their `kidnet-` prefix for now, because those names are wired
+workers keep their `genkan-` prefix for now, because those names are wired
 into systemd units on live boxes and renaming them is its own job. The rest are background workers
-that timers run, plus `kidnet-report`, `kidnet-quiz`, `kidnet-quiz-suggest` and
-`kidnet-pack`, which you run when you want to read something or to change what
+that timers run, plus `genkan-report`, `genkan-quiz`, `genkan-quiz-suggest` and
+`genkan-pack`, which you run when you want to read something or to change what
 the kids can learn from.
 
-`deploy.sh` installs sixteen of them into `/usr/local/bin`. `kidnet-report`,
-`kidnet-quiz`, `kidnet-quiz-suggest` and `kidnet-pack` are not among them: run
+`deploy.sh` installs sixteen of them into `/usr/local/bin`. `genkan-report`,
+`genkan-quiz`, `genkan-quiz-suggest` and `genkan-pack` are not among them: run
 those from the repo, because they read files that live there.
 
 | Command | Run by | What it is for |
 |---|---|---|
 | [`genkan`](#genkan) | you, or your agent | the control surface: on, off, categories, time, devices |
-| [`kidnet-report`](#kidnet-report) | you, weekly | the family digest, read only |
-| [`kidnet-health`](#kidnet-health) | you, any time | is the household's internet working and is Genkan doing its job. Read only |
-| [`kidnet-upgrade`](#kidnet-upgrade) | you | update Genkan: check, snapshot, apply, undo itself if it breaks |
-| [`kidnet-rollback`](#kidnet-rollback) | you | go back to a version that worked |
-| [`kidnet-quiz`](#kidnet-quiz) | you, or your agent | manage the learn-to-earn quiz banks |
-| [`kidnet-quiz-suggest`](#kidnet-quiz-suggest) | you, or your agent | brief an agent on what one child should be quizzed on next |
-| [`kidnet-pack`](#kidnet-pack) | you | install, list and remove learning packages other people wrote |
-| [`kidnet-meter`](#kidnet-meter) | `kids-meter.timer` | ticks a minute off each active child's daily budget |
-| [`kidnet-schedule`](#kidnet-schedule) | `kids-schedule.timer` | applies scheduled bedtimes, and lifts them in the morning |
-| [`kidnet-catmap`](#kidnet-catmap) | `kids-metering.timer` | learns which addresses are gaming, video or a download |
-| [`kidnet-catmeter`](#kidnet-catmeter) | `kids-metering.timer` | counts active category minutes, enforces category budgets |
-| [`kidnet-servicemap`](#kidnet-servicemap) | `kids-services.timer` | learns which addresses are YouTube, Netflix, Roblox and so on |
-| [`kidnet-servicemeter`](#kidnet-servicemeter) | `kids-services.timer` | counts real bytes per service per device |
-| [`kidnet-devicescan`](#kidnet-devicescan) | `kids-devicescan.timer` | pulls DHCP leases into the devices table |
-| [`kidnet-classify`](#kidnet-classify) | `kidnet-devicescan` | guesses personal, IoT or infrastructure for each device |
-| [`kidnet-dnslog`](#kidnet-dnslog) | `kids-dnslog.timer` | pulls AdGuard's query log into `dns_log` |
-| [`kidnet-alerts`](#kidnet-alerts) | `kids-dnslog.service` | raises alerts on flagged domains just ingested |
-| [`kidnet-notify`](#kidnet-notify) | `kids-notify.timer` | sends unacknowledged alerts to the phone routes a household set up |
-| [`kidnet-adguard`](#kidnet-adguard) | `genkan`, on every change | renders category blocks into AdGuard's rule list |
-| [`kidnet-adguard-clients`](#kidnet-adguard-clients) | `genkan assign` | points each child's AdGuard client at their real device IPs, and gives each shared family device one of its own |
-| [`kidnet-tor-sync`](#kidnet-tor-sync) | `kids-tor-sync.timer` | fetches the public Tor relay list for the firewall |
-| [`kidnet-iot-policy`](#kidnet-iot-policy) | `kids-iot-policy.timer` (installed, off by default) | generates the household IoT security policy from the database |
+| [`genkan-report`](#genkan-report) | you, weekly | the family digest, read only |
+| [`genkan-health`](#genkan-health) | you, any time | is the household's internet working and is Genkan doing its job. Read only |
+| [`genkan-upgrade`](#genkan-upgrade) | you | update Genkan: check, snapshot, apply, undo itself if it breaks |
+| [`genkan-rollback`](#genkan-rollback) | you | go back to a version that worked |
+| [`genkan-quiz`](#genkan-quiz) | you, or your agent | manage the learn-to-earn quiz banks |
+| [`genkan-quiz-suggest`](#genkan-quiz-suggest) | you, or your agent | brief an agent on what one child should be quizzed on next |
+| [`genkan-pack`](#genkan-pack) | you | install, list and remove learning packages other people wrote |
+| [`genkan-meter`](#genkan-meter) | `kids-meter.timer` | ticks a minute off each active child's daily budget |
+| [`genkan-schedule`](#genkan-schedule) | `kids-schedule.timer` | applies scheduled bedtimes, and lifts them in the morning |
+| [`genkan-catmap`](#genkan-catmap) | `kids-metering.timer` | learns which addresses are gaming, video or a download |
+| [`genkan-catmeter`](#genkan-catmeter) | `kids-metering.timer` | counts active category minutes, enforces category budgets |
+| [`genkan-servicemap`](#genkan-servicemap) | `kids-services.timer` | learns which addresses are YouTube, Netflix, Roblox and so on |
+| [`genkan-servicemeter`](#genkan-servicemeter) | `kids-services.timer` | counts real bytes per service per device |
+| [`genkan-devicescan`](#genkan-devicescan) | `kids-devicescan.timer` | pulls DHCP leases into the devices table |
+| [`genkan-classify`](#genkan-classify) | `genkan-devicescan` | guesses personal, IoT or infrastructure for each device |
+| [`genkan-dnslog`](#genkan-dnslog) | `kids-dnslog.timer` | pulls AdGuard's query log into `dns_log` |
+| [`genkan-alerts`](#genkan-alerts) | `kids-dnslog.service` | raises alerts on flagged domains just ingested |
+| [`genkan-notify`](#genkan-notify) | `kids-notify.timer` | sends unacknowledged alerts to the phone routes a household set up |
+| [`genkan-adguard`](#genkan-adguard) | `genkan`, on every change | renders category blocks into AdGuard's rule list |
+| [`genkan-adguard-clients`](#genkan-adguard-clients) | `genkan assign` | points each child's AdGuard client at their real device IPs, and gives each shared family device one of its own |
+| [`genkan-tor-sync`](#genkan-tor-sync) | `kids-tor-sync.timer` | fetches the public Tor relay list for the firewall |
+| [`genkan-iot-policy`](#genkan-iot-policy) | `kids-iot-policy.timer` (installed, off by default) | generates the household IoT security policy from the database |
 
 Everything talks to Postgres through `docker exec -i postgres psql`, so the
 tools need the `postgres` container running and the Docker socket readable.
@@ -57,8 +57,8 @@ The one command a parent or an agent uses. Run it with no arguments to print
 this same summary from the script's own header.
 
 State lives in Postgres. `genkan` writes the desired state, then pushes it to
-the two enforcement planes: nftables (via `docker exec hearth-gw nft`) for the
-coarse internet switch, and AdGuard (via `kidnet-adguard`) for per-category DNS
+the two enforcement planes: nftables (via `docker exec genkan-gw nft`) for the
+coarse internet switch, and AdGuard (via `genkan-adguard`) for per-category DNS
 blocks. If the firewall is not loaded yet, `genkan` says so and still records
 the state, and the gateway picks it up when it comes back.
 
@@ -89,7 +89,7 @@ Which group somebody falls in is decided by their role (`child`, `guest-child`,
 **Groups only ever touch devices classified `personal` or `shared`.** Cameras,
 locks, speakers and other IoT, appliances and the access point are never cut by
 `genkan off all`, by `dinner` or by `genkan house off`. See
-[device classification](#kidnet-classify).
+[device classification](#genkan-classify).
 
 There is one more scope, `house-off`, which is every device ticked for the
 whole-house cut and no people at all. It is deliberately not in the list above,
@@ -155,7 +155,7 @@ the tick box's to give.
     genkan media off|on <kid>     video + social; Spotify and audio stay up
     genkan study on|off <kid>     gaming + video + social off together
 
-All three write `category_state` and then call `kidnet-adguard apply`, which
+All three write `category_state` and then call `genkan-adguard apply`, which
 answers that category's domains with the portal address for that child only.
 `study on` is exactly `game off` plus `media off`; `study off` clears all three.
 
@@ -260,10 +260,10 @@ which reached the dashboard verbatim.
 
 ### Bedtimes
 
-    genkan schedule <anything>   passed straight through to kidnet-schedule
+    genkan schedule <anything>   passed straight through to genkan-schedule
 
 The times a child's internet goes off and comes back are their own script, the
-same way the household IoT policy is. See [kidnet-schedule](#kidnet-schedule).
+same way the household IoT policy is. See [genkan-schedule](#genkan-schedule).
 
 ### The safety net, and the reading list
 
@@ -302,7 +302,7 @@ and once an hour on its own.
     genkan iot allow <phone> <device>    let one device reach another
     genkan iot mode off|observe|enforce
 
-A pass-through to [`kidnet-iot-policy`](#kidnet-iot-policy), so there is one
+A pass-through to [`genkan-iot-policy`](#genkan-iot-policy), so there is one
 control surface. This is the household layer, not the kid layer: what each
 camera, lock, speaker and vacuum is allowed to talk to. Read
 [HOUSEHOLD-SECURITY.md](HOUSEHOLD-SECURITY.md) before switching it on.
@@ -322,7 +322,7 @@ camera, lock, speaker and vacuum is allowed to talk to. Read
     genkan guest list                   the visitors here right now
 
 `assign` maps a device to a person, then immediately runs
-`kidnet-adguard-clients` so the age tier follows the device rather than lagging
+`genkan-adguard-clients` so the age tier follows the device rather than lagging
 a minute behind. Pass a MAC (anything containing a colon) or an address. The
 optional fifth argument sets the DHCP reservation at the same time.
 
@@ -415,7 +415,7 @@ Two rules learned the hard way, worth following when you add a verb:
 
 ### Which database role it connects as
 
-`genkan` and every `kidnet-*` worker connect as **`kids_agent`**, not as the
+`genkan` and every `genkan-*` worker connect as **`kids_agent`**, not as the
 Postgres superuser, and not as the `kids_app` role the dashboard and portal
 use. `kids_agent` cannot run `COPY ... TO PROGRAM`, read a server file, drop or
 truncate a table, delete a child or a day of history, or escalate itself. Its
@@ -428,20 +428,20 @@ explains the three places that are still on the superuser path on purpose.
 
 | Variable | Default | Effect |
 |---|---|---|
-| `GW_CONTAINER` | `hearth-gw` | which container holds the island's namespace |
+| `GW_CONTAINER` | `genkan-gw` | which container holds the island's namespace |
 | `NFT_DIRECT` | unset | set to `1` to run `nft` on the host instead (the no-Docker variant) |
 | `NFT` | `/usr/sbin/nft` | the `nft` binary, when `NFT_DIRECT=1` |
 | `PG_CONTAINER` | `postgres` | the container Postgres runs in |
-| `HEARTH_DB` | `kids_network` | the database to talk to |
-| `HEARTH_DB_ROLE` | `kids_agent` | the Postgres role to connect as |
+| `GENKAN_DB` | `kids_network` | the database to talk to |
+| `GENKAN_DB_ROLE` | `kids_agent` | the Postgres role to connect as |
 | `ADGUARD_PASS` | unset | without it, the DNS layer is skipped silently and the database stays the source of truth |
 
 ---
 
-## kidnet-report
+## genkan-report
 
-    bin/kidnet-report <child> [week]
-    bin/kidnet-report all [week]
+    bin/genkan-report <child> [week]
+    bin/genkan-report all [week]
 
 The weekly family digest: time online, metered categories, top sites, things
 worth a chat, and what was earned. One block per child, plain text, Monday to
@@ -456,7 +456,7 @@ and how to schedule it: [reporting.md](reporting.md).
 
 ---
 
-## kidnet-meter
+## genkan-meter
 
 No arguments. Run every minute by `kids-meter.timer`.
 
@@ -467,21 +467,21 @@ internet and marks the block `set_by='out-of-time'`, which is the only kind of
 block a quiz can lift.
 
 This is the whole-internet minute meter. Per-category minutes are counted
-separately by `kidnet-catmeter`.
+separately by `genkan-catmeter`.
 
 ---
 
-## kidnet-schedule
+## genkan-schedule
 
-    kidnet-schedule [apply]                          apply the schedules (what the timer runs)
-    kidnet-schedule show [kid]                       what is set, what is in force, when it lifts
-    kidnet-schedule set <kid> <days> <HH:MM> <HH:MM> [categories]
-    kidnet-schedule clear <kid>                      remove that child's bedtimes
-    kidnet-schedule enable|disable <kid>             keep the times, stop or start them firing
-    kidnet-schedule extend <kid> <min>               tonight only, no schedule edited
-    kidnet-schedule holiday <from> <to> [name]       no bedtimes between those dates
-    kidnet-schedule holiday late <from> <to> <min> [name]
-    kidnet-schedule holiday clear                    end every override window now
+    genkan-schedule [apply]                          apply the schedules (what the timer runs)
+    genkan-schedule show [kid]                       what is set, what is in force, when it lifts
+    genkan-schedule set <kid> <days> <HH:MM> <HH:MM> [categories]
+    genkan-schedule clear <kid>                      remove that child's bedtimes
+    genkan-schedule enable|disable <kid>             keep the times, stop or start them firing
+    genkan-schedule extend <kid> <min>               tonight only, no schedule edited
+    genkan-schedule holiday <from> <to> [name]       no bedtimes between those dates
+    genkan-schedule holiday late <from> <to> <min> [name]
+    genkan-schedule holiday clear                    end every override window now
 
 Run every minute by `kids-schedule.timer`, and reachable as `genkan schedule
 ...`. The dashboard's Family page sets the same rows through `/api/schedule`.
@@ -517,7 +517,7 @@ Nothing here touches nftables. The database is the desired state and the
 gateway container reconciles the firewall from it every 15 seconds, which is
 also why a reboot mid-bedtime comes back blocked: the block is a row, not a
 rule somebody has to remember to re-add. The DNS layer is pushed with
-`kidnet-adguard apply` when a change actually happened, because
+`genkan-adguard apply` when a change actually happened, because
 `gaming`, `video` and `social` bedtimes are enforced there.
 
 ### The set_by rules
@@ -528,8 +528,8 @@ DECISIONS.md; the short version:
 | `set_by` | who set it | may a schedule lift it? |
 |---|---|---|
 | `agent` | a parent, by hand or on the dashboard | never |
-| `out-of-time` | `kidnet-meter`, at zero minutes | never |
-| `over-budget` | `kidnet-catmeter`, a category over its cap | never |
+| `out-of-time` | `genkan-meter`, at zero minutes | never |
+| `over-budget` | `genkan-catmeter`, a category over its cap | never |
 | `bedtime` | this worker | yes, and only this worker |
 | `schedule-lifted` | this worker, in the morning | n/a, it is not a block |
 
@@ -542,7 +542,7 @@ rather than towards the child being online.
 ### Time and place
 
 Every date and time is worked out in the database's own timezone, which
-`deploy.sh` pins to `HEARTH_TZ`. That is the same clock the daily budget rolls
+`deploy.sh` pins to `GENKAN_TZ`. That is the same clock the daily budget rolls
 over on, so a bedtime and a day boundary can never disagree.
 
 The maths lives in one SQL function, `schedule_windows(at timestamptz)`, which
@@ -554,16 +554,16 @@ is off right now because of a bedtime rather than because of a parent).
 
 ### Environment
 
-Same three overrides as `bin/genkan`: `PG_CONTAINER`, `HEARTH_DB` and
-`HEARTH_DB_ROLE`. It connects as `kids_agent`. `ADGUARD_PASS` is optional; with
+Same three overrides as `bin/genkan`: `PG_CONTAINER`, `GENKAN_DB` and
+`GENKAN_DB_ROLE`. It connects as `kids_agent`. `ADGUARD_PASS` is optional; with
 it unset the DNS push is skipped and the database is still the truth.
 
 ---
 
-## kidnet-catmap
+## genkan-catmap
 
 No arguments. Run every minute by `kids-metering.timer`, just before
-`kidnet-catmeter`.
+`genkan-catmeter`.
 
 Reads AdGuard's query log, matches each looked-up name against
 `category_domains` by longest domain suffix, and records the A-record answers
@@ -596,10 +596,10 @@ a much smaller lie than colouring the whole house's traffic with it.
 
 ---
 
-## kidnet-catmeter
+## genkan-catmeter
 
 No arguments. Run every minute by `kids-metering.timer`, straight after
-`kidnet-catmap`.
+`genkan-catmap`.
 
 Three steps each minute:
 
@@ -648,7 +648,7 @@ stack a duplicate rule.
 | `DOWNLOAD_THRESH` | `256000` | bytes in a minute that count as actively downloading |
 | `DOWNLOAD_BYTES_PER_MIN` | `52428800` | above this on a gaming address it is an update, not a game (~7 Mbit/s) |
 | `KIDS_IFACE` | `kids0` | island interface, used only when adding the download rule to an older ruleset |
-| `GW_CONTAINER` | `hearth-gw` | |
+| `GW_CONTAINER` | `genkan-gw` | |
 | `NFT_NS` | unset | run `nft` in this network namespace instead (used by the tests) |
 | `NFT_DIRECT` | unset | `1` to run `nft` on the host |
 
@@ -656,12 +656,12 @@ Exits quietly with a note if the firewall is not loaded.
 
 ---
 
-## kidnet-servicemap
+## genkan-servicemap
 
 No arguments. Run every minute by `kids-services.timer`, just before
-`kidnet-servicemeter`.
+`genkan-servicemeter`.
 
-The same DNS trick as `kidnet-catmap`, one level finer. Matches query-log names
+The same DNS trick as `genkan-catmap`, one level finer. Matches query-log names
 against `service_domains` (YouTube, Netflix, Disney+, Prime Video, TikTok,
 Twitch, Instagram, Snapchat, Roblox, Fortnite, Steam, Minecraft, Spotify, Khan
 Academy, Google Classroom) and records the answers in `service_ips`. Longest
@@ -674,7 +674,7 @@ suffix wins, so `nflxvideo.net` beats a bare guess at `netflix.com`.
 
 ---
 
-## kidnet-servicemeter
+## genkan-servicemeter
 
 No arguments. Run every minute by `kids-services.timer`.
 
@@ -702,14 +702,14 @@ hides destinations entirely.
 
 ---
 
-## kidnet-devicescan
+## genkan-devicescan
 
 No arguments. Run every minute by `kids-devicescan.timer`.
 
 Reads AdGuard's DHCP status (both dynamic and static leases) and upserts a row
 per MAC into `devices`, owned by nobody until a parent assigns it. Refreshes
 `last_seen` and `dhcp_leases`, which is what `genkan leases` prints. Then it
-records presence, then it runs `kidnet-classify` on anything new.
+records presence, then it runs `genkan-classify` on anything new.
 
 **"Seen before" and "here now" are different columns.** `last_seen` comes from
 the lease list, and a lease outlives the device that holds it by up to its full
@@ -730,13 +730,13 @@ manual step: only the parent knows whose phone is whose.
 
 | Variable | Default | Effect |
 |---|---|---|
-| `GW_CONTAINER` | `hearth-gw` | the container whose neighbour table is read for presence |
+| `GW_CONTAINER` | `genkan-gw` | the container whose neighbour table is read for presence |
 
 ---
 
-## kidnet-classify
+## genkan-classify
 
-No arguments. Normally run by `kidnet-devicescan`; safe to run by hand.
+No arguments. Normally run by `genkan-devicescan`; safe to run by hand.
 
 Every device sits in one of five classes, which decides how it is treated:
 
@@ -785,7 +785,7 @@ or update `devices.category` directly for anything else.
 
 ---
 
-## kidnet-dnslog
+## genkan-dnslog
 
 No arguments. Run every two minutes by `kids-dnslog.timer`.
 
@@ -804,7 +804,7 @@ and the next tick picks up what it missed.
 
 ---
 
-## kidnet-alerts
+## genkan-alerts
 
 No arguments. Run by `kids-dnslog.service` as an `ExecStartPost`, so it always
 sees rows that were just ingested.
@@ -830,7 +830,7 @@ ingest that feeds it, which means systemd ignores the status by design.
 To sweep a longer window than the timer does, for instance after fixing an
 outage, set the lookback for one run:
 
-    ALERT_LOOKBACK="2 days" kidnet-alerts
+    ALERT_LOOKBACK="2 days" genkan-alerts
 
 | Variable | Default |
 |---|---|
@@ -838,16 +838,16 @@ outage, set the lookback for one run:
 
 ---
 
-## kidnet-notify
+## genkan-notify
 
-    kidnet-notify run                     send what is owed (the timer runs this)
-    kidnet-notify pending                 what would go next, without sending it
-    kidnet-notify list                    the routes, their state and their last result
-    kidnet-notify test <route>            send a harmless test message now
-    kidnet-notify log [n]                 the last n attempts, good and bad
-    kidnet-notify add <kind> <name> [options]
-    kidnet-notify set <name> [options]
-    kidnet-notify on <name> | off <name> | remove <name>
+    genkan-notify run                     send what is owed (the timer runs this)
+    genkan-notify pending                 what would go next, without sending it
+    genkan-notify list                    the routes, their state and their last result
+    genkan-notify test <route>            send a harmless test message now
+    genkan-notify log [n]                 the last n attempts, good and bad
+    genkan-notify add <kind> <name> [options]
+    genkan-notify set <name> [options]
+    genkan-notify on <name> | off <name> | remove <name>
 
 Puts Genkan's alerts on a parent's phone. Reads unacknowledged `alerts` rows and
 POSTs the ones a household asked for, to an address the household typed in. It
@@ -896,9 +896,9 @@ words, are in [NOTIFICATIONS.md](NOTIFICATIONS.md).
 
 ---
 
-## kidnet-adguard
+## genkan-adguard
 
-    kidnet-adguard [apply|render]
+    genkan-adguard [apply|render]
 
 `render` prints the rules it would install. `apply` (the default) POSTs them to
 AdGuard. `genkan` calls `apply` after any change that affects the DNS layer.
@@ -925,7 +925,7 @@ order:
 
 ---
 
-## kidnet-adguard-clients
+## genkan-adguard-clients
 
 No arguments. Run automatically by `genkan assign`.
 
@@ -952,9 +952,9 @@ AdGuard keys clients by name and building it would overwrite that person's.
 
 ---
 
-## kidnet-tor-sync
+## genkan-tor-sync
 
-    kidnet-tor-sync [sync|emit|status]
+    genkan-tor-sync [sync|emit|status]
 
 - `sync` (default) fetches the current public Tor relay list, loads the
   addresses into the `tor_nodes` table, and writes two files: a plain address
@@ -978,8 +978,8 @@ gateway is in its segment-guard wait with no firewall loaded, so the guard
 fired every time, the apply was skipped every time, and the unit reported
 success every time. The set was empty and nothing said so.
 
-A fetch that cannot reach the firewall is not a blocklist. `kidnet-tor-sync
-status` and `kidnet-health` both now ask the firewall directly rather than
+A fetch that cannot reach the firewall is not a blocklist. `genkan-tor-sync
+status` and `genkan-health` both now ask the firewall directly rather than
 looking at the age of a file.
 
 Sources in order: Onionoo, the Tor Project's own directory API, then dan.me.uk
@@ -994,8 +994,8 @@ would block nothing in this direction.
 
 | Variable | Default | Effect |
 |---|---|---|
-| `TOR_NODES_FILE` | `/var/lib/hearth/tor-nodes.txt` | plain list, one address per line |
-| `TOR_NFT_FILE` | `/var/lib/hearth/tor-nodes.nft` | the generated nft snippet |
+| `TOR_NODES_FILE` | `/var/lib/genkan/tor-nodes.txt` | plain list, one address per line |
+| `TOR_NFT_FILE` | `/var/lib/genkan/tor-nodes.nft` | the generated nft snippet |
 | `TOR_MIN_NODES` | `1000` | fewer than this means a bad fetch; refuse it |
 | `TOR_CHUNK` | `500` | addresses per `add element` line |
 
@@ -1006,21 +1006,21 @@ specifically to defeat address lists. The honest version is in
 
 ---
 
-## kidnet-iot-policy
+## genkan-iot-policy
 
-    kidnet-iot-policy apply           regenerate and apply the policy chain
-    kidnet-iot-policy learn           resolve vendor domains into vendor_ips, then apply
-    kidnet-iot-policy status          the policy, and what the firewall has refused
-    kidnet-iot-policy show <device>   the effective policy for one device
-    kidnet-iot-policy mode off|observe|enforce
-    kidnet-iot-policy set <device> <field> <value>
-    kidnet-iot-policy allow <src> <dst> [note]
-    kidnet-iot-policy revoke <src> <dst>
-    kidnet-iot-policy dryrun          print the ruleset that WOULD be applied
+    genkan-iot-policy apply           regenerate and apply the policy chain
+    genkan-iot-policy learn           resolve vendor domains into vendor_ips, then apply
+    genkan-iot-policy status          the policy, and what the firewall has refused
+    genkan-iot-policy show <device>   the effective policy for one device
+    genkan-iot-policy mode off|observe|enforce
+    genkan-iot-policy set <device> <field> <value>
+    genkan-iot-policy allow <src> <dst> [note]
+    genkan-iot-policy revoke <src> <dst>
+    genkan-iot-policy dryrun          print the ruleset that WOULD be applied
 
 The household security layer. Generates its own nftables sets and chain from
 `device_policy_effective` (config/db/schema-policies.sql), the same way
-`kidnet-servicemeter` generates its counters, so adding a device or changing a
+`genkan-servicemeter` generates its counters, so adding a device or changing a
 rule is a database row rather than a firewall edit.
 
 Policy is written in terms of who may START a conversation: may this device
@@ -1084,14 +1084,14 @@ the gateway ever seeing it unless client isolation is on.
 
 ---
 
-## kidnet-quiz
+## genkan-quiz
 
-    kidnet-quiz list                      every bank, with its difficulty ramp
-    kidnet-quiz validate <file>...        check a bank without installing it
-    kidnet-quiz install <file> [--force]  validate, install, reload the portal
-    kidnet-quiz remove <id>               take a bank off the portal
-    kidnet-quiz stats [kid]               who has passed what, and how it is going
-    kidnet-quiz reload [--container]      re-read the bank directory
+    genkan-quiz list                      every bank, with its difficulty ramp
+    genkan-quiz validate <file>...        check a bank without installing it
+    genkan-quiz install <file> [--force]  validate, install, reload the portal
+    genkan-quiz remove <id>               take a bank off the portal
+    genkan-quiz stats [kid]               who has passed what, and how it is going
+    genkan-quiz reload [--container]      re-read the bank directory
 
 The control surface for learn-to-earn content. A parent asks their agent for
 "a quiz on the animals of Madagascar for a 12 to 15 year old", the agent writes
@@ -1116,10 +1116,10 @@ level. `remove` never deletes either: minutes earned stay earned.
 
 | Variable | Default | Effect |
 |---|---|---|
-| `HEARTH_REPO` | the parent of `bin/` | where the banks and the validator live |
-| `QUIZ_DIR` | `$HEARTH_REPO/portal/quizzes` | the bank directory |
+| `GENKAN_REPO` | the parent of `bin/` | where the banks and the validator live |
+| `QUIZ_DIR` | `$GENKAN_REPO/portal/quizzes` | the bank directory |
 | `PORTAL_UNIT` | `kids-portal.service` | the host portal reloaded with SIGHUP after a change |
-| `PORTAL_CONTAINER` | `hearth-portal` | the island portal, signalled only with `reload --container` |
+| `PORTAL_CONTAINER` | `genkan-portal` | the island portal, signalled only with `reload --container` |
 
 The island container is left alone unless you ask for it, because SIGHUP only
 reloads a portal already running the code that handles it. On a box that has
@@ -1128,12 +1128,12 @@ instead of reloading it.
 
 ---
 
-## kidnet-pack
+## genkan-pack
 
-    kidnet-pack list                      what is installed, and what is on the shelf
-    kidnet-pack validate <file>...        check a package without installing it
-    kidnet-pack install <file> [--force]  validate, then install it for the kids
-    kidnet-pack remove <id> [--off]       remove it, or just take it off the list
+    genkan-pack list                      what is installed, and what is on the shelf
+    genkan-pack validate <file>...        check a package without installing it
+    genkan-pack install <file> [--force]  validate, then install it for the kids
+    genkan-pack remove <id> [--off]       remove it, or just take it off the list
 
 Community learning packages. A package is one JSON file: a quiz bank, plus who
 wrote it, what licence it carries, who it is for, and optionally a short piece
@@ -1142,7 +1142,7 @@ the forty-two banks that ship with Genkan pass every package check unchanged,
 manifest aside. `docs/CONTRIBUTING-CONTENT.md` is the guide for writing one,
 written for somebody who is not a programmer.
 
-**Why this is not `kidnet-quiz install`.** That command copies a bank file into
+**Why this is not `genkan-quiz install`.** That command copies a bank file into
 `portal/quizzes`, which is tracked in git: a `git pull` would delete a family's
 installed content and a repo update would overwrite it. A package goes into the
 **database** instead, alongside the banks a parent writes on the dashboard
@@ -1179,10 +1179,10 @@ the database shelf, so nothing needs restarting.
 
 | Variable | Default | Effect |
 |---|---|---|
-| `HEARTH_REPO` | the repo above `bin/` | where to find the validator and the shelf |
-| `PACK_SHELF` | `$HEARTH_REPO/portal/quizzes/community` | the shelf `list` reads |
-| `HEARTH_DB` | `kids_network` | the database to install into |
-| `HEARTH_DB_ROLE` | `kids_agent` | the Postgres role to connect as |
+| `GENKAN_REPO` | the repo above `bin/` | where to find the validator and the shelf |
+| `PACK_SHELF` | `$GENKAN_REPO/portal/quizzes/community` | the shelf `list` reads |
+| `GENKAN_DB` | `kids_network` | the database to install into |
+| `GENKAN_DB_ROLE` | `kids_agent` | the Postgres role to connect as |
 
 `test/package-test.sh` (31 checks) is the suite behind this: it builds fourteen
 hostile packages, proves each is refused, then forces one into the database by
@@ -1190,13 +1190,13 @@ hand and proves the portal still renders it inert.
 
 ---
 
-## kidnet-quiz-suggest
+## genkan-quiz-suggest
 
-    kidnet-quiz-suggest                     the children it can brief on
-    kidnet-quiz-suggest <kid>               the briefing
-    kidnet-quiz-suggest <kid> --days 60     a longer window (default 30)
-    kidnet-quiz-suggest <kid> --top 15      more rows per section (default 10)
-    kidnet-quiz-suggest <kid> --quiet       the briefing without the closing prompt
+    genkan-quiz-suggest                     the children it can brief on
+    genkan-quiz-suggest <kid>               the briefing
+    genkan-quiz-suggest <kid> --days 60     a longer window (default 30)
+    genkan-quiz-suggest <kid> --top 15      more rows per section (default 10)
+    genkan-quiz-suggest <kid> --quiet       the briefing without the closing prompt
 
 The research half of "keep feeding them new quizzes". It gathers what one
 child passes, what they avoid, which questions they keep getting wrong, what
@@ -1217,8 +1217,8 @@ correct: there is nothing to go on until the kids have taken some rounds and
 
 | Variable | Default | Effect |
 |---|---|---|
-| `HEARTH_REPO` | the parent of `bin/` | where the banks live |
-| `QUIZ_DIR` | `$HEARTH_REPO/portal/quizzes` | the file bank directory |
+| `GENKAN_REPO` | the parent of `bin/` | where the banks live |
+| `QUIZ_DIR` | `$GENKAN_REPO/portal/quizzes` | the file bank directory |
 | `PG_CONTAINER` | `postgres` | the Postgres container |
 | `KIDS_DB` | `kids_network` | the database |
 
@@ -1247,9 +1247,9 @@ It exists because `git checkout dashboard/portal.mjs` discarded an agent's
 uncommitted work and there was nothing to recover from.
 
 Every `save` commits the entire working tree, tracked and untracked, to
-`refs/hearth/snapshots`. That ref never appears in the branch history, is never
+`refs/genkan/snapshots`. That ref never appears in the branch history, is never
 pushed, and never touches what you have staged: the script uses an index file
-of its own (`.git/hearth-snapshot-index`). If the tree has not changed since the
+of its own (`.git/genkan-snapshot-index`). If the tree has not changed since the
 last snapshot it exits without committing, so identical commits do not pile up.
 Recovery is then an ordinary git operation, which is the point: the snapshots
 are readable by any git tool, not by a bespoke one.
@@ -1262,7 +1262,7 @@ and whether you want it at all is not a household concern of Genkan's. On the
 reference box it is a user timer running every two minutes:
 
 ```ini
-# ~/.config/systemd/user/hearth-snapshot.timer
+# ~/.config/systemd/user/genkan-snapshot.timer
 [Unit]
 Description=Snapshot Genkan's working tree every two minutes
 [Timer]
@@ -1273,21 +1273,21 @@ AccuracySec=30s
 WantedBy=timers.target
 ```
 
-with a matching `hearth-snapshot.service` of `Type=oneshot` running
+with a matching `genkan-snapshot.service` of `Type=oneshot` running
 `tools/worktree-snapshot.sh save`. This is a developer safety net, not part of
 what a family runs.
 
 ---
 
-## kidnet-health
+## genkan-health
 
 ```
-kidnet-health [--json] [--details] [--quiet] [--wait <seconds>] [--write <file>]
+genkan-health [--json] [--details] [--quiet] [--wait <seconds>] [--write <file>]
 ```
 
 Answers one question: is this household's internet working, and is Genkan doing
 its job. It is the command a parent runs at 9pm when a child says the internet
-is broken, and it is what `kidnet-upgrade` trusts when it decides whether an
+is broken, and it is what `genkan-upgrade` trusts when it decides whether an
 upgrade worked.
 
 **Read only.** It writes nothing except the optional JSON cache. That is a rule
@@ -1298,10 +1298,10 @@ What it checks, in this order:
 
 | Check | Fails when |
 |---|---|
-| the gateway container | `hearth-gw` is not running, so nobody has internet |
-| the filter and address server | `hearth-adguard` is not running, so nothing resolves and no device gets an address |
-| the children's page | `hearth-portal` is not running |
-| the speed test | `hearth-speedtest` is not running. A note, never a failure: it is optional |
+| the gateway container | `genkan-gw` is not running, so nobody has internet |
+| the filter and address server | `genkan-adguard` is not running, so nothing resolves and no device gets an address |
+| the children's page | `genkan-portal` is not running |
+| the speed test | `genkan-speedtest` is not running. A note, never a failure: it is optional |
 | the firewall | table `inet kids` is missing, or any of the chains `input`, `forward`, `metering`, `prerouting`, `postrouting`, or the sets `kids_block`, `kids_allow`, `kids_known` |
 | name lookups | a real DNS question, put on the wire to the resolver inside the island, gets no usable answer |
 | the children's page answers | an HTTP request to the portal on the island does not come back 200 |
@@ -1319,7 +1319,7 @@ Exit code 0 when nothing a household depends on is broken (notes are allowed),
 1 otherwise. That binary answer is deliberate: an upgrade has to decide.
 
 `--wait <seconds>` re-checks until it passes or the time runs out, which is how
-`kidnet-upgrade` gives containers a moment to come up after a deploy.
+`genkan-upgrade` gives containers a moment to come up after a deploy.
 `--json` prints the same thing as JSON, which is what the dashboard footer
 reads. `--details` spells out what each line actually checked.
 
@@ -1329,13 +1329,13 @@ output.
 
 ---
 
-## kidnet-upgrade
+## genkan-upgrade
 
 ```
-kidnet-upgrade [check]
-sudo kidnet-upgrade apply [--to <ref>] [--yes] [--dry-run] [--allow-dirty]
+genkan-upgrade [check]
+sudo genkan-upgrade apply [--to <ref>] [--yes] [--dry-run] [--allow-dirty]
                           [--no-auto-rollback] [--wait <seconds>]
-kidnet-upgrade status
+genkan-upgrade status
 ```
 
 Updates Genkan. `check` (the default) changes nothing: it fetches, says what is
@@ -1348,20 +1348,20 @@ the database.
    carries on: `nft -c` on the new ruleset, `test/schema-test.sh` on the new
    schema, `bash -n` on every new script. A failure here means nothing is
    changed and the household never notices.
-2. Snapshots into `/var/lib/hearth/releases/<timestamp>/`: a `pg_dump` of the
+2. Snapshots into `/var/lib/genkan/releases/<timestamp>/`: a `pg_dump` of the
    database, a `manifest.env` naming the commit to come back to, and a copy of
-   `kidnet-rollback`, `kidnet-health` and the shared library. The undo tool
+   `genkan-rollback`, `genkan-health` and the shared library. The undo tool
    travels with the thing it undoes, because a version broken enough to fail
    its health check cannot be trusted to roll itself back.
 3. Switches the checkout over and runs `deploy.sh`.
-4. Runs `kidnet-health --wait`. If it fails, it calls the snapshot's own copy
-   of `kidnet-rollback` and puts the old version back, unasked.
+4. Runs `genkan-health --wait`. If it fails, it calls the snapshot's own copy
+   of `genkan-rollback` and puts the old version back, unasked.
 
 Follows release tags (`v[0-9]*`), not branches, so a household never receives
 the tip of main unless somebody types `--to origin/main`.
 
 Safe to run twice: an upgrade to the version already installed says so and does
-nothing. Safe to interrupt: a killed run leaves `/var/lib/hearth/releases/in-progress`,
+nothing. Safe to interrupt: a killed run leaves `/var/lib/genkan/releases/in-progress`,
 and the next run finishes that job or rolls it back rather than starting a new one.
 
 Refuses to run over uncommitted edits unless `--allow-dirty`, and snapshots them
@@ -1371,18 +1371,18 @@ with `tools/worktree-snapshot.sh` either way.
 the release log.
 
 Overridable for testing, which is how `test/release-test.sh` drives the whole
-path without going near a live household: `HEARTH_ROOT`, `HEARTH_STATE_DIR`,
-`HEARTH_DB`, `PG_CONTAINER`, `HEARTH_APPLY_CMD`, `HEARTH_HEALTH_FILE`,
-`HEARTH_KEEP_SNAPSHOTS`.
+path without going near a live household: `GENKAN_ROOT`, `GENKAN_STATE_DIR`,
+`GENKAN_DB`, `PG_CONTAINER`, `GENKAN_APPLY_CMD`, `GENKAN_HEALTH_FILE`,
+`GENKAN_KEEP_SNAPSHOTS`.
 
 ---
 
-## kidnet-rollback
+## genkan-rollback
 
 ```
-kidnet-rollback list
-kidnet-rollback show <id>
-sudo kidnet-rollback to <id|previous> [--with-database] [--yes] [--dry-run]
+genkan-rollback list
+genkan-rollback show <id>
+sudo genkan-rollback to <id|previous> [--with-database] [--yes] [--dry-run]
 ```
 
 Goes back to a version that worked, deliberately. `list` shows every snapshot,
@@ -1437,7 +1437,7 @@ Run them one at a time. Several build a throwaway database or a namespace with
 a fixed name, so two at once collide and report failures that are not real.
 
 `container-test.sh` skips one containment check when the interim
-`hearth-share-gateway` service is running, because that service adds host NAT
+`genkan-share-gateway` service is running, because that service adds host NAT
 for the island subnet on purpose.
 
 The ones that do not need root: `schema-test.sh`, `db-role-test.sh`,
@@ -1455,7 +1455,7 @@ failed on the first two files.
 
 `schedule-test.sh` never touches the household database. It creates its own,
 loads the real schema files into it, invents a family, and points
-`bin/kidnet-schedule` and `bin/genkan` at that database with `HEARTH_DB`. The
+`bin/genkan-schedule` and `bin/genkan` at that database with `GENKAN_DB`. The
 firewall is pointed at a container that does not exist, so nothing in it can
 reach nftables either. It proves the time maths at fixed moments, then drives
 the worker through a bedtime, a parent override, a restart mid-bedtime and a
@@ -1473,9 +1473,9 @@ the firewall and container suites. Both must pass fully. After any change to
 
 `release-test.sh` proves the upgrade and rollback path without touching
 anything real. It clones the repo into a temp directory, invents two releases
-in it, points `HEARTH_ROOT`, `HEARTH_STATE_DIR`, `HEARTH_DB`,
-`HEARTH_HEALTH_FILE` and `HEARTH_APPLY_CMD` at throwaways, then upgrades,
+in it, points `GENKAN_ROOT`, `GENKAN_STATE_DIR`, `GENKAN_DB`,
+`GENKAN_HEALTH_FILE` and `GENKAN_APPLY_CMD` at throwaways, then upgrades,
 breaks the health check on purpose and checks that the tooling put the old
-version back by itself. Run it with sudo: without root, `kidnet-upgrade`
+version back by itself. Run it with sudo: without root, `genkan-upgrade`
 refuses to apply anything, and that refusal is itself one of the things worth
 keeping. Run it before cutting any release.
