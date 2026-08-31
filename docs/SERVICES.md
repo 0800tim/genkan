@@ -146,7 +146,7 @@ missed.
 The map is exactly as good as the households who extend it, and a family in a
 country nobody here has lived in is in the best position to get this right.
 
-1. Fork [github.com/0800tim/hearth](https://github.com/0800tim/hearth).
+1. Fork [github.com/0800tim/genkan](https://github.com/0800tim/genkan).
 2. Add your rows to `config/db/schema-categories.sql` and, if you want the
    service named rather than just categorised, `config/db/schema-services.sql`.
 3. Run `bash test/schema-test.sh` and confirm it passes.

@@ -162,7 +162,7 @@ which can be your old router in bridge mode.
 Then, roughly:
 
 ```bash
-git clone https://github.com/0800tim/hearth && cd hearth
+git clone https://github.com/0800tim/genkan && cd genkan
 ./install/omarchy-setup.sh     # host prep, asks which adapter is the kids' side
 # then: a Postgres container and the schema, per docs/setup/README.md
 sudo ./deploy.sh               # validates, builds, starts the island

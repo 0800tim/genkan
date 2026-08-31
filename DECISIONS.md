@@ -138,7 +138,7 @@ skill: DNS (lvl 1), DoH/DoT (lvl 2), static IP (3), MAC spoof (4), VPN/hotspot
 - At the time: not pushed to GitHub yet, Tim holding off publicising. gh is
   authed as 0800tim. A rendered public pitch would need GitHub Pages (a raw
   .html GitHub link shows source, not the page). The repo has since been
-  published at github.com/0800tim/hearth.
+  published at github.com/0800tim/genkan.
 
 ## Status at handover (2026-08-28, superseded)
 
@@ -299,7 +299,7 @@ stays entirely in the separate private repo.
 
 ## Public, and the documentation audit (2026-08-29)
 
-The repo is now public at github.com/0800tim/hearth. Everything above about
+The repo is now public at github.com/0800tim/genkan. Everything above about
 "not pushed yet" is history; docs/GO-PUBLIC-CHECKLIST.md carries what that
 means for the items on it, including the history scrub.
 

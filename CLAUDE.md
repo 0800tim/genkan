@@ -92,7 +92,7 @@ the kids_unclaimed nft set) are both OFF BY DEFAULT and must stay that way.
   even when a kid is cut off).
 - Real household values (MAC, tailnet IP, SSID, secrets) live ONLY in
   gitignored config.env / secrets.env. Tracked files stay generic. This repo
-  is PUBLIC (github.com/0800tim/hearth), so assume anything you write here is
+  is PUBLIC (github.com/0800tim/genkan), so assume anything you write here is
   read by strangers.
 - Never commit anything commercial; that lives outside this repo.
 - After ANY change to bin/kidnet-upgrade, bin/kidnet-rollback,

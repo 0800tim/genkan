@@ -1,6 +1,6 @@
 # Going public: what was required, and what is still outstanding
 
-**The repo is now public at github.com/0800tim/hearth.** This file is no longer
+**The repo is now public at github.com/0800tim/genkan.** This file is no longer
 a gate; it is the record of what had to be true first, and of the one blocking
 item that a public repo makes urgent rather than optional.
 

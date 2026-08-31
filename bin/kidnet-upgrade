@@ -401,7 +401,7 @@ if HEARTH_ROOT="$R" HEARTH_STATE_DIR="$HEARTH_STATE_DIR" bash "$RB" to "$ID" --y
   say ""
   say "  Hearth $FROM_VERSION is back and the household is working again."
   say "  The version that failed was $TO_VERSION. Please report it:"
-  say "      https://github.com/0800tim/hearth/issues"
+  say "      https://github.com/0800tim/genkan/issues"
   say ""
   exit 1
 fi

@@ -94,7 +94,7 @@ Then `sudo reboot`. The whole file must remain one line.
 
 ## Step 3: clone the repo, hand it to your agent
 
-    git clone <hearth repo url> ~/hearth && cd ~/hearth
+    git clone <genkan repo url> ~/genkan && cd ~/genkan
 
 The agentic path, and the one we recommend: start your agent (`claude`, or
 whichever you use) in the repo and say:
@@ -304,7 +304,7 @@ segment guard checks exactly this before serving.
 
 ## Step 6: deploy
 
-    cd ~/hearth
+    cd ~/genkan
     sudo ./deploy.sh
 
 `deploy.sh` validates the firewall ruleset, builds the gateway image,

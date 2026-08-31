@@ -231,7 +231,7 @@ Copy everything from here down, with the briefing above it, into your own AI
 agent. It never leaves this house until you paste it.
 ------------------------------------------------------------------------
 You are writing a learn-to-earn quiz bank for one child in a household that
-runs Hearth (github.com/0800tim/hearth). Above this line is a briefing about
+runs Hearth (github.com/0800tim/genkan). Above this line is a briefing about
 that child, generated from the household's own database.
 
 Read docs/runbooks/quiz-suggestions.md in the Hearth repo first. It has the

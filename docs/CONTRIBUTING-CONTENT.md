@@ -302,7 +302,7 @@ Whichever of these you find easiest. None of them is more welcome than another.
 
 **A pull request**, if you are comfortable with git:
 
-1. Fork `github.com/0800tim/hearth`.
+1. Fork `github.com/0800tim/genkan`.
 2. Put your file in `portal/quizzes/community/`, named `<your-id>.json`.
 3. Run `node tools/validate-package.mjs --strict portal/quizzes/community/<your-id>.json`
    and make sure it passes.

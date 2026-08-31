@@ -138,7 +138,7 @@ Provision Postgres and load the schema per "The database" in
 [README.md](README.md) and [../DATABASE.md](../DATABASE.md). Copy
 `secrets.env.example` to `secrets.env` and set both DB URLs. Then:
 
-    cd ~/hearth
+    cd ~/genkan
     sudo ./deploy.sh
 
 The agentic path, and the one we recommend: clone the repo, start your

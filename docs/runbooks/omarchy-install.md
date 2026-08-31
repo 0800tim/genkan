@@ -19,7 +19,7 @@ Docker (swap the pacman line).
 Run these in order. Stop and ask the parent only where noted.
 
     # 1. Get the code onto the gateway box
-    git clone <hearth repo> ~/hearth && cd ~/hearth
+    git clone <genkan repo> ~/genkan && cd ~/genkan
 
     # 2. Prepare the host (installs docker, unmanages the kids NIC, adds the
     #    Omarchy post-update hook). Asks the parent for the USB dongle's MAC.

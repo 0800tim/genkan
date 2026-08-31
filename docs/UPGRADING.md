@@ -77,7 +77,7 @@ picks up where it stopped, and rolls back if the box is not healthy.
 
 You will see `REFUSING TO UPGRADE` and a reason. Nothing was changed and your
 household is still working. This is the tooling doing its job. Report the
-release: <https://github.com/0800tim/hearth/issues>
+release: <https://github.com/0800tim/genkan/issues>
 
 ### The update went on and rolled itself back
 

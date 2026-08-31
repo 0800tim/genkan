@@ -53,7 +53,7 @@ opened on a clone of the repo. It costs nothing and saves the most common
 wasted evening.
 
 ```
-I want to build a Hearth gateway (github.com/0800tim/hearth): a self-hosted
+I want to build a Hearth gateway (github.com/0800tim/genkan): a self-hosted
 family internet gateway on a spare Linux box.
 
 Here is what I have available:
@@ -63,7 +63,7 @@ My internet is <e.g. 300/100 fibre> and there are <N> people in the house
 with roughly <M> devices between them.
 
 Read docs/HARDWARE.md in the Hearth repo (or fetch it from
-https://github.com/0800tim/hearth/blob/main/docs/HARDWARE.md) and tell me:
+https://github.com/0800tim/genkan/blob/main/docs/HARDWARE.md) and tell me:
 1. Which of my machines is the best gateway, and why.
 2. Whether it needs a USB ethernet adapter, and exactly which chipset to buy.
 3. Which of my choices are combinations the project has actually tested and
@@ -170,7 +170,7 @@ on Ubuntu, have it remove the snap and install from get.docker.com instead.
 This is the step everybody gets wrong, so it gets its own prompt.
 
 ```
-Clone https://github.com/0800tim/hearth.git into ~/hearth and read, in this
+Clone https://github.com/0800tim/genkan.git into ~/genkan and read, in this
 order: CLAUDE.md, docs/setup/README.md, and the platform guide that matches
 this box (docs/setup/raspberry-pi.md, docs/setup/debian-ubuntu.md,
 docs/setup/generic-linux.md or docs/SETUP-OMARCHY.md). Also read
@@ -226,7 +226,7 @@ unpick.
 
 ```
 Read docs/DATABASE.md and the "The database" section of docs/setup/README.md
-in ~/hearth, and read config/db/load.sh, before you touch anything.
+in ~/genkan, and read config/db/load.sh, before you touch anything.
 
 Provision Hearth's database on this box:
 1. Check whether a Docker container named "postgres" on a Docker network
@@ -242,7 +242,7 @@ Provision Hearth's database on this box:
    hand. That script is the authoritative order: the table in docs/DATABASE.md
    drifted out of date once already and a fresh install failed on the first
    two files. Run it, show me its output, and stop if any file reports FAILED.
-4. Set KIDS_DB_URL and KIDS_DB_URL_DOCKER in ~/hearth/secrets.env. The first
+4. Set KIDS_DB_URL and KIDS_DB_URL_DOCKER in ~/genkan/secrets.env. The first
    is how the host sees Postgres, the second is how a container on the
    postgres network sees it.
 5. Prove it: list the tables, and show me the rows in the "policies" table
@@ -272,7 +272,7 @@ files from the doc's table instead, decline.
 ## Prompt 5: deploy, and prove it before you believe it
 
 ```
-Read ~/hearth/deploy.sh in full, and docs/setup/README.md's "Deploy and prove"
+Read ~/genkan/deploy.sh in full, and docs/setup/README.md's "Deploy and prove"
 section, before running anything.
 
 1. Tell me, in your own words, everything deploy.sh is about to do to this
@@ -587,7 +587,7 @@ did the build.
 This box was set up as a Hearth gateway by an AI agent. I want a second
 opinion on its work.
 
-Read CLAUDE.md, docs/setup/README.md and PRIVACY-CHARTER.md in ~/hearth.
+Read CLAUDE.md, docs/setup/README.md and PRIVACY-CHARTER.md in ~/genkan.
 Then audit what is actually running, and be adversarial about it:
 1. Is anything on this box sending data outside my house? Check the running
    containers, the systemd timers, and any outbound connection you can see.

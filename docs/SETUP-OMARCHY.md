@@ -33,7 +33,7 @@ This box holds filtering config and logs, not your life.
 Omarchy ships agent-first (Claude Code is a first-class citizen). Sign in
 to your Claude plan, then:
 
-    git clone https://github.com/0800tim/hearth && cd hearth
+    git clone https://github.com/0800tim/genkan && cd genkan
     claude
 
 Tell the agent: "Read CLAUDE.md and set this box up as our Hearth gateway."
