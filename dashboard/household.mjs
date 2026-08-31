@@ -1,4 +1,4 @@
-// Hearth dashboard: household roles, and the things a parent does with them.
+// Genkan dashboard: household roles, and the things a parent does with them.
 //
 // One place decides what the four roles are called, what they mean, and what
 // each one is allowed to do, so the family page, the naming queue, the API
@@ -217,7 +217,7 @@ function guestLeave(id,name){
 }
 function guestBack(id){hhPost({op:'guest-back',id:id},'welcome back\\u2026');}
 function guestRemove(id,name){
-  if(!confirm('Delete '+name+' from Hearth for good? Their devices go back to the unnamed list.'))return;
+  if(!confirm('Delete '+name+' from Genkan for good? Their devices go back to the unnamed list.'))return;
   hhPost({op:'guest-remove',id:id},'removing\\u2026');
 }
 /* The whole-house cut. The confirm spells out what it does NOT reach, because
@@ -265,7 +265,7 @@ export async function householdApi(b, ctx) {
     if (!CLASS_VALUES.includes(cls)) return bad("That is not one of the choices.");
     if (label && !LABEL_RE.test(label)) return bad("A device name can be letters, numbers and simple punctuation, up to 40 characters.");
     const [d] = await q("SELECT id,label FROM devices WHERE mac::text=$1", [mac.toLowerCase()]);
-    if (!d) return bad("Hearth has not seen that device.");
+    if (!d) return bad("Genkan has not seen that device.");
     // Smart home and infrastructure belong to the household, never to a person,
     // so filing one here also takes it off whoever had it. That is the whole
     // point: it gets the smart lock out of the queue of things to hand a child.
@@ -287,7 +287,7 @@ export async function householdApi(b, ctx) {
       [d.id, cls, label, d.category || "personal"]);
     const ag = await syncAdguard();
     const said = cls === "iot" ? "Filed as a smart home device. It is never metered, never assigned to a child, and never cut by a family pause."
-      : cls === "infra" ? "Filed as infrastructure. Nothing Hearth does will ever touch it."
+      : cls === "infra" ? "Filed as infrastructure. Nothing Genkan does will ever touch it."
         : cls === "appliance" ? "Filed as an unrestricted device. No owner, no time limit, and no control reaches it."
           : cls === "shared" ? "Filed as a shared family device on the Standard filter level. Nobody's minutes pay for it. It goes off at dinner and in a whole-house cut until you untick it."
             : "Back in the list of people's devices.";
@@ -305,7 +305,7 @@ export async function householdApi(b, ctx) {
     if (!SWEEP_VALUES.includes(sweep)) return bad("That is not one of the sweeps.");
     const on = b.on === null || b.on === undefined ? null : !!b.on;
     const [d] = await q("SELECT id,label,hostname,category FROM devices WHERE mac::text=$1", [mac.toLowerCase()]);
-    if (!d) return bad("Hearth has not seen that device.");
+    if (!d) return bad("Genkan has not seen that device.");
     if (!SWEEPABLE.includes(d.category || "personal")) {
       const [, label] = CLASSES.find(c => c[0] === d.category) || [null, d.category];
       return bad(`${label} is never caught by any control, so there is nothing to tick. That is deliberate: a bedtime must not darken the front door lock.`);
@@ -328,7 +328,7 @@ export async function householdApi(b, ctx) {
     if (!MAC_RE.test(mac)) return bad("which device?");
     if (!TIER_VALUES.includes(tier)) return bad("That is not one of the filter levels.");
     const [d] = await q("SELECT id,label,hostname,category FROM devices WHERE mac::text=$1", [mac.toLowerCase()]);
-    if (!d) return bad("Hearth has not seen that device.");
+    if (!d) return bad("Genkan has not seen that device.");
     if ((d.category || "personal") !== "shared")
       return bad("Only a shared family device has a filter level of its own. A person's device takes their owner's.");
     await q("UPDATE devices SET policy_tier=$2 WHERE id=$1", [d.id, tier]);

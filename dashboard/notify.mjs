@@ -1,10 +1,10 @@
-// Hearth dashboard: notifications to a parent's phone.
+// Genkan dashboard: notifications to a parent's phone.
 //
-// The page that turns "Hearth knows" into "a parent knows". Everything Hearth
+// The page that turns "Genkan knows" into "a parent knows". Everything Genkan
 // raises already sits in the alerts table; bin/kidnet-notify sends the ones a
 // household asked for, and this is where a household asks.
 //
-// THE PROMISE THE PAGE HAS TO KEEP SAYING OUT LOUD: Hearth has no telemetry and
+// THE PROMISE THE PAGE HAS TO KEEP SAYING OUT LOUD: Genkan has no telemetry and
 // talks to no cloud. A route is the household's own box POSTing to an address
 // the household typed in. With no routes, nothing is sent to anybody, and that
 // is the shipped default. The page says this in plain words at the top, because
@@ -151,7 +151,7 @@ export async function notifyApi(q, body, { runTool }) {
     if (!NAME_RE.test(name)) return bad("which route?");
     const rows = await q("DELETE FROM notify_routes WHERE name=$1 RETURNING 1", [name]);
     if (!rows.length) return bad("No route by that name.");
-    return { ok: true, out: `Removed "${name}", and everything Hearth remembered about sending to it.` };
+    return { ok: true, out: `Removed "${name}", and everything Genkan remembered about sending to it.` };
   }
 
   // The one action that shells out. A notification setup nobody has tested is a
@@ -212,7 +212,7 @@ async function nfyTest(name){
 async function nfyToggle(name,on){
   const {r,j}=await post('/api/notify',{action:'toggle',name:name,enabled:on});done(r,j,700);}
 async function nfyRemove(name){
-  if(!confirm('Remove the route "'+name+'"? Hearth will stop sending to it, and will forget what it already sent.'))return;
+  if(!confirm('Remove the route "'+name+'"? Genkan will stop sending to it, and will forget what it already sent.'))return;
   const {r,j}=await post('/api/notify',{action:'remove',name:name});done(r,j,900);}
 function nfyEdit(name){var e=document.getElementById('edit_'+name);if(e)e.hidden=!e.hidden;}
 `;
@@ -274,7 +274,7 @@ export function notifyPage(d) {
   const routes = d.routes.length
     ? `<table><thead><tr><th>Route</th><th>Sends</th><th>Quiet hours</th><th>State</th></tr></thead>
        <tbody>${d.routes.map(routeRow).join("")}</tbody></table>`
-    : `<div class="empty">No routes. Hearth is sending nothing to anybody, which is what a fresh
+    : `<div class="empty">No routes. Genkan is sending nothing to anybody, which is what a fresh
         install does and what a household that wants none should leave it doing.</div>`;
 
   const addForm = `<div class="card nfy"><h2>Add a route</h2>
@@ -338,10 +338,10 @@ export function notifyPage(d) {
       into a bug report.</div></div>` : "";
 
   return `<style>${CSS}</style><div class="card nfy"><h2>Notifications</h2>
-    <p class="lead">Hearth already knows when a device nobody has claimed joins the network, when a
+    <p class="lead">Genkan already knows when a device nobody has claimed joins the network, when a
       household camera is not as restricted as it should be, and when a genuinely concerning signal
       turns up. This is how it tells you, instead of waiting for you to open a dashboard.</p>
-    <div class="promise"><b>Nothing leaves this house that you did not set up.</b> Hearth has no
+    <div class="promise"><b>Nothing leaves this house that you did not set up.</b> Genkan has no
       telemetry and talks to no cloud. A route below is this box POSTing a short message to an
       address you typed in, and you can read every word it would send further down the page. With no
       routes, nothing is sent to anybody.</div>

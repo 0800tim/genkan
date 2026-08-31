@@ -1,4 +1,4 @@
-// Hearth dashboard: the live view.
+// Genkan dashboard: the live view.
 //
 // The chart is a canvas, not SVG, because it redraws sixty times a second and
 // scrolls continuously: a few hundred DOM nodes a second is the one thing SVG
@@ -556,9 +556,9 @@ function note(){
   bits.push(filtered()
     ? 'Filtered figures are added up from each device\\u2019s own byte counters in the firewall.'
     : 'The household figure is every byte that crossed the '+(root.dataset.iface||'kids')+' interface, named or not.');
-  if(!totalsOn) bits.push('Per-device totals are off, so a device only reports traffic Hearth can put a name to.');
+  if(!totalsOn) bits.push('Per-device totals are off, so a device only reports traffic Genkan can put a name to.');
   bits.push('Downloads (a game or system update) are shown as bandwidth and never charged as screen time.');
-  bits.push('Reading only: Hearth never resets these counters, so the daily metering is unaffected.');
+  bits.push('Reading only: Genkan never resets these counters, so the daily metering is unaffected.');
   elNote.textContent=bits.join(' ');
 }
 function connect(){

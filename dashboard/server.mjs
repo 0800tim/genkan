@@ -1,4 +1,4 @@
-// Hearth admin dashboard. Live state chips + controls that call kidnet, plus
+// Genkan admin dashboard. Live state chips + controls that call kidnet, plus
 // the per-kid analytics the charts read out of Postgres.
 // Binds to the tailnet so it is private to the operator.
 //
@@ -16,7 +16,7 @@
 //   /devices   Devices  - the roster and the naming queue
 //   /notify    Notifications - the phone routes a household set up, what each
 //                          one sends, and the exact words that reach a phone
-//   /system    System   - the health of the box Hearth itself runs on: CPU,
+//   /system    System   - the health of the box Genkan itself runs on: CPU,
 //                          memory, disk, load, uptime, its containers and the
 //                          throughput of its own network cards
 //   /kid/:name Kid      - one child: their devices, time, goals and controls
@@ -192,13 +192,13 @@ const authed = req => !DASH_TOKEN || (req.headers["x-dash-token"] === DASH_TOKEN
 const SPEED_NAV = `<div style="display:flex;gap:18px;align-items:center;padding:11px 20px;
   background:#14161f;border-bottom:1px solid rgba(236,228,214,.11);flex-wrap:wrap;
   font:600 14px/1 ui-sans-serif,system-ui,sans-serif">
-  <a href="/" style="color:#f2a15a;text-decoration:none">&lsaquo; Hearth</a>
+  <a href="/" style="color:#f2a15a;text-decoration:none">&lsaquo; Genkan</a>
   <a href="/" style="color:#c3bcaf;text-decoration:none">Home</a>
   <a href="/live" style="color:#c3bcaf;text-decoration:none">Right now</a>
   <a href="/devices" style="color:#c3bcaf;text-decoration:none">Devices</a>
   <span style="color:#ece4d6">Speed</span>
   <span style="margin-left:auto;color:#8f8879;font-weight:600;font-size:12.5px">
-    Measuring this device to the Hearth box over the network you are on now.
+    Measuring this device to the Genkan box over the network you are on now.
     For the family wifi, open it from a device on that network.
   </span>
 </div>`;
@@ -223,7 +223,7 @@ async function proxySpeed(req, res) {
     res.end('<!doctype html><meta charset="utf-8"><title>Speed test</title>'
       + '<body style="font:16px/1.6 system-ui;padding:40px;max-width:36em">'
       + '<h1>Speed test</h1><p>This is the demo, so there is no real network to '
-      + 'measure. On a real Hearth box this page runs a test against the gateway '
+      + 'measure. On a real Genkan box this page runs a test against the gateway '
       + 'itself, and a second one against the internet, so you can tell a slow '
       + 'connection apart from slow wifi.</p>');
     return;
@@ -540,7 +540,7 @@ const server = createServer(async (req, res) => {
       const person = String(b.person || "").trim();
       if (label && !LABEL_RE.test(label)) return send(400, "A device name can be letters, numbers and simple punctuation, up to 40 characters.");
       if (!CLASSES.includes(cls)) return send(400, "That is not one of the choices.");
-      if (person && !NAME_RE.test(person)) return send(400, "That owner name is not one Hearth knows.");
+      if (person && !NAME_RE.test(person)) return send(400, "That owner name is not one Genkan knows.");
       // Only a person's own device can belong to a person. Smart home kit and
       // infrastructure are the household's, never a child's, so moving a device
       // into either class also takes it off whoever had it.
@@ -562,7 +562,7 @@ const server = createServer(async (req, res) => {
       }
       if (person) {
         const [p] = await q("SELECT id FROM children WHERE lower(name)=lower($1)", [person]);
-        if (!p) return send(400, `Hearth does not know anybody called ${person}.`);
+        if (!p) return send(400, `Genkan does not know anybody called ${person}.`);
         // kidnet assign already updates the row, writes the audit trail and
         // pushes the new address to AdGuard, so it does all three at once.
         const r = await runKidnet(["assign", d.mac || String(id), person, label || d.label || "device"]);
@@ -620,7 +620,7 @@ const server = createServer(async (req, res) => {
     // health page that is missing exactly when it is wanted.
     if (url.pathname === "/system") {
       res.writeHead(200, headers);
-      res.end(shell({ tab: "/system", title: "Hearth system", body: systemPage(await sysmon.pageData()) }));
+      res.end(shell({ tab: "/system", title: "Genkan system", body: systemPage(await sysmon.pageData()) }));
       return;
     }
     const s = await state();
@@ -630,7 +630,7 @@ const server = createServer(async (req, res) => {
       // this week. The digest resolves the Monday itself, from the DB clock.
       const raw = url.searchParams.get("week") || "";
       const ref = raw === "last" ? "last" : (/^\d{4}-\d{2}-\d{2}$/.test(raw) ? raw : null);
-      html = shell({ tab: "/week", title: "Hearth week", body: weekView(s, await digest(q, ref)) });
+      html = shell({ tab: "/week", title: "Genkan week", body: weekView(s, await digest(q, ref)) });
     } else if (url.pathname.startsWith("/kid/")) {
       const name = decodeURIComponent(url.pathname.slice(5));
       if (!/^[A-Za-z0-9_ -]{1,32}$/.test(name)) {
@@ -638,14 +638,14 @@ const server = createServer(async (req, res) => {
       const days = url.searchParams.get("days") === "30" ? 30 : 7;
       const kd = await kidDetail(q, name, days);
       if (!kd) { res.writeHead(404, { "content-type": "text/plain" }); res.end("no such child"); return; }
-      html = shell({ tab: "/", title: `Hearth: ${kd.child.name}`, body: kidView(s, kd) });
+      html = shell({ tab: "/", title: `Genkan: ${kd.child.name}`, body: kidView(s, kd) });
     } else if (url.pathname === "/notify") {
-      html = shell({ tab: "/notify", title: "Hearth notifications", body: notifyPage(await notifyData(q)) });
+      html = shell({ tab: "/notify", title: "Genkan notifications", body: notifyPage(await notifyData(q)) });
     } else if (url.pathname === "/trends") {
       const days = url.searchParams.get("days") === "30" ? 30 : 7;
-      html = shell({ tab: "/trends", title: "Hearth trends", body: trends(s, await analytics(q, days)) });
+      html = shell({ tab: "/trends", title: "Genkan trends", body: trends(s, await analytics(q, days)) });
     } else if (url.pathname === "/live") {
-      html = shell({ tab: "/live", title: "Hearth: right now", body: livePage(s) });
+      html = shell({ tab: "/live", title: "Genkan: right now", body: livePage(s) });
     } else if (url.pathname === "/family") {
       // Everything the manage area needs that the shared state() does not
       // already carry: the per-child category caps, how many devices each
@@ -659,17 +659,17 @@ const server = createServer(async (req, res) => {
       const mg = { policies, schedule, budgets: {}, deviceCounts: {} };
       for (const b of budgets) (mg.budgets[b.child_id] ||= {})[b.category] = b.daily_min;
       for (const c of counts) mg.deviceCounts[c.child_id] = c.n;
-      html = shell({ tab: "/family", title: "Hearth family", body: familyView(s, mg) });
+      html = shell({ tab: "/family", title: "Genkan family", body: familyView(s, mg) });
     } else if (url.pathname === "/earn") {
-      html = shell({ tab: "/earn", title: "Hearth: learn to earn", body: earnPage(await earnData(q)) });
+      html = shell({ tab: "/earn", title: "Genkan: learn to earn", body: earnPage(await earnData(q)) });
     } else if (url.pathname === "/devices") {
-      html = shell({ tab: "/devices", title: "Hearth devices", body: devicesView(s) });
+      html = shell({ tab: "/devices", title: "Genkan devices", body: devicesView(s) });
     } else if (url.pathname === "/" || url.pathname === "/index.html") {
       // Home leans on a short window for the "last 7 days" lines under each
       // kid; if the analytics query fails the controls must still render.
       let a = null;
       try { a = await analytics(q, 7); } catch (e) { a = null; }
-      html = shell({ tab: "/", title: "Hearth", body: tonight(s, a) });
+      html = shell({ tab: "/", title: "Genkan", body: tonight(s, a) });
     } else {
       res.writeHead(404, { "content-type": "text/plain" }); res.end("not found"); return;
     }

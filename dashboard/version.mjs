@@ -84,7 +84,7 @@ export function healthState() { refresh(); return cache; }
 export function versionFooter() {
   const c = healthState();
   const d = c.data;
-  const v = VERSION ? `Hearth ${esc(d?.version || VERSION)}` : "Hearth";
+  const v = VERSION ? `Genkan ${esc(d?.version || VERSION)}` : "Genkan";
   let dot = "unknown", words = "checking...", title = "";
   if (DEMO) { dot = "demo"; words = "this is the public demo, so there is nothing to check"; }
   else if (d) {

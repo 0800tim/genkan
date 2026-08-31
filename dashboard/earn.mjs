@@ -1,4 +1,4 @@
-// Hearth dashboard: learn to earn.
+// Genkan dashboard: learn to earn.
 //
 // The half of the system the parent could not see. The database has carried
 // the whole loop for a while (tasks, earn_claims, time_events, the quiz banks
@@ -52,7 +52,7 @@ const EXPLAIN_MAX = 400;
 const PERF_MIN_ASKED = 4;
 const HARD_AT = 0.4;            // at or under this, the question is probably mislabelled or unfair
 const EASY_AT = 0.9;            // at or over this, it is a warm-up whatever it says on the tin
-// The numbers Hearth has always used, repeated here only so the form can show
+// The numbers Genkan has always used, repeated here only so the form can show
 // them as the placeholder. earn_settings_effective is the authority.
 const EARN_DEFAULTS = { quiz_cooldown_min: 360, quiz_daily_cap_min: 30,
                         mastery_bonus_min: 5, default_minutes_per_pass: 10 };
@@ -909,7 +909,7 @@ export function earnPage(d) {
     </div></div>`;
 
   // ---- quizzes ------------------------------------------------------------
-  // Two shelves in one list: the banks that shipped with Hearth, as files, and
+  // Two shelves in one list: the banks that shipped with Genkan, as files, and
   // the banks this household wrote, which live in the database. The second
   // kind can be edited here, question by question. The first kind cannot, on
   // purpose: it is a file in git, and kidnet-quiz owns it.
@@ -1044,7 +1044,7 @@ export function earnPage(d) {
           <div class="qlist">${qs.length ? qs.map(qq => questionRow(b, qq)).join("")
             : '<div class="empty">No questions yet. The first one goes below.</div>'}</div>
           ${newQuestion(b)}`
-          : `<p class="hint">This one shipped with Hearth as a file in <code>portal/quizzes</code>. Change it with
+          : `<p class="hint">This one shipped with Genkan as a file in <code>portal/quizzes</code>. Change it with
              <code>kidnet-quiz</code>, or write your own version below and switch this one off per child.</p>`}
       </div></details>`;
   };
@@ -1057,7 +1057,7 @@ export function earnPage(d) {
     ${d.banks.length ? d.banks.map(quizRow).join("")
       : '<div class="empty">No quiz banks yet. Write one below, or drop a JSON file into portal/quizzes.</div>'}
     <h2 style="margin-top:18px">Write a new bank</h2>
-    <p class="sub">It is saved in the database, not in the repo, so updating Hearth can never delete it.
+    <p class="sub">It is saved in the database, not in the repo, so updating Genkan can never delete it.
       Add ten questions and it appears on the kids' portal by itself.</p>
     <div class="jform">
       <input type="text" class="emo" id="nb_emoji" value="🎓" maxlength="2" aria-label="Emoji">
@@ -1072,7 +1072,7 @@ export function earnPage(d) {
       <input type="text" class="wide" id="nb_note" maxlength="300" placeholder="Where the facts came from, and when you checked them (optional)" aria-label="Source note">
     </div>
     <p class="hint">${quizOnCount} of ${kids.length * d.banks.length} bank and child pairs are switched on.
-      ${mineCount ? `${mineCount} bank${mineCount === 1 ? " is" : "s are"} yours; the rest shipped with Hearth.` : ""}
+      ${mineCount ? `${mineCount} bank${mineCount === 1 ? " is" : "s are"} yours; the rest shipped with Genkan.` : ""}
       Want a whole bank written for you? <code>docs/runbooks/quiz-suggestions.md</code> tells your own AI agent how,
       and <code>bin/kidnet-quiz-suggest &lt;child&gt;</code> gathers what it needs to know.</p></div>`;
 
@@ -1097,7 +1097,7 @@ export function earnPage(d) {
     <div class="jbody">
       ${p.description ? `<p class="hint">${esc(p.description)}</p>` : ""}
       <p class="hint">Installed ${esc(ago(p.installed_ts))}${p.installed_by ? ` by ${esc(p.installed_by)}` : ""}.
-        It lives in the database, so updating Hearth cannot delete it.
+        It lives in the database, so updating Genkan cannot delete it.
         Switch it on or off per child in <b>Quizzes they can pass</b> above.
         To take it out altogether: <code>bin/kidnet-pack remove ${esc(p.bank_id)}</code>.</p>
     </div></details>`;
@@ -1124,10 +1124,10 @@ export function earnPage(d) {
     ${d.packages.length
       ? `<h2 style="margin-top:6px">Installed on this box</h2>${d.packages.map(packRow).join("")}`
       : `<div class="empty">Nothing installed yet. Anything you install lands in the database, so a
-           Hearth update can never delete it.</div>`}
+           Genkan update can never delete it.</div>`}
     ${notInstalled.length
       ? `<h2 style="margin-top:18px">On the shelf, not installed</h2>
-         <p class="sub">These came with Hearth. None of them is live until you say so.</p>
+         <p class="sub">These came with Genkan. None of them is live until you say so.</p>
          ${notInstalled.map(shelfRow).join("")}`
       : ""}
     <p class="hint">Writing one is the most useful thing anybody can do for this project and it needs no code:
@@ -1141,7 +1141,7 @@ export function earnPage(d) {
         A package can carry a short read-first page, which the kids see on the bank's <b>Read up</b> screen.</td></tr>
       <tr><td>What is not built</td><td><b>Nothing suggests a package to you.</b> The plan is that a parent gets
         told when a package would suit one of their children, based on what that child actually likes. That
-        does not exist. Hearth has no telemetry and talks to no cloud, so it will never be a service that
+        does not exist. Genkan has no telemetry and talks to no cloud, so it will never be a service that
         watches your family and recommends things. It will be an agent that YOU run, on your box, reading your
         own database. The evidence half of that already works today:
         <code>bin/kidnet-quiz-suggest &lt;child&gt;</code> prints what one child has been doing, and

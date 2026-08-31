@@ -1,4 +1,4 @@
-// Kid portal for the Hearth island. Two jobs:
+// Kid portal for the Genkan island. Two jobs:
 //  1. Captive portal: a blocked or out-of-time device's web traffic lands
 //     here (nft redirect), OS captive-probes pop this page, and it explains
 //     why instead of letting pages silently fail.
@@ -47,7 +47,7 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "
 // ---- quiz banks: two shelves, one list ------------------------------------
 // Answers never leave the server, whichever shelf a bank came off.
 //
-//   files     portal/quizzes/*.json, shipped with Hearth and installed by
+//   files     portal/quizzes/*.json, shipped with Genkan and installed by
 //             `kidnet-quiz install`. SIGHUP re-reads the directory, so a new
 //             one appears without dropping anyone's in-flight round.
 //   database  quiz_banks / quiz_bank_questions, written by a parent on the
@@ -253,7 +253,7 @@ async function credit(childId, minutes, reason) {
 }
 
 // ---- the difficulty ramp --------------------------------------------------
-// The headline of a Hearth quiz is not the marking, it is the shape of the
+// The headline of a Genkan quiz is not the marking, it is the shape of the
 // round. A round opens with questions this kid can definitely answer and gets
 // harder as it goes, so the feeling is "I am getting somewhere", not "this is
 // not for me". A kid who gives up at question one learns nothing and earns
@@ -457,7 +457,7 @@ const STUDY_CSS = `
 .rf .rf-l a{color:#c4b5fd;margin-right:12px;display:inline-block}
 `;
 const page = body => `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
-<title>${DEMO ? "Hearth demo" : "Hearth"}</title><style>${CSS}${STUDY_CSS}</style><div class="wrap">${DEMO_NOTE}${body}</div>`;
+<title>${DEMO ? "Genkan demo" : "Genkan"}</title><style>${CSS}${STUDY_CSS}</style><div class="wrap">${DEMO_NOTE}${body}</div>`;
 // ---------------------------------------------------------------------------
 // Claiming a device
 // ---------------------------------------------------------------------------
@@ -494,7 +494,7 @@ async function doClaim(dev, ip, form) {
   if (!Number.isInteger(childId) || childId <= 0) return claimPage(dev?.mac, ip, dev?.hostname, "Pick a name first.");
   const [child] = await q(`SELECT id, name, policy_tier, claim_pin FROM children
      WHERE id=$1 AND kind IN ('child','guest-child') AND active`, [childId]);
-  if (!child) return claimPage(dev?.mac, ip, dev?.hostname, "That is not somebody Hearth knows.");
+  if (!child) return claimPage(dev?.mac, ip, dev?.hostname, "That is not somebody Genkan knows.");
 
   const log = (outcome, cid) => q(`INSERT INTO device_claims(mac,ip,child_id,hostname,outcome)
       VALUES($1,$2,$3,$4,$5)`, [dev?.mac || null, ip, cid, dev?.hostname || null, outcome]).catch(() => {});
@@ -671,7 +671,7 @@ function warmPage(kid, flag, kidQS) {
         Kidsline <b>0800 543 754</b><br>
         The Lowdown <b>thelowdown.co.nz</b><br>
         These always work, even when your internet is off.</div></div>
-    <div class="card"><p style="margin:0"><a class="back" href="/hub${kidQS}">\u2190 Back to Hearth (time, quizzes, jobs)</a></p></div>`);
+    <div class="card"><p style="margin:0"><a class="back" href="/hub${kidQS}">\u2190 Back to Genkan (time, quizzes, jobs)</a></p></div>`);
 }
 
 // A child's own badges, then the house board if a parent switched it on.
@@ -731,7 +731,7 @@ function homePage(kid, st, kidQS) {
   // goes and "fixes" it: reboots the router, changes their address, asks a
   // friend for a hotspot. So the portal names it, names what is slow, and says
   // it is deliberate. Honesty here is also the whole position of the product:
-  // Hearth never pretends the internet is faulty.
+  // Genkan never pretends the internet is faulty.
   const slowInet = st.slow?.find(c => c.category === "internet");
   const slowCats = (st.slow || []).filter(c => c.category !== "internet").map(c => c.category);
   const slowOutOfTime = slowInet?.set_by === "out-of-time";
@@ -898,7 +898,7 @@ async function gradeRound(kid, form, kidQS) {
     : "";
   return page(`<div class="card"><div class="score">${right} / ${total}</div>${won}
     <div class="msg">${passed ? "🎉 Passed. " + esc(creditedMsg) : `Not this time, you need ${bank.pass_mark}. Have another go, the questions change.`}</div>
-    <p style="text-align:center"><a class="back" href="/${kidQS}">← back to Hearth</a></p></div>`);
+    <p style="text-align:center"><a class="back" href="/${kidQS}">← back to Genkan</a></p></div>`);
 }
 
 // ---- server --------------------------------------------------------------
@@ -930,7 +930,7 @@ const server = createServer(async (req, res) => {
         }
         return send(await claimPage(dev?.mac, ip, dev?.hostname));
       }
-      return send(page(`<div class="card"><h1>Hearth</h1><div class="msg">This device isn't recognised on the kids network yet. Ask Dad to add it.</div>${helpFoot}</div>`));
+      return send(page(`<div class="card"><h1>Genkan</h1><div class="msg">This device isn't recognised on the kids network yet. Ask Dad to add it.</div>${helpFoot}</div>`));
     }
     if (req.method === "POST") {
       if (!kid.real && !DEMO) return send(page(`<div class="card"><div class="msg">Earning only works from your own device on the network.</div></div>`));
@@ -990,7 +990,7 @@ const server = createServer(async (req, res) => {
       const [p] = await q("SELECT enabled,minutes FROM quiz_settings WHERE child_id=$1 AND bank_id=$2", [kid.id, bank.id]);
       if (p && p.enabled === false)
         return send(page(`<div class="card"><div class="msg">That one is off your list just now. There are others.</div>
-          <p style="text-align:center"><a class="back" href="/${kidQS}">← back to Hearth</a></p></div>`));
+          <p style="text-align:center"><a class="back" href="/${kidQS}">← back to Genkan</a></p></div>`));
       const set = await earnSettings(kid.id);
       return send(await quizPage(kid, bank, kidQS, p?.minutes ?? (bank.minutes_per_pass || set.default_minutes_per_pass), set.mastery_bonus_min));
     }

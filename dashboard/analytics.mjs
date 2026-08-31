@@ -1,4 +1,4 @@
-// Hearth dashboard: the analytics data layer.
+// Genkan dashboard: the analytics data layer.
 //
 // Everything here is READ ONLY. It never writes, never calls kidnet, and never
 // touches the firewall. It turns the tables the gateway already fills
@@ -23,7 +23,7 @@
 
 // ---------------------------------------------------------------------------
 // Palette. Four categorical slots, assigned in fixed order and never cycled.
-// Validated with the dataviz validator against the two Hearth chart surfaces
+// Validated with the dataviz validator against the two Genkan chart surfaces
 // (light #fdfbf8, dark #1d1926): lightness band, chroma floor, adjacent CVD
 // separation and normal-vision separation all pass in both modes. Two light
 // slots sit under 3:1 against the light surface, so every chart that uses them

@@ -1,4 +1,4 @@
-// Hearth dashboard: the health of the box itself.
+// Genkan dashboard: the health of the box itself.
 //
 // Everything here is a file read. /proc and /sys already hold every number
 // this page shows, so nothing shells out to top, df, free or vmstat on a
@@ -205,7 +205,7 @@ async function readTemp(path) {
   return c > 0 && c < 200 ? c : null;
 }
 
-// Which Hearth containers are up. Asked over docker's own socket rather than
+// Which Genkan containers are up. Asked over docker's own socket rather than
 // by running `docker ps`: no process spawn, a couple of milliseconds, and it
 // is on the slow clock anyway. If there is no socket (the demo has none) or
 // the dashboard's user cannot open it, this returns null and the tile says so
@@ -231,7 +231,7 @@ async function containers() {
   const out = [];
   for (const c of list) {
     const name = String((c.Names || [])[0] || "").replace(/^\//, "");
-    // Hearth's own containers only, and never the public demo's, which happen
+    // Genkan's own containers only, and never the public demo's, which happen
     // to share the prefix on the box that hosts it.
     if (!name.startsWith("hearth-") || name.startsWith("hearth-demo")) continue;
     out.push({ name, up: c.State === "running", state: String(c.State || "unknown") });

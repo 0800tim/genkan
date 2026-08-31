@@ -1,4 +1,4 @@
-// Hearth dashboard: charts.
+// Genkan dashboard: charts.
 //
 // Every chart here is self-contained inline SVG. No library, no CDN, no web
 // font, nothing fetched: the dashboard has to work on the tailnet with the

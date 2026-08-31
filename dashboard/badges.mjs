@@ -88,7 +88,7 @@ export async function awardBadges(q, childId, bank, right, total, passed) {
     if (passed) {
       const [{ passes }] = await q(
         "SELECT count(*)::int AS passes FROM quiz_rounds WHERE child_id=$1 AND passed", [childId]);
-      // >= 1, not === 1. Every household that was already using Hearth before
+      // >= 1, not === 1. Every household that was already using Genkan before
       // badges existed has children with passes behind them, and an exact
       // match would mean none of them could ever earn the first badge: a child
       // with ten passes would see "First win: still to get", which reads as

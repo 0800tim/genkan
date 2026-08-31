@@ -365,7 +365,7 @@ INSERT INTO alerts (ts, child_id, severity, category, domain, detail, acknowledg
 
 -- ---------------------------------------------------------------------------
 -- DNS history, so the top sites and the per-service breakdowns have something
--- to count. Domains only: Hearth never records what was on a page.
+-- to count. Domains only: Genkan never records what was on a page.
 -- ---------------------------------------------------------------------------
 CREATE TEMP TABLE d_domains (domain text, category text, weight numeric, blockrate numeric);
 INSERT INTO d_domains VALUES

@@ -4,9 +4,9 @@
 // inside a container on a shared server, so those numbers would describe
 // somebody else's machine: sixteen cores, a terabyte of disk and whatever the
 // neighbours are doing. That is both a poor advertisement for a family box and
-// a small leak of a machine that has nothing to do with Hearth.
+// a small leak of a machine that has nothing to do with Genkan.
 //
-// So the demo describes a plausible little Hearth box instead: four cores,
+// So the demo describes a plausible little Genkan box instead: four cores,
 // 8 GB of memory, a 128 GB disk, up for a week and a half, sitting at a few
 // per cent with the evening's video pulling a couple of megabytes a second.
 // Real dashboard code, invented numbers. sysmon.mjs only calls this when

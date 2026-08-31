@@ -1,4 +1,4 @@
-// Hearth dashboard: the pages.
+// Genkan dashboard: the pages.
 //
 // Design brief: mobile-first (this is driven from a phone), warm and calm,
 // dusk and ember. Summary before detail, state readable at a glance. It is an
@@ -540,11 +540,11 @@ const DEMO_CSS = DEMO ? `
 const DEMO_BAR = DEMO ? `<div class="demobar" role="note">
   <span class="porch" aria-hidden="true"></span>
   <span><b>Demo household, made-up data.</b> Controls here do not change anything.
-  This is the real Hearth dashboard running against a fake family, so nobody's
-  network is behind it. <a href="https://hearth.appspurt.dev/">About Hearth</a></span>
+  This is the real Genkan dashboard running against a fake family, so nobody's
+  network is behind it. <a href="https://hearth.appspurt.dev/">About Genkan</a></span>
 </div>` : "";
 
-export function shell({ tab, body, title = "Hearth" }) {
+export function shell({ tab, body, title = "Genkan" }) {
   const nav = [["/", "Home"], ["/live", "Right now"], ["/week", "Week"], ["/trends", "Trends"],
     ["/earn", "Learn to earn"], ["/devices", "Devices"], ["/family", "Family"],
     ["/notify", "Notifications"], ["/system", "System"]];
@@ -552,7 +552,7 @@ export function shell({ tab, body, title = "Hearth" }) {
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
 <title>${esc(title)}</title><style>${CSS}${POLISH}${LIVE_CSS}${MANAGE_CSS}${HOUSEHOLD_CSS}${SYS_CSS}${SCHEDULE_CSS}${DEMO_CSS}</style></head><body>
-<div class="top"><div class="brand"><span class="porch"></span><b>Hearth</b>
+<div class="top"><div class="brand"><span class="porch"></span><b>Genkan</b>
   <span>the house with the porch light on</span></div>
   <button class="tbtn" onclick="toggleTheme()" aria-label="Switch light or dark">Theme</button></div>
 <nav>${nav.map(([h, l]) => `<a href="${h}"${tab === h ? ' class="sel" aria-current="page"' : ""}>${esc(l)}</a>`).join("")}<a href="/speed"${tab === "/speed" ? ' class="sel" aria-current="page"' : ""} title="Measures the gateway's own wire, and its connection to the internet">Speed</a></nav>
@@ -1067,7 +1067,7 @@ function measurementCard(a) {
   return `<div class="card"><h2>How these numbers are measured</h2>
     ${lines.map(([h, b]) => `<div class="row" style="display:block"><b>${esc(h)}</b><br><span class="r" style="text-align:left;display:block">${esc(b)}</span></div>`).join("")}
     ${a.notes.length ? `<p class="cnote">Panels unavailable: ${esc(a.notes.join("; "))}</p>` : ""}
-    <p class="foot">Days follow the gateway's clock. Hearth logs domains, never content: it is a family conversation aid, not a surveillance console.</p>
+    <p class="foot">Days follow the gateway's clock. Genkan logs domains, never content: it is a family conversation aid, not a surveillance console.</p>
   </div>`;
 }
 
@@ -1363,7 +1363,7 @@ export function digestText(dg) {
     L.push(`  worth a chat: ${chat.length ? chat.join("; ") : "nothing flagged"}`);
   }
   L.push("");
-  L.push(`Hearth sees domain names, never content. Minutes come from the meter, lookups are only a proxy for activity.`);
+  L.push(`Genkan sees domain names, never content. Minutes come from the meter, lookups are only a proxy for activity.`);
   return L.join("\n");
 }
 

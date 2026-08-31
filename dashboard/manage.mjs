@@ -1,4 +1,4 @@
-// Hearth dashboard: the manage area.
+// Genkan dashboard: the manage area.
 //
 // Everything a parent needs to change about WHO is on the network and WHAT
 // belongs to them, in one place. Until this existed the only way to add a
@@ -100,7 +100,7 @@ function addChild(){
   mgPost('/api/child',{op:'add',name:n,age:mgVal('newage'),kind:mgVal('newkind'),tier:mgVal('newtier')},'adding\\u2026');
 }
 function removeChild(id,name,devices){
-  var lines=['Remove '+name+' from Hearth?','',
+  var lines=['Remove '+name+' from Genkan?','',
     'What happens:',
     '\\u2022 '+devices+' device(s) assigned to them go back to the unnamed list. They keep working, but with no filtering tier and no time limits until you assign them to somebody.',
     '\\u2022 Their time ledger, category budgets and recorded usage are deleted.',
@@ -171,7 +171,7 @@ export function family(s, mg) {
 
   const add = `<div class="card"><h2>Add someone</h2>
     <p class="sub">A new person needs a matching client in AdGuard for their filter level to apply.
-      Hearth will tell you straight after saving whether it found one.</p>
+      Genkan will tell you straight after saving whether it found one.</p>
     <div class="mg">
       <div><label for="newname">Name</label><input id="newname" maxlength="32" placeholder="e.g. Sam"></div>
       <div>${num("newage", "Age", null, { min: 0, max: 25, ph: "e.g. 9" })}</div>

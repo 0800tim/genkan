@@ -1,4 +1,4 @@
-// Hearth dashboard: the live wire.
+// Genkan dashboard: the live wire.
 //
 // One sampler for the whole process, shared by every open page. It asks the
 // gateway container for two cheap things per tick and turns the difference

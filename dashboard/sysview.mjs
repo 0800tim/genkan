@@ -1,6 +1,6 @@
-// Hearth dashboard: the System page.
+// Genkan dashboard: the System page.
 //
-// The health of the box Hearth runs on, for the parent who has just been told
+// The health of the box Genkan runs on, for the parent who has just been told
 // "the internet is broken" and needs to know whether that is the house, the
 // gateway, or the little computer in the cupboard running out of disk.
 //
@@ -259,7 +259,7 @@ export function systemPage(data) {
     ? `<p class="empty">The dashboard cannot reach docker from here, so it cannot say what is running.
        Everything else on this page is unaffected.</p>`
     : boxes.length === 0
-      ? `<p class="empty">No Hearth containers found. On a deployed box there should be a gateway,
+      ? `<p class="empty">No Genkan containers found. On a deployed box there should be a gateway,
          AdGuard and the kid portal.</p>`
       : boxes.map(c => `<div class="row"><span>${c.up ? '<span class="dot-on"></span>' : ""}${esc(c.name)}</span>
         <span class="r">${c.up ? "running" : esc(c.state)}</span></div>`).join("");
@@ -293,7 +293,7 @@ export function systemPage(data) {
 
   return `<div id="sys" data-tick="${data.tickMs || 10000}">
   <div class="card syshead">
-    <div class="shl"><h2>The box Hearth runs on</h2>
+    <div class="shl"><h2>The box Genkan runs on</h2>
       <p class="sub">Read straight out of the kernel every ${Math.round((data.tickMs || 10000) / 1000)} seconds.
       Nothing here is written down: the history is held in memory and starts again if the dashboard restarts.</p></div>
     <div class="shstate"><span class="lvled" id="sysLed"></span><span class="lvstate" id="sysState">connecting&hellip;</span></div>
@@ -305,7 +305,7 @@ export function systemPage(data) {
 
   <div class="syscols">
     <div class="card"><h2>What is running</h2>
-      <p class="sub">The containers Hearth itself is made of. Anything not running here is a piece of the
+      <p class="sub">The containers Genkan itself is made of. Anything not running here is a piece of the
         house that is currently missing.</p>
       ${boxRows}
     </div>
@@ -321,7 +321,7 @@ export function systemPage(data) {
   <div class="card flat"><p class="foot">This page only reads. It opens files under /proc and /sys, asks
     the filesystem how full it is, and asks docker what is running. It changes no setting, touches no
     firewall rule and writes nothing to the database, so it is safe to leave open.
-    ${data.demo ? "In this demo the figures describe a made-up little Hearth box rather than the machine the demo happens to be hosted on." : ""}</p></div>
+    ${data.demo ? "In this demo the figures describe a made-up little Genkan box rather than the machine the demo happens to be hosted on." : ""}</p></div>
 </div>`;
 }
 

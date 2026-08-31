@@ -1,4 +1,4 @@
-# The Hearth public demo: genkan-demo.appspurt.dev
+# The Genkan public demo: genkan-demo.appspurt.dev
 #
 # The REAL dashboard code from ../dashboard, mounted read only, run against a
 # throwaway Postgres full of a made-up family. Improving the dashboard improves

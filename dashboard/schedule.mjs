@@ -1,4 +1,4 @@
-// Hearth dashboard: scheduled bedtimes.
+// Genkan dashboard: scheduled bedtimes.
 //
 // The times a child's internet goes off and comes back, per child, with
 // different school-night and weekend times, a holiday window that suspends the
