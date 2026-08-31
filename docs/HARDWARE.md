@@ -232,6 +232,38 @@ thirty dollars.
 
 ---
 
+## Serving the kids' wifi straight from the box (exploratory)
+
+Not built yet. Recorded here because the thinking is done and it changes the
+shopping list, and because it is a good first contribution for somebody who
+knows hostapd.
+
+**The idea.** Instead of USB-ethernet out to an old router in AP mode, the box
+broadcasts the kids' SSID itself: built-in ethernet to your router as the
+uplink, and a wifi interface in AP mode as the island. A wifi interface can be
+handed into the gateway's network namespace the same way the wired one is, with
+hostapd running against it and AdGuard already doing DHCP. That removes both
+the USB adapter and the old router from the list.
+
+**The laptop version is the best version.** An old laptop has both interfaces
+built in and a battery, which means the family gateway rides out power cuts on
+its own UPS. Ethernet to the router, internal wifi as the AP. Intel cards (the
+common case) do AP mode happily on 2.4GHz but their regulatory firmware makes
+5GHz awkward; Atheros cards do both well. For kids' phones and a Switch,
+2.4GHz is fine.
+
+**If you buy a dongle for this, buy MediaTek, not Realtek.** The mt76 driver
+(MT7612U, MT7921AU; the ALFA AWUS036ACM is the well-known MT7612U stick) is
+mainline and does AP mode properly. The NZ$10 sticks are almost all Realtek
+RTL8811-family: "driver-free" on the listing means a Windows driver partition,
+mainline support arrived late, and AP mode on them is exactly the part that is
+flaky. They were built to be clients.
+
+**The honest limits when this ships.** One dongle or laptop card is a one-room
+access point, not whole-house coverage, so the real-AP path above stays the
+recommended default. And it will ship with a tested chipset list rather than
+"any wifi stick", because untested sticks are how an issue tracker fills up.
+
 ## The access point
 
 The kids' wifi does not come from the Genkan box in the recommended build. It

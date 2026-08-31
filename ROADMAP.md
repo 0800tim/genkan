@@ -134,7 +134,10 @@ These are real gaps, sized roughly, and each is genuinely useful.
 - **Home automation.** The gateway already knows every smart device in the
   house. Home Assistant integration is an obvious neighbour.
 - **A second AP topology.** Running the kids' network on a laptop's own WiFi
-  via hostapd is documented but never tested on real hardware.
+  via hostapd, which also makes the laptop's battery a free UPS for the family
+  gateway. The thinking, including which chipsets can actually do AP mode, is
+  in docs/HARDWARE.md under "Serving the kids' wifi straight from the box".
+  Never tested on real hardware yet.
 - **Per-app control on the device.** The network cannot see inside apps. A
   consenting companion app could, and would need to be as privacy-respecting as
   the rest of this.
