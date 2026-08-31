@@ -1,4 +1,4 @@
-# Hearth on an Omarchy thin client
+# Genkan on an Omarchy thin client
 
 Turn any spare PC or laptop into your family's network gateway: filtered,
 time-budgeted internet for the kids, learn-to-earn quizzes, and your own AI
@@ -36,18 +36,18 @@ to your Claude plan, then:
     git clone https://github.com/0800tim/genkan && cd genkan
     claude
 
-Tell the agent: "Read CLAUDE.md and set this box up as our Hearth gateway."
+Tell the agent: "Read CLAUDE.md and set this box up as our Genkan gateway."
 It will copy config.env.example and secrets.env.example, ask you for your
 USB dongle's MAC address, mark the kids' NIC unmanaged in NetworkManager,
 provision Postgres and load the schema, run deploy.sh, and walk you through
 your AP and each kid's devices.
 
-One step is not scripted: Hearth needs a Postgres container and its schema.
+One step is not scripted: Genkan needs a Postgres container and its schema.
 `install/omarchy-setup.sh` does the host preparation and `deploy.sh` assumes
 the database is already there. The commands are in docs/setup/README.md and
 docs/DATABASE.md, and they are about four of them.
 
-Because Hearth's firewall lives inside its own container namespace, the
+Because Genkan's firewall lives inside its own container namespace, the
 host's own Omarchy firewall (ufw) stays exactly as Omarchy ships it. Add
 a post-update hook (~/.config/omarchy/hooks/post-update) that runs
 `docker compose up -d` in the repo so Omarchy updates never leave the

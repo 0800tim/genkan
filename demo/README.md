@@ -5,7 +5,7 @@
 | <https://genkan-demo.appspurt.dev> | the parent's dashboard |
 | <https://genkan-portal.appspurt.dev> | the child's captive portal and the quizzes |
 
-The real Hearth code, running against a database full of a household that does
+The real Genkan code, running against a database full of a household that does
 not exist. There is no second copy of anything: this stack bind-mounts
 `../dashboard` read only and runs `node server.mjs` and `node portal.mjs`, the
 same files a household runs. Improve the dashboard or the portal and the demos

@@ -1,10 +1,10 @@
 # Security: what is fixed, what is open
 
-Hearth ships its own adversarial audits in `research/`, which is unusual and
+Genkan ships its own adversarial audits in `research/`, which is unusual and
 deliberate. The cost of that honesty is that a reader, human or AI, can quote a
 finding without checking whether it is still true. That has already happened:
 an external reviewer read the reports and told a parent to fix the DNS-log
-poisoning before trusting Hearth, hours after it had been fixed.
+poisoning before trusting Genkan, hours after it had been fixed.
 
 **This file is the answer to "is that still a problem".** It is checked against
 the code, not against the reports.
@@ -36,12 +36,12 @@ the code, not against the reports.
 ## What this project cannot do, at all
 
 Not bugs, and no amount of work fixes them. They are in `README.md` too, and
-anybody deciding whether to rely on Hearth should read them first.
+anybody deciding whether to rely on Genkan should read them first.
 
 - **Mobile data.** A phone that turns off wifi has left the network. Nothing at
   the network layer can reach it.
 - **Anything offline.** A downloaded film, an offline game, a book.
-- **What was actually watched.** Hearth sees domains, not content. It cannot
+- **What was actually watched.** Genkan sees domains, not content. It cannot
   tell an educational video from four hours of shorts, and does not try.
 - **Every VPN.** Known endpoints are blocked. A determined teenager with a new
   one will get through, which is why there is a household bug bounty rather

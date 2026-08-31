@@ -1,6 +1,6 @@
 # Contributing
 
-Hearth is a self-hosted, network-level parental-control island. One small Linux
+Genkan is a self-hosted, network-level parental-control island. One small Linux
 box becomes the gateway for a separate kids' network, so filtering, time
 budgets, category blocks and schedules are things you own. MIT, no telemetry,
 your family's data never leaves your house.
@@ -12,7 +12,7 @@ screen time by studying". This one is the network side.
 
 **Write a quiz bank.** This is the easiest way in and the most useful thing
 anybody can do here. It needs no networking knowledge, no hardware, and no
-running Hearth: a bank is one JSON file.
+running Genkan: a bank is one JSON file.
 
 - The format is `portal/quizzes/FORMAT.md`. Read it once, all of it.
 - `node tools/validate-quizzes.mjs` checks your work: valid JSON, four choices
@@ -98,7 +98,7 @@ what anybody's children see without somebody saying yes to it.
 - `portal/quizzes/community/paint-and-colour.json` is a complete worked example
   to copy.
 - `node tools/validate-package.mjs --strict <file>` checks it. It needs nothing
-  but this repo and Node: no hardware, no running Hearth.
+  but this repo and Node: no hardware, no running Genkan.
 
 A package is treated as hostile input, because a stranger's text ends up on a
 page a child reads. The validator refuses anything that could be read as markup,

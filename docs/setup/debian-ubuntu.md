@@ -1,4 +1,4 @@
-# Hearth on Debian or Ubuntu
+# Genkan on Debian or Ubuntu
 
 For a Debian or Ubuntu server, a mini PC, or a retired laptop. This is the
 most common "hardware we already had" path after the Raspberry Pi. It is
@@ -97,7 +97,7 @@ this before serving, and refuses a noisy wire.
 
 ## Step 4: ufw and host firewalls
 
-Good news first: Hearth was designed so you do not have to touch ufw. The
+Good news first: Genkan was designed so you do not have to touch ufw. The
 gateway's firewall, NAT and DHCP all live inside the container's private
 network namespace. Once the warden hands the kids' NIC into the container,
 the host firewall never sees island traffic at all. Leave ufw exactly as
@@ -145,7 +145,7 @@ The agentic path, and the one we recommend: clone the repo, start your
 agent in it, and say:
 
 > Read CLAUDE.md and docs/setup/debian-ubuntu.md. Set this box up as our
-> Hearth gateway: install what is missing, keep the host network manager
+> Genkan gateway: install what is missing, keep the host network manager
 > off the kids' NIC, provision the database per docs/DATABASE.md, run
 > deploy.sh, then verify. Show me anything you run with sudo, and stop
 > and ask if a verification step fails.

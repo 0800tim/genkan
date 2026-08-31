@@ -1,6 +1,6 @@
 # Notifications to a parent's phone
 
-Hearth already knows the things a parent needs to hear. A device nobody has
+Genkan already knows the things a parent needs to hear. A device nobody has
 claimed joining the network. A household camera that is not as restricted as the
 policy says. A Tor or self-harm signal. A child out of time. Until this layer,
 every one of them sat on a dashboard, which meant a parent could learn on
@@ -15,12 +15,12 @@ nothing to anybody, and `test/schema-test.sh` proves it.
 
 ## The constraint that shapes all of it
 
-**Hearth has no telemetry, talks to no cloud, and that stays true.** So a
+**Genkan has no telemetry, talks to no cloud, and that stays true.** So a
 notification is never "we send your child's activity to a service". It is the
 household's own box POSTing a short message the household worded, to an address
 the household typed in, over a route the household controls and can delete.
 
-Nothing in this layer calls a vendor. There is no Hearth server, no account, no
+Nothing in this layer calls a vendor. There is no Genkan server, no account, no
 opt-out to find. If you add no route, nothing is ever sent anywhere, and the
 worker says so every time it runs.
 
@@ -55,10 +55,10 @@ the tone rules for the portal, and they apply doubly here, because a portal page
 is read by one child in one room and a notification is read wherever the phone
 happens to be.
 
-> **Hearth: worth a quiet check in**
+> **Genkan: worth a quiet check in**
 >
 > One thing today needs your eyes, and it is a care thing, not a trouble thing.
-> The detail is on the Hearth dashboard at home. Read it somewhere private.
+> The detail is on the Genkan dashboard at home. Read it somewhere private.
 
 Every word of that is a decision:
 
@@ -79,7 +79,7 @@ Every word of that is a decision:
   do-not-disturb. It is the only category that gets it.
 
 The blocked-road categories (`tor`, `darknet`, `drugs`, `extreme`) read
-"Hearth: worth a conversation tonight ... It was blocked. Nobody is in trouble."
+"Genkan: worth a conversation tonight ... It was blocked. Nobody is in trouble."
 Same reasoning: `docs/tor-and-safety.md` is explicit that a kid bouncing off the
 Tor block is not automatically in trouble, so the message that reaches a parent
 must not read as a charge.
@@ -87,11 +87,11 @@ must not read as a charge.
 The routine ones are allowed to say what they are, because none of them is
 about a child's private business:
 
-> **Hearth: a device nobody has claimed joined the network**
+> **Genkan: a device nobody has claimed joined the network**
 > 12 devices nobody has claimed joined the network. They have limited access
 > until somebody names them.
 
-A category with no wording row at all falls back to "Hearth: something needs a
+A category with no wording row at all falls back to "Genkan: something needs a
 look", which names nobody and quotes nothing. That direction is deliberate: a
 new alert type is never assumed harmless enough to quote.
 

@@ -1,4 +1,4 @@
-# Hearth voice: "Hey Claudia"
+# Genkan voice: "Hey Claudia"
 
 An optional module. It gives the house an Alexa-shaped thing that answers to
 the family instead of to a corporation: a wake word, local speech to text, a
@@ -59,7 +59,7 @@ pipeline uses. That is deliberate. It means:
 - the pieces are swappable (drop whisper.cpp for faster-whisper, keep the rest)
 - a Home Assistant satellite (a Pi with a mic and a speaker, sitting on the
   kitchen bench) works as an input device with no code from us
-- if a house already runs Home Assistant, Hearth can be a voice pipeline it
+- if a house already runs Home Assistant, Genkan can be a voice pipeline it
   calls rather than a second thing to maintain
 
 We do not depend on Home Assistant. We just refuse to be incompatible with it.

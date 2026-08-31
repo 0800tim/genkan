@@ -1,6 +1,6 @@
-# The Hearth privacy charter
+# The Genkan privacy charter
 
-Hearth is a parental control system. That means it is one bad decision away
+Genkan is a parental control system. That means it is one bad decision away
 from being a surveillance product, and the difference between the two is not
 the code, it is the promises the code keeps.
 
@@ -57,7 +57,7 @@ the ones a future contributor cannot quietly reverse.
 
 ### P1. No telemetry. None. Not anonymous, not aggregate, not opt-in.
 
-Hearth does not phone home. There is no usage reporting, no crash reporting, no
+Genkan does not phone home. There is no usage reporting, no crash reporting, no
 "anonymous statistics", no version check that carries anything, and no
 analytics of any kind. There is no account, so there is nothing to attach data
 to even in principle.
@@ -67,7 +67,7 @@ are not monetising my kids' browsing" is *read the code, it never sends
 anything anywhere*, and that answer stops being available the moment a single
 exception exists.
 
-**The only outbound requests Hearth's own code makes** are the daily fetch of
+**The only outbound requests Genkan's own code makes** are the daily fetch of
 the public Tor relay list (`onionoo.torproject.org`, with `dan.me.uk` as a
 fallback), which downloads a public list and uploads nothing. Everything else
 that leaves the box is either DNS resolution by AdGuard to its configured
@@ -87,7 +87,7 @@ core function to work, and any "sign in to continue".
 
 The family's AI agent is the deliberate exception and it is bounded: it is the
 parent's own agent, running with the parent's own subscription, and it is a
-cockpit rather than a component. Hearth runs when it is closed.
+cockpit rather than a component. Genkan runs when it is closed.
 
 ### P3. No decryption of a child's traffic. Ever.
 
@@ -95,7 +95,7 @@ No TLS interception, no certificate installed on a child's device, no MITM
 proxy, no "inspection" mode. This is the line between regulating and spying and
 it is not crossed for any feature, for any age, at any parent's request.
 
-Hearth sees domains, because it is the DNS server. It counts bytes by
+Genkan sees domains, because it is the DNS server. It counts bytes by
 destination address. It does not and will not see inside.
 
 The metering design is built around this constraint rather than around it being
@@ -105,7 +105,7 @@ being read.
 
 ### P4. No reading of messages.
 
-Hearth cannot see inside Snapchat, Instagram, Discord or any other end-to-end
+Genkan cannot see inside Snapchat, Instagram, Discord or any other end-to-end
 encrypted app, and no feature will be built that tries. Not keyword scanning,
 not screenshotting, not an accessibility service, not a keylogger, not a
 "companion app" that reads notifications.
@@ -134,7 +134,7 @@ private address leave a house at once.
 
 ### P6. No feature reports a child to anybody but their own parent.
 
-There is one audience for everything Hearth produces about a child: the adults
+There is one audience for everything Genkan produces about a child: the adults
 responsible for that child, in that house.
 
 This bans a school integration, a co-parenting service, a shared dashboard
@@ -170,7 +170,7 @@ told they are cut off, told why, and told what to do next.
 
 ### P8. No dark patterns aimed at children.
 
-The learn-to-earn system is the part of Hearth that most resembles the products
+The learn-to-earn system is the part of Genkan that most resembles the products
 it exists to push back against, so it carries the strictest rule: it may not
 import the attention economy's toolkit.
 
@@ -277,7 +277,7 @@ none.
   glossed over, and a pull request that adds sane defaults would be genuinely
   welcome. Until then, P5's promise is that nothing is uploaded, not that
   nothing accumulates.
-- **It does not make the network see less than it sees.** Hearth is the DNS
+- **It does not make the network see less than it sees.** Genkan is the DNS
   server. It knows every domain a device looks up. The charter constrains what
   is done with that, not the fact of it, and every parent should understand
   that before they deploy it.
@@ -380,9 +380,9 @@ it honestly, and defaulted it off.
 **Why it is refused.** It breaks **P1** outright, and **P2** and **P10** on the
 way past.
 
-- The value of "Hearth never sends anything anywhere" is that it needs no
+- The value of "Genkan never sends anything anywhere" is that it needs no
   trust. It is checkable by reading the code in an afternoon. One exception
-  converts it into "Hearth sends only this, we promise", which is a privacy
+  converts it into "Genkan sends only this, we promise", which is a privacy
   policy, and privacy policies are exactly what this project exists as an
   alternative to. The claim is worth more than the feature.
 - "Anonymous" and "aggregate" do not survive contact with the size of the

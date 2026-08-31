@@ -1,6 +1,6 @@
 # The Switcheroo: take over the wifi without touching a single device
 
-*A Hearth playbook. The cheekiest 20 minutes in parenting.*
+*A Genkan playbook. The cheekiest 20 minutes in parenting.*
 
 Your kids have six, eight, ten devices between them. Chromebooks for school,
 phones, a hand-me-down iPad, a smart watch, the friend who is basically a
@@ -33,7 +33,7 @@ the internet, unfiltered. Everyone is on it. You are going to do a swap:
    own network in **Access Point mode**. Give it the old name and the old
    password: **Nero**, same key as before.
 
-3. **Wire it to the gateway.** That new Nero plugs into your Hearth box (the
+3. **Wire it to the gateway.** That new Nero plugs into your Genkan box (the
    always-on computer running this project). The gateway hands out the
    addresses, does the filtering, keeps the logs, enforces the time limits.
 
@@ -47,7 +47,7 @@ nothing. The network they always used just got a new engine under the bonnet.
 
 ## The honest part (read this)
 
-Hearth's whole ethos is that this works *better* when it is not a secret. The
+Genkan's whole ethos is that this works *better* when it is not a secret. The
 Switcheroo is a convenience, it saves you reconnecting a dozen devices, not a
 way to spy. We strongly suggest you still tell the kids, in plain words, that
 the home network is filtered and time-managed now, and why. Especially the
@@ -61,7 +61,7 @@ Two things the Switcheroo does NOT do, and we will not pretend otherwise:
 - It does not touch mobile data. A phone on 4G never comes near your wifi.
   That is a job for the phone itself (Family Link and friends).
 - It does not read inside apps. You see the sites devices reach, never the
-  messages inside Snapchat or Discord. Hearth is a gateway, not a wiretap.
+  messages inside Snapchat or Discord. Genkan is a gateway, not a wiretap.
 
 ## Naming your networks
 
@@ -82,7 +82,7 @@ Two things the Switcheroo does NOT do, and we will not pretend otherwise:
 ## The friend problem, solved
 
 When your kid's friend joins (and they will, they have your password), their
-phone lands on the filtered island like everyone else. Hearth tags devices you
+phone lands on the filtered island like everyone else. Genkan tags devices you
 have not claimed as **guests**: filtered and time-limited, but controllable
 separately from your own kids. Pause the guests without pausing your kids, or
 your kids without pausing a guest, whichever the evening needs.

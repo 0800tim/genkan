@@ -6,7 +6,7 @@ category separately (e.g. 2h gaming/day, 1h YouTube/day; music unlimited).
 
 ## The one trick that makes it possible
 
-We can't read inside encrypted traffic, but **the Hearth box is the DNS server**, so
+We can't read inside encrypted traffic, but **the Genkan box is the DNS server**, so
 we see every name a device looks up and the IPs it got back. That lets us tag
 otherwise-opaque traffic by category WITHOUT decrypting it:
 
@@ -166,7 +166,7 @@ next reconcile.
 
 ### Running out of time: the cliff or the slope
 
-`genkan slow-timeout cut|slow`. `cut` is the default and is what Hearth has
+`genkan slow-timeout cut|slow`. `cut` is the default and is what Genkan has
 always done at zero. `slow` drops the child into the whole-device slow lane
 instead, so the evening tails off rather than ending mid-sentence, and earning
 minutes back puts them straight back to full speed. Some families want the
@@ -237,7 +237,7 @@ the red every minute and earning ten minutes back would not lift them out.
   nothing.
 - **Under-counting is the deliberate failure direction.** Between naming
   something wrongly and not naming it, this layer always chooses not to name it.
-  Traffic Hearth cannot attribute shows as "other" rather than being guessed
+  Traffic Genkan cannot attribute shows as "other" rather than being guessed
   into a category, and a child is never charged a minute for a category the
   meter is not sure about.
 
@@ -316,9 +316,9 @@ counted. The sets carry a ten-minute timeout so they cannot grow without bound,
 and the chain is only ever created when it is genuinely absent, so a restart
 cannot stack duplicate rules. Set `HEARTH_LIVE_DEVICE_TOTALS=0` on the
 dashboard to turn it off; everything else keeps working, and per-device figures
-fall back to "traffic Hearth can put a name to".
+fall back to "traffic Genkan can put a name to".
 
 The household figure on that page comes from somewhere else again: the kids0
 byte counters in `/proc/net/dev` inside the gateway container. That is every
 byte that crossed the wire, named or not, which is why the household total is
-usually larger than the sum of the devices Hearth can attribute.
+usually larger than the sum of the devices Genkan can attribute.

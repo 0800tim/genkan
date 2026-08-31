@@ -12,7 +12,7 @@ Three labels are used throughout, and they mean exactly what they say.
 
 | Label | Meaning |
 |---|---|
-| **Run** | Hearth has been deployed and used on this, in a house, over time. |
+| **Run** | Genkan has been deployed and used on this, in a house, over time. |
 | **Validated** | The build, the ruleset and the scripts were exercised on this hardware, but a live deploy was not completed on it. |
 | **Inference** | Nobody has tried it. It is expected to work because of what it is, and the reasoning is given. Treat it as a hypothesis. |
 
@@ -24,7 +24,7 @@ Three labels are used throughout, and they mean exactly what they say.
 combined, and every failure is one of four shapes.
 
 1. **There is only one interface.** A mini PC or a laptop with a single
-   ethernet port and wifi. Hearth needs a path to the house router and a
+   ethernet port and wifi. Genkan needs a path to the house router and a
    separate path to the kids, and one port cannot be both. You need a second
    interface before anything else in this document matters.
 2. **The wrong interface is chosen as the kids' side.** If you nominate your
@@ -54,7 +54,7 @@ An x86_64 Ubuntu 26.04 workstation with plenty of RAM, using its onboard
 ethernet (`enp5s0`) as the uplink and an **ASIX AX88179** USB 3.0 gigabit
 adapter (USB ID `0b95:1790`, driver `ax88179_178a`) as the kids' side.
 
-This is the combination Hearth was developed on and runs on daily. The
+This is the combination Genkan was developed on and runs on daily. The
 containers `hearth-gw`, `hearth-adguard`, `hearth-portal` and
 `hearth-speedtest` all run here, the timers run here, and the firewall and
 container test suites pass on this box.
@@ -64,7 +64,7 @@ it. Do not read the reference box's specification as a requirement.
 
 ### Omarchy (Arch): **Validated**
 
-Hearth was built and checked end to end on a real Omarchy box on 2026-08-29:
+Genkan was built and checked end to end on a real Omarchy box on 2026-08-29:
 eight cores, 7.7GiB RAM, two interfaces (a wifi radio and a USB ethernet),
 Docker 29.7.2. The record is [OMARCHY-VALIDATION.md](OMARCHY-VALIDATION.md).
 
@@ -83,7 +83,7 @@ software side is proven on Arch and the live network handover is not.
 
 The reference box is Ubuntu, so the distro family is genuinely exercised. What
 is inference is the specific class of machine: a 1-litre tiny PC (ThinkCentre,
-OptiPlex Micro, EliteDesk Mini) or a retired laptop. There is nothing in Hearth
+OptiPlex Micro, EliteDesk Mini) or a retired laptop. There is nothing in Genkan
 that would notice the difference between those and the reference box: same
 architecture, same kernel, same Docker, same handover.
 
@@ -91,7 +91,7 @@ The laptop case has one genuine advantage worth naming: **its battery is a free
 UPS**, and it is the only configuration that rides through a short power cut
 without buying anything.
 
-### Raspberry Pi: **Inference. No Pi has run Hearth.**
+### Raspberry Pi: **Inference. No Pi has run Genkan.**
 
 [setup/raspberry-pi.md](setup/raspberry-pi.md) is a careful and detailed guide,
 and it has not been executed on a Pi by this project. Say that out loud before
@@ -112,9 +112,9 @@ What is genuinely unknown, and would be the first thing to check on a Pi:
   server shares.
 - The Pi 3 throughput numbers in the guide (roughly 40 to 90 Mbps through the
   island) are derived from the platform's known 100Mbit ethernet on a shared
-  USB 2.0 bus, not measured on Hearth.
+  USB 2.0 bus, not measured on Genkan.
 
-If you run Hearth on a Pi, that is the single most useful contribution anyone
+If you run Genkan on a Pi, that is the single most useful contribution anyone
 could make to this file right now.
 
 ### What will not work at all
@@ -198,7 +198,7 @@ Practical notes:
 
 ### A second onboard NIC, or a PCIe card
 
-**Inference.** Nothing in Hearth cares how the interface got there: the warden
+**Inference.** Nothing in Genkan cares how the interface got there: the warden
 matches on MAC and hands the interface over the same way. A machine with two
 onboard ports is arguably the tidiest build there is.
 
@@ -234,7 +234,7 @@ thirty dollars.
 
 ## The access point
 
-The kids' wifi does not come from the Hearth box in the recommended build. It
+The kids' wifi does not come from the Genkan box in the recommended build. It
 comes from a separate access point cabled to the kids' interface, and it must
 be a genuinely dumb one.
 
@@ -245,7 +245,7 @@ be a genuinely dumb one.
 - **Access Point or bridge mode.** In router mode it would NAT the whole island
   behind one address, which hides every device behind a single IP and destroys
   per-device control. This is the point of the whole exercise, so get it right.
-- **Its own DHCP server off.** The Hearth box, through AdGuard in the container,
+- **Its own DHCP server off.** The Genkan box, through AdGuard in the container,
   is the island's single DHCP and DNS server. Two DHCP servers on one wire is a
   race, and the child wins it about half the time.
 - **Not connected to your main LAN in any way.** One cable, from the kids'
@@ -265,8 +265,8 @@ The reference household's access point, and the source of the segment guard.
 - **It is app-only.** No web UI, no SSH, no API, no rooting path. Factory reset,
   a standalone network, then Access Point mode, all in the phone app. That is
   the entire configuration and there is nothing else to tune.
-- **Hearth does not need to control it**, which is why an app-only unit is
-  acceptable. Once it is in AP mode it is a dumb bridge and the Hearth box owns
+- **Genkan does not need to control it**, which is why an app-only unit is
+  acceptable. Once it is in AP mode it is a dumb bridge and the Genkan box owns
   addresses, DNS, filtering and time.
 - **The incident worth knowing.** Freshly plugged in, the Deco bridged the main
   house LAN onto the kids' port, because it was still meshed to the house wifi.
@@ -293,7 +293,7 @@ on its own, and you should know exactly what breaks while it is down.
 - **The house network is unaffected.** Your router keeps routing, your own
   devices keep working. This is a property of the topology, not a mitigation:
   the island hangs off a separate interface, and the main LAN never depended on
-  the Hearth box.
+  the Genkan box.
 - **The kids have no internet.** No DHCP, no DNS, no route. Devices already
   holding a lease lose the gateway and stop.
 - **The safety net is down too**, and this is worth sitting with. The help

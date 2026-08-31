@@ -1,6 +1,6 @@
-# Setting up a Hearth gateway
+# Setting up a Genkan gateway
 
-Hearth turns one small Linux box into your family's network gateway:
+Genkan turns one small Linux box into your family's network gateway:
 filtered, time-budgeted internet for the kids, a learn-to-earn portal, and
 a CLI (`kidnet`) your AI agent drives from chat. These guides get you from
 bare hardware to a running island.
@@ -16,7 +16,7 @@ bare hardware to a running island.
 
 ## The universal shape
 
-Every Hearth gateway is the same machine wearing different clothes: one
+Every Genkan gateway is the same machine wearing different clothes: one
 Linux box with two network paths.
 
 1. An uplink to your existing home router. Usually the built-in ethernet.
@@ -40,7 +40,7 @@ internet goes down and the house network does not notice.
 1. Install Linux on the box. Any distro with Docker works.
 2. Clone this repo onto it.
 3. Open your AI agent in the repo and say: "Read CLAUDE.md and
-   docs/setup/<your platform>.md, then set this box up as our Hearth
+   docs/setup/<your platform>.md, then set this box up as our Genkan
    gateway." The agent does the fiddly parts: package installs, marking
    the kids' NIC as unmanaged, provisioning Postgres and loading the schema,
    running `deploy.sh`, and proving it works with the test rigs. Provisioning
@@ -58,7 +58,7 @@ These live here once so the platform guides do not repeat them.
 
 ### The database
 
-Hearth keeps state (children, devices, blocks, the time ledger, quiz
+Genkan keeps state (children, devices, blocks, the time ledger, quiz
 results, alerts) in Postgres. The stack expects a container named
 `postgres` on a Docker network named `postgres`. If you do not already run
 one:
@@ -88,7 +88,7 @@ The segment guard matters: on every appearance of `kids0` the gateway
 listens on the wire first. If it hears another DHCP server or traffic from
 a foreign subnet, the island refuses to start and raises an alert. That is
 deliberate. It catches an access point still bridged to your main LAN
-before Hearth's DHCP can fight your router's.
+before Genkan's DHCP can fight your router's.
 
 ## Once it is running
 
@@ -104,14 +104,14 @@ before Hearth's DHCP can fight your router's.
 ## The ethos
 
 **Omarchy-first, genuinely distro-agnostic.** We build and test on Omarchy
-because its agent-first design fits how Hearth is operated. But nothing in
-Hearth depends on it: the stack is Docker plus standard Linux tooling
+because its agent-first design fits how Genkan is operated. But nothing in
+Genkan depends on it: the stack is Docker plus standard Linux tooling
 (systemd, nftables inside the container, a NetworkManager drop-in or its
-equivalent on the host). If your distro runs Docker, it runs Hearth.
+equivalent on the host). If your distro runs Docker, it runs Genkan.
 
 **AI agents make a fiddly setup easy.** A network gateway build is
 genuinely fiddly: interface names, MACs, firewall semantics, DHCP scope.
-Hearth leans into the agent doing that work. The repo carries CLAUDE.md and
+Genkan leans into the agent doing that work. The repo carries CLAUDE.md and
 runbooks written for machines as much as people, and the control surface is
 a plain CLI, so any agent that can run shell commands can both build and
 operate it. Bring your own agent: Claude Code, Codex, Gemini CLI, a local

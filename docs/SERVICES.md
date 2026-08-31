@@ -1,13 +1,13 @@
-# Adding a service Hearth doesn't know yet
+# Adding a service Genkan doesn't know yet
 
-Hearth counts a child's gaming and video time by watching which addresses
+Genkan counts a child's gaming and video time by watching which addresses
 their device talks to, learned from DNS lookups (see
 [METERING.md](../METERING.md)). That only works for a service if its domains
 are in the map. The map is seeded from a New Zealand household and is nothing
 like exhaustive: your country's catch-up TV, your kid's new game, the music
 app everyone at school uses. None of that requires touching a firewall rule or
 writing code. It is two SQL files, and this is the easiest way for a
-non-programmer to make a real contribution to Hearth.
+non-programmer to make a real contribution to Genkan.
 
 This is the plain version. If you have not already, read METERING.md first:
 the reasoning below only makes sense once you know why a shared address is
@@ -123,7 +123,7 @@ Proving it actually works end to end takes patience, because the meter only
 learns from real traffic:
 
 1. Have the child use the service for a few minutes, for real, on a device
-   Hearth already knows.
+   Genkan already knows.
 2. Run `kidnet-catmap` (or wait for `kids-services.timer`), then check the
    address was learned:
 

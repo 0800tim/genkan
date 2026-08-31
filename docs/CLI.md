@@ -22,8 +22,8 @@ those from the repo, because they read files that live there.
 |---|---|---|
 | [`genkan`](#genkan) | you, or your agent | the control surface: on, off, categories, time, devices |
 | [`kidnet-report`](#kidnet-report) | you, weekly | the family digest, read only |
-| [`kidnet-health`](#kidnet-health) | you, any time | is the household's internet working and is Hearth doing its job. Read only |
-| [`kidnet-upgrade`](#kidnet-upgrade) | you | update Hearth: check, snapshot, apply, undo itself if it breaks |
+| [`kidnet-health`](#kidnet-health) | you, any time | is the household's internet working and is Genkan doing its job. Read only |
+| [`kidnet-upgrade`](#kidnet-upgrade) | you | update Genkan: check, snapshot, apply, undo itself if it breaks |
 | [`kidnet-rollback`](#kidnet-rollback) | you | go back to a version that worked |
 | [`kidnet-quiz`](#kidnet-quiz) | you, or your agent | manage the learn-to-earn quiz banks |
 | [`kidnet-quiz-suggest`](#kidnet-quiz-suggest) | you, or your agent | brief an agent on what one child should be quizzed on next |
@@ -198,7 +198,7 @@ applied by this command directly: the database is the desired state, the
 firewall follows.
 
 `slow-timeout` decides what running out of time does. `cut` is the default and
-is what Hearth has always done: the internet goes off and the captive portal
+is what Genkan has always done: the internet goes off and the captive portal
 explains. `slow` drops the child into the slow lane instead, so the evening
 tails off rather than ending mid-sentence. Some families want the cliff and
 some want the slope; neither is assumed, and an upgrade never changes it.
@@ -740,7 +740,7 @@ No arguments. Normally run by `kidnet-devicescan`; safe to run by hand.
 
 Every device sits in one of five classes, which decides how it is treated:
 
-| Class | What it is | How Hearth treats it |
+| Class | What it is | How Genkan treats it |
 |---|---|---|
 | `personal` | a phone, tablet, laptop, console | assignable to a person, filtered and metered by their tier |
 | `shared` | the lounge TV, the iPad every kid uses | the household's, not one child's. Its own filter level, nobody's minutes, and swept by `dinner` or `genkan house off` only where the parent has ticked it |
@@ -849,7 +849,7 @@ outage, set the lookback for one run:
     kidnet-notify set <name> [options]
     kidnet-notify on <name> | off <name> | remove <name>
 
-Puts Hearth's alerts on a parent's phone. Reads unacknowledged `alerts` rows and
+Puts Genkan's alerts on a parent's phone. Reads unacknowledged `alerts` rows and
 POSTs the ones a household asked for, to an address the household typed in. It
 talks to no cloud and no vendor: with no routes configured it sends nothing to
 anybody and says so, which is what a fresh install does.
@@ -1138,7 +1138,7 @@ instead of reloading it.
 Community learning packages. A package is one JSON file: a quiz bank, plus who
 wrote it, what licence it carries, who it is for, and optionally a short piece
 to read first. It is the bank format with one optional block added: forty-one of
-the forty-two banks that ship with Hearth pass every package check unchanged,
+the forty-two banks that ship with Genkan pass every package check unchanged,
 manifest aside. `docs/CONTRIBUTING-CONTENT.md` is the guide for writing one,
 written for somebody who is not a programmer.
 
@@ -1146,7 +1146,7 @@ written for somebody who is not a programmer.
 `portal/quizzes`, which is tracked in git: a `git pull` would delete a family's
 installed content and a repo update would overwrite it. A package goes into the
 **database** instead, alongside the banks a parent writes on the dashboard
-(`config/db/schema-packages.sql`). Updating Hearth cannot touch it, removing it
+(`config/db/schema-packages.sql`). Updating Genkan cannot touch it, removing it
 is one row, and the children's earned minutes stay earned either way, because
 `quiz_rounds` has no foreign key to the bank.
 
@@ -1205,7 +1205,7 @@ ids are taken, then prints it as one briefing with a prompt on the end.
 `docs/runbooks/quiz-suggestions.md` is the recipe for what to do with it.
 
 **It calls no AI service.** It reads Postgres and `portal/quizzes`, and writes
-to your terminal. Hearth has no telemetry and talks to no cloud, and this
+to your terminal. Genkan has no telemetry and talks to no cloud, and this
 script is not the exception. Handing the output to an agent is a decision you
 make, one paste at a time.
 
@@ -1258,13 +1258,13 @@ are readable by any git tool, not by a bespoke one.
 deduplicates blobs, so an unchanged tree costs almost nothing to snapshot.
 
 The script is in the repo. **The timer is not**, because how often you want it
-and whether you want it at all is not a household concern of Hearth's. On the
+and whether you want it at all is not a household concern of Genkan's. On the
 reference box it is a user timer running every two minutes:
 
 ```ini
 # ~/.config/systemd/user/hearth-snapshot.timer
 [Unit]
-Description=Snapshot Hearth's working tree every two minutes
+Description=Snapshot Genkan's working tree every two minutes
 [Timer]
 OnBootSec=2min
 OnUnitActiveSec=2min
@@ -1285,7 +1285,7 @@ what a family runs.
 kidnet-health [--json] [--details] [--quiet] [--wait <seconds>] [--write <file>]
 ```
 
-Answers one question: is this household's internet working, and is Hearth doing
+Answers one question: is this household's internet working, and is Genkan doing
 its job. It is the command a parent runs at 9pm when a child says the internet
 is broken, and it is what `kidnet-upgrade` trusts when it decides whether an
 upgrade worked.
@@ -1338,7 +1338,7 @@ sudo kidnet-upgrade apply [--to <ref>] [--yes] [--dry-run] [--allow-dirty]
 kidnet-upgrade status
 ```
 
-Updates Hearth. `check` (the default) changes nothing: it fetches, says what is
+Updates Genkan. `check` (the default) changes nothing: it fetches, says what is
 available, lists what changed, and calls out separately if the release touches
 the database.
 

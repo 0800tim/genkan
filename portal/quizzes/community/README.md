@@ -4,7 +4,7 @@ This directory holds **learning packages other people wrote**.
 
 A package is one JSON file: a quiz bank, plus who wrote it, what licence it
 carries, who it is for, and optionally a short piece to read first. It is the
-quiz bank format Hearth already used (`../FORMAT.md`) with one optional
+quiz bank format Genkan already used (`../FORMAT.md`) with one optional
 `package` block added, so nothing here is a new format to learn: a bank you have
 already written becomes a package when you add four lines saying who wrote it.
 
@@ -21,7 +21,7 @@ That is the important part.
 | Loaded by the portal | yes, automatically | **no** |
 | Where it lives once in use | it is already in use | the household's database |
 | Survives a `git pull` | it is part of the repo | yes, it is in the database |
-| How it gets to the kids | it ships with Hearth | somebody runs `kidnet-pack install` |
+| How it gets to the kids | it ships with Genkan | somebody runs `kidnet-pack install` |
 
 The portal reads `*.json` at the top of `portal/quizzes` and nowhere else, so a
 package sitting here is invisible to every child in the house. It is an offer,

@@ -1,9 +1,9 @@
-# Updating Hearth, and what to do when it goes wrong
+# Updating Genkan, and what to do when it goes wrong
 
 This is written for the person whose house it is. You do not need to know what
 nftables is.
 
-Hearth sits between your family and the internet. A bad update here does not
+Genkan sits between your family and the internet. A bad update here does not
 mean an app looks funny: it means the children cannot do their homework and
 the dashboard you would use to fix it is down as well. Everything below is
 built around that one fact.
@@ -18,7 +18,7 @@ sudo kidnet-rollback list      # what I can go back to
 sudo kidnet-rollback to previous
 ```
 
-If an update breaks something, **you do not have to do anything**. Hearth
+If an update breaks something, **you do not have to do anything**. Genkan
 checks the household after every update and puts the old version back by
 itself if it is not working. The rollback commands above are for the case
 where the problem shows up later, or where you simply changed your mind.
@@ -81,7 +81,7 @@ release: <https://github.com/0800tim/genkan/issues>
 
 ### The update went on and rolled itself back
 
-You will see `Putting Hearth <old version> back`. It is already done. Your
+You will see `Putting Genkan <old version> back`. It is already done. Your
 household is on the version that worked. Please report the release that
 failed, with the output.
 
@@ -92,7 +92,7 @@ kidnet-health
 ```
 
 Read the lines marked FAIL. Each one says what to do. The most common answers
-have nothing to do with Hearth at all: the broadband is down, the wifi access
+have nothing to do with Genkan at all: the broadband is down, the wifi access
 point has been reset or re-bridged to the main network, or the USB network
 adapter has been knocked out of its socket.
 
@@ -125,7 +125,7 @@ gunzip -c /var/lib/hearth/releases/<id>/db.sql.gz \
 ```
 
 The manifest is a plain text file of `key=value` lines and the backup is an
-ordinary gzipped SQL dump. Neither needs any Hearth tooling to read. That is
+ordinary gzipped SQL dump. Neither needs any Genkan tooling to read. That is
 deliberate: the day you need them is the day the tooling might be the broken
 thing.
 
@@ -161,13 +161,13 @@ Read this part before you need it.
   notes below say which kind it was.
 - **Recover anything older than the snapshots it kept.** Only the ten most
   recent are kept, so that a box does not fill its own disk with backups.
-- **Fix a problem that was never Hearth's.** If your broadband is down, every
+- **Fix a problem that was never Genkan's.** If your broadband is down, every
   version will look broken and none of them is the cause. `kidnet-health` says
   plainly that it cannot check your broadband, precisely so that this is not
   confusing at 9pm.
 - **Undo anything on the AdGuard side that was changed by hand.** AdGuard
   keeps its own configuration in its own container volume, which is not part
-  of the snapshot. `kidnet-adguard apply` rebuilds the parts Hearth manages,
+  of the snapshot. `kidnet-adguard apply` rebuilds the parts Genkan manages,
   from the database, and always did.
 
 A rollback is a way back to a version that worked. It is not a time machine,

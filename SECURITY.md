@@ -1,6 +1,6 @@
 # Security policy
 
-Hearth sits between children and the internet, and it holds a record of the
+Genkan sits between children and the internet, and it holds a record of the
 domains their devices visit. Getting security wrong here is not an abstract
 problem, so please tell us when we have.
 
@@ -46,7 +46,7 @@ affects everyone, please pass it on here and we will credit them.
 
 ## Our commitments
 
-- No telemetry, ever. Hearth does not phone home, so there is no central store
+- No telemetry, ever. Genkan does not phone home, so there is no central store
   of anyone's browsing to breach.
 - Secrets stay out of the repository. Configuration with real values lives in
   gitignored files, and the shipped configuration contains placeholders only.

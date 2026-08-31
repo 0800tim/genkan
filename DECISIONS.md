@@ -1,4 +1,4 @@
-# How Hearth got here: the decision log
+# How Genkan got here: the decision log
 
 The reasoning behind the design, captured so the "why" isn't lost. Written
 2026-08-27/28 from the conversation that built the project.
@@ -12,15 +12,15 @@ kill his son's Android MOBILE DATA.
 
 ## First reality checks
 
-1. **The Hearth box is a LAN host, not the router.** The gateway is an ASUS at
+1. **The Genkan box is a LAN host, not the router.** The gateway is an ASUS at
    192.168.1.1 (SSH off). A host can't cleanly cut another device's traffic
-   without controlling the router or ugly ARP tricks. So we needed the Hearth box to
+   without controlling the router or ugly ARP tricks. So we needed the Genkan box to
    BE the gateway for the kids, on its own segment.
 2. **Mobile data can't be touched by ANY router.** Cellular goes phone ->
    tower -> internet, never through the house. The only lever is Google
    Family Link (pause device / downtime, works over cellular). Tim already
    uses Family Link and is on Android for exactly this reason. Decision:
-   Hearth owns HOME network time; Family Link owns the device + cellular;
+   Genkan owns HOME network time; Family Link owns the device + cellular;
    they run in parallel (no shared API, grant bonus in each separately).
 
 ## Hardware path (what we rejected and why)
@@ -30,14 +30,14 @@ kill his son's Android MOBILE DATA.
 - **OPNsense/pfSense** -> these are x86 whole-network firewalls, not router
   firmware. Overkill and the wrong shape (would route the whole house through
   a new box). Rejected for this job.
-- **CHOSEN: the Hearth box as the kids' gateway** via a spare USB-ethernet adapter.
+- **CHOSEN: the Genkan box as the kids' gateway** via a spare USB-ethernet adapter.
   Zero new OS, always-on, fully agent-controlled, ~$0. This is essentially
   "OPNsense-style control" but on the Linux box we already own.
 
 ## The topology we settled on
 
-    ASUS (192.168.1.1) -> the Hearth box enp5s0 (uplink, unchanged)
-                           the Hearth box kids0 (USB ASIX AX88179) = 192.168.60.1 gateway
+    ASUS (192.168.1.1) -> the Genkan box enp5s0 (uplink, unchanged)
+                           the Genkan box kids0 (USB ASIX AX88179) = 192.168.60.1 gateway
                               -> spare switch
                                    -> son's wired PC
                                    -> TP-Link Deco X20 (AP MODE) -> kids' + guest WiFi
@@ -45,19 +45,19 @@ kill his son's Android MOBILE DATA.
 - USB NIC detected: ASIX AX88179 = kids0 (mac in config.env, gitignored).
 - Deco X20 is APP-ONLY (no web UI / SSH / API). We don't need to control it:
   Tim flips it to Access Point mode ONCE via the app, then it's a dumb bridge
-  and the Hearth box owns everything. Must NOT stay in router mode (it would NAT and
+  and the Genkan box owns everything. Must NOT stay in router mode (it would NAT and
   hide devices behind one IP, defeating per-device control).
 - Confirmed cabling (Tim, for his house layout): kids0 -> Deco port 1;
   Deco port 2 -> switch -> wired devices.
-- DHCP: the Hearth box is the single DHCP+DNS server. Deco in AP mode runs neither.
+- DHCP: the Genkan box is the single DHCP+DNS server. Deco in AP mode runs neither.
 - Guests join the SAME isolated island (internet yes; main network no).
 
 ## Security decisions
 
 - **Segment isolation**: the kids/guest island cannot reach the main
-  192.168.1.0/24 LAN where the Hearth box and all client work live. Guests get
+  192.168.1.0/24 LAN where the Genkan box and all client work live. Guests get
   internet, nothing else. (nftables forward drop to RFC1918 internals.)
-- **DNS forcing**: redirect all :53 to the Hearth box, block DoT (853), filter DoH,
+- **DNS forcing**: redirect all :53 to the Genkan box, block DoT (853), filter DoH,
   so a kid can't set 8.8.8.8 or "Secure DNS" to bypass filtering. (Tim asked
   what DoH/DoT were; this is why they matter.)
 
@@ -80,7 +80,7 @@ talking to him. So metering is PER CATEGORY, not "internet on":
 - Metered: gaming (Roblox/Fortnite/Steam/consoles) + video (YouTube/Shorts/
   TikTok/Netflix). Each with its own daily budget.
 - Never metered: audio (Spotify), schoolwork, chess, messaging Dad.
-- **The trick**: the Hearth box is the DNS server, so it knows which IPs belong to
+- **The trick**: the Genkan box is the DNS server, so it knows which IPs belong to
   which app, and can tag encrypted traffic by category WITHOUT decrypting it
   (device resolves googlevideo.com -> those IPs = video). Per-minute byte
   counters on category IP sets tell us "actively using" vs idle.
@@ -173,7 +173,7 @@ that were written down as true but were not.
    "off" meant no address and no name resolution: pages fail silently, which
    is the exact thing the captive portal was built to prevent. DHCP, DNS and
    the portal are now unconditional, and the accepts are pinned to the gateway
-   address (without that, `tcp dport 80 accept` matched every address the Hearth box
+   address (without that, `tcp dport 80 accept` matched every address the Genkan box
    holds, including its main-LAN and tailnet ones).
 
 4. **always_allow was doing two jobs.** It had grown to hold both the help
@@ -191,7 +191,7 @@ silently killed the replies for the allowlist flows above it, taking the safety
 net with it. Unsolicited inbound cannot reach the island through NAT anyway.
 
 All of this is now held in place by `test/firewall-test.sh`, which builds a
-three-namespace lab (kid, the Hearth box, internet), loads the ruleset that ships, and
+three-namespace lab (kid, the Genkan box, internet), loads the ruleset that ships, and
 asserts the guarantees with real packets. Twenty checks at the time, no
 hardware needed; the suite has since grown to 31 as the Tor layer and the
 static-IP defence landed.
@@ -460,9 +460,9 @@ wifi, and the page should not let anybody assume otherwise.
 
 ## A System page, on its own slow clock (2026-08-29)
 
-Hearth runs on a box, and the box is the single point of failure for the whole
+Genkan runs on a box, and the box is the single point of failure for the whole
 family's internet. There was nowhere to see whether it was full, hot or
-thrashing. `/system` shows CPU, memory, disk, load, uptime, the Hearth
+thrashing. `/system` shows CPU, memory, disk, load, uptime, the Genkan
 containers and temperature as tiles, then processor, memory and network over
 time, with download and upload as separate lines.
 
@@ -494,7 +494,7 @@ screenshotted.
 
 ## Two public demos, running the real code (2026-08-29)
 
-A stranger arriving at the repo could read about Hearth but not see it. Both
+A stranger arriving at the repo could read about Genkan but not see it. Both
 halves are now live: `genkan-demo.appspurt.dev` is the parent's dashboard and
 `genkan-portal.appspurt.dev` is the child's captive portal with playable
 quizzes.
@@ -620,7 +620,7 @@ Two related honesty fixes came with it:
   parent to ignore the red ones. A good run now retires the failed runs before
   it, and the alert carries the nft error instead of dropping it.
 - **A device on a lead that is not attached now says so.** A device set to
-  vendor-only whose brand Hearth cannot identify is not restricted at all. That
+  vendor-only whose brand Genkan cannot identify is not restricted at all. That
   was a note in a terminal nobody reads. It is now a dashboard warning that
   names the device and prints the command that fixes it.
 
@@ -738,7 +738,7 @@ index still never leave the server.
 `bin/kidnet-quiz-suggest` gathers what one child passes, avoids, gets wrong and
 has been looking up, and prints it with a prompt on the end.
 `docs/runbooks/quiz-suggestions.md` is the recipe. The script calls no AI and
-Hearth ships no scheduler for it: the recurrence and the model call are the
+Genkan ships no scheduler for it: the recurrence and the model call are the
 parent's own agent, and the briefing leaves the house only when a human pastes
 it. That is the boundary, and it is a design position rather than a missing
 feature.
@@ -784,7 +784,7 @@ those tests is worth more than a long one that quietly fails a couple. Every
 rejection in `docs/READING-LIST.md` is a real one: a site that looked like an
 obvious yes until it was checked.
 
-The honest gap this opened: Hearth still cannot see that a child spent forty
+The honest gap this opened: Genkan still cannot see that a child spent forty
 minutes reading before the round, so it pays them exactly the same as a child
 who guessed well. The signal exists (`dns_log`, and now `quiz_study_visits`) and
 nothing prices it. `LEARN-TO-EARN.md` keeps that open.
@@ -842,7 +842,7 @@ already winning.
 **The mechanics that were refused, and why.** A streak that breaks is a
 punishment dressed as a reward, and "don't break the chain" is a tool of the
 attention economy this project exists to push back against: importing it into
-the one part of Hearth that is meant to feel unlike a phone would be copying the
+the one part of Genkan that is meant to feel unlike a phone would be copying the
 enemy's toolkit. A handicap multiplier for the younger child is still a formula
 standing between a child and an honest answer to "how am I doing", and a clever
 kid will treat it as a puzzle while a parent has to defend it.
@@ -868,7 +868,7 @@ switch says. Full reasoning in `docs/GAMIFICATION.md`.
 The island was default-deny by source address, and a DHCP lease was what got you
 into `@kids_known`. Which meant a lease was the whole identity check: plug in a
 new phone, get a lease, get unfiltered internet, because no child owned it and
-so no child's rules applied. Every control in Hearth hangs off "whose device is
+so no child's rules applied. Every control in Genkan hangs off "whose device is
 this", and the answer was "whoever asked for an address".
 
 **Claiming, not logging in.** A login needs a credential per child, which means
@@ -973,7 +973,7 @@ It skips the commit when nothing has changed, and git deduplicates blobs, so
 snapshotting an unchanged tree costs almost nothing.
 
 **The script is in the repo, the timer is not.** How often a box snapshots, or
-whether it does at all, is not a household concern, and a family running Hearth
+whether it does at all, is not a household concern, and a family running Genkan
 does not need this at all. It is a development safeguard and `docs/CLI.md` says
 so.
 
@@ -1095,7 +1095,7 @@ cause it.
 
 An external reviewer read the repo cold, as a cautious parent would, and made
 two points that were both right. Some command-line SQL interpolation was still
-ungated. And, more seriously: everything Hearth's CLI does ran as the Postgres
+ungated. And, more seriously: everything Genkan's CLI does ran as the Postgres
 **superuser**, on an instance this box shares with unrelated projects.
 
 The second one is the finding, and it is not really about injection.
@@ -1158,7 +1158,7 @@ Postgres lets `PUBLIC` connect to a new database by default, so any role on this
 shared instance could open `kids_network` and read the catalogue. Only
 `kids_app`, `kids_agent` and a superuser may now. The mirror of that, fencing
 `kids_agent` out of other projects' databases, is deliberately **not** done:
-that would mean editing an ACL Hearth does not own, on a server other people's
+that would mean editing an ACL Genkan does not own, on a server other people's
 production runs on. It is written down in `docs/OPERATIONS.md` as a one-line
 thing a household can choose to do, with the caveat attached.
 
@@ -1205,7 +1205,7 @@ outage, all devices off. Obviously, if we've got some appliance devices they
 wouldn't get included, but kid devices would."
 
 An outside reviewer put the same thing more sharply: a television does not
-belong to one child, and Hearth identifies the device, not the person holding
+belong to one child, and Genkan identifies the device, not the person holding
 the remote.
 
 Until now that iPad had two homes and both were wrong. Give it to one child and
@@ -1319,7 +1319,7 @@ costs nobody any minutes, but there is no daily allowance for the family
 television and no "the iPad has had two hours today".
 
 That was offered as optional and it is genuinely a lot more work, so it is not
-half built. Everything about time in Hearth is keyed on a child: `time_ledger`
+half built. Everything about time in Genkan is keyed on a child: `time_ledger`
 and `time_remaining`, `genkan spend` and `genkan bonus`, `kidnet-meter` walking
 children rather than devices, `category_budgets`, the earn and quiz paths that
 add minutes back, and the captive portal that explains to a named child what
@@ -1357,7 +1357,7 @@ content arrived by repository update and left the same way.
 The format is the existing bank format with one optional `package` block on top:
 `author`, `licence`, `description`, `tags`, `sources`, and an optional
 `read_first` page. Nothing was renamed and nothing was moved, so forty-one of
-the forty-two banks that ship with Hearth pass every package check unchanged,
+the forty-two banks that ship with Genkan pass every package check unchanged,
 manifest aside. The forty-second fails on an explanation of 404 characters, which is a real
 pre-existing bug rather than a format problem: the `quiz_bank_questions`
 constraint stops at 400, so that bank could never have been installed into the
@@ -1476,7 +1476,7 @@ and the licence on each, and a table that says in plain words what is built,
 what is not, and what is not supported. The "not built" row names the missing
 piece rather than describing it in the present tense.
 
-The important half is the shape the missing piece has to take. **Hearth has no
+The important half is the shape the missing piece has to take. **Genkan has no
 telemetry and calls no cloud**, so this will never be a service that watches a
 family and recommends things to them. The evidence half already exists and calls
 nothing: `bin/kidnet-quiz-suggest <child>` reads the household's own database
@@ -1491,8 +1491,8 @@ the design.
 
 Added 2026-08-30. The idea is borrowed honestly: Firewalla ships "disturb"
 rules, which degrade an addictive service instead of blocking it. It is the
-best idea in the competitive landscape and it fits Hearth better than it fits
-Firewalla, because Hearth's whole position is that the household should be able
+best idea in the competitive landscape and it fits Genkan better than it fits
+Firewalla, because Genkan's whole position is that the household should be able
 to explain every decision to the child it lands on.
 
 ### The argument
@@ -1531,7 +1531,7 @@ won, and that rule would have been wrong somewhere.
 
 `tc` is the obvious tool and it was rejected. It would have meant a second
 enforcement plane, with its own state, its own reconciler and its own way of
-disagreeing with the firewall about who is being controlled right now. Hearth's
+disagreeing with the firewall about who is being controlled right now. Genkan's
 whole architecture is that Postgres holds the desired state and the firewall is
 a projection of it, reconciled every fifteen seconds. Rate limiting in
 nftables lives in the same ruleset, is rebuilt by the same loop and is proven
@@ -1571,7 +1571,7 @@ Running out of time can now drop a child into the slow lane instead of cutting
 them off. The evening tails off rather than ending mid-sentence, and earning
 minutes back puts them straight back to full speed.
 
-It defaults to `cut`, which is what Hearth has always done. Changing what
+It defaults to `cut`, which is what Genkan has always done. Changing what
 happens when a child's time runs out is a change to somebody's household
 routine, and shipping that as the side effect of an upgrade would be wrong. A
 household has to choose the slope: `genkan slow-timeout slow`.
@@ -1612,7 +1612,7 @@ no evidence yet about which one a household actually wants.
 
 ## Version numbers are dates, and an upgrade undoes itself (2026-08-30)
 
-An outside review called Hearth "an impressive working prototype rather than a
+An outside review called Genkan "an impressive working prototype rather than a
 finished household appliance" and listed what was missing: a reliable
 installer, automated upgrades and rollback, a release process, compatibility
 documentation. Two of those are the same problem. There was no version number
@@ -1629,11 +1629,11 @@ dashboard is down too. Rollback here is not a nice to have.
 `VERSION` holds `2026.09.0`: year, month, patch.
 
 Semantic versioning answers "will this break my code", which is the right
-question for a library with programmers downstream. Hearth has none. It is one
+question for a library with programmers downstream. Genkan has none. It is one
 repository, deployed one way, on one box, by a family. The question a household
 actually asks is "am I running something old", and a date answers that with no
 changelog, no comparison and no internet connection. A parent seeing
-`Hearth 2025.03.0` in 2026 has learned something. A parent seeing `Hearth 1.4.2`
+`Genkan 2025.03.0` in 2026 has learned something. A parent seeing `Genkan 1.4.2`
 has learned nothing.
 
 The one change that genuinely breaks an upgrade is a database change, and a
@@ -1722,17 +1722,17 @@ is the outage.
 
 ## Alerts nobody was looking at (2026-08-30)
 
-Hearth raised alerts and did nothing with them. A device nobody had claimed, a
+Genkan raised alerts and did nothing with them. A device nobody had claimed, a
 camera that was not actually restricted, a Tor or self-harm signal: all of them
 landed in a table and waited for somebody to open a dashboard. A parent could
 learn on Saturday that something concerning happened on Wednesday. Rival
 products push to a phone, and the ones that matter here are the safety signals.
 
-**The constraint came first.** Hearth has no telemetry and talks to no cloud,
+**The constraint came first.** Genkan has no telemetry and talks to no cloud,
 and notifications are exactly where a product like this starts leaking. So a
 route is the household's own box POSTing a message the household worded, to an
 address the household typed in, over a route the household can delete. There is
-no Hearth server, no account and no opt-out to find, because there is nothing to
+no Genkan server, no account and no opt-out to find, because there is nothing to
 opt out of. With no routes, nothing is sent to anybody, and that is what a fresh
 install does.
 
@@ -1750,9 +1750,9 @@ reading over a shoulder. So the rule is that **the notification says something
 needs your eyes and where to look, and the detail stays on the dashboard at
 home**. The self-harm alert is the one the design is bent around:
 
-> **Hearth: worth a quiet check in**
+> **Genkan: worth a quiet check in**
 > One thing today needs your eyes, and it is a care thing, not a trouble thing.
-> The detail is on the Hearth dashboard at home. Read it somewhere private.
+> The detail is on the Genkan dashboard at home. Read it somewhere private.
 
 No child's name, because naming one is an accusation in front of whoever is
 standing there. No site, and not even the category, because "self-harm" on a
@@ -1948,3 +1948,29 @@ This is the second bug in one night whose whole damage was a check reporting
 calm it had not established. The first was `kidnet-alerts`. Both are the same
 mistake in different clothes: **the failure of a check must never be able to
 look like the success of a check.**
+
+## The product is called Genkan
+
+**2026-08-31.** Hearth was a working title, and it was crowded: half a dozen
+software projects already wear the name. The product is now **Genkan** (玄関),
+the recessed entryway of a Japanese house where street shoes come off before
+anyone stands on the floor of the home. From Middle Chinese 玄關, "the hidden
+gate": 玄 dark, hidden, profound; 関 barrier, checkpoint. A boundary made of
+hospitality rather than defence, which is precisely the register this product
+aims for, and a word that has meant "the gate where the outside stops" for a
+thousand years.
+
+Capitalised "Genkan" in prose, lowercase `genkan` as the command, the package
+and the domain. The site is **genkan.nz**, the repo is
+github.com/0800tim/genkan, and the CLI is `bin/genkan` with `kidnet` kept as a
+compatibility shim.
+
+What deliberately keeps the old names: the `kidnet-` worker scripts, the
+`hearth-gw`/`hearth-adguard`/`hearth-portal` container names, the
+`HEARTH_*` environment variables, `refs/hearth/snapshots`, and the host-side
+service names. Every one of them is wired into live boxes, and each rename is
+its own deliberate job with a household on the other end, not a side effect of
+a documentation sweep. `research/` also keeps the old name throughout: those
+files are dated snapshots, one of them records the naming exploration itself,
+and editing history to agree with a decision made later would falsify the
+record.

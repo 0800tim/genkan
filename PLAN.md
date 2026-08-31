@@ -16,15 +16,15 @@ Status: built and deployed. The reference household has been running it since
       |
     your existing router                 <- untouched; your own devices stay here
       |
-    Hearth box, uplink NIC               <- ordinary DHCP client on your LAN
+    Genkan box, uplink NIC               <- ordinary DHCP client on your LAN
       |  [NAT / masquerade, inside the gateway container]
-    Hearth box, kids0 = 192.168.60.1/24  <- the kids' gateway
+    Genkan box, kids0 = 192.168.60.1/24  <- the kids' gateway
       |
     a switch, or straight to the AP
       +-- wired kids' devices
       +-- WiFi access point (AP / bridge mode) --- the kids' SSID --- phones, tablets, consoles
 
-New subnet: `192.168.60.0/24`. The Hearth box is `.1`, and is the **single**
+New subnet: `192.168.60.0/24`. The Genkan box is `.1`, and is the **single**
 DHCP and DNS server for that segment. Configurable in `config.env`.
 
 The two hard requirements:
@@ -107,7 +107,7 @@ reason the bug bounty exists.
 
 ## Resilience
 
-- If the Hearth box reboots or the Docker daemon restarts, the island drops
+- If the Genkan box reboots or the Docker daemon restarts, the island drops
   briefly and comes back on its own. The house internet through your own router
   is unaffected. That is the designed worst case: kids offline, house untouched.
 - Nothing is held in memory. The firewall is a projection of the database,

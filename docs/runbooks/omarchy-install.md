@@ -1,4 +1,4 @@
-# Runbook: set up Hearth on an Omarchy box
+# Runbook: set up Genkan on an Omarchy box
 
 For a parent's AI agent to follow, or a person to read. Omarchy-first, but
 every step works on any Arch box, and the shape works on any distro with
@@ -43,7 +43,7 @@ Run these in order. Stop and ask the parent only where noted.
   power cut without a keyboard. Use the documented no-encryption install
   (Ctrl+C at the disk step). This box holds filtering config and logs, not
   your life.
-- **We do not touch ufw.** Omarchy ships ufw enabled. Hearth's firewall lives
+- **We do not touch ufw.** Omarchy ships ufw enabled. Genkan's firewall lives
   inside a container namespace and never registers a host rule, so ufw stays
   exactly as Omarchy set it. Nothing to configure, nothing to fight.
 - **The kids NIC is unmanaged by NetworkManager.** The setup script writes a
@@ -53,7 +53,7 @@ Run these in order. Stop and ask the parent only where noted.
 
 ## Bring your own AI
 
-Hearth does not ship an LLM. The parent points their existing agent (Claude
+Genkan does not ship an LLM. The parent points their existing agent (Claude
 Code, Codex, Gemini CLI, a local model) at this repo. The control surface is
 `kidnet` plus these runbooks, so any agent that runs shell commands works.
 Add your API key or CLI login once. See docs/AGENT.md.

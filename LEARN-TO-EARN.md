@@ -1,6 +1,6 @@
 # Learn to earn
 
-The heart of Hearth. A child who runs out of screen time does not hit a wall,
+The heart of Genkan. A child who runs out of screen time does not hit a wall,
 they hit a door: pass a quiz, do a job, earn some back.
 
 This document is the design and the open questions. If you want to contribute
@@ -101,13 +101,13 @@ not tell them apart:
 
 - **Recall** is cheap to supply. A child who already knows their times tables
   can pass rounds quickly. That should be worth something, and not very much.
-- **Learning** is the thing worth paying for, and it is the thing Hearth
+- **Learning** is the thing worth paying for, and it is the thing Genkan
   cannot currently see. Time spent reading is not measured, so a child who
   spent forty minutes on Wikipedia and then passed a hard round earns exactly
   the same as one who guessed well.
 
 The reading list and the study pages made that gap wider, not narrower: a child
-can now genuinely go and learn, and Hearth still pays them the same as if they
+can now genuinely go and learn, and Genkan still pays them the same as if they
 had not. Ideas, none of them built:
 
 - **Pay for the first pass of a bank more than the tenth.** Learning something
@@ -176,7 +176,7 @@ cannot be pasted into the dashboard. It goes in as a file through
 **As a package**, from somebody outside the house. A package is the same JSON
 bank with a short manifest on top: who wrote it, what licence it carries, who it
 is for, and optionally a page to read first that a child sees on the Read up
-screen. It installs into the database, so a Hearth update cannot delete it, and
+screen. It installs into the database, so a Genkan update cannot delete it, and
 `bin/kidnet-pack` validates, installs, lists and removes them. Anybody can write
 one and it needs no code:
 [`docs/CONTRIBUTING-CONTENT.md`](docs/CONTRIBUTING-CONTENT.md) is the guide, and
@@ -195,7 +195,7 @@ child who has run out of time and can only reach the reading list. And
 **nothing suggests a package to a parent yet**. The evidence half works
 (`bin/kidnet-quiz-suggest` and `bin/kidnet-pack list`, both of which call
 nothing and print to a terminal), and the matching is a job for an agent the
-parent runs, never for a service Hearth calls.
+parent runs, never for a service Genkan calls.
 
 What makes a good bank, learned from writing a lot of them:
 

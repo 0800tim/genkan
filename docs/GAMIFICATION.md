@@ -32,7 +32,7 @@ are not playing the same game, whatever the scoreboard says:
   attention economy this whole project exists to push back against
   (`README.md`: no telemetry, no dark patterns, treat kids as clever people
   worth teaching). Importing it here to make the badges "sticky" would be
-  copying the enemy's toolkit into the one part of Hearth that is supposed to
+  copying the enemy's toolkit into the one part of Genkan that is supposed to
   feel like the opposite of a phone that will not leave you alone.
 - **A handicap formula is still a puzzle to a clever kid**, and now it is a
   puzzle a parent has to defend rather than a plain fact. "You get a bonus
@@ -131,7 +131,7 @@ collection can put another child in a worse light.
   for, in the most literal reading, and the thing this document opens by
   explaining is not being built. It is the single clearest way to make a
   younger sibling feel like the network's least favourite child, which is
-  the opposite of `README.md`'s stated position that Hearth treats kids as
+  the opposite of `README.md`'s stated position that Genkan treats kids as
   clever people worth teaching.
 - **Login or daily-use streaks.** Never built, on purpose, and it should stay
   that way. `LEARN-TO-EARN.md` already worries about turning learning into

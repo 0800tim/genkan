@@ -1,9 +1,9 @@
-# Hearth on any Linux
+# Genkan on any Linux
 
-The distro-agnostic recipe. Hearth is Omarchy-first in spirit but there is
+The distro-agnostic recipe. Genkan is Omarchy-first in spirit but there is
 nothing Arch-shaped in it: the whole island runs in Docker, and the host
 side is one shell script, one systemd unit, and a handful of CLIs. If your
-distro can run Docker and systemd, it can be a Hearth gateway.
+distro can run Docker and systemd, it can be a Genkan gateway.
 
 Read [README.md](README.md) in this directory first for the universal
 shape and the shared steps (database, deploy, segment guard). If your
@@ -12,7 +12,7 @@ Omarchy guide at [../SETUP-OMARCHY.md](../SETUP-OMARCHY.md) covers Arch.
 
 ## The contract
 
-A Hearth gateway needs exactly this from the host:
+A Genkan gateway needs exactly this from the host:
 
 1. **Linux with systemd.** The NIC warden, meter and log-shipping timers
    are systemd units, installed by `deploy.sh` into `/etc/systemd/system`.
@@ -57,7 +57,7 @@ family:
 | Alpine | Not recommended: OpenRC, not systemd. See the contract. |
 
 Then `systemctl enable --now docker` and add your user to the `docker`
-group. On Fedora, prefer Docker CE over the default Podman: Hearth's
+group. On Fedora, prefer Docker CE over the default Podman: Genkan's
 warden and `kidnet` shell out to the Docker CLI, and Podman's netns
 layout differs. Podman may be workable but is untested; report back if
 you try. SELinux-enforcing distros are also untested territory: the
@@ -85,7 +85,7 @@ The same as every platform. Clone the repo on the gateway box, start your
 agent in it, and say:
 
 > Read CLAUDE.md and docs/setup/generic-linux.md. This box runs <your
-> distro>. Set it up as our Hearth gateway: satisfy the contract section
+> distro>. Set it up as our Genkan gateway: satisfy the contract section
 > with this distro's packages, keep the network manager off the kids'
 > NIC, provision the database per docs/DATABASE.md, run deploy.sh, then
 > verify. Stop and ask me if anything fails.

@@ -4,7 +4,7 @@ A home network is not a list of children. It is a household: children, the
 adults who live there, a friend's kid over for the afternoon, grandparents
 staying the week, and a pile of gadgets that are nobody's at all.
 
-Hearth used to know about three of those and guess at the rest. `children.kind`
+Genkan used to know about three of those and guess at the rest. `children.kind`
 was `child | guest | adult`, and "guest" had to cover both a visiting eight year
 old and a visiting grandmother. So the one control a parent actually reaches for
 at 11pm, "turn streaming off for the kids", could not be right for both: either
@@ -88,7 +88,7 @@ filing a device any of those ways takes it off whoever had it.
 
 ## The shared family device
 
-A television does not belong to one child, and Hearth identifies the device, not
+A television does not belong to one child, and Genkan identifies the device, not
 the person holding the remote. Before the `shared` class there were two places
 to put the family iPad and both were wrong. Give it to one child and that child
 pays for the family film out of their own minutes, and the parent finds out on
@@ -269,7 +269,7 @@ From the command line:
 
 In that order, because the order matters:
 
-1. Anything blocked for them is lifted first, while Hearth still knows which
+1. Anything blocked for them is lifted first, while Genkan still knows which
    addresses were theirs. Nothing gets left cut off in the firewall.
 2. Their devices are let go and marked inactive, so they stop counting as
    anybody's and drop out of the naming queue.
@@ -312,7 +312,7 @@ the unnamed list rather than disappearing.
 - **A shared device has no clock of its own.** It is filtered, it is swept, and
   it costs nobody any minutes, but there is no daily allowance for the family
   television and no "the iPad has had two hours today". Everything about time in
-  Hearth is keyed on a child, from `time_ledger` through `kidnet spend` to the
+  Genkan is keyed on a child, from `time_ledger` through `kidnet spend` to the
   captive portal that explains what happened, and a device-level budget is a
   second full metering path rather than a column. It is written up as a next
   step in DECISIONS.md rather than half built, because a budget that silently

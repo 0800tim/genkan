@@ -1,6 +1,6 @@
 # Household security: the rules your smart devices live by
 
-Hearth started as a way to give children a healthier internet. This part of it
+Genkan started as a way to give children a healthier internet. This part of it
 is for the rest of the house: the cameras, the doorbell, the front door lock,
 the vacuum, the speakers, the lights. It is the difference between a kid
 monitor and a household gateway.
@@ -25,7 +25,7 @@ internet, though. And the camera has no business starting a conversation with
 your laptop, your phone, or the robot vacuum.
 
 Once a conversation has been permitted, the replies come back automatically.
-Hearth never re-judges a reply. So "the camera may push out to its cloud"
+Genkan never re-judges a reply. So "the camera may push out to its cloud"
 means the cloud can answer, and "my phone may reach the camera" means the video
 comes back. Only the very first packet of a conversation is judged.
 
@@ -63,14 +63,14 @@ Plenty of good advice on the internet says "put your cameras on a VLAN with no
 internet access". That advice quietly throws away the best feature a cheap
 camera has: if someone walks off with it, the footage is already elsewhere.
 
-So Hearth does not cut the camera off. It gives the camera an **allowlist**:
+So Genkan does not cut the camera off. It gives the camera an **allowlist**:
 the addresses that belong to its manufacturer, and nothing else. Cloud
 recording keeps working. Remote viewing keeps working. Firmware updates keep
 working. What stops working is the camera talking to a machine in another
 country that has nothing to do with its maker, which is what a compromised
 camera does.
 
-The allowlist is built the same way the rest of Hearth learns things: Hearth is
+The allowlist is built the same way the rest of Genkan learns things: Genkan is
 your DNS server, so it resolves the vendor's domains itself and also watches
 which addresses your own devices are given when they look those names up.
 
@@ -115,7 +115,7 @@ see exactly what enforcement would have stopped before you commit to it.
 The safe sequence:
 
 ```sh
-# 1. Check what Hearth thinks your devices are, and fix anything it got wrong.
+# 1. Check what Genkan thinks your devices are, and fix anything it got wrong.
 genkan devices
 genkan iot status
 
@@ -130,7 +130,7 @@ genkan iot status
 genkan iot mode enforce
 ```
 
-Step 1 matters more than it looks. A device Hearth has classed as a `camera`
+Step 1 matters more than it looks. A device Genkan has classed as a `camera`
 gets camera rules, and the vendor it guessed from the MAC address decides which
 cloud it is pinned to. If either guess is wrong you will lock down the wrong
 thing, or lock down nothing. Fix a wrong guess with:
@@ -174,19 +174,19 @@ Changes are recorded, and nothing takes effect until `genkan iot apply` (which
 
 ## What happens when something goes wrong
 
-The design assumption is that Hearth itself will occasionally have a bad day,
+The design assumption is that Genkan itself will occasionally have a bad day,
 and that a bad day must never mean a household locked out of its own front
 door. So:
 
 - **If the database is unreachable, nothing changes.** The rules already loaded
-  stay loaded. Hearth says so and does nothing.
+  stay loaded. Genkan says so and does nothing.
 - **If a vendor's addresses have not been learned yet, that device is not
   restricted.** An empty allowlist means "we do not know yet", never "block
   everything". That direction is deliberate and stays: a household must never be
   locked out of its own front door because a name did not resolve. But it means
-  "not restricted" is a real state your house can be in, so Hearth now says so
+  "not restricted" is a real state your house can be in, so Genkan now says so
   where you will see it rather than only in a terminal.
-- **If a device is set to vendor-only and Hearth cannot tell what brand it is,
+- **If a device is set to vendor-only and Genkan cannot tell what brand it is,
   it is not restricted at all**, and a warning appears on the dashboard naming
   that device and printing the command that fixes it:
 
@@ -227,8 +227,8 @@ or shipping video to a third party. Blast radius, not immunity.
 **Two devices on the same wifi can talk without asking us.** This is the
 biggest limit and it is worth understanding. If your camera and your laptop are
 on the same access point on the same network, the access point delivers frames
-between them directly. Those packets never reach the Hearth box, so no rule on
-the Hearth box can judge them. Everything in the "to your phones" and "to other
+between them directly. Those packets never reach the Genkan box, so no rule on
+the Genkan box can judge them. Everything in the "to your phones" and "to other
 gadgets" columns above is enforced **only for traffic that comes to us**.
 
 To make those columns real, stop the access point switching that traffic
@@ -238,13 +238,13 @@ locally:
   the access point serving the island, or
 - put the gadgets on their own SSID.
 
-Then every packet between two devices comes through Hearth and every rule
+Then every packet between two devices comes through Genkan and every rule
 applies, including the exception that keeps your camera app working. That is
 the configuration the test suite models, and it is the recommended setup.
 Without it, the lateral movement rules are a second line of defence for the
 routed cases only, not a guarantee.
 
-**We see addresses, not content.** Same as everywhere else in Hearth. We know
+**We see addresses, not content.** Same as everywhere else in Genkan. We know
 your camera talked to its vendor. We do not know what it said.
 
 **"Enforcing" is not the same as "restricted".** Every device with an empty

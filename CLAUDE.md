@@ -1,4 +1,4 @@
-# Hearth: agent context
+# Genkan: agent context
 
 Self-hosted, network-level parental controls plus learn-to-earn. Kids get a
 filtered, time-budgeted network island; they earn screen time by learning.

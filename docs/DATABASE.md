@@ -1,6 +1,6 @@
-# The Hearth database
+# The Genkan database
 
-Hearth keeps its state in Postgres: people, devices, category blocks, the time
+Genkan keeps its state in Postgres: people, devices, category blocks, the time
 ledger, per-category and per-service usage, DNS history, quiz and chore
 credits, alerts, and the audit log of every on and off.
 
@@ -223,7 +223,7 @@ injection: a superuser connection can run `COPY ... TO PROGRAM`, which is
 command execution inside the database container, and can read and write every
 other database on the server. So one bad argument in a shell script was one
 step from the whole box. As `kids_agent` the same bad argument can at worst
-scribble on Hearth's own rows.
+scribble on Genkan's own rows.
 
 What `kids_agent` deliberately cannot do, each one proved by
 `test/db-role-test.sh`:
@@ -244,8 +244,8 @@ What `kids_agent` deliberately cannot do, each one proved by
 `kids_network` itself is now closed to `PUBLIC`: only `kids_app`, `kids_agent`
 and a superuser may connect, so another project's role on the same server
 cannot open the household's database. The mirror of that, fencing `kids_agent`
-out of *other* projects' databases, is not something Hearth does for you: it
-would mean editing an ACL Hearth does not own. `kids_agent` has no rights on
+out of *other* projects' databases, is not something Genkan does for you: it
+would mean editing an ACL Genkan does not own. `kids_agent` has no rights on
 any table anywhere else, so the most it could do is read another database's
 catalogue. If you want even that closed, see OPERATIONS.md.
 

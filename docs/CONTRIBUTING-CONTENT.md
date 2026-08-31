@@ -3,7 +3,7 @@
 **You do not need to be a programmer to read this page.** You need something
 you know how to do, and a text editor.
 
-Hearth gives children a filtered, time-budgeted network, and a way to earn time
+Genkan gives children a filtered, time-budgeted network, and a way to earn time
 back by learning. The learning material is a set of quiz banks. Most of them
 were written around school subjects, because that is what the first household
 needed. That is not the interesting half.
@@ -48,13 +48,13 @@ four answers and a one sentence explanation. Wrapped around it is a short
 manifest that says who wrote it, what licence it carries, who it is for, and
 optionally a page of writing to read before having a go.
 
-A package is an extension of the quiz bank format that Hearth already used, not
+A package is an extension of the quiz bank format that Genkan already used, not
 a replacement. Everything in `portal/quizzes/FORMAT.md` still applies and is
 still the reference for the quiz half. A package just adds a `package` block on
 top.
 
 To put a number on how much of an extension it is: forty-one of the forty-two
-banks that ship with Hearth pass every package check unchanged, manifest aside.
+banks that ship with Genkan pass every package check unchanged, manifest aside.
 So if you have already written a bank, you are four lines from a package. (The
 forty-second fails on an explanation of 404 characters, where the database
 column stops at 400. That is a real bug in that bank rather than a difference
@@ -241,7 +241,7 @@ request. That is useful evidence for building the asset support properly.
 ## Links, and the reading list rule
 
 Every URL in a package, in `sources` and in `read_first.links`, must be `https`
-and must point at a domain already on Hearth's reading list.
+and must point at a domain already on Genkan's reading list.
 
 The reading list is the set of about forty reference sites that stay reachable
 for a child who has been fully cut off: Wikipedia, Britannica, Te Ara, NASA, the
@@ -260,7 +260,7 @@ libraries wearing a library's name.
 ## Testing it yourself
 
 Three commands. The first two need nothing but a copy of this repository and
-Node installed. You do not need a running Hearth, a network, or any hardware.
+Node installed. You do not need a running Genkan, a network, or any hardware.
 
 **1. Check the quiz half:**
 
@@ -276,12 +276,12 @@ Drop `--strict` to check a plain bank that has no manifest yet.
 
 A pass looks like this:
 
-    PASS  paint-and-colour.json (40 questions, The Hearth project, CC-BY-4.0, read-first (6 paragraphs))
+    PASS  paint-and-colour.json (40 questions, The Genkan project, CC-BY-4.0, read-first (6 paragraphs))
 
 A failure names the field and says what to do about it. Nothing it prints is a
 judgement on your content. It cannot read your content.
 
-**3. If you run Hearth, install it and take a round yourself:**
+**3. If you run Genkan, install it and take a round yourself:**
 
     bin/kidnet-pack install my-package.json
 
@@ -315,10 +315,10 @@ and open the pull request for you. This is a completely normal way to
 contribute and it is not a lesser one.
 
 **By hand.** If you cannot use GitHub at all, the file is just a file. Send it
-however you like and say it is for Hearth.
+however you like and say it is for Genkan.
 
 Please do not put your package in `portal/quizzes/` itself. That directory is
-the banks that ship as part of Hearth and load automatically. The community
+the banks that ship as part of Genkan and load automatically. The community
 shelf is `portal/quizzes/community/`, and the difference is explained in the
 README there.
 
@@ -356,7 +356,7 @@ Pick one of these four, and put it in `package.licence`:
 | `CC-BY-4.0` | Anyone can use and change it, as long as you are credited. **This is the recommended one.** |
 | `CC0-1.0` | You give it away completely, no credit needed. |
 | `CC-BY-SA-4.0` | Like CC-BY, but changed versions must carry the same licence. |
-| `MIT` | The licence Hearth itself uses. Fine, though it is written for code. |
+| `MIT` | The licence Genkan itself uses. Fine, though it is written for code. |
 
 Nothing else is accepted, and the database enforces it.
 
@@ -387,7 +387,7 @@ For completeness, and so you know what happens to your file at the other end.
     bin/kidnet-pack remove <id>             take it out again
 
 An installed package goes into the household's **database**, not into the
-repository. That matters: updating Hearth cannot delete it, and removing it is
+repository. That matters: updating Genkan cannot delete it, and removing it is
 one command that leaves nothing behind. Everything the children earned from it
 stays earned, because the time ledger does not depend on the bank still
 existing.
@@ -399,7 +399,7 @@ pays, on the dashboard's **Learn to earn** screen, where installed packages are
 listed with your name and your licence on them.
 
 **Nothing about this involves a server of ours.** There is no package registry,
-no download, no update check and no telemetry. Hearth talks to no cloud. Your
+no download, no update check and no telemetry. Genkan talks to no cloud. Your
 package reaches a household because they pulled the repository or because
 somebody handed them the file.
 
@@ -420,6 +420,6 @@ both into whichever AI agent the parent already uses and it can say which
 package fits, and why. `docs/runbooks/quiz-suggestions.md` is the recipe.
 
 Whatever gets built later will work that way round: an agent the parent runs, on
-their own box, reading their own database. Not a service Hearth calls. Hearth
+their own box, reading their own database. Not a service Genkan calls. Genkan
 has no telemetry and talks to no cloud, and a recommendation engine that watched
 your family would be the one feature that broke that promise.

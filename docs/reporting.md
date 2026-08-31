@@ -57,7 +57,7 @@ nice", "what is this Tor thing about?").
 
 The digest deliberately cannot show message content. The network sees
 domain names, not conversations: Snapchat, Discord and friends are
-end-to-end encrypted, and Hearth does not try to break that (see
+end-to-end encrypted, and Genkan does not try to break that (see
 PLAN.md's honest limits). That is a feature. The kids should know exactly
 what the house can and cannot see, and the digest should be something you
 would happily show the child it is about. Transparency runs both ways in
@@ -84,7 +84,7 @@ units, alongside the other kidnet timers:
 
 ```ini
 [Unit]
-Description=HEARTH weekly family digest
+Description=GENKAN weekly family digest
 Requires=docker.service
 After=docker.service
 
@@ -99,7 +99,7 @@ ExecStart=/bin/bash -c '/opt/kids-network/bin/kidnet-report all last \
 
 ```ini
 [Unit]
-Description=HEARTH weekly digest, Monday breakfast
+Description=GENKAN weekly digest, Monday breakfast
 
 [Timer]
 OnCalendar=Mon 07:30
@@ -116,7 +116,7 @@ To email it instead, swap the ExecStart for something like:
 
 ```ini
 ExecStart=/bin/bash -c '/opt/kids-network/bin/kidnet-report all last \
-  | mail -s "HEARTH weekly digest" parents@example.com'
+  | mail -s "GENKAN weekly digest" parents@example.com'
 ```
 
 (using whatever mailer the box already has: `mail`, `msmtp`, or a small

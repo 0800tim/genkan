@@ -1,6 +1,6 @@
 # Copy-and-paste prompts: the whole build, one prompt at a time
 
-Hearth has no installer, and this file is the honest answer to that. There is
+Genkan has no installer, and this file is the honest answer to that. There is
 no `curl | sh` that turns a spare PC into a family gateway, because the job is
 genuinely a network build: two interfaces, a container namespace, a firewall, a
 DHCP scope, a database. What there is instead is a repo written for a machine to
@@ -27,7 +27,7 @@ something breaks, and one that audits your agent's own work.
 ## Which agent
 
 Any agent that can run shell commands and read files. Claude Code is what
-Hearth is developed with, so it is the smoothest path; Codex, Gemini CLI and a
+Genkan is developed with, so it is the smoothest path; Codex, Gemini CLI and a
 local model all work, because the whole control surface is a plain CLI plus
 plain Markdown. Bring the subscription you already pay for.
 [../AGENT.md](../AGENT.md) covers talking to it once the box is running.
@@ -53,7 +53,7 @@ opened on a clone of the repo. It costs nothing and saves the most common
 wasted evening.
 
 ```
-I want to build a Hearth gateway (github.com/0800tim/genkan): a self-hosted
+I want to build a Genkan gateway (github.com/0800tim/genkan): a self-hosted
 family internet gateway on a spare Linux box.
 
 Here is what I have available:
@@ -62,7 +62,7 @@ Here is what I have available:
 My internet is <e.g. 300/100 fibre> and there are <N> people in the house
 with roughly <M> devices between them.
 
-Read docs/HARDWARE.md in the Hearth repo (or fetch it from
+Read docs/HARDWARE.md in the Genkan repo (or fetch it from
 https://github.com/0800tim/genkan/blob/main/docs/HARDWARE.md) and tell me:
 1. Which of my machines is the best gateway, and why.
 2. Whether it needs a USB ethernet adapter, and exactly which chipset to buy.
@@ -90,12 +90,12 @@ Run this on **your everyday computer**, with the USB stick plugged in. The
 gateway box does not exist yet.
 
 ```
-I am building a Hearth gateway on <describe the box: e.g. a 2016 ThinkCentre
+I am building a Genkan gateway on <describe the box: e.g. a 2016 ThinkCentre
 M710q, or a Raspberry Pi 5 with 8GB>. I need to install Linux on it from this
 computer, which runs <macOS / Windows / Linux>.
 
 Walk me through, one step at a time, waiting for me after each:
-1. Which distribution to use for this box, given that Hearth needs Docker,
+1. Which distribution to use for this box, given that Genkan needs Docker,
    systemd and 64-bit. Raspberry Pi OS Lite 64-bit for a Pi; Debian 12+ or
    Ubuntu Server 22.04+ for a PC; Omarchy if I want the agent-first setup.
 2. Where to download the image and how to check I got the right one.
@@ -128,7 +128,7 @@ will sit at.
 SSH into the box. Run your agent **on the box**, not on your laptop.
 
 ```
-This machine is going to become a Hearth gateway (a self-hosted family
+This machine is going to become a Genkan gateway (a self-hosted family
 internet gateway). Right now it is a fresh <distro> install and nothing has
 been done to it.
 
@@ -139,7 +139,7 @@ Prepare the host, and only the host. Do not clone anything yet.
 2. Bring the system up to date.
 3. Install: git, curl, openssl, nftables, and Docker Engine with the compose
    plugin. Use Docker's official installation for this distro, not a snap.
-   The Docker snap breaks the network namespace handover Hearth relies on.
+   The Docker snap breaks the network namespace handover Genkan relies on.
 4. Enable Docker at boot, and add me to the docker group.
 5. Set net.ipv4.ip_forward=1 persistently in /etc/sysctl.d/99-hearth.conf.
 6. On a Raspberry Pi only: enable the memory cgroup by appending
@@ -228,7 +228,7 @@ unpick.
 Read docs/DATABASE.md and the "The database" section of docs/setup/README.md
 in ~/genkan, and read config/db/load.sh, before you touch anything.
 
-Provision Hearth's database on this box:
+Provision Genkan's database on this box:
 1. Check whether a Docker container named "postgres" on a Docker network
    named "postgres" already exists. If it does, use it and tell me what it is
    already being used for. If it does not, create the network and a
@@ -488,7 +488,7 @@ Do not tune anything on night one. Watch for a week, then tune with evidence.
 ```
 Read docs/reporting.md, LEARN-TO-EARN.md and METERING.md.
 
-Hearth has been running for a week. Help me review it, and be honest rather
+Genkan has been running for a week. Help me review it, and be honest rather
 than encouraging:
 1. Run "bin/kidnet-report all last" and walk me through it, one child at a
    time. Tell me what is actually notable and what is just noise.
@@ -562,7 +562,7 @@ yourself: a wrong answer in a bank takes minutes off a child for being right.
 Keep this one. It is the prompt you will use most after the first week.
 
 ```
-Something is wrong with our Hearth gateway.
+Something is wrong with our Genkan gateway.
 
 What I am seeing: <describe it in plain words, including which device, which
 person, and when it started>
@@ -584,7 +584,7 @@ Run this a few days in, ideally with a **different** agent from the one that
 did the build.
 
 ```
-This box was set up as a Hearth gateway by an AI agent. I want a second
+This box was set up as a Genkan gateway by an AI agent. I want a second
 opinion on its work.
 
 Read CLAUDE.md, docs/setup/README.md and PRIVACY-CHARTER.md in ~/genkan.

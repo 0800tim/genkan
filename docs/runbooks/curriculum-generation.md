@@ -1,7 +1,7 @@
 # Runbook: generating quiz banks for your country and your kids
 
 This runbook is written for an AI agent (Claude Code or similar) that a
-parent has asked to build learn-to-earn quiz banks for Hearth. Hand this
+parent has asked to build learn-to-earn quiz banks for Genkan. Hand this
 file to your agent along with the ages of your kids and your country,
 and it should be able to produce good banks without further hand
 holding. Humans are welcome to read it too.
@@ -206,7 +206,7 @@ check them; you must.
 
 ## Step 6: contribute banks back
 
-Other families benefit from your work, and you from theirs. Hearth
+Other families benefit from your work, and you from theirs. Genkan
 content is open source.
 
 1. Fork the repo on GitHub and create a branch

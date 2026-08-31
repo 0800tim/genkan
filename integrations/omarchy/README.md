@@ -1,4 +1,4 @@
-# Hearth for Omarchy
+# Genkan for Omarchy
 
 Your kids' internet on the status bar, and in the system menu, on the parent's
 own desktop. No browser, no terminal, no phone.
@@ -18,20 +18,20 @@ dinner it shows a pause glyph and `all paused`.
 
 Hover it and the tooltip breaks it down per child:
 
-    Hearth
+    Genkan
     Ada: 45m left, online
     Ben: out of time, online, blocked: gaming, internet
     Cleo: no daily limit, offline
     2 of 3 online, 1 paused
-    Click for the Hearth menu
+    Click for the Genkan menu
 
 Left click opens the menu. Right click opens the dashboard. Middle click sends
 the same summary as a notification.
 
-**A menu.** In the Omarchy menu (SUPER+SPACE) there is a **Hearth** entry with
+**A menu.** In the Omarchy menu (SUPER+SPACE) there is a **Genkan** entry with
 Dinner and Resume all at the top, then one submenu per child:
 
-    Hearth
+    Genkan
       Dinner                     pause every kid at once
       Resume all
       Ada  >                     Internet off / Internet on
@@ -60,7 +60,7 @@ the open menu would be a genuinely useful pull request.
   older Waybar-based releases are both handled; the installer works out which
   one you have.
 - `jq` and `curl`, both of which Omarchy already ships.
-- A Hearth gateway you can reach, one of three ways (see below).
+- A Genkan gateway you can reach, one of three ways (see below).
 
 ## Install
 
@@ -142,7 +142,7 @@ So:
 - A short outage shows **the last good answer**, dimmed, for
   `HEARTH_STALE_SEC` (three minutes by default). Brief blips do not make the
   bar flap.
-- After that it falls back to a **dim home glyph** with the tooltip "Hearth:
+- After that it falls back to a **dim home glyph** with the tooltip "Genkan:
   the gateway is not reachable". Set `HEARTH_HIDE_WHEN_DOWN=1` and it shows
   nothing at all, which makes the item vanish from the bar entirely.
 - Menu actions that cannot reach the gateway say so in one notification, once,
@@ -219,7 +219,7 @@ Worth stating plainly, because Omarchy 4 changed the answer.
   `default/omarchy/omarchy-menu.jsonc` overlaid by
   `~/.config/omarchy/extensions/omarchy-menu.jsonc`. Entry ids are dotted and
   the tree follows from the id, so `hearth.kid-ada.off` is a row inside a
-  submenu inside Hearth, with no parent field to keep in sync.
+  submenu inside Genkan, with no parent field to keep in sync.
 - That extension file is JSONC only in a narrow sense: the parser strips
   **whole-line** `//` comments and trailing commas, then runs `JSON.parse`. An
   inline trailing comment breaks it, and a file that fails to parse contributes

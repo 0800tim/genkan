@@ -1,6 +1,9 @@
-# Hearth
+# Genkan
 
 **Your kids' internet, run from a box in your own house.**
+
+The tour for humans is at **[genkan.nz](https://genkan.nz)**. This README is
+the front door for people who came to read the code.
 
 Not a monitoring tool. A **regulator and a teacher**: it helps your family
 agree how much is enough, makes that boundary hold without an argument every
@@ -168,14 +171,14 @@ git clone https://github.com/0800tim/genkan && cd genkan
 sudo ./deploy.sh               # validates, builds, starts the island
 ```
 
-One step in there is not automated yet: Hearth needs a Postgres container and
+One step in there is not automated yet: Genkan needs a Postgres container and
 its schema loaded, and `deploy.sh` assumes you already have one. The setup
 guides walk through it, and it is about four commands.
 
 The honest version: this is a genuinely fiddly networking setup, and that is
 exactly why it is built agent-first. Clone the repo, point Claude Code (or
 Codex, or Gemini, or whatever you use) at `CLAUDE.md`, and say *"read this and
-set up my Hearth gateway"*. It will ask you what it needs. The entire control
+set up my Genkan gateway"*. It will ask you what it needs. The entire control
 surface is one CLI plus plain-markdown runbooks, precisely so an agent can
 drive it.
 
@@ -217,7 +220,7 @@ internet
    |
 your router                     (untouched, your own devices stay here)
    |
-Hearth box  eth0 --------------- uplink
+Genkan box  eth0 --------------- uplink
             kids0 -------------- the kids' island, 192.168.60.0/24
                                    |
                             access point (bridge mode)
@@ -360,7 +363,7 @@ it works.
 
 ## Updating, and getting back
 
-Hearth is versioned by date, so you can tell how old yours is at a glance.
+Genkan is versioned by date, so you can tell how old yours is at a glance.
 `2026.09.0` is the first release of September 2026. The version is the first
 line of `kidnet-health` and sits at the bottom of every dashboard page.
 

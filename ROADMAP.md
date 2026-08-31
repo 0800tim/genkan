@@ -1,6 +1,6 @@
 # Roadmap, and where you could help
 
-Hearth is not a monitoring product. It is a **regulator and a teacher**: it
+Genkan is not a monitoring product. It is a **regulator and a teacher**: it
 helps a family agree how much is enough, makes the boundary hold without an
 argument every night, and lets kids earn their way back through learning
 rather than pleading. Every feature below should be judged against that. If
@@ -76,8 +76,8 @@ the holes are.
 | Weekly digest delivery | The page and the CLI exist; nothing emails or messages it to you yet. |
 | Social metering | `METERING.md` says social is not metered; the dashboard counts it. Needs a deliberate decision either way. |
 | Household IoT policy | The model, the generator and 39 packet-level tests are real, and it is installed with its timer left disabled on purpose. It was also, until 2026-08-29, storing none of the vendor addresses it resolved, so every restricted device had an empty allowlist and was not restricted at all. Fixed, but nobody has yet run it enforcing for long enough to say what it breaks in an ordinary house. |
-| Vendor cloud lists | `vendor_clouds` covers a handful of brands. A device whose brand Hearth cannot identify is not restricted, and now says so on the dashboard. Adding a brand is a database row. |
-| Paying for learning rather than recall | The reading list and the study pages mean a child can now genuinely go and learn before a round. Hearth still pays them exactly the same as a child who guessed well. The signals exist (`dns_log`, `quiz_study_visits`, `quiz_answers`, and the difficulty of every question served) and nothing prices any of them. `LEARN-TO-EARN.md` holds the open question. |
+| Vendor cloud lists | `vendor_clouds` covers a handful of brands. A device whose brand Genkan cannot identify is not restricted, and now says so on the dashboard. Adding a brand is a database row. |
+| Paying for learning rather than recall | The reading list and the study pages mean a child can now genuinely go and learn before a round. Genkan still pays them exactly the same as a child who guessed well. The signals exist (`dns_log`, `quiz_study_visits`, `quiz_answers`, and the difficulty of every question served) and nothing prices any of them. `LEARN-TO-EARN.md` holds the open question. |
 | Curriculum coverage | Over 40 banks is a real curriculum and it is not an even one. Every New Zealand learning area has at least one bank now, but depth varies: maths has one per year band and te reo Māori has a single beginners bank. Languages beyond te reo have nothing, and no country outside NZ, the UK, the US, Australia, Canada and Ireland is covered. It is also not validated against any syllabus document, and nobody should say otherwise. |
 | Getting a bank into the dashboard | A parent types a database bank in one question at a time. There is no bulk import, so a whole bank written as JSON has to go in as a file through `kidnet-quiz install`. |
 | Device claiming in a real house | Off by default, with observe mode, 5 packet-level checks and the reasoning written up. Nobody has yet run it enforcing for a month in a house full of guests, so what it costs in day-to-day annoyance is genuinely unknown. |

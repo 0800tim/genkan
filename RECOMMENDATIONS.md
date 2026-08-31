@@ -30,7 +30,7 @@ don't just surveil.)
 
 ## 3. Tamper resistance (a 16yo WILL try)
 
-- Force all DNS through the Hearth box; block DoT (853) and DoH endpoints. [done in nft, tested]
+- Force all DNS through the Genkan box; block DoT (853) and DoH endpoints. [done in nft, tested]
 - Segment isolation so they can't reach the main LAN. [done in nft]
 - Log/alert on an unknown device joining the island, or a device using an
   IP that isn't its reservation (static-IP dodge). [ENFORCEMENT DONE: the
@@ -75,7 +75,7 @@ don't just surveil.)
 ## 7. Guests
 
 - Guests join the SAME isolated island, so they get internet but cannot
-  touch the main network where the Hearth box and all client work live. [nft isolation]
+  touch the main network where the Genkan box and all client work live. [nft isolation]
 - Guest policy = adult/malware/VPN filtering only, no schedules, no
   per-person logging. [guest tier seeded]
 

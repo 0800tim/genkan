@@ -1,4 +1,4 @@
-# Hearth on a Raspberry Pi
+# Genkan on a Raspberry Pi
 
 The "any old hardware" build. A Raspberry Pi in a drawer is enough to run
 your whole family's filtered, time-budgeted network. This guide covers the
@@ -23,7 +23,7 @@ the kids' AP you will see roughly 40 to 90 Mbps through the island, less
 under load. For homework, YouTube at 1080p, music and most gaming that is
 fine. For a gigabit fibre household with heavy downloaders it will feel
 like the bottleneck it is. The Pi 3's WiFi is also 2.4GHz only. It is a
-great way to prove Hearth with zero spend; plan to promote it to a Pi 4 or
+great way to prove Genkan with zero spend; plan to promote it to a Pi 4 or
 5 (or any mini PC) if the family outgrows it.
 
 ## Choose a topology
@@ -100,7 +100,7 @@ The agentic path, and the one we recommend: start your agent (`claude`, or
 whichever you use) in the repo and say:
 
 > Read CLAUDE.md and docs/setup/raspberry-pi.md. Set this Pi up as our
-> Hearth gateway using topology A (the Pi's own WiFi as the kids' access
+> Genkan gateway using topology A (the Pi's own WiFi as the kids' access
 > point). Provision the database per docs/DATABASE.md, work step by step,
 > and stop and ask me if any verification step fails.
 
@@ -116,7 +116,7 @@ a `postgres` Docker network, then schema load per
 
 ## Step 5A: topology A, the Pi's radio as the kids' AP
 
-Hearth's containment model does not change here. The gateway container
+Genkan's containment model does not change here. The gateway container
 still owns `kids0`; the only host-side additions are hostapd (which must
 sit where the radio driver is) and a bridge that carries WiFi frames to a
 virtual cable into the container:
@@ -128,7 +128,7 @@ DHCP, DNS, filtering and the firewall all stay inside the container.
 AdGuard's DHCP answers arrive on the WiFi through the bridge.
 
 **A note on dnsmasq.** Every classic "Pi as access point" guide pairs
-hostapd with dnsmasq and host NAT rules. Hearth replaces both: AdGuard in
+hostapd with dnsmasq and host NAT rules. Genkan replaces both: AdGuard in
 the container is the island's only DHCP and DNS server, and NAT lives in
 the container's own nftables ruleset. Do not install dnsmasq. If this Pi
 previously followed such a guide, disable it first:
@@ -140,7 +140,7 @@ previously followed such a guide, disable it first:
 Create `/etc/systemd/system/hearth-kids-bridge.service`:
 
     [Unit]
-    Description=Hearth kids bridge + veth pair (WiFi AP topology)
+    Description=Genkan kids bridge + veth pair (WiFi AP topology)
     Before=kids-nic-warden.service hostapd.service
     Wants=network-pre.target
 
@@ -244,13 +244,13 @@ Then start it:
 AP; the drop-in keeps it off.)
 
 At this point the SSID should be visible on a phone. Joining it gets you
-nothing yet: there is no DHCP server until Hearth is deployed. That is
+nothing yet: there is no DHCP server until Genkan is deployed. That is
 correct, and it is also the handoff in one sentence: hostapd only moves
 radio frames; addresses, DHCP, DNS and NAT all come from the container
 once `deploy.sh` runs.
 
 **Optional: standalone radio test.** If you want to prove the radio and
-bridge before deploying Hearth, you can temporarily play the container's
+bridge before deploying Genkan, you can temporarily play the container's
 role from the host. Temporarily is the operative word: undo all of it
 before deploying, or the segment guard will (rightly) refuse the wire.
 

@@ -51,7 +51,7 @@ prompt you can paste.
 Two things about that script matter:
 
 - **It calls no AI service.** It reads this household's Postgres and
-  the bank files, and prints to the terminal. Hearth has no telemetry
+  the bank files, and prints to the terminal. Genkan has no telemetry
   and talks to no cloud, and this does not change that. The output
   leaves the house only when a human pastes it somewhere, deliberately.
 - **A fresh install prints a mostly empty briefing.** That is honest,
@@ -226,9 +226,9 @@ time you are playing with.
 ## Step 7: run it on a schedule
 
 There is no timer for this in the repo, and that is deliberate: what
-runs it is your own agent setup, not Hearth. A weekly cron, a Claude
+runs it is your own agent setup, not Genkan. A weekly cron, a Claude
 Code scheduled routine, or a person who remembers on Sundays are all
-fine. What Hearth ships is the evidence command and this runbook.
+fine. What Genkan ships is the evidence command and this runbook.
 
 If you do schedule it, keep it to one child per run and one suggestion
 per child. The point is a parent who reads it.
@@ -271,7 +271,7 @@ This is also the honest answer to "the dashboard should alert a parent
 to packages that suit their child". That alert does not exist. The
 dashboard lists what is installed and what is on the shelf and says so.
 The suggesting is this runbook, run by an agent the parent chose, on the
-parent's own box, against the parent's own database. Hearth has no
+parent's own box, against the parent's own database. Genkan has no
 telemetry and calls no cloud, so it will never be a service that watches
 a family and recommends things to them.
 
@@ -281,8 +281,8 @@ Stated plainly, because half a feature described as a whole one is how
 trust goes:
 
 - **Nothing here runs by itself.** There is no timer, no service and no
-  scheduler in Hearth for this. You wire up the recurrence.
-- **Hearth never calls an AI.** `kidnet-quiz-suggest` gathers and
+  scheduler in Genkan for this. You wire up the recurrence.
+- **Genkan never calls an AI.** `kidnet-quiz-suggest` gathers and
   prints. Every model call happens in your agent, on your terms, with
   you pasting the briefing in. That is the design, not a gap to close.
 - **The DNS signal is coarse.** `dns_log` records the domains a device

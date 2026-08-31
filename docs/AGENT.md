@@ -1,6 +1,6 @@
-# Talking to Hearth: the family agent interface
+# Talking to Genkan: the family agent interface
 
-Hearth is built agent-first and LLM-agnostic. The reference setup runs
+Genkan is built agent-first and LLM-agnostic. The reference setup runs
 Claude Code on the gateway box in a tmux session; the family talks to it
 from their phones over their OWN tailnet (Tailscale). Any agent that can
 run shell commands works the same way (Codex, Gemini CLI, a local model):

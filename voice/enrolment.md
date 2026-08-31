@@ -5,7 +5,7 @@ about two minutes per person and it is worth doing properly, because a sloppy
 enrolment does not fail loudly, it just quietly mislabels people for months.
 
 Read voice/README.md first if you have not. The short version: this produces a
-*guess*, not a login. Nothing in Hearth is unlocked by a voice.
+*guess*, not a login. Nothing in Genkan is unlocked by a voice.
 
 ## What actually gets stored
 

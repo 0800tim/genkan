@@ -1,6 +1,6 @@
-# Releasing Hearth
+# Releasing Genkan
 
-How a version of Hearth gets a number, and how one is cut. If you are a
+How a version of Genkan gets a number, and how one is cut. If you are a
 household wanting to update, you want [UPGRADING.md](UPGRADING.md) instead.
 
 ## The version scheme: dated release trains
@@ -17,14 +17,14 @@ That is `YEAR.MONTH.PATCH`. `2026.09.0` is the first release of September
 ### Why dated and not semantic versioning
 
 Semantic versioning answers "will this break my code". That is the right
-question for a library with other programmers downstream. Hearth has none.
+question for a library with other programmers downstream. Genkan has none.
 It is one repository, deployed one way, on one box, by a family.
 
-The question a Hearth household actually asks is **"am I running something
+The question a Genkan household actually asks is **"am I running something
 old?"** and dates answer it without a changelog, a comparison, or an internet
-connection. A parent who opens the dashboard, sees `Hearth 2025.03.0`, and
+connection. A parent who opens the dashboard, sees `Genkan 2025.03.0`, and
 knows it is now 2026 has learned something useful in one glance. The same
-parent seeing `Hearth 1.4.2` has learned nothing at all.
+parent seeing `Genkan 1.4.2` has learned nothing at all.
 
 The rest of the reasoning:
 
@@ -61,7 +61,7 @@ that is not `2026.09.0` and is not yet `2026.10.0`. The tooling says so rather
 than pretending, because a version number that lies is worse than none:
 
 ```
-Hearth 2026.10.0 (12 change(s) since the release, edited on this box)
+Genkan 2026.10.0 (12 change(s) since the release, edited on this box)
 ```
 
 `bin/kidnet-health`, `kidnet-upgrade status` and the dashboard footer all print
@@ -132,7 +132,7 @@ to read it before they upgrade, not after.
 
 ```bash
 # VERSION already holds the number being released.
-git tag -a v2026.09.0 -m "Hearth 2026.09.0"
+git tag -a v2026.09.0 -m "Genkan 2026.09.0"
 git push origin main --tags
 ```
 

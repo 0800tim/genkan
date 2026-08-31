@@ -1,4 +1,4 @@
-# Running a Hearth box
+# Running a Genkan box
 
 Day two. The island is deployed and the family is on it. This is how you check
 it is healthy, read what it is telling you, and fix the handful of things that
@@ -99,7 +99,7 @@ moves fastest. At the time of writing:
 | `/speed` | the island speed test, proxied from the gateway |
 | `/kid/<name>` | one child |
 
-**`/system`** reads CPU, memory, disk, load, uptime, temperature and the Hearth
+**`/system`** reads CPU, memory, disk, load, uptime, temperature and the Genkan
 containers straight out of `/proc`, `/sys` and `statfs`. Nothing shells out to
 `top`, `df` or `free`, because a family box can be a Raspberry Pi. It runs on
 its own slow SSE stream (`/api/system/stream`, one sample every ten seconds,
@@ -131,7 +131,7 @@ the bind address, or write your own from this:
 
 ```ini
 [Unit]
-Description=Hearth admin dashboard
+Description=Genkan admin dashboard
 After=network-online.target
 
 [Service]
@@ -286,7 +286,7 @@ The gateway acknowledges its own `category='gateway'` alerts when it comes up
 healthy, so the dashboard stops showing a solved problem as if it were still
 happening.
 
-**Two categories are alerts about Hearth rather than about a child**, and both
+**Two categories are alerts about Genkan rather than about a child**, and both
 mean the safety path has stopped working:
 
 | Category | What it means |
@@ -476,7 +476,7 @@ untracked, to `refs/hearth/snapshots` every couple of minutes. It exists because
 one `git checkout` discarded an agent's uncommitted work and there was nothing to
 recover from.
 
-**A family running Hearth does not need this.** It is for a box where somebody,
+**A family running Genkan does not need this.** It is for a box where somebody,
 or something, is editing the repo. Nothing in `deploy.sh` installs it and no
 household unit refers to it.
 
@@ -485,7 +485,7 @@ household unit refers to it.
     tools/worktree-snapshot.sh restore <ref> path/to/file
 
 The timer is not in the repo, for the same reason the dashboard's is not: how
-often you want it is not Hearth's business. On the reference box it is a user
+often you want it is not Genkan's business. On the reference box it is a user
 timer (`hearth-snapshot.timer`) firing every two minutes, with a `Type=oneshot`
 service running `tools/worktree-snapshot.sh save`. `docs/CLI.md` has the unit.
 
@@ -498,7 +498,7 @@ pushed.
 
 ## The public demos
 
-On the reference box, two public demos are the only part of Hearth reachable
+On the reference box, two public demos are the only part of Genkan reachable
 from the internet. Neither can touch the household, and a household install runs
 none of this.
 
@@ -789,10 +789,10 @@ execution inside the database container on a server this box shares with
 unrelated projects. `docs/DATABASE.md` has the full picture, including the three
 places that are still on the superuser path on purpose.
 
-### If Hearth shares a Postgres server with other projects
+### If Genkan shares a Postgres server with other projects
 
 `kids_network` is closed to `PUBLIC`, so no other project's role can open the
-household's database. The other direction is not Hearth's to close: Postgres
+household's database. The other direction is not Genkan's to close: Postgres
 lets `PUBLIC` connect to a new database by default, so `kids_agent` can open any
 database on the server whose owner has not revoked that. It has no rights on any
 table anywhere else, so the most it could read is another database's catalogue,
@@ -804,7 +804,7 @@ statement per database, and it is **their** database you are changing:
 
 Check first that their application connects as a named role and not as
 `PUBLIC`; the database's own owner keeps CONNECT either way. The cleanest
-answer, if you have the choice, is to give Hearth a Postgres of its own.
+answer, if you have the choice, is to give Genkan a Postgres of its own.
 
 ## Backing up and restoring
 
@@ -888,14 +888,14 @@ not ceremony: the two worst bugs this project has had were a ruleset that never
 parsed and a safety net that existed only in the database, and both were caught
 the day these tests were written.
 
-**One caution if Hearth shares a Postgres server with other projects.**
+**One caution if Genkan shares a Postgres server with other projects.**
 `db-role-test.sh` and `schema-test.sh` each create a database, use it for a
 minute or so, and drop it. If a whole-instance backup enumerates the databases
 while one of those exists and then tries to dump it after it has gone,
 `pg_dump` fails on a database that no longer exists and the backup run can fail
 with it. That has happened on this box. Do not run these two suites during the
 backup window, or make the backup skip a database that vanished mid-run. It is
-not a Hearth bug and Hearth cannot fix it from here, but it is worth knowing
+not a Genkan bug and Genkan cannot fix it from here, but it is worth knowing
 before it costs somebody a night's backup.
 
 **After changing policy in the database** (a new always_allow row, a renamed
@@ -933,7 +933,7 @@ needs the internet back tonight, the honest fallback is to plug the kids'
 access point straight into your main router. You lose every control, nothing
 else breaks, and you can debug in the morning.
 
-To take Hearth down cleanly:
+To take Genkan down cleanly:
 
     docker compose --profile island down
     sudo systemctl stop kids-nic-warden.service
@@ -946,7 +946,7 @@ To bring it back:
     sudo systemctl start 'kids-*.timer'
     docker logs -f hearth-gw
 
-Nothing above touches the host's own firewall, because Hearth never installs
+Nothing above touches the host's own firewall, because Genkan never installs
 rules there. That is the point of the whole namespace design, and
 `container-test.sh` asserts it every run.
 

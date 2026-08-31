@@ -1,6 +1,6 @@
 # The vision: a smart family watchdog, educator and home brain
 
-Hearth is an AI-first system for the family home. You talk to it (phone
+Genkan is an AI-first system for the family home. You talk to it (phone
 chat first, open-mic voice later), it runs your kids' internet, helps them
 learn to earn their screen time, and grows into the home's automation
 brain. Everything open source, everything on your own hardware, in
@@ -12,7 +12,7 @@ house sees anything: not us, not a cloud, nobody. That is the point.
 The agent layer is LLM-agnostic by design. Families use whatever they
 already pay for: Claude (the reference setup), ChatGPT/Codex, Gemini, or a
 local model. The contract is simple: any agent that can run shell commands
-can drive Hearth, because the entire control surface is `kidnet` plus
+can drive Genkan, because the entire control surface is `kidnet` plus
 plain-markdown runbooks (docs/runbooks/) written for ANY agent to follow.
 Add your API key or CLI login once; from then on the family talks to their
 own agent on their own tailnet.

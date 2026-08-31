@@ -1,6 +1,6 @@
 # Omarchy validation (2026-08-29)
 
-Hearth built and validated on a real Omarchy box over the tailnet, the first
+Genkan built and validated on a real Omarchy box over the tailnet, the first
 time the stack ran on the target platform rather than the reference box.
 
 This is a point-in-time record of one validation run, not a living document.
