@@ -32,8 +32,8 @@ parent names in the voice documentation. The author's name is now pinned in the
 script rather than read from git's `user.name`, allowed only in `LICENSE` and
 `DECISIONS.md`, and a hard failure anywhere else.
 
-There is also public surface beyond the repo now: `genkan-demo.appspurt.dev`
-and `genkan-portal.appspurt.dev`. Both run the repo's code against an invented
+There is also public surface beyond the repo now: `demo.genkan.nz`
+and `quiz-demo.genkan.nz`. Both run the repo's code against an invented
 household on its own database, with no docker socket and no `bin/` mounted.
 `demo/README.md` lists what stops them reaching anything real.
 

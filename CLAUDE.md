@@ -135,7 +135,7 @@ tools/worktree-snapshot.sh save. Development safeguard, not a household one:
 the unit is on the box, not in the repo.
 
 Two PUBLIC demos run the same code read-only against a seeded fictional
-household, so they improve whenever the product does: genkan-demo.appspurt.dev
-(the dashboard) and genkan-portal.appspurt.dev (the kid's portal, with one
+household, so they improve whenever the product does: demo.genkan.nz
+(the dashboard) and quiz-demo.genkan.nz (the kid's portal, with one
 child deliberately out of time). Both are demo/, both set HEARTH_DEMO=1, which
 turns every shell-out into a no-op. Operational detail: docs/OPERATIONS.md.

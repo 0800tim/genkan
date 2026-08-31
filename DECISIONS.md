@@ -495,8 +495,8 @@ screenshotted.
 ## Two public demos, running the real code (2026-08-29)
 
 A stranger arriving at the repo could read about Genkan but not see it. Both
-halves are now live: `genkan-demo.appspurt.dev` is the parent's dashboard and
-`genkan-portal.appspurt.dev` is the child's captive portal with playable
+halves are now live: `demo.genkan.nz` is the parent's dashboard and
+`quiz-demo.genkan.nz` is the child's captive portal with playable
 quizzes.
 
 **The real code, read only, not a copy.** `demo/compose.yaml` bind-mounts

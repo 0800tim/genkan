@@ -59,7 +59,7 @@ the holes are.
 - A speed test on the island, measuring the wifi leg and the internet leg
   separately, proxied into the dashboard at `/speed`
 - Two public demos running the real code against an invented household:
-  `genkan-demo.appspurt.dev` and `genkan-portal.appspurt.dev`
+  `demo.genkan.nz` and `quiz-demo.genkan.nz`
 - Nine test suites, including one that loads every schema file into an empty
   database because a fresh install was the thing nothing tested, and one that
   proves a Friday night, a morning restore and a restart mid-bedtime without

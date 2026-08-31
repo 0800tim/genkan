@@ -18,11 +18,11 @@ cloud service, not to us.
 Both halves are live, with a made-up family in them. No sign-up, nothing to
 install, and nobody's real child:
 
-- **[The parent's dashboard](https://genkan-demo.appspurt.dev)** at
-  `genkan-demo.appspurt.dev`. Tonight's state and the controls, live traffic,
+- **[The parent's dashboard](https://demo.genkan.nz)** at
+  `demo.genkan.nz`. Tonight's state and the controls, live traffic,
   the week, trends per child, the device roster, and the health of the box.
-- **[The kid's portal](https://genkan-portal.appspurt.dev)** at
-  `genkan-portal.appspurt.dev`. The page a child meets when their time has run
+- **[The kid's portal](https://quiz-demo.genkan.nz)** at
+  `quiz-demo.genkan.nz`. The page a child meets when their time has run
   out, and the quizzes that earn it back. One demo child is deliberately out of
   minutes: pass a round of times tables and watch the clock change.
 

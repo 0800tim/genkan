@@ -1,4 +1,5 @@
 // Genkan dashboard: the pages.
+import { wordmarkSVG, KANJI_SVG, LOGO_CSS } from "./logo.mjs";
 //
 // Design brief: mobile-first (this is driven from a phone), warm and calm,
 // dusk and ember. Summary before detail, state readable at a glance. It is an
@@ -72,7 +73,7 @@ a{color:inherit}
 
 /* ---- header + nav ---- */
 .top{display:flex;align-items:center;gap:10px;margin:4px 0 12px}
-.brand{display:flex;align-items:baseline;gap:9px;flex:1;min-width:0}
+.brand{display:flex;align-items:center;gap:10px;flex:1;min-width:0}
 .brand b{font-size:21px;letter-spacing:-.01em}
 .porch{width:9px;height:9px;border-radius:50%;background:var(--ember);
   box-shadow:0 0 0 4px var(--ember-soft);flex:none;align-self:center}
@@ -541,7 +542,7 @@ const DEMO_BAR = DEMO ? `<div class="demobar" role="note">
   <span class="porch" aria-hidden="true"></span>
   <span><b>Demo household, made-up data.</b> Controls here do not change anything.
   This is the real Genkan dashboard running against a fake family, so nobody's
-  network is behind it. <a href="https://hearth.appspurt.dev/">About Genkan</a></span>
+  network is behind it. <a href="https://genkan.nz/">About Genkan</a></span>
 </div>` : "";
 
 export function shell({ tab, body, title = "Genkan" }) {
@@ -551,9 +552,9 @@ export function shell({ tab, body, title = "Genkan" }) {
   return `<!doctype html><html lang="en-NZ"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<title>${esc(title)}</title><style>${CSS}${POLISH}${LIVE_CSS}${MANAGE_CSS}${HOUSEHOLD_CSS}${SYS_CSS}${SCHEDULE_CSS}${DEMO_CSS}</style></head><body>
-<div class="top"><div class="brand"><span class="porch"></span><b>Genkan</b>
-  <span>the house with the porch light on</span></div>
+<title>${esc(title)}</title><style>${CSS}${LOGO_CSS}${POLISH}${LIVE_CSS}${MANAGE_CSS}${HOUSEHOLD_CSS}${SYS_CSS}${SCHEDULE_CSS}${DEMO_CSS}</style></head><body>
+<div class="top"><div class="brand">${KANJI_SVG}${wordmarkSVG()}
+  <span>the family router</span></div>
   <button class="tbtn" onclick="toggleTheme()" aria-label="Switch light or dark">Theme</button></div>
 <nav>${nav.map(([h, l]) => `<a href="${h}"${tab === h ? ' class="sel" aria-current="page"' : ""}>${esc(l)}</a>`).join("")}<a href="/speed"${tab === "/speed" ? ' class="sel" aria-current="page"' : ""} title="Measures the gateway's own wire, and its connection to the internet">Speed</a></nav>
 <div class="msg" id="msg" role="status" aria-live="polite"></div>

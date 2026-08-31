@@ -1,4 +1,5 @@
 // Kid portal for the Genkan island. Two jobs:
+import { wordmarkSVG, KANJI_SVG, LOGO_CSS } from "./logo.mjs";
 //  1. Captive portal: a blocked or out-of-time device's web traffic lands
 //     here (nft redirect), OS captive-probes pop this page, and it explains
 //     why instead of letting pages silently fail.
@@ -456,8 +457,25 @@ const STUDY_CSS = `
 .rf .rf-l{font-size:13.5px;opacity:.9}
 .rf .rf-l a{color:#c4b5fd;margin-right:12px;display:inline-block}
 `;
+// Every portal page opens with the lockup, so the kid's side wears the same
+// face as everything else. Small and calm: this page is for reading.
+const LOCKUP = `<div class="lockup-line">${KANJI_SVG}${wordmarkSVG()}</div>`;
+const LOCKUP_CSS = `
+.lockup-line{display:flex;align-items:center;gap:10px;padding:2px 2px 12px}
+.lockup-line .lgk{width:24px;height:22px;color:#f2b95e;
+  filter:drop-shadow(0 0 6px rgba(242,185,94,.35))}
+.lockup-line .lgm{height:17px}
+/* The portal lives in its own purple world in both OS themes, so the shared
+   light and dark band ramps both disappear into it. Its own ramp: white down
+   through the portal's lavenders to an amber base that echoes the kanji. */
+.lockup-line .lg0{fill:#ffffff}.lockup-line .lg1{fill:#f3efff}
+.lockup-line .lg2{fill:#e4dbfe}.lockup-line .lg3{fill:#d3c5fd}
+.lockup-line .lg4{fill:#c4b5fd}.lockup-line .lg5{fill:#b5a3f9}
+.lockup-line .lg6{fill:#a68ff5}.lockup-line .lg7{fill:#9a7df0}
+.lockup-line .lg8{fill:#f2b95e}
+`;
 const page = body => `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
-<title>${DEMO ? "Genkan demo" : "Genkan"}</title><style>${CSS}${STUDY_CSS}</style><div class="wrap">${DEMO_NOTE}${body}</div>`;
+<title>${DEMO ? "Genkan demo" : "Genkan"}</title><style>${CSS}${STUDY_CSS}${LOGO_CSS}${LOCKUP_CSS}</style><div class="wrap">${DEMO_NOTE}${LOCKUP}${body}</div>`;
 // ---------------------------------------------------------------------------
 // Claiming a device
 // ---------------------------------------------------------------------------

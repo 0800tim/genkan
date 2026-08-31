@@ -504,8 +504,8 @@ none of this.
 
 | Demo | What it shows |
 |---|---|
-| `genkan-demo.appspurt.dev` | the parent's dashboard |
-| `genkan-portal.appspurt.dev` | the child's captive portal and the quizzes |
+| `demo.genkan.nz` | the parent's dashboard |
+| `quiz-demo.genkan.nz` | the child's captive portal and the quizzes |
 
 Both run the **real** code: `demo/compose.yaml` bind-mounts `../dashboard` read
 only and runs the same `server.mjs` and `portal.mjs` a household runs, against a

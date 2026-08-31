@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| <https://genkan-demo.appspurt.dev> | the parent's dashboard |
-| <https://genkan-portal.appspurt.dev> | the child's captive portal and the quizzes |
+| <https://demo.genkan.nz> | the parent's dashboard |
+| <https://quiz-demo.genkan.nz> | the child's captive portal and the quizzes |
 
 The real Genkan code, running against a database full of a household that does
 not exist. There is no second copy of anything: this stack bind-mounts
