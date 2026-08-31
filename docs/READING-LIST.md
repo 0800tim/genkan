@@ -154,7 +154,7 @@ re-doing the checking.
 
 ## A limit worth knowing: shared addresses
 
-`kidnet allow-sync` resolves each domain in `always_allow` with `getent
+`genkan allow-sync` resolves each domain in `always_allow` with `getent
 ahostsv4` and allows the exact addresses that come back. It does not resolve
 subdomains and it does not do anything clever with wildcards: whatever
 hostname is stored is the hostname it looks up.
@@ -196,7 +196,7 @@ ON CONFLICT (domain) DO UPDATE SET scope = EXCLUDED.scope,
 
 Then run:
 
-    kidnet allow-sync
+    genkan allow-sync
 
 which resolves every `always_allow` row with `scope` of `safety` or `learn`
 and loads the addresses into the firewall's `kids_allow` set. The gateway
@@ -209,5 +209,5 @@ Before adding a domain, check it actually resolves:
 
 and run it past the five tests above. If the domain you want is a subdomain
 (the real content lives at `study.example.org`, not `example.org`), add that
-exact subdomain rather than the bare domain: `kidnet allow-sync` looks up
+exact subdomain rather than the bare domain: `genkan allow-sync` looks up
 literally what is stored, nothing more clever than that.

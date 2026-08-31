@@ -77,7 +77,7 @@ which addresses your own devices are given when they look those names up.
 ### It was not working until 2026-08-29
 
 Said plainly, because it is the kind of thing a project is tempted to bury.
-`kidnet iot learn` resolved every vendor address correctly and then failed to
+`genkan iot learn` resolved every vendor address correctly and then failed to
 store any of them. Several of a vendor's domains resolve to the same address,
 Postgres refuses an `ON CONFLICT DO UPDATE` that touches one row twice in a
 single command, and the error was being sent to `/dev/null`. So the tool
@@ -94,10 +94,10 @@ Fixed, and the write no longer hides its own errors: a storage failure now logs
 the Postgres message and raises an urgent alert. `learn` now reports both how
 many addresses it resolved and how many are stored, so the two numbers can be
 compared. If you have been running with the IoT layer enforcing, run
-`kidnet iot learn` again and check the stored count:
+`genkan iot learn` again and check the stored count:
 
 ```sh
-kidnet iot learn
+genkan iot learn
 docker exec -i postgres psql -U postgres -d kids_network -c \
   "SELECT vc.vendor, count(*) FROM vendor_ips vi
      JOIN vendor_clouds vc ON vc.id = vi.vendor_id GROUP BY 1 ORDER BY 1"
@@ -116,18 +116,18 @@ The safe sequence:
 
 ```sh
 # 1. Check what Hearth thinks your devices are, and fix anything it got wrong.
-kidnet devices
-kidnet iot status
+genkan devices
+genkan iot status
 
 # 2. Learn where each vendor's cloud lives. Do this a few times over a day or
 #    two, so the lists have seen the addresses your devices actually use.
-kidnet iot learn
+genkan iot learn
 
 # 3. Watch. Leave it in observe mode for a day, then look at the counters.
-kidnet iot status
+genkan iot status
 
 # 4. When the counters only show traffic you are happy to lose, switch on.
-kidnet iot mode enforce
+genkan iot mode enforce
 ```
 
 Step 1 matters more than it looks. A device Hearth has classed as a `camera`
@@ -136,16 +136,16 @@ cloud it is pinned to. If either guess is wrong you will lock down the wrong
 thing, or lock down nothing. Fix a wrong guess with:
 
 ```sh
-kidnet iot show "Front door camera"
-kidnet iot set "Front door camera" vendor Reolink
-kidnet iot set "Front door camera" internet_out vendor
+genkan iot show "Front door camera"
+genkan iot set "Front door camera" vendor Reolink
+genkan iot set "Front door camera" internet_out vendor
 ```
 
 To go back at any moment:
 
 ```sh
-kidnet iot mode observe     # stop enforcing, keep watching
-kidnet iot mode off         # remove the policy from the firewall entirely
+genkan iot mode observe     # stop enforcing, keep watching
+genkan iot mode off         # remove the policy from the firewall entirely
 ```
 
 `off` genuinely removes it. The firewall goes back to exactly the rules it had
@@ -158,18 +158,18 @@ without disturbing the rest.
 
 ```sh
 # Close a camera off from every phone in the house...
-kidnet iot set "Front door camera" reachable_from_personal no
+genkan iot set "Front door camera" reachable_from_personal no
 # ...then let exactly one phone back in.
-kidnet iot allow "Mum's phone" "Front door camera" "camera app"
+genkan iot allow "Mum's phone" "Front door camera" "camera app"
 
 # Let a device off its vendor leash completely.
-kidnet iot set "Living room speaker" internet_out full
+genkan iot set "Living room speaker" internet_out full
 
 # Take a device off the internet entirely.
-kidnet iot set "Printer" internet_out none
+genkan iot set "Printer" internet_out none
 ```
 
-Changes are recorded, and nothing takes effect until `kidnet iot apply` (which
+Changes are recorded, and nothing takes effect until `genkan iot apply` (which
 `mode` runs for you).
 
 ## What happens when something goes wrong
@@ -190,7 +190,7 @@ door. So:
   it is not restricted at all**, and a warning appears on the dashboard naming
   that device and printing the command that fixes it:
 
-      kidnet iot set "Front door camera" vendor Reolink
+      genkan iot set "Front door camera" vendor Reolink
 
   Until you answer it, that device has the ordinary internet. This used to be a
   line of terminal output nobody read. Note that the alert's own wording says
@@ -248,7 +248,7 @@ routed cases only, not a guarantee.
 your camera talked to its vendor. We do not know what it said.
 
 **"Enforcing" is not the same as "restricted".** Every device with an empty
-allowlist is wide open regardless of the mode, so `kidnet iot status` telling
+allowlist is wide open regardless of the mode, so `genkan iot status` telling
 you the mode is `enforce` is not on its own evidence that anything is being
 enforced. Check the stored address counts, and check the dashboard for the
 unknown-brand warning. That gap is what hid the bug above for as long as it hid.
@@ -268,7 +268,7 @@ gateway. What we can police is the hub's traffic, not the radio behind it.
 | Piece | File |
 |---|---|
 | The policy model | `config/db/schema-policies.sql` |
-| The generator and the CLI | `bin/kidnet-iot-policy` (also `kidnet iot ...`) |
+| The generator and the CLI | `bin/kidnet-iot-policy` (also `genkan iot ...`) |
 | The proof, with real packets | `test/iot-policy-test.sh` (39 checks) |
 | The island firewall it sits on | `config/nftables/kids.nft` |
 

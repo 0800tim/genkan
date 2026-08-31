@@ -1,11 +1,15 @@
 # CLI reference
 
-Every command Hearth ships, what it takes, and what it actually does. Written
+Every command Genkan ships, what it takes, and what it actually does. Written
 from the scripts themselves, so if this file and a script disagree, the script
 is right and this file is a bug.
 
-`bin/` holds every executable Hearth ships. One of them, `kidnet`, is the control
-surface a parent or an agent drives by hand. The rest are background workers
+`bin/` holds every executable Genkan ships. One of them, `genkan`, is the
+control surface a parent or an agent drives by hand. It was called `kidnet`
+until 2026-08-31 and that name still works, as a shim, so old runbooks and
+muscle memory do not break; new writing should say `genkan`. The background
+workers keep their `kidnet-` prefix for now, because those names are wired
+into systemd units on live boxes and renaming them is its own job. The rest are background workers
 that timers run, plus `kidnet-report`, `kidnet-quiz`, `kidnet-quiz-suggest` and
 `kidnet-pack`, which you run when you want to read something or to change what
 the kids can learn from.
@@ -16,7 +20,7 @@ those from the repo, because they read files that live there.
 
 | Command | Run by | What it is for |
 |---|---|---|
-| [`kidnet`](#kidnet) | you, or your agent | the control surface: on, off, categories, time, devices |
+| [`genkan`](#genkan) | you, or your agent | the control surface: on, off, categories, time, devices |
 | [`kidnet-report`](#kidnet-report) | you, weekly | the family digest, read only |
 | [`kidnet-health`](#kidnet-health) | you, any time | is the household's internet working and is Hearth doing its job. Read only |
 | [`kidnet-upgrade`](#kidnet-upgrade) | you | update Hearth: check, snapshot, apply, undo itself if it breaks |
@@ -35,8 +39,8 @@ those from the repo, because they read files that live there.
 | [`kidnet-dnslog`](#kidnet-dnslog) | `kids-dnslog.timer` | pulls AdGuard's query log into `dns_log` |
 | [`kidnet-alerts`](#kidnet-alerts) | `kids-dnslog.service` | raises alerts on flagged domains just ingested |
 | [`kidnet-notify`](#kidnet-notify) | `kids-notify.timer` | sends unacknowledged alerts to the phone routes a household set up |
-| [`kidnet-adguard`](#kidnet-adguard) | `kidnet`, on every change | renders category blocks into AdGuard's rule list |
-| [`kidnet-adguard-clients`](#kidnet-adguard-clients) | `kidnet assign` | points each child's AdGuard client at their real device IPs, and gives each shared family device one of its own |
+| [`kidnet-adguard`](#kidnet-adguard) | `genkan`, on every change | renders category blocks into AdGuard's rule list |
+| [`kidnet-adguard-clients`](#kidnet-adguard-clients) | `genkan assign` | points each child's AdGuard client at their real device IPs, and gives each shared family device one of its own |
 | [`kidnet-tor-sync`](#kidnet-tor-sync) | `kids-tor-sync.timer` | fetches the public Tor relay list for the firewall |
 | [`kidnet-iot-policy`](#kidnet-iot-policy) | `kids-iot-policy.timer` (installed, off by default) | generates the household IoT security policy from the database |
 
@@ -47,15 +51,15 @@ is why the timer units all carry `EnvironmentFile=.../secrets.env`.
 
 ---
 
-## kidnet
+## genkan
 
 The one command a parent or an agent uses. Run it with no arguments to print
 this same summary from the script's own header.
 
-State lives in Postgres. `kidnet` writes the desired state, then pushes it to
+State lives in Postgres. `genkan` writes the desired state, then pushes it to
 the two enforcement planes: nftables (via `docker exec hearth-gw nft`) for the
 coarse internet switch, and AdGuard (via `kidnet-adguard`) for per-category DNS
-blocks. If the firewall is not loaded yet, `kidnet` says so and still records
+blocks. If the firewall is not loaded yet, `genkan` says so and still records
 the state, and the gateway picks it up when it comes back.
 
 ### Who you can name
@@ -84,33 +88,33 @@ Which group somebody falls in is decided by their role (`child`, `guest-child`,
 
 **Groups only ever touch devices classified `personal` or `shared`.** Cameras,
 locks, speakers and other IoT, appliances and the access point are never cut by
-`kidnet off all`, by `dinner` or by `kidnet house off`. See
+`genkan off all`, by `dinner` or by `genkan house off`. See
 [device classification](#kidnet-classify).
 
 There is one more scope, `house-off`, which is every device ticked for the
 whole-house cut and no people at all. It is deliberately not in the list above,
-so `kidnet off house-off` is refused. The only door to it is `kidnet house off`,
+so `genkan off house-off` is refused. The only door to it is `genkan house off`,
 which also sets the clock that makes the cut lift itself.
 
 ### Internet on and off
 
-    kidnet off <person|group>
-    kidnet on  <person|group>
+    genkan off <person|group>
+    genkan on  <person|group>
 
 Adds or removes that person's reserved addresses in the nftables `kids_block`
 set and records it in `category_state`. A blocked device keeps DHCP, DNS, the
 captive portal and the safety net: it does not fall off the network, it lands
 on the "time's up" page.
 
-    kidnet dinner        # everyone but the adults, plus the shared devices
+    genkan dinner        # everyone but the adults, plus the shared devices
                          # ticked for dinner
-    kidnet resume        # and back on again
+    genkan resume        # and back on again
 
 ### The whole-house cut
 
-    kidnet house off [minutes]     one button: everything ticked for it goes off
-    kidnet house on                end it now
-    kidnet house status            is it running, and what would it catch
+    genkan house off [minutes]     one button: everything ticked for it goes off
+    genkan house on                end it now
+    genkan house status            is it running, and what would it catch
 
 `minutes` defaults to 60 and is capped at 1440. **The cut lifts itself when the
 time is up.** No rows are written against any device: `house_state` holds one
@@ -120,14 +124,14 @@ A cut you have to undo by hand is a cut that can outlive the reason for it, and
 the person who pressed it is often the person who has left the house.
 
 It never touches a smart home device, an appliance or the access point, and the
-safety net still answers on every device. `kidnet house on` takes out only the
+safety net still answers on every device. `genkan house on` takes out only the
 addresses nothing else still says should be blocked, so ending a house cut
 cannot hand the internet back to a child who is out of time.
 
 ### Shared family devices, and the two tick boxes
 
-    kidnet shared <mac|ip> [label] [tier]        file it as the household's
-    kidnet sweep  <mac|ip> dinner|house on|off|default
+    genkan shared <mac|ip> [label] [tier]        file it as the household's
+    genkan sweep  <mac|ip> dinner|house on|off|default
 
 A shared family device is the lounge television or the iPad every kid uses. It
 belongs to the household rather than to one child, so nobody's minutes pay for
@@ -143,13 +147,13 @@ the access point is in neither, always. Ticking a box on one of those three is
 refused, because the answer is computed in the `device_sweeps` view and is not
 the tick box's to give.
 
-    kidnet sweep 192.168.60.72 dinner off    # the display that plays music
+    genkan sweep 192.168.60.72 dinner off    # the display that plays music
 
 ### Categories
 
-    kidnet game  off|on <kid>     gaming: Roblox, Fortnite, Steam, consoles
-    kidnet media off|on <kid>     video + social; Spotify and audio stay up
-    kidnet study on|off <kid>     gaming + video + social off together
+    genkan game  off|on <kid>     gaming: Roblox, Fortnite, Steam, consoles
+    genkan media off|on <kid>     video + social; Spotify and audio stay up
+    genkan study on|off <kid>     gaming + video + social off together
 
 All three write `category_state` and then call `kidnet-adguard apply`, which
 answers that category's domains with the portal address for that child only.
@@ -161,11 +165,11 @@ still crawling with nothing on screen to say why.
 
 ### The slow lane
 
-    kidnet slow <kid> <gaming|video|social|media|internet>   turn it down, do not cut it
-    kidnet full <kid> <gaming|video|social|media|internet>   back to full speed
-    kidnet slow-rate [kbit]                                  how slow the slow lane is
-    kidnet slow-timeout [cut|slow]                           what running out of time does
-    kidnet slow-status                                       who is slowed, and the settings
+    genkan slow <kid> <gaming|video|social|media|internet>   turn it down, do not cut it
+    genkan full <kid> <gaming|video|social|media|internet>   back to full speed
+    genkan slow-rate [kbit]                                  how slow the slow lane is
+    genkan slow-timeout [cut|slow]                           what running out of time does
+    genkan slow-status                                       who is slowed, and the settings
 
 A third state between on and off. Instead of cutting a category dead, the
 gateway polices it down to a few hundred kilobits: the video still plays, it
@@ -185,7 +189,7 @@ step:
 
 Choosing `slow` or `full` always lifts a block, because that is what a parent
 means when they pick one. `media` is video and social together, exactly as it
-is for `kidnet media off`.
+is for `genkan media off`.
 
 `slow-rate` takes 32 to 9999 kbit/s and defaults to **256**. It is stored in
 `slow_settings`, and the gateway re-renders the firewall's throttle chain with
@@ -211,20 +215,20 @@ return a personal device, and `test/schema-test.sh` proves that too.
 
 ### Time
 
-    kidnet time    [kid]                    minutes left today, or everybody
-    kidnet bonus   <kid> <min> [why]        grant general minutes, reopens the internet
-    kidnet grant   <kid> <gaming|video> <min>   grant minutes to ONE category
-    kidnet earn    <kid> <task|min>         credit a named task's minutes, or a raw number
-    kidnet penalty <kid> <min> [why]        dock minutes
-    kidnet spend   <kid> <min>              consume minutes; at zero, cuts or slows
+    genkan time    [kid]                    minutes left today, or everybody
+    genkan bonus   <kid> <min> [why]        grant general minutes, reopens the internet
+    genkan grant   <kid> <gaming|video> <min>   grant minutes to ONE category
+    genkan earn    <kid> <task|min>         credit a named task's minutes, or a raw number
+    genkan penalty <kid> <min> [why]        dock minutes
+    genkan spend   <kid> <min>              consume minutes; at zero, cuts or slows
 
-    kidnet reopen  <kid>                    lift an out-of-time block, and nothing else
+    genkan reopen  <kid>                    lift an out-of-time block, and nothing else
 
 `bonus`, `earn` and `penalty` all write `time_ledger.bonus_min` and an audit row
 in `time_events`. `bonus` and `earn` reopen the internet if the child now has
 minutes left, through `reopen`.
 
-What `spend` does at zero depends on `kidnet slow-timeout`. By default it cuts
+What `spend` does at zero depends on `genkan slow-timeout`. By default it cuts
 the internet and stamps `set_by='out-of-time'`. Set to `slow`, it puts the
 child in the slow lane instead and cuts nothing; a row that is already blocked
 for another reason, a bedtime say, is left completely alone.
@@ -232,7 +236,7 @@ for another reason, a bedtime say, is left completely alone.
 `reopen` is narrow on purpose. It clears an internet block **only** where
 `set_by` is `out-of-time` or `earned-back`, and marks it `earned-back`. It will
 not touch a block a parent set by hand, a category over its budget, or a
-scheduled bedtime. Until this existed, `bonus` and `earn` called `kidnet on`,
+scheduled bedtime. Until this existed, `bonus` and `earn` called `genkan on`,
 which stamps `set_by='agent'` over whatever was in the row, so a chore approved
 at half past ten cancelled that child's bedtime. Time can be earned; bedtime
 cannot be bought. The dashboard's chore approval calls this same verb.
@@ -247,24 +251,24 @@ match and uses its minutes. If nothing matches, the argument is treated as a
 number of minutes.
 
 A child on the teen tier has no daily budget. That is stored as 999 in
-`time_ledger`, which the meter treats as unlimited, and `kidnet time` prints
+`time_ledger`, which the meter treats as unlimited, and `genkan time` prints
 "no daily limit (teen tier)".
 
-`kidnet time` with no name reports the whole house: one line per active child
+`genkan time` with no name reports the whole house: one line per active child
 and guest child, in name order. It used to die with a raw bash parameter error,
 which reached the dashboard verbatim.
 
 ### Bedtimes
 
-    kidnet schedule <anything>   passed straight through to kidnet-schedule
+    genkan schedule <anything>   passed straight through to kidnet-schedule
 
 The times a child's internet goes off and comes back are their own script, the
 same way the household IoT policy is. See [kidnet-schedule](#kidnet-schedule).
 
 ### The safety net, and the reading list
 
-    kidnet allow-sync      resolve scope='safety' and scope='learn' domains into @kids_allow
-    kidnet allow-status    print what is currently in that set
+    genkan allow-sync      resolve scope='safety' and scope='learn' domains into @kids_allow
+    genkan allow-status    print what is currently in that set
 
 `allow-sync` resolves every `always_allow` row with `scope='safety'` or
 `scope='learn'` with `getent`, and loads the addresses into `@kids_allow`. It
@@ -290,13 +294,13 @@ and once an hour on its own.
 
 ### Household devices
 
-    kidnet iot status                    what the policy is, and what it has refused
-    kidnet iot show <device>             the effective policy for one device
-    kidnet iot learn                     refresh the vendor address lists, then apply
-    kidnet iot apply                     regenerate the firewall from the policy rows
-    kidnet iot set <device> <field> <value>
-    kidnet iot allow <phone> <device>    let one device reach another
-    kidnet iot mode off|observe|enforce
+    genkan iot status                    what the policy is, and what it has refused
+    genkan iot show <device>             the effective policy for one device
+    genkan iot learn                     refresh the vendor address lists, then apply
+    genkan iot apply                     regenerate the firewall from the policy rows
+    genkan iot set <device> <field> <value>
+    genkan iot allow <phone> <device>    let one device reach another
+    genkan iot mode off|observe|enforce
 
 A pass-through to [`kidnet-iot-policy`](#kidnet-iot-policy), so there is one
 control surface. This is the household layer, not the kid layer: what each
@@ -305,17 +309,17 @@ camera, lock, speaker and vacuum is allowed to talk to. Read
 
 ### Devices and people
 
-    kidnet devices                      the full roster, with owner and online state
-    kidnet unassigned                   devices with no owner set yet
-    kidnet leases                       current DHCP leases
-    kidnet assign <mac|ip> <person> <label> [reserved-ip]
-    kidnet shared <mac|ip> [label] [tier]   file it as a shared family device
-    kidnet infra <mac>                  mark a device as infrastructure (an AP, a switch)
-    kidnet person add <name> <child|guest-child|guest-adult|adult> [tier]
-    kidnet person list                  who is in the house, by role
-    kidnet guest leave <name>           they have gone home
-    kidnet guest back <name>            they are visiting again
-    kidnet guest list                   the visitors here right now
+    genkan devices                      the full roster, with owner and online state
+    genkan unassigned                   devices with no owner set yet
+    genkan leases                       current DHCP leases
+    genkan assign <mac|ip> <person> <label> [reserved-ip]
+    genkan shared <mac|ip> [label] [tier]   file it as a shared family device
+    genkan infra <mac>                  mark a device as infrastructure (an AP, a switch)
+    genkan person add <name> <child|guest-child|guest-adult|adult> [tier]
+    genkan person list                  who is in the house, by role
+    genkan guest leave <name>           they have gone home
+    genkan guest back <name>            they are visiting again
+    genkan guest list                   the visitors here right now
 
 `assign` maps a device to a person, then immediately runs
 `kidnet-adguard-clients` so the age tier follows the device rather than lagging
@@ -336,11 +340,11 @@ See [HOUSEHOLD-ROLES.md](HOUSEHOLD-ROLES.md).
 
 ### Device claiming
 
-    kidnet claim-mode                    what mode claiming is in, and how many devices are unclaimed
-    kidnet claim-mode off|observe|enforce
-    kidnet unclaimed                     personal devices that belong to nobody
-    kidnet claims                        self-claims waiting for a parent to agree
-    kidnet confirm <device|address>      say yes to one of them
+    genkan claim-mode                    what mode claiming is in, and how many devices are unclaimed
+    genkan claim-mode off|observe|enforce
+    genkan unclaimed                     personal devices that belong to nobody
+    genkan claims                        self-claims waiting for a parent to agree
+    genkan confirm <device|address>      say yes to one of them
 
 **Off by default.** A household running happily today must not find devices in
 a restricted lane because it pulled an update, so `claim_settings.mode` ships
@@ -349,7 +353,7 @@ as `off` and nothing here does anything until you change it. The three modes:
 | Mode | What happens to a device nobody owns |
 |---|---|
 | `off` | nothing. A DHCP lease is enough, exactly as before |
-| `observe` | nothing is restricted. `kidnet unclaimed` tells you what enforcing would catch |
+| `observe` | nothing is restricted. `genkan unclaimed` tells you what enforcing would catch |
 | `enforce` | it gets DNS, the portal and the safety net, and nothing else |
 
 Enforcing works through the `kids_unclaimed` nft set, which the gateway
@@ -361,16 +365,16 @@ a dead connection.
 
 A child claiming a device at that page gains nothing on its own: the device is
 marked `claim_pending` and stays in the restricted lane until a parent runs
-`kidnet confirm` or presses the button on the dashboard. That is the whole
+`genkan confirm` or presses the button on the dashboard. That is the whole
 design, and the reasoning is in [DEVICE-IDENTITY.md](DEVICE-IDENTITY.md).
 Smart home kit, appliances and infrastructure are never expected to announce
-themselves and never appear in `kidnet unclaimed`.
+themselves and never appear in `genkan unclaimed`.
 
 ### Looking around
 
-    kidnet status              which categories are blocked, per child
-    kidnet recent <kid> [n]    that child's last N domains (default 25, last 24 hours)
-    kidnet topsites [n]        busiest allowed domains today across all children (default 15)
+    genkan status              which categories are blocked, per child
+    genkan recent <kid> [n]    that child's last N domains (default 25, last 24 hours)
+    genkan topsites [n]        busiest allowed domains today across all children (default 15)
 
 ### Input validation
 
@@ -380,7 +384,7 @@ attack it:
 
 - names: `[A-Za-z0-9_-]`, 1 to 32 characters. Group controls work by database
   id rather than by name, so a household that already holds an awkwardly named
-  person can still use `kidnet off kids`; only addressing that person
+  person can still use `genkan off kids`; only addressing that person
   individually is refused.
 - numbers: digits only, at most 4
 - free text (reasons, labels): letters, digits and `_ : + . , -` and spaces, at
@@ -390,8 +394,8 @@ Four more gates sit beside those three: a signed number (a penalty is minutes
 with a minus in front), a row id, a MAC-or-IPv4 address, and an IPv4 address on
 its own.
 
-A row limit is not exempt from any of it, and used not to be gated. `kidnet
-recent` and `kidnet topsites` interpolated their `[n]` straight into SQL, both
+A row limit is not exempt from any of it, and used not to be gated. `genkan
+recent` and `genkan topsites` interpolated their `[n]` straight into SQL, both
 are on the dashboard's HTTP allowlist, and `psql -c` will happily run a second
 statement, as the Postgres superuser. It was proven end to end before it was
 fixed. Both now run their argument through `ck_int` like everything else.
@@ -404,14 +408,14 @@ Two rules learned the hard way, worth following when you add a verb:
   values that reach a `WHERE` here came from Postgres rather than from a
   parent's typing, and that is exactly the assumption that turns one bad write
   into a second injection. They go through `ck_id` too.
-- **Gate before you query.** `kidnet assign` used to check its optional
+- **Gate before you query.** `genkan assign` used to check its optional
   reservation next to the statement that used it, which sat after the person
   lookup, so whether a bad reservation was refused depended on whether the
   person existed. Check every argument before the first connection is opened.
 
 ### Which database role it connects as
 
-`kidnet` and every `kidnet-*` worker connect as **`kids_agent`**, not as the
+`genkan` and every `kidnet-*` worker connect as **`kids_agent`**, not as the
 Postgres superuser, and not as the `kids_app` role the dashboard and portal
 use. `kids_agent` cannot run `COPY ... TO PROGRAM`, read a server file, drop or
 truncate a table, delete a child or a day of history, or escalate itself. Its
@@ -458,7 +462,7 @@ No arguments. Run every minute by `kids-meter.timer`.
 
 Finds every child who has a device seen in the last two minutes, is not already
 internet-blocked, and has a real daily budget (teen tier, stored as 999, is
-skipped), then calls `kidnet spend <kid> 1`. At zero, `kidnet` blocks their
+skipped), then calls `genkan spend <kid> 1`. At zero, `genkan` blocks their
 internet and marks the block `set_by='out-of-time'`, which is the only kind of
 block a quiz can lift.
 
@@ -479,7 +483,7 @@ separately by `kidnet-catmeter`.
     kidnet-schedule holiday late <from> <to> <min> [name]
     kidnet-schedule holiday clear                    end every override window now
 
-Run every minute by `kids-schedule.timer`, and reachable as `kidnet schedule
+Run every minute by `kids-schedule.timer`, and reachable as `genkan schedule
 ...`. The dashboard's Family page sets the same rows through `/api/schedule`.
 
 `<days>` is `school` (Sunday to Thursday nights), `weekend` (Friday and
@@ -529,9 +533,9 @@ DECISIONS.md; the short version:
 | `bedtime` | this worker | yes, and only this worker |
 | `schedule-lifted` | this worker, in the morning | n/a, it is not a block |
 
-And in the other direction: a parent's `kidnet on` during a bedtime holds until
+And in the other direction: a parent's `genkan on` during a bedtime holds until
 the next window boundary, not for one minute; earning time back cannot lift a
-bedtime (see `kidnet reopen`); and an empty `schedule_state` means assert, so a
+bedtime (see `genkan reopen`); and an empty `schedule_state` means assert, so a
 restored backup or a fresh state table fails towards the bedtime being in force
 rather than towards the child being online.
 
@@ -550,7 +554,7 @@ is off right now because of a bedtime rather than because of a parent).
 
 ### Environment
 
-Same three overrides as `bin/kidnet`: `PG_CONTAINER`, `HEARTH_DB` and
+Same three overrides as `bin/genkan`: `PG_CONTAINER`, `HEARTH_DB` and
 `HEARTH_DB_ROLE`. It connects as `kids_agent`. `ADGUARD_PASS` is optional; with
 it unset the DNS push is skipped and the database is still the truth.
 
@@ -704,7 +708,7 @@ No arguments. Run every minute by `kids-devicescan.timer`.
 
 Reads AdGuard's DHCP status (both dynamic and static leases) and upserts a row
 per MAC into `devices`, owned by nobody until a parent assigns it. Refreshes
-`last_seen` and `dhcp_leases`, which is what `kidnet leases` prints. Then it
+`last_seen` and `dhcp_leases`, which is what `genkan leases` prints. Then it
 records presence, then it runs `kidnet-classify` on anything new.
 
 **"Seen before" and "here now" are different columns.** `last_seen` comes from
@@ -739,8 +743,8 @@ Every device sits in one of five classes, which decides how it is treated:
 | Class | What it is | How Hearth treats it |
 |---|---|---|
 | `personal` | a phone, tablet, laptop, console | assignable to a person, filtered and metered by their tier |
-| `shared` | the lounge TV, the iPad every kid uses | the household's, not one child's. Its own filter level, nobody's minutes, and swept by `dinner` or `kidnet house off` only where the parent has ticked it |
-| `iot` | cameras, locks, speakers, vacuums, lights, plugs, thermostats | never assigned, never metered, **never cut** by `kidnet off all`, `dinner` or `kidnet house off` |
+| `shared` | the lounge TV, the iPad every kid uses | the household's, not one child's. Its own filter level, nobody's minutes, and swept by `dinner` or `genkan house off` only where the parent has ticked it |
+| `iot` | cameras, locks, speakers, vacuums, lights, plugs, thermostats | never assigned, never metered, **never cut** by `genkan off all`, `dinner` or `genkan house off` |
 | `appliance` | an SMS gateway, a build agent, a media server: nobody's device, but not smart-home kit either | full internet, no owner, no time limits, never caught by any control |
 | `infra` | the access point, switches, the gateway itself | not a client at all |
 
@@ -751,7 +755,7 @@ Nobody's front door goes offline because a fourteen year old ran out of time.
 
 `shared` (`config/db/schema-shared.sql`) and `appliance`
 (`config/db/schema-appliance.sql`) are both a parent's decision, made in the
-owner picker on the dashboard's Devices page or with `kidnet shared`. The
+owner picker on the dashboard's Devices page or with `genkan shared`. The
 classifier never guesses either, because the difference between "a server" and
 "somebody's laptop", or between "the family TV" and "the eldest's monitor", is
 not visible from a hostname or a MAC prefix.
@@ -776,7 +780,7 @@ never guessing at all: a guess must never beat a decision.
 The vendor tables are curated rather than exhaustive, and extending them is a
 one-line change: most homes contain the same handful of vendors.
 
-If it guesses wrong, fix it by hand: `kidnet infra <mac>` for an access point,
+If it guesses wrong, fix it by hand: `genkan infra <mac>` for an access point,
 or update `devices.category` directly for anything else.
 
 ---
@@ -897,7 +901,7 @@ words, are in [NOTIFICATIONS.md](NOTIFICATIONS.md).
     kidnet-adguard [apply|render]
 
 `render` prints the rules it would install. `apply` (the default) POSTs them to
-AdGuard. `kidnet` calls `apply` after any change that affects the DNS layer.
+AdGuard. `genkan` calls `apply` after any change that affects the DNS layer.
 
 AdGuard's custom rule list is a single global list, so this **renders the whole
 list from the database every time**: one API call, no drift, idempotent. In
@@ -923,7 +927,7 @@ order:
 
 ## kidnet-adguard-clients
 
-No arguments. Run automatically by `kidnet assign`.
+No arguments. Run automatically by `genkan assign`.
 
 AdGuard applies the age tier (SafeSearch, blocked services, per-client rules) by
 client, and a client is identified by IP address. This points each child's
@@ -1451,7 +1455,7 @@ failed on the first two files.
 
 `schedule-test.sh` never touches the household database. It creates its own,
 loads the real schema files into it, invents a family, and points
-`bin/kidnet-schedule` and `bin/kidnet` at that database with `HEARTH_DB`. The
+`bin/kidnet-schedule` and `bin/genkan` at that database with `HEARTH_DB`. The
 firewall is pointed at a container that does not exist, so nothing in it can
 reach nftables either. It proves the time maths at fixed moments, then drives
 the worker through a bedtime, a parent override, a restart mid-bedtime and a
@@ -1463,7 +1467,7 @@ is safe to run on a household that is in use. It creates its own people and
 devices, asserts, then deletes them and puts the category blocks it touched back
 exactly as it found them.
 
-After any change to `config/nftables/kids.nft`, `gateway/` or `bin/kidnet`, run
+After any change to `config/nftables/kids.nft`, `gateway/` or `bin/genkan`, run
 the firewall and container suites. Both must pass fully. After any change to
 `config/db/`, run the schema suite.
 

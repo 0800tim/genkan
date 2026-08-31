@@ -36,7 +36,7 @@ Four checks, about thirty seconds.
 
     docker ps --filter name=hearth                 # gateway, adguard, portal, speedtest: all Up
     docker logs --tail 20 hearth-gw                # the gateway's own account of itself
-    kidnet allow-status                            # the safety net and reading list have addresses in them
+    genkan allow-status                            # the safety net and reading list have addresses in them
     systemctl list-timers 'kids-*'                 # six timers, all waiting, none failed
 
 Healthy gateway logs look like this:
@@ -70,7 +70,7 @@ throwaway database or a namespace with a fixed name, so two at once collide and
 report failures that are not real.
 
 The container suite is the one to run after any change to the firewall, the
-gateway or `kidnet`. It builds the real image, hands it a fake NIC the same way
+gateway or `genkan`. It builds the real image, hands it a fake NIC the same way
 the host warden does, and attacks it from a fake kid device.
 
 ### What the parent sees
@@ -181,7 +181,7 @@ raises a warning and starts the whole sequence again when it returns.
 ### The host-side units
 
 One service and seven timers. That is the entire host footprint, besides the
-`kidnet` scripts in `/usr/local/bin` and `/etc/kids-network/`.
+`genkan` scripts in `/usr/local/bin` and `/etc/kids-network/`.
 
 | Unit | Cadence | What it runs |
 |---|---|---|
@@ -216,19 +216,19 @@ dashboard offering a bedtime form that saves nothing. The file is idempotent, so
 on a database that already has it this changes nothing. Every other schema file
 still goes through `config/db/load.sh`.
 
-On a box where the tables are genuinely missing, `kidnet schedule show` and the
+On a box where the tables are genuinely missing, `genkan schedule show` and the
 worker both say so in one sentence and exit 0 rather than printing a psql trace
 sixty times an hour.
 
 To stop bedtimes without uninstalling anything:
 
-    kidnet schedule disable <kid>        # one child, keeps their times
-    kidnet schedule holiday clear        # end every override window
+    genkan schedule disable <kid>        # one child, keeps their times
+    genkan schedule holiday clear        # end every override window
     sudo systemctl disable --now kids-schedule.timer   # the whole thing
 
 Disabling the timer leaves whatever is currently blocked blocked, because
-nothing is left to lift it. Turn the child back on by hand (`kidnet on <kid>`)
-before you disable it, or use `kidnet schedule clear <kid>`, which lifts what it
+nothing is left to lift it. Turn the child back on by hand (`genkan on <kid>`)
+before you disable it, or use `genkan schedule clear <kid>`, which lifts what it
 was holding as it goes.
 
 The timers stagger their first run after boot (60s, 90s, 2min, 3min) so they do
@@ -241,7 +241,7 @@ To see what one of them last did:
     journalctl -u kids-nic-warden.service -f
 
 There is no timer for the safety net. The gateway container refreshes it itself,
-hourly. `kidnet allow-sync` exists to force it from the host.
+hourly. `genkan allow-sync` exists to force it from the host.
 
 ### The weekly digest
 
@@ -378,11 +378,11 @@ deliberately never enforced against a budget.
 Off by default, and it stays off until you change one row. The full reasoning is
 in [DEVICE-IDENTITY.md](DEVICE-IDENTITY.md); this is the operational half.
 
-    kidnet claim-mode                    what mode it is in, and how many devices are unclaimed
-    kidnet claim-mode observe            watch first: nothing is restricted
-    kidnet unclaimed                     what enforcing would catch
-    kidnet claim-mode enforce            switch it on
-    kidnet claim-mode off                switch it back off
+    genkan claim-mode                    what mode it is in, and how many devices are unclaimed
+    genkan claim-mode observe            watch first: nothing is restricted
+    genkan unclaimed                     what enforcing would catch
+    genkan claim-mode enforce            switch it on
+    genkan claim-mode off                switch it back off
 
 **Always run `observe` for a few days first.** It restricts nothing and just
 tells you the truth: how many personal devices in your house belong to nobody.
@@ -405,14 +405,14 @@ themselves and never appear in that set. Only `category='personal'` devices do.
 A child claiming a device at the portal gains nothing on its own. The device is
 marked `claim_pending` and **stays restricted** until a parent agrees:
 
-    kidnet claims                        what is waiting
-    kidnet confirm <device|address>      say yes
+    genkan claims                        what is waiting
+    genkan confirm <device|address>      say yes
 
 `confirm` clears the pending flag and re-runs `kidnet-adguard-clients`, so the
 device picks up its owner's filter tier and clock straight away. The same queue
 and the same button are on the dashboard.
 
-If it goes wrong, `kidnet claim-mode off` is the whole undo. Nothing is deleted
+If it goes wrong, `genkan claim-mode off` is the whole undo. Nothing is deleted
 and no device has to be re-claimed later, because the claims themselves are kept.
 
 ---
@@ -431,10 +431,10 @@ Three checks, in order:
       "SELECT category, count(*) FROM always_allow WHERE scope='learn' GROUP BY 1 ORDER BY 1"
 
     # 2. Did they resolve? This prints the count it installed.
-    kidnet allow-sync
+    genkan allow-sync
 
     # 3. Are they in the firewall?
-    kidnet allow-status
+    genkan allow-status
 
 Zero rows in step 1 means `config/db/schema-learn.sql` and
 `config/db/schema-learn-intl.sql` have not been loaded. Both are idempotent, so
@@ -445,12 +445,12 @@ address came from which scope. To check one site end to end, resolve it and look
 for the address:
 
     getent ahostsv4 wikipedia.org | awk '{print $1}' | sort -u
-    kidnet allow-status | tr ',' '\n' | grep -F "$(getent ahostsv4 wikipedia.org | awk 'NR==1{print $1}')"
+    genkan allow-status | tr ',' '\n' | grep -F "$(getent ahostsv4 wikipedia.org | awk 'NR==1{print $1}')"
 
 **These are CDN-hosted and the addresses move.** That is why the gateway
 re-resolves the whole set hourly rather than at boot only. A site that "worked
 yesterday and not today" for a child who is out of time is almost always this,
-and `kidnet allow-sync` fixes it immediately. `allow-sync` refuses to install an
+and `genkan allow-sync` fixes it immediately. `allow-sync` refuses to install an
 empty result, so a resolver blip leaves yesterday's addresses in place rather
 than leaving a cut-off child with nothing.
 
@@ -462,7 +462,7 @@ refreshes. Adding a domain is a database row and a re-sync:
       "INSERT INTO always_allow (domain, scope, category, note)
        VALUES ('example.org', 'learn', 'reference', 'why you added it')
        ON CONFLICT (domain) DO NOTHING"
-    kidnet allow-sync
+    genkan allow-sync
 
 Read the five tests in [READING-LIST.md](READING-LIST.md) before you add one.
 The list only works while it stays dull.
@@ -504,8 +504,8 @@ none of this.
 
 | Demo | What it shows |
 |---|---|
-| `hearth-demo.appspurt.dev` | the parent's dashboard |
-| `hearth-portal.appspurt.dev` | the child's captive portal and the quizzes |
+| `genkan-demo.appspurt.dev` | the parent's dashboard |
+| `genkan-portal.appspurt.dev` | the child's captive portal and the quizzes |
 
 Both run the **real** code: `demo/compose.yaml` bind-mounts `../dashboard` read
 only and runs the same `server.mjs` and `portal.mjs` a household runs, against a
@@ -595,16 +595,16 @@ Work down this list. It is ordered by how often each one is the answer.
 
 **1. Is it out of time, or is a category blocked?**
 
-    kidnet time <kid>
-    kidnet status
+    genkan time <kid>
+    genkan status
 
 If it is out of time, the device should be seeing the captive portal, not a dead
-connection. `kidnet bonus <kid> 15` reopens it.
+connection. `genkan bonus <kid> 15` reopens it.
 
 **2. Does it have a lease, and is it a known device?**
 
-    kidnet leases
-    kidnet devices
+    genkan leases
+    genkan devices
     docker exec hearth-gw nft list set inet kids kids_known
 
 The island is default-deny by source address. A device only gets internet if its
@@ -667,7 +667,7 @@ check for first. In order:
 
 **1. Is anything actually blocked, and who put it there?**
 
-    kidnet status
+    genkan status
     docker exec -i postgres psql -U kids_agent -d kids_network -tAc \
       "SELECT c.name, cs.category, cs.blocked, cs.set_by, cs.since
          FROM category_state cs JOIN children c ON c.id=cs.child_id WHERE cs.blocked"
@@ -676,11 +676,11 @@ check for first. In order:
 
 - `bedtime` and it is the morning: the worker has not run. Check the timer.
 - `agent`: somebody turned it off by hand. A schedule will never lift that, by
-  design. `kidnet on <kid>`.
-- `out-of-time`: they have used the day's minutes. `kidnet bonus <kid> <min>`,
+  design. `genkan on <kid>`.
+- `out-of-time`: they have used the day's minutes. `genkan bonus <kid> <min>`,
   or they earn it back on the portal.
 - `over-budget` on one category: that category hit its daily cap.
-  `kidnet grant <kid> <gaming|video> <min>`.
+  `genkan grant <kid> <gaming|video> <min>`.
 
 **2. Is the timer running?**
 
@@ -693,8 +693,8 @@ kids-schedule.timer` shows when it last fired.
 
 **3. What does it think tonight looks like?**
 
-    kidnet schedule show
-    kidnet schedule show <kid>
+    genkan schedule show
+    genkan schedule show <kid>
 
 That prints the bedtimes, what is in force right now, when it lifts, and any
 holiday window. If the times are right and the child is still blocked, run
@@ -734,7 +734,7 @@ itself, so rotation is a two-place change.
     docker exec hearth-adguard sh -c \
       "sed -i 's|^\( *password: \).*|\1$HASH|' /opt/adguardhome/conf/AdGuardHome.yaml"
 
-    # 4. Put the plaintext in secrets.env, which is what the kidnet tools read.
+    # 4. Put the plaintext in secrets.env, which is what the genkan tools read.
     sed -i "s|^ADGUARD_PASS=.*|ADGUARD_PASS=$NEW|" secrets.env
 
     # 5. Restart AdGuard and re-run the timers' next tick.
@@ -753,9 +753,9 @@ ever restore a backup onto different hardware.
 
 ---
 
-## "kidnet says permission denied for table ..."
+## "genkan says permission denied for table ..."
 
-Since 2026-08-30 `bin/kidnet` and every `bin/kidnet-*` worker connect as
+Since 2026-08-30 `bin/genkan` and every `bin/kidnet-*` worker connect as
 `kids_agent`, a role with no superuser, no ownership and no DDL, instead of as
 the Postgres superuser. `permission denied for table X` means that role has not
 been granted what the command needs. Two causes, in order of likelihood.
@@ -832,7 +832,7 @@ grants in the dump will apply:
     docker exec -i postgres psql -U postgres -c \
       "CREATE ROLE kids_app LOGIN PASSWORD 'the-one-in-secrets.env'"
 
-Then put the CLI's role back, or every `kidnet` command answers `permission
+Then put the CLI's role back, or every `genkan` command answers `permission
 denied`. This is idempotent and safe to run at any time:
 
     docker exec -i postgres psql -U postgres -d kids_network -q \
@@ -870,12 +870,12 @@ house without a good reason.
 
 ## Routine maintenance
 
-**After changing the firewall, the gateway or `kidnet`:**
+**After changing the firewall, the gateway or `genkan`:**
 
     sudo test/firewall-test.sh && sudo test/container-test.sh
 
 **After changing anything that talks to the database** (a schema file,
-`config/db/grants.sql`, or a `kidnet` verb that touches a new table):
+`config/db/grants.sql`, or a `genkan` verb that touches a new table):
 
     bash test/schema-test.sh && bash test/db-role-test.sh
 
@@ -901,7 +901,7 @@ before it costs somebody a night's backup.
 **After changing policy in the database** (a new always_allow row, a renamed
 child, a reassigned device):
 
-    kidnet allow-sync                 # if you touched always_allow scope='safety'
+    genkan allow-sync                 # if you touched always_allow scope='safety'
     bin/kidnet-adguard apply          # re-render the DNS rules from the database
     bin/kidnet-adguard-clients        # re-point the age tiers at the right addresses
 

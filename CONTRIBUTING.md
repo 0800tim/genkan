@@ -153,7 +153,7 @@ segment guard, and the safety net (the `scope='safety'` allowlist that keeps the
 youth help lines reachable even when a child is fully cut off).
 
 **Run the tests.** After any change to `config/nftables/kids.nft`, `gateway/` or
-`bin/kidnet`:
+`bin/genkan`:
 
     sudo test/firewall-test.sh      # 46 checks, throwaway namespaces
     sudo test/container-test.sh     # 26 checks, the real image

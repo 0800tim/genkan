@@ -118,8 +118,8 @@ lesson: the category is policed down to a few hundred kilobits, so the video
 still plays and simply buffers, a page still loads, a message still sends, and
 the child drifts off to something else on their own. Nobody was told no.
 
-    kidnet slow ben video      video crawls, everything else is untouched
-    kidnet full ben video      back to normal
+    genkan slow ben video      video crawls, everything else is untouched
+    genkan full ben video      back to normal
 
 ### How it is done
 
@@ -160,13 +160,13 @@ under 150 kbit/s, so a game mostly still plays while everything it wants to
 stream in stalls. That asymmetry is the point: small things work, big things
 are miserable.
 
-`kidnet slow-rate <kbit>` changes it, between 32 and 9999. It is stored in
+`genkan slow-rate <kbit>` changes it, between 32 and 9999. It is stored in
 `slow_settings` and the gateway re-renders the throttle chain with it on the
 next reconcile.
 
 ### Running out of time: the cliff or the slope
 
-`kidnet slow-timeout cut|slow`. `cut` is the default and is what Hearth has
+`genkan slow-timeout cut|slow`. `cut` is the default and is what Hearth has
 always done at zero. `slow` drops the child into the whole-device slow lane
 instead, so the evening tails off rather than ending mid-sentence, and earning
 minutes back puts them straight back to full speed. Some families want the
@@ -263,10 +263,10 @@ the red every minute and earning ten minutes back would not lift them out.
 4. `kids-metering.timer` runs both each minute. Proven by test/meter-test.sh
    (eight checks: active counts, idle ignored, budget reached, category
    blocked, others untouched, and the grant path below).
-5. `kidnet grant <kid> <gaming|video> <min>` tops up ONE category: it raises
+5. `genkan grant <kid> <gaming|video> <min>` tops up ONE category: it raises
    that category's daily budget and clears an over-budget block for it. It
    deliberately cannot clear a block a parent set, only one the meter set, so
-   earning time never overrides a parent's decision. `kidnet bonus` remains the
+   earning time never overrides a parent's decision. `genkan bonus` remains the
    general-minutes grant.
 
 ## Bytes as well as minutes: per-service accounting

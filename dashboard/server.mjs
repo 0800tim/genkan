@@ -50,7 +50,7 @@ const shell = o => pageShell({ ...o, body: (o.body || "") + versionFooter() });
 
 const BIND = process.env.BIND || "127.0.0.1";
 const PORT = Number(process.env.PORT || 8899);
-const KIDNET = process.env.KIDNET || "/srv/projects/internal/kids-network/bin/kidnet";
+const KIDNET = process.env.KIDNET || "/srv/projects/internal/kids-network/bin/genkan";
 // Optional shared secret for the control API. Unset = tailnet is the only
 // perimeter (unchanged). Set = every /api/* call must carry it, so a stray
 // device on the tailnet cannot drive controls. The page injects it from a

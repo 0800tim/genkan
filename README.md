@@ -15,11 +15,11 @@ cloud service, not to us.
 Both halves are live, with a made-up family in them. No sign-up, nothing to
 install, and nobody's real child:
 
-- **[The parent's dashboard](https://hearth-demo.appspurt.dev)** at
-  `hearth-demo.appspurt.dev`. Tonight's state and the controls, live traffic,
+- **[The parent's dashboard](https://genkan-demo.appspurt.dev)** at
+  `genkan-demo.appspurt.dev`. Tonight's state and the controls, live traffic,
   the week, trends per child, the device roster, and the health of the box.
-- **[The kid's portal](https://hearth-portal.appspurt.dev)** at
-  `hearth-portal.appspurt.dev`. The page a child meets when their time has run
+- **[The kid's portal](https://genkan-portal.appspurt.dev)** at
+  `genkan-portal.appspurt.dev`. The page a child meets when their time has run
   out, and the quizzes that earn it back. One demo child is deliberately out of
   minutes: pass a round of times tables and watch the clock change.
 
@@ -249,14 +249,14 @@ gateway polices it down to 256 kbit/s, so the video still plays and simply
 buffers, a page still loads, a message still sends, and the child drifts off to
 something else on their own. Nobody was told no.
 
-    kidnet slow ben video       video crawls, everything else is untouched
-    kidnet full ben video       back to normal
+    genkan slow ben video       video crawls, everything else is untouched
+    genkan full ben video       back to normal
 
 It is done with nftables' own rate limiting, in the same ruleset as everything
 else and reconciled from the database on the same fifteen-second loop, with a
-separate token bucket per device. The rate is settable (`kidnet slow-rate`),
+separate token bucket per device. The rate is settable (`genkan slow-rate`),
 and running out of time can drop a child into the slow lane instead of cutting
-them off (`kidnet slow-timeout slow`), though it still cuts by default because
+them off (`genkan slow-timeout slow`), though it still cuts by default because
 changing that without a household asking would be wrong.
 
 The portal tells the child, in plain words, that things are slow on purpose and
@@ -306,7 +306,7 @@ unless client isolation is on.
 | Firewall, NAT, isolation | nftables, inside the container namespace |
 | DHCP, DNS, filtering | AdGuard Home, per-child clients by age tier |
 | State, logs, ledger | Postgres |
-| Control surface | `bin/kidnet`, a single CLI any agent can drive |
+| Control surface | `bin/genkan`, a single CLI any agent can drive |
 | Parent dashboard | Node, on your private network, charts in inline SVG |
 | Kids' portal | Node, the captive portal and quiz engine |
 

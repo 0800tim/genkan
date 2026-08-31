@@ -94,7 +94,11 @@ echo "Building the gateway image..."
 docker compose -f "$R/compose.yaml" build gateway
 
 echo "Installing host pieces..."
-install -m 0755 "$R/bin/kidnet"        /usr/local/bin/kidnet
+install -m 0755 "$R/bin/genkan"        /usr/local/bin/genkan
+# `kidnet` stays callable: the shim in the repo resolves relative to itself,
+# so the installed copy needs its own one-liner pointing at the installed CLI.
+printf '#!/usr/bin/env bash\n# The CLI is called genkan now; this name is kept for muscle memory.\nexec /usr/local/bin/genkan "$@"\n' > /usr/local/bin/kidnet
+chmod 0755 /usr/local/bin/kidnet
 install -m 0755 "$R/bin/kidnet-meter"    /usr/local/bin/kidnet-meter
 install -m 0755 "$R/bin/kidnet-adguard"  /usr/local/bin/kidnet-adguard
 install -m 0755 "$R/bin/kidnet-adguard-clients" /usr/local/bin/kidnet-adguard-clients

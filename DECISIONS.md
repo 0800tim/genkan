@@ -164,7 +164,7 @@ that were written down as true but were not.
    with 1737, Youthline and the rest, and every document promised they stayed
    reachable during a cut, but no firewall rule read the table. A blocked kid
    could not reach a help line. There is now an `@kids_allow` nft set, fed
-   hourly by `kidnet allow-sync` (which resolves the domains, since the
+   hourly by `genkan allow-sync` (which resolves the domains, since the
    firewall matches addresses and these sites are CDN-hosted), placed above
    the block rules in the forward chain.
 
@@ -221,11 +221,11 @@ Decisions that fell out of building it:
   a Docker daemon restart takes the island down briefly; restart=always
   plus the warden re-handing the NIC covers recovery; other parents get
   the runtime they already know. The no-docker variant stays possible
-  (kidnet NFT_DIRECT=1).
+  (genkan NFT_DIRECT=1).
 - **The DB is desired state; the firewall is a projection.** The gateway
   reconciles kids_block from Postgres every 15s in one atomic nft
   transaction. This is what lets the portal grant earned time by writing
-  a row, survives restarts and replugs, and means kidnet's direct nft
+  a row, survives restarts and replugs, and means genkan's direct nft
   calls are just a fast path.
 - **Segment guard.** Born from a real event: the Deco, freshly plugged in,
   bridged the main house LAN onto the kids' port (it was still meshed to
@@ -495,8 +495,8 @@ screenshotted.
 ## Two public demos, running the real code (2026-08-29)
 
 A stranger arriving at the repo could read about Hearth but not see it. Both
-halves are now live: `hearth-demo.appspurt.dev` is the parent's dashboard and
-`hearth-portal.appspurt.dev` is the child's captive portal with playable
+halves are now live: `genkan-demo.appspurt.dev` is the parent's dashboard and
+`genkan-portal.appspurt.dev` is the child's captive portal with playable
 quizzes.
 
 **The real code, read only, not a copy.** `demo/compose.yaml` bind-mounts
@@ -517,7 +517,7 @@ worth meeting explicitly:
 - `HEARTH_DEMO=1` replaces `runKidnet` and `runTool` in `server.mjs` with
   functions that return "This is the demo, so nothing was actually changed", so
   no path reaches `execFile`, and switches the live sampler to a synthetic one.
-- `bin/` is not mounted, so there would be no `kidnet` to run.
+- `bin/` is not mounted, so there would be no `genkan` to run.
 - No `NET_ADMIN`, no host networking, no privileged flag.
 
 With the flag unset, which is every household install, all of that is a strict
@@ -905,7 +905,7 @@ A security review and an adversarial pen test of the surface, filed as
 `research/security-review-2026-08-30.md` and `research/pentest-2026-08-30.md`.
 Four findings, and each one changed a rule rather than just a line.
 
-**SQL injection reachable from the dashboard API.** `kidnet recent` and `kidnet
+**SQL injection reachable from the dashboard API.** `genkan recent` and `genkan
 topsites` interpolated their row limit straight into SQL. Both are on the
 dashboard's HTTP allowlist, and `psql -c` will happily run a second statement,
 as the Postgres superuser. Proven end to end before it was fixed. Every argument
@@ -982,7 +982,7 @@ so.
 An outside reviewer called scheduled bedtimes the largest functional omission,
 and they were right. The `schedules` table had been in `schema.sql` since the
 first night and nothing read it. Every bedtime in this house was a parent
-typing `kidnet off kids` at nine and remembering to type `kidnet on kids` at
+typing `genkan off kids` at nine and remembering to type `genkan on kids` at
 seven. The remembering is the part that failed. **A child who wakes to a dead
 network because nothing lifted it has been punished by an oversight**, so the
 morning restore is the half that matters, not the bedtime.
@@ -999,9 +999,9 @@ may take it away.
 |---|---|---|
 | `agent` | a parent, by hand or on the dashboard | a parent |
 | `out-of-time` | `kidnet-meter`, at zero minutes | earning, and a parent |
-| `over-budget` | `kidnet-catmeter`, a category over its cap | `kidnet grant`, and a parent |
+| `over-budget` | `kidnet-catmeter`, a category over its cap | `genkan grant`, and a parent |
 | `bedtime` | `kidnet-schedule` | `kidnet-schedule`, and a parent |
-| `earned-back` | the portal or `kidnet reopen` | not a block |
+| `earned-back` | the portal or `genkan reopen` | not a block |
 | `schedule-lifted` | `kidnet-schedule`, in the morning | not a block |
 
 Five rules fall out of it, and each one is a real failure that was possible
@@ -1022,10 +1022,10 @@ id plus **the date the window started**, so the release cannot leak into
 tomorrow night and nothing has to clean it up.
 
 **Earning time cannot buy a way past bedtime.** This one was actually broken.
-`kidnet bonus` and `kidnet earn` ended with `internet <kid> on`, which stamps
+`genkan bonus` and `genkan earn` ended with `internet <kid> on`, which stamps
 `set_by='agent'` over whatever was in the row, bedtime included. So did the
 dashboard's chore approval. A quiz passed at half past ten reopened the night.
-Both now call `kidnet reopen`, which clears an internet block only where
+Both now call `genkan reopen`, which clears an internet block only where
 `set_by` is `out-of-time` or `earned-back`. The portal had been doing exactly
 that since it was written; the CLI had not. **Time can be earned. Bedtime
 cannot be bought.**
@@ -1107,10 +1107,10 @@ A superuser connection can run `COPY ... TO PROGRAM`, which executes a shell
 command inside the database container, and it can read and write every other
 database on the server. So the distance between "a device label with a quote in
 it reached a WHERE clause" and "somebody owns the box" was one statement. The
-gates in `bin/kidnet` were the only thing in the way, and a gate is a thing that
+gates in `bin/genkan` were the only thing in the way, and a gate is a thing that
 can be forgotten: the 2026-08-30 review found four sites that had been.
 
-`bin/kidnet`, every `bin/kidnet-*` worker and the two operator tools that read
+`bin/genkan`, every `bin/kidnet-*` worker and the two operator tools that read
 the database now connect as **`kids_agent`**, whose grants are one line per
 table in `config/db/grants.sql`, each with a comment naming the script that
 needs it. It is not a superuser, owns nothing, is a member of no role, and has
@@ -1165,7 +1165,7 @@ thing a household can choose to do, with the caveat attached.
 ### And the rest of the interpolations
 
 Fifty-five argument sites are now gated that were not. Twenty-four in
-`bin/kidnet` alone: all four values in the audit trail, the id, category and
+`bin/genkan` alone: all four values in the audit trail, the id, category and
 boolean in `setcat_id`, the signed minutes and the reason in `addtime`, the
 child id in `ensure_day`, `remaining`, `spend`, `time`, `grant` and both guest
 verbs, and the MAC or address and the optional reservation in `assign` and
@@ -1185,7 +1185,7 @@ back out of Postgres, not typed by a parent, and the temptation is to trust
 them for that reason. That is the assumption that turns one bad write into a
 second injection, so `ck_id` is applied to every one of them.
 
-**Gate before you query, not beside the statement.** `kidnet assign` checked its
+**Gate before you query, not beside the statement.** `genkan assign` checked its
 optional reservation next to the statement that used it, which sat after the
 person lookup. So whether a bad reservation was refused depended on whether the
 person existed. A gate whose answer depends on the data is not a gate. Every
@@ -1282,15 +1282,15 @@ timestamp, `off_until`. The `blocked_device_ips` view reads the clock. When the
 moment passes the addresses simply stop being in the set on the gateway's next
 fifteen-second reconcile. There is no worker to fail, no timer to install, and
 nothing left behind to go stale: the cut cannot outlive the reason for it,
-because the reason for it *is* the clock. `kidnet house on` is the same single
+because the reason for it *is* the clock. `genkan house on` is the same single
 UPDATE. Default sixty minutes, capped at a day.
 
 Ending a cut early takes out only the addresses nothing else still says should
 be blocked, so `house on` cannot hand the internet back to a child who is out of
 time or who was switched off separately.
 
-`house-off` is a scope in `ips_in_scope()` but deliberately NOT in `bin/kidnet`'s
-scope list, so `kidnet off house-off` is refused. A whole-house cut with no
+`house-off` is a scope in `ips_in_scope()` but deliberately NOT in `bin/genkan`'s
+scope list, so `genkan off house-off` is refused. A whole-house cut with no
 expiry is exactly the foot-gun this design exists to remove, and leaving a second
 door to it open would have put it straight back.
 
@@ -1298,14 +1298,14 @@ door to it open would have put it straight back.
 
 `category_state` is keyed on a child, and the gateway rebuilds `@kids_block`
 from it every fifteen seconds. A shared device has no child, so a block written
-straight into nftables would have been scrubbed on the next tick, and `kidnet
+straight into nftables would have been scrubbed on the next tick, and `genkan
 dinner` would have turned the television off for fifteen seconds. `device_state`
 is the same idea keyed on the device.
 
 While moving that query into the database (`blocked_device_ips`) two things came
 out of the old one in `gateway/entrypoint.sh`. It joined on `child_id` alone
 with no class check, so a camera that had somehow been handed to a child would
-have gone dark with them; nothing in `bin/kidnet` can produce that row, but the
+have gone dark with them; nothing in `bin/genkan` can produce that row, but the
 iron rule should not depend on that staying true. And `reconcile_set` could not
 tell an empty answer from a failed query: a view the image expects but the
 database has not been given yet produced no rows, which read as "nothing should
@@ -1320,7 +1320,7 @@ television and no "the iPad has had two hours today".
 
 That was offered as optional and it is genuinely a lot more work, so it is not
 half built. Everything about time in Hearth is keyed on a child: `time_ledger`
-and `time_remaining`, `kidnet spend` and `kidnet bonus`, `kidnet-meter` walking
+and `time_remaining`, `genkan spend` and `genkan bonus`, `kidnet-meter` walking
 children rather than devices, `category_budgets`, the earn and quiz paths that
 add minutes back, and the captive portal that explains to a named child what
 happened and what they can do about it. A device-level budget is a second full
@@ -1333,7 +1333,7 @@ A budget that silently does not enforce is worse than no budget at all, so:
 
 **Next step, written down rather than done.** A `device_budgets` table mirroring
 `category_budgets`, a `device_usage` day ledger, a device branch in
-`kidnet-meter`, a `kidnet spend-device` verb, and a portal page for a device
+`kidnet-meter`, a `genkan spend-device` verb, and a portal page for a device
 with no owner. Roughly the size of the metering work in METERING.md, and it
 should be done as one piece with tests, not bolted on.
 
@@ -1560,7 +1560,7 @@ everything it wants to stream in stalls. The asymmetry is the point: the small
 things you might genuinely need still work, and the things designed to hold you
 for three hours become miserable.
 
-It is settable (`kidnet slow-rate`, 32 to 9999 kbit/s) because households and
+It is settable (`genkan slow-rate`, 32 to 9999 kbit/s) because households and
 connections differ. There is a floor because below about 32 kbit/s TCP struggles
 to make progress at all, and at that point it is a broken connection rather
 than a slow one, which is the failure the whole feature is trying to avoid.
@@ -1574,7 +1574,7 @@ minutes back puts them straight back to full speed.
 It defaults to `cut`, which is what Hearth has always done. Changing what
 happens when a child's time runs out is a change to somebody's household
 routine, and shipping that as the side effect of an upgrade would be wrong. A
-household has to choose the slope: `kidnet slow-timeout slow`.
+household has to choose the slope: `genkan slow-timeout slow`.
 
 ### The child is told, in plain words
 

@@ -2,8 +2,8 @@
 
 | | |
 |---|---|
-| <https://hearth-demo.appspurt.dev> | the parent's dashboard |
-| <https://hearth-portal.appspurt.dev> | the child's captive portal and the quizzes |
+| <https://genkan-demo.appspurt.dev> | the parent's dashboard |
+| <https://genkan-portal.appspurt.dev> | the child's captive portal and the quizzes |
 
 The real Hearth code, running against a database full of a household that does
 not exist. There is no second copy of anything: this stack bind-mounts

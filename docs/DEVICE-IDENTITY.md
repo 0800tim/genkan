@@ -123,9 +123,9 @@ Off by default. A household running happily today should not wake up to
 devices in a restricted lane. Turn it on deliberately, once the family knows
 what it does, which is the same rule the IoT policy follows.
 
-    kidnet claim-mode off      # today's behaviour: a lease is enough
-    kidnet claim-mode observe  # count what WOULD be restricted, block nothing
-    kidnet claim-mode enforce  # unclaimed devices get DNS, portal, safety net
+    genkan claim-mode off      # today's behaviour: a lease is enough
+    genkan claim-mode observe  # count what WOULD be restricted, block nothing
+    genkan claim-mode enforce  # unclaimed devices get DNS, portal, safety net
 
 `observe` exists because the first thing a parent wants to know is how many
 devices this would have caught, before it catches any.

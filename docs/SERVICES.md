@@ -21,7 +21,7 @@ kilobytes of page; the CDN is the gigabytes that should count as screen time.
 The honest way to find the real answer is to watch your own house's DNS log
 while the service is actually being used:
 
-    kidnet recent <kid> 1
+    genkan recent <kid> 1
 
 shows every domain that child's devices looked up in the last day, newest
 first. Have them open the app or the website, use it for a couple of minutes,
@@ -29,7 +29,7 @@ then run this straight after and read down the list. The domains that repeat
 while video is playing, or that appear only once the show actually starts
 rather than when the app just opens, are the ones that matter.
 
-    kidnet topsites 1
+    genkan topsites 1
 
 does the same thing the other way round: every domain any child looked up
 today, ranked by how often. A service that is being used a lot but is missing

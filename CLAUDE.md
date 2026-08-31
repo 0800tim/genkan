@@ -52,13 +52,14 @@ adguard/) and the kid portal (dashboard/portal.mjs) all live in that
 namespace and physically cannot touch the host, main LAN or tailnet.
 Postgres holds desired state; the gateway reconciles the firewall from it
 every 15s. The admin dashboard (dashboard/server.mjs) binds the tailnet on
-the HOST, outside the island. bin/kidnet is the CLI the agent drives.
+the HOST, outside the island. bin/genkan is the CLI the agent drives; it was
+called kidnet until 2026-08-31 and bin/kidnet remains as a compat shim.
 
-bin/ holds seventeen scripts: kidnet (the control surface), kidnet-report
-(the weekly digest), kidnet-quiz (the learn-to-earn bank manager),
+bin/ holds eighteen scripts: genkan (the control surface), kidnet (the shim),
+kidnet-report (the weekly digest), kidnet-quiz (the learn-to-earn bank manager),
 kidnet-quiz-suggest (the evidence briefing for writing new banks, which calls
 no AI service) and thirteen background workers driven by systemd timers.
-deploy.sh installs fourteen of them and enables six timers; the seventh,
+deploy.sh installs fifteen of them and enables six timers; the seventh,
 kids-iot-policy.timer, is installed but left disabled because the household
 IoT policy is switched on deliberately (docs/HOUSEHOLD-SECURITY.md).
 kidnet-report, kidnet-quiz and kidnet-quiz-suggest are run from the repo.
@@ -82,7 +83,7 @@ carries a difficulty and an explanation, and every bank has a study page at
 the reading list in config/db/schema-learn*.sql (scope='learn' rows in
 always_allow, reachable through a total cut), and badges in dashboard/badges.mjs
 plus config/db/schema-badges.sql. Badges' house board and device claiming
-(config/db/schema-claim.sql, kidnet claim-mode / claims / confirm / unclaimed,
+(config/db/schema-claim.sql, genkan claim-mode / claims / confirm / unclaimed,
 the kids_unclaimed nft set) are both OFF BY DEFAULT and must stay that way.
 
 ## Iron rules
@@ -99,7 +100,7 @@ the kids_unclaimed nft set) are both OFF BY DEFAULT and must stay that way.
   bin/kidnet-health or bin/kidnet-release-lib.sh: run sudo
   test/release-test.sh (42 checks, throwaway clone and throwaway database).
   NEVER test an upgrade or a rollback against the live gateway.
-- After ANY change to kids.nft, gateway/ or kidnet: run
+- After ANY change to kids.nft, gateway/ or genkan: run
   sudo test/firewall-test.sh (46 checks) and sudo test/container-test.sh
   (26 checks). Both must pass 100% before commit. After ANY change to
   config/db/: test/schema-test.sh (88 checks) and test/db-role-test.sh
@@ -134,7 +135,7 @@ tools/worktree-snapshot.sh save. Development safeguard, not a household one:
 the unit is on the box, not in the repo.
 
 Two PUBLIC demos run the same code read-only against a seeded fictional
-household, so they improve whenever the product does: hearth-demo.appspurt.dev
-(the dashboard) and hearth-portal.appspurt.dev (the kid's portal, with one
+household, so they improve whenever the product does: genkan-demo.appspurt.dev
+(the dashboard) and genkan-portal.appspurt.dev (the kid's portal, with one
 child deliberately out of time). Both are demo/, both set HEARTH_DEMO=1, which
 turns every shell-out into a no-op. Operational detail: docs/OPERATIONS.md.

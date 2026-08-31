@@ -287,8 +287,8 @@ section, before running anything.
      docker ps
      docker logs hearth-gw | tail -30
      systemctl status kids-nic-warden
-     kidnet status
-     kidnet allow-status
+     genkan status
+     genkan allow-status
 5. Then run the proof: sudo test/container-test.sh
    Every check must pass. If any check fails, stop, show me the failure, and
    do not attempt a workaround. A failing check here is a real finding.
@@ -300,7 +300,7 @@ test fails, that is information, not an obstacle.
 **What you should see.** Containers `hearth-gw`, `hearth-adguard` and
 `hearth-portal` up; the gateway log reporting the segment guard verdict and the
 firewall loading; the NIC warden active with a handover in its journal; and
-`kidnet allow-status` listing addresses rather than nothing. `container-test.sh`
+`genkan allow-status` listing addresses rather than nothing. `container-test.sh`
 prints its own pass count at the end, and all of them have to pass.
 
 `deploy.sh` also generates your AdGuard admin password on first run and writes
@@ -314,7 +314,7 @@ it into `secrets.env`. That file is gitignored and stays on this box.
   Fix the access point (prompt 6), do not disable the guard.
 - **The warden never hands the NIC over.** The MAC in `config.env` does not
   match. `journalctl -u kids-nic-warden` prints what it is looking for.
-- **`kidnet` says "permission denied" against the database.** The
+- **`genkan` says "permission denied" against the database.** The
   `config/db/grants.sql` step warned rather than failed. `docs/DATABASE.md` has
   the fix, and re-running `deploy.sh` repairs it.
 - **`allow-status` is empty.** The safety net is not loaded, and that is the one
@@ -343,7 +343,7 @@ Talk me through, one step at a time:
 
 Then, once it serves:
 4. I will join a phone to the kids' wifi. Confirm from the box that it got a
-   lease (kidnet leases), that it appears as a device (kidnet devices), and
+   lease (genkan leases), that it appears as a device (genkan devices), and
    tell me its address.
 5. On the phone I will check: the internet works, the portal loads at
    http://192.168.60.1, and an obviously adult domain is blocked. Tell me
@@ -415,25 +415,25 @@ Our household:
    policies table and recommend one per child based on their age. Tell me
    what each tier actually blocks and what daily budget it carries, so I am
    choosing rather than accepting a default.
-2. Add each real person with "kidnet person add <name> <role> [tier]".
+2. Add each real person with "genkan person add <name> <role> [tier]".
 3. The seed left placeholder children called child-11, child-14 and child-16.
-   Tell me how to remove them. Note that kidnet has no delete: removing a
+   Tell me how to remove them. Note that genkan has no delete: removing a
    person is done on the dashboard's Family page, and it deletes their time
    ledger and usage with them.
-4. Run "kidnet devices" and "kidnet unassigned" and show me the list. For
+4. Run "genkan devices" and "genkan unassigned" and show me the list. For
    each unassigned device, tell me its vendor and hostname so I can work out
-   whose it is, then assign it with "kidnet assign <mac> <person> <label>".
+   whose it is, then assign it with "genkan assign <mac> <person> <label>".
 5. Anything that is not a person's device: mark infrastructure (the access
-   point, the switch) with "kidnet infra", and tell me which devices you
+   point, the switch) with "genkan infra", and tell me which devices you
    think are smart home kit rather than personal, and why.
-6. Then show me "kidnet status" and "kidnet time" for the whole house.
+6. Then show me "genkan status" and "genkan time" for the whole house.
 
 Never guess whose device something is. Bring me the vendor, the hostname and
 the address, and let me say.
 ```
 
 **What you should see.** Every device with an owner or a deliberate
-classification, and `kidnet time` printing one line per child.
+classification, and `genkan time` printing one line per child.
 
 **If it looks wrong.** Devices classified `personal` are the only ones that
 group controls reach, so a camera wrongly marked personal will go dark at
@@ -466,14 +466,14 @@ My current house wifi is called "<old SSID>". I want to do the Switcheroo:
    than as a gotcha. It should say the network is filtered and time managed,
    why, what it can see (domains) and what it cannot (inside their messages),
    and that there is a bug bounty for finding holes in it.
-4. Then watch with me: "kidnet leases" and "kidnet unassigned" as devices
+4. Then watch with me: "genkan leases" and "genkan unassigned" as devices
    roll in, and help me name each one.
 
 Do not suggest keeping this secret from them. The playbook explains why.
 ```
 
 **What you should see.** Devices reconnecting themselves over the following
-hour, appearing in `kidnet unassigned` as they arrive.
+hour, appearing in `genkan unassigned` as they arrive.
 
 **If it looks wrong.** Devices that never reconnect are usually holding the old
 router's network in range. The rename has to be a real rename, and the new
@@ -492,7 +492,7 @@ Hearth has been running for a week. Help me review it, and be honest rather
 than encouraging:
 1. Run "bin/kidnet-report all last" and walk me through it, one child at a
    time. Tell me what is actually notable and what is just noise.
-2. Show me "kidnet topsites" and anything in the alerts table. For any
+2. Show me "genkan topsites" and anything in the alerts table. For any
    self-harm category flag, tell me plainly that it is a care conversation
    and not a discipline one, and do not bury it in a list.
 3. Tell me where the time budgets are wrong: who is hitting the wall every
@@ -593,10 +593,10 @@ Then audit what is actually running, and be adversarial about it:
    containers, the systemd timers, and any outbound connection you can see.
    Name anything you are unsure about.
 2. Is the admin dashboard bound to a private address only?
-3. Does the safety net actually resolve? Run "kidnet allow-status".
+3. Does the safety net actually resolve? Run "genkan allow-status".
 4. Run "sudo test/container-test.sh" and "sudo test/firewall-test.sh" and
    report every failure verbatim.
-5. Has anything in config/nftables/kids.nft, gateway/ or bin/kidnet been
+5. Has anything in config/nftables/kids.nft, gateway/ or bin/genkan been
    modified from what the repo ships? "git status" and "git diff" will tell
    you. If something was changed to make a test pass, say so plainly.
 6. Tell me the three most likely ways this setup fails in the next year.

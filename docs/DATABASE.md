@@ -71,7 +71,7 @@ These ordering constraints are load-bearing:
 - `schema-devices.sql` must come **after** `schema-people.sql`. Both define the
   `device_roster` view; the later one adds `category` and `vendor`, and running
   them the other way around silently gives you a roster with no device class,
-  which is what the dashboard and `kidnet devices` read.
+  which is what the dashboard and `genkan devices` read.
 - `seed.sql` must come **after** `schema-safety.sql`, because its `always_allow`
   rows set the `category` column that file adds.
 - `schema-policies.sql` must come **after** `schema-devices.sql`, because its
@@ -117,7 +117,7 @@ These ordering constraints are load-bearing:
   replaces `people_in_scope()` and `ips_in_scope()`, and **after**
   `schema-devices.sql`, because it replaces `device_roster` and alters
   `devices`. Load it the other way round and you get the narrower scope
-  functions back, which means `kidnet dinner` stops reaching the family
+  functions back, which means `genkan dinner` stops reaching the family
   television and the whole-house cut stops existing. `gateway/entrypoint.sh`
   reads `blocked_device_ips` from this file, so a gateway image rebuilt against
   a database that has not loaded it logs a failed reconcile and keeps the
@@ -142,7 +142,7 @@ These ordering constraints are load-bearing:
   `schema-safety.sql`, because both insert `always_allow` rows carrying the
   `scope` and `category` columns that file adds. They go last of all simply
   because they are pure content and nothing reads them at load time. Their rows
-  reach the firewall through `kidnet allow-sync` and the gateway's hourly
+  reach the firewall through `genkan allow-sync` and the gateway's hourly
   refresh, not through the loader. See [READING-LIST.md](READING-LIST.md).
 
 Load them:
@@ -175,7 +175,7 @@ audit trail that makes voice grants safe, so loading it costs nothing.
 ## One thing the seed does not do
 
 There is no seed for the `tasks` table, so a fresh install has an empty list of
-earnable chores. The portal's chore buttons and `kidnet earn <kid> <task>` both
+earnable chores. The portal's chore buttons and `genkan earn <kid> <task>` both
 read it, so add your own household's list:
 
 ```sql
@@ -189,14 +189,14 @@ INSERT INTO tasks (name, minutes, needs_approval) VALUES
 
 `needs_approval` is the difference between the two earning paths: quizzes are
 graded by the portal and credited immediately, chores are a claim a parent
-approves on the dashboard or with `kidnet earn`. Both land in the same
+approves on the dashboard or with `genkan earn`. Both land in the same
 `time_events` audit trail.
 
 ## One table nothing reads
 
 `schedules` (child, days, start and end minute, block or allow) is defined in
 `schema.sql` and read by nothing. Bedtimes are not automatic yet: today they
-are `kidnet off` from a timer you write yourself, or a word to the agent. The
+are `genkan off` from a timer you write yourself, or a word to the agent. The
 table is left in place because the design is settled and the column shape is
 right; it is listed here so nobody assumes a row in it does something.
 
@@ -208,9 +208,9 @@ Two roles, two jobs, and neither is a superuser.
 module and the gateway container connect as it, over TCP, with the password in
 `secrets.env`. It holds only the SELECT, INSERT and UPDATE it needs on the app
 tables. It has no rights over enforcement: the only audited path to the
-firewall is `bin/kidnet`.
+firewall is `bin/genkan`.
 
-**`kids_agent`** is the CLI and timer role, added on 2026-08-30. `bin/kidnet`,
+**`kids_agent`** is the CLI and timer role, added on 2026-08-30. `bin/genkan`,
 every `bin/kidnet-*` worker and the two operator tools that read the database
 (`tools/publish.sh`, the Omarchy widget) connect as it, over the local socket
 inside the Postgres container. Its grants are in `config/db/grants.sql`, one
@@ -276,7 +276,7 @@ things `kids_agent` is not allowed to do.
 
 ### Adding a verb
 
-If you add a `kidnet` verb that touches a table not in `config/db/grants.sql`,
+If you add a `genkan` verb that touches a table not in `config/db/grants.sql`,
 add its grant there too, or the verb fails with `permission denied`. Grant the
 narrowest verb list that works, and say in the comment which script needs it.
 Then run `bash test/db-role-test.sh`.
@@ -285,7 +285,7 @@ Then run `bash test/db-role-test.sh`.
 
 - `KIDS_DB_URL`: how **host** processes reach Postgres, via the published
   loopback port. Used by the dashboard and, where a tool reads it at all, the
-  host-side kidnet tools.
+  host-side genkan tools.
 - `KIDS_DB_URL_DOCKER`: the same database as a **container** sees it, via the
   Postgres network alias. Used by the portal and the gateway. Which one is
   picked is decided by the `IN_CONTAINER` flag compose sets.
