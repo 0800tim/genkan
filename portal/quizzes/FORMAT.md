@@ -16,6 +16,10 @@ effort earns screen time.
   "title": "Times Tables",
   "emoji": "✖️",
   "suggested_age_min": 9,
+  "subject": "maths",
+  "year_from": 3,
+  "year_to": 6,
+  "year_note": "Times tables are learned from Year 3 and expected by the end of Year 6.",
   "minutes_per_pass": 10,
   "pass_mark": 8,
   "questions_per_round": 10,
@@ -40,7 +44,18 @@ effort earns screen time.
 | `title` | string | Shown on the portal. |
 | `emoji` | string | One emoji for the bank's card on the portal. |
 | `suggested_age_min` | int | Soft hint for which kids see the bank first. Not a lock: a younger kid can still try it. |
+| `subject` | string | Where the portal's Learning home files the bank. One of the eight NZ learning areas, `english`, `maths`, `science`, `social-sciences`, `technology`, `arts`, `health-pe`, `languages`, or one of two shelves that are not learning areas: `general` (general knowledge, chess, the road code) and `other-countries` (another country's curriculum). |
+| `year_from`, `year_to` | int | The NZ school years the bank suits, 1 to 13, inclusive. A bank for Years 7 and 8 is `7` and `8`; a beginners bank a child of any age might pick up is honest about that and spans wide. Not a lock either: the Learning home shows every bank, it just puts these ones first for that year. |
+| `year_note` | string | One or two sentences saying how the band was chosen: the curriculum level it was written for, or the age it was written for and the year that maps to, or "not on any curriculum, playable from about Year 4". The point is that the next person can see whether it was a match or a guess. |
 | `minutes_per_pass` | int | Minutes credited for a passing round. Keep modest (see anti-grind below). |
+
+The three curriculum fields go together: give all of them or none. A bank
+without them still plays exactly as before, and the Learning home lists it
+under "any year". Every bank in this directory has them. The mapping from year
+to curriculum level and age is the table in `research/curriculum-nz.md`: Year 1
+starts at about five, Level 4 is Years 7 and 8, NCEA Levels 1 to 3 are Years 11
+to 13. Where a bank was written for an age rather than a year, the year is age
+minus four, and the note says so.
 | `pass_mark` | int | Correct answers needed, out of `questions_per_round`, to earn the minutes. |
 | `questions_per_round` | int | How many questions the server samples for one round. Must be well below the bank size. |
 
@@ -159,12 +174,16 @@ Hard failures:
   that uses difficulty. A struggling kid is given a round built mostly from
   those two levels, so there has to be enough to fill one without repeating.
 - Fewer than `4 x questions_per_round` questions in total.
+- A `subject` that is not on the list above, a `year_from` or `year_to`
+  outside 1 to 13 or the wrong way round, or curriculum fields without a
+  `year_note`.
 
-Warnings, printed but not fatal: a difficulty level with no questions in it.
+Warnings, printed but not fatal: a difficulty level with no questions in it,
+and a bank with no curriculum fields at all (it lists under "any year").
 
-A passing line prints the question count and the ramp, so
-`PASS times-tables.json (60 questions, ramped 12/16/15/12/5)` tells you the
-spread across levels 1 to 5 at a glance.
+A passing line prints the question count, the ramp and where the bank is
+filed, so `PASS times-tables.json (60 questions, ramped 12/16/15/12/5, maths
+Y3-6)` tells you the spread across levels 1 to 5 and the year band at a glance.
 
 What it cannot check, and what review is for: whether the answer is actually
 correct, whether the explanation teaches anything, and whether the wrong answers
@@ -241,3 +260,6 @@ New banks arrive by pull request. Checklist:
 - NZ English spelling. Māori place names with correct macrons (Taupō,
   Whangārei).
 - Bank size at least 4x `questions_per_round`.
+- A `subject`, a `year_from` and `year_to`, and a `year_note` that says how you
+  chose them. Be honest where a bank spans years or is not on any curriculum;
+  a wide band with a plain note beats a narrow guess.

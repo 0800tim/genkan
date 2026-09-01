@@ -34,6 +34,17 @@ if (paths.length === 0) {
 let anyFailed = false;
 const seenBankIds = new Map();
 
+// The subjects a bank can be filed under: the eight learning areas of the New
+// Zealand Curriculum, plus two shelves that are not learning areas at all.
+// The same list lives in dashboard/portal-learn.mjs (SUBJECTS), which is what
+// the portal groups by; change both or the Learning home drops the bank.
+const SUBJECTS = new Set([
+  "english", "maths", "science", "social-sciences", "technology", "arts",
+  "health-pe", "languages",
+  "general",          // general knowledge, chess, the road code: not a learning area
+  "other-countries",  // another country's curriculum, filed by rough age
+]);
+
 for (const path of paths) {
   const file = basename(path);
   const errors = [];
@@ -62,6 +73,31 @@ for (const path of paths) {
     ]) {
       if (!Number.isInteger(bank[field]) || bank[field] <= 0) {
         errors.push(`field "${field}" must be a positive integer`);
+      }
+    }
+
+    // Where the bank sits in the New Zealand curriculum: a subject and a
+    // year band (Year 1 to Year 13). The portal's Learning home groups banks
+    // by these. Missing is a warning rather than a failure, because a bank
+    // written on the dashboard or by an older generator has none and still
+    // plays; the Learning home files it under "any year". Present but wrong
+    // is a failure, because a bank filed under Year 40 helps nobody.
+    if (!("year_from" in bank) && !("year_to" in bank) && !("subject" in bank)) {
+      warnings.push(`no subject / year_from / year_to: the Learning home lists it under "any year"`);
+    } else {
+      if (!SUBJECTS.has(bank.subject)) {
+        errors.push(`subject "${bank.subject}" is not one of: ${[...SUBJECTS].join(", ")}`);
+      }
+      for (const field of ["year_from", "year_to"]) {
+        if (!Number.isInteger(bank[field]) || bank[field] < 1 || bank[field] > 13) {
+          errors.push(`field "${field}" must be an integer from 1 to 13 (NZ school years)`);
+        }
+      }
+      if (Number.isInteger(bank.year_from) && Number.isInteger(bank.year_to) && bank.year_from > bank.year_to) {
+        errors.push(`year_from (${bank.year_from}) is after year_to (${bank.year_to})`);
+      }
+      if (typeof bank.year_note !== "string" || bank.year_note.trim().length === 0) {
+        errors.push(`"year_note" must say how the year band was chosen (a sentence is enough)`);
       }
     }
 
@@ -215,7 +251,10 @@ for (const path of paths) {
     const ramp = bankLevels
       ? `, ramped ${bankLevels.join("/")}`
       : ", no difficulty data";
-    console.log(`PASS  ${file} (${bank.questions.length} questions${ramp})`);
+    const where = Number.isInteger(bank.year_from)
+      ? `, ${bank.subject} Y${bank.year_from}${bank.year_to !== bank.year_from ? `-${bank.year_to}` : ""}`
+      : "";
+    console.log(`PASS  ${file} (${bank.questions.length} questions${ramp}${where})`);
   } else {
     anyFailed = true;
     console.log(`FAIL  ${file}`);

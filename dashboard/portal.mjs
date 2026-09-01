@@ -22,6 +22,10 @@ import pg from "pg";
 // Badges and the house board. All the logic lives there because the parent
 // dashboard shows the same rows; this file only wires it to the kid's side.
 import { BADGES, awardBadges, childBadges, boardEnabled, boardData, recordStudyVisit } from "./badges.mjs";
+// The Learning home (/learn), the missed-questions list on a result page and
+// practice rounds. A factory, because it needs page(), esc() and the shelf
+// from this file and this file needs it back.
+import { createLearn, kidYear, LEARN_CSS } from "./portal-learn.mjs";
 
 const DEMO = process.env.GENKAN_DEMO === "1";
 // The ?kid= override lets a parent see what a child sees. At home it is
@@ -171,7 +175,9 @@ setInterval(() => { const now = Date.now(); for (const [t, r] of rounds) if (r.e
 const PREVIEW_TOKEN = process.env.PORTAL_PREVIEW_TOKEN || "";
 let PREVIEW_OK = false;
 async function whoIs(ip, override) {
-  const [byIp] = await q("SELECT c.id,c.name,c.age FROM children c JOIN devices d ON d.child_id=c.id WHERE host(d.reserved_ip)=$1 LIMIT 1", [ip]);
+  // notes rides along for the Learning home, which reads "Year 7" out of it
+  // when a household has written that there (portal-learn.mjs, kidYear).
+  const [byIp] = await q("SELECT c.id,c.name,c.age,c.notes FROM children c JOIN devices d ON d.child_id=c.id WHERE host(d.reserved_ip)=$1 LIMIT 1", [ip]);
   if (byIp) return { ...byIp, real: true };
   // The ?kid= override is a parent's preview, not something a device on the
   // island may use. Any unrecognised device could name any child and read
@@ -180,7 +186,7 @@ async function whoIs(ip, override) {
   // siblings do. It now needs the preview token, which only the dashboard
   // holds, or the demo flag, where the household is invented anyway.
   if (override && (DEMO || PREVIEW_OK)) {
-    const [o] = await q("SELECT id,name,age FROM children WHERE lower(name)=lower($1)", [override]);
+    const [o] = await q("SELECT id,name,age,notes FROM children WHERE lower(name)=lower($1)", [override]);
     if (o) return { ...o, real: false };
   }
   return null;
@@ -474,8 +480,48 @@ const LOCKUP_CSS = `
 .lockup-line .lg6{fill:#a68ff5}.lockup-line .lg7{fill:#9a7df0}
 .lockup-line .lg8{fill:#f2b95e}
 `;
-const page = body => `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
-<title>${DEMO ? "Genkan demo" : "Genkan"}</title><style>${CSS}${STUDY_CSS}${LOGO_CSS}${LOCKUP_CSS}</style><div class="wrap">${DEMO_NOTE}${LOCKUP}${body}</div>`;
+// The demo's child switcher. A visiting parent should be able to flip between
+// the invented children and see each one's page, and Tim's first note on the
+// live demo was that he could only ever see one child. It renders ONLY under
+// the demo flag: at home the child is whoever the device belongs to, and a
+// page that let a child pick a sibling would let them read that sibling's
+// minutes, which is exactly what whoIs() refuses. The list is re-read every
+// minute so a reseed shows up without a restart.
+let demoKids = [];
+async function loadDemoKids() {
+  if (!DEMO) return;
+  try {
+    demoKids = await q(`SELECT name, age, notes FROM children
+       WHERE kind='child' AND active ORDER BY age DESC, name`);
+  } catch { /* an older schema without kind/active: keep whatever we had */ }
+}
+if (DEMO) { loadDemoKids(); setInterval(loadDemoKids, 60_000).unref(); }
+const DEMO_BAR_CSS = `
+.demo-bar{max-width:520px;margin:0 auto 14px;display:flex;align-items:center;gap:7px;flex-wrap:wrap;font:14px system-ui,sans-serif}
+.demo-bar .lbl{opacity:.8;margin-right:2px}
+.demo-bar a{display:inline-block;padding:7px 12px;border-radius:11px;color:#fff;text-decoration:none;font-weight:600;
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.22)}
+.demo-bar a.on{background:rgba(255,255,255,.30);border-color:rgba(255,255,255,.5)}
+.demo-bar a small{font-weight:400;opacity:.8;margin-left:5px}
+.demo-bar a.learn{margin-left:auto;background:rgba(74,222,128,.18);border-color:rgba(74,222,128,.5)}`;
+function demoBar(ctx) {
+  if (!DEMO || !demoKids.length) return "";
+  const path = ctx?.path === "/learn" ? "/learn" : "/";
+  const cur = String(ctx?.kid?.name || "").toLowerCase();
+  const pill = k => {
+    const y = kidYear(k);
+    return `<a class="${k.name.toLowerCase() === cur ? "on" : ""}" href="${path}?kid=${encodeURIComponent(k.name)}">${esc(k.name)}<small>${
+      y ? `Year ${y.year}` : esc(k.age ? k.age + "" : "")}</small></a>`;
+  };
+  return `<div class="demo-bar"><span class="lbl">See it as</span>${demoKids.map(pill).join("")}${
+    ctx?.kid ? `<a class="learn" href="/learn?kid=${encodeURIComponent(ctx.kid.name)}">📚 Learning by year</a>` : ""}</div>`;
+}
+// ctx is optional: {kid, path} for the pages that know who they are for,
+// used only by the demo's switcher. Nothing at home reads it.
+const page = (body, ctx) => `<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1">
+<title>${DEMO ? "Genkan demo" : "Genkan"}</title><style>${CSS}${STUDY_CSS}${LEARN_CSS}${LOGO_CSS}${LOCKUP_CSS}${DEMO_BAR_CSS}</style><div class="wrap">${DEMO_NOTE}${demoBar(ctx)}${LOCKUP}${body}</div>`;
+
+const learn = createLearn({ q, page, esc, banks, quizOn, quizMinutes, demo: DEMO });
 // ---------------------------------------------------------------------------
 // Claiming a device
 // ---------------------------------------------------------------------------
@@ -605,7 +651,10 @@ function readFirstBlock(bank) {
     + r.body.map(t => `<p>${esc(t)}</p>`).join("") + links + `</div>`;
 }
 
-function studyPage(bank, kidQS) {
+// `st` is the child's status, so the page can say what a pass is worth and
+// whether the bank is ready, in the same words as the hub. Absent (an older
+// caller), the page still reads fine, it just does not name a price.
+function studyPage(bank, kidQS, st, ctx) {
   const items = (bank.questions || []).map((q, i) => {
     const ans = (q.choices || [])[q.answer_index];
     return `<div class="s-q">
@@ -614,15 +663,24 @@ function studyPage(bank, kidQS) {
       ${q.explanation ? `<p class="s-e">${esc(q.explanation)}</p>` : ""}
     </div>`;
   }).join("");
+  const on = st ? quizOn(st, bank) : true;
+  const pay = st ? learn.payState(st, bank) : null;
+  const meta = `<div class="meta">${esc(learn.yearsLabel(bank))}${bank.subject ? ` · ${esc(learn.subjectTitle(bank))}` : ""} · ${(bank.questions || []).length} questions, ${bank.questions_per_round || 10} a round, ${bank.pass_mark || 8} to pass${
+    pay ? (on ? ` · ${esc(pay.note)}${pay.ok ? " a pass" : ""}` : " · off your list just now") : ""}</div>`;
+  const start = on
+    ? `<a class="go${pay && !pay.ok ? " alt" : ""}" href="/quiz/${esc(bank.id)}${kidQS}">${pay && !pay.ok ? `Have a go anyway (${esc(pay.note)}, no minutes yet)` : "I am ready, start a round"}</a>`
+    : "";
   return page(`<div class="card">
     <h1>${esc(bank.emoji || "")} ${esc(bank.title)}</h1>
+    ${meta}
     <div class="who">Everything this quiz can ask, with the answers and why.
       Read it, then go and have a go. The questions come up in a different order
       every time, so there is nothing to memorise the shape of.</div>
     ${readFirstBlock(bank)}
+    ${start ? `<div class="actions" style="margin-bottom:6px">${start}</div>` : ""}
     <div class="study">${items}</div>
-    <p><a class="back" href="/quiz/${esc(bank.id)}${kidQS}">I am ready, start a round</a></p>
-    <p><a class="back" href="/${kidQS}">Back</a></p></div>`);
+    ${start ? `<div class="actions">${start}</div>` : ""}
+    <div class="crumbs" style="margin-top:12px"><a href="/learn${kidQS}">📚 Learning</a><a href="/${kidQS}">← back to Genkan</a></div></div>`, ctx);
 }
 
 // The ordinary portal pages carry no help-line footer (a parent's call,
@@ -697,7 +755,7 @@ function warmPage(kid, flag, kidQS) {
 // Deliberately not a ranking: the board spotlights whoever leads each
 // category, so different children can lead different ones, and everybody
 // else's own number sits alongside without a position next to it.
-function badgesPage(kid, got, board, kidQS) {
+function badgesPage(kid, got, board, kidQS, ctx) {
   // `got` is only the badges this child has actually earned, so the ones still
   // to get are BADGES minus those. Showing both matters: a child with two
   // badges should be able to see there are eight more waiting, all of which
@@ -728,13 +786,13 @@ function badgesPage(kid, got, board, kidQS) {
     ${todo.length ? `<div class="card"><h2>Still to get</h2>
       <div class="badges">${todo.map(b => chip(b, false)).join("")}</div></div>` : ""}
     ${boardHtml}
-    <p><a class="back" href="/${kidQS}">← back</a></p>`);
+    <div class="crumbs"><a href="/learn${kidQS}">📚 Learning</a><a href="/${kidQS}">← back</a></div>`, ctx);
 }
 
 // The time as a child reads a clock, not as a database prints one.
 const clock = ts => ts ? new Date(ts).toLocaleTimeString("en-NZ", { hour: "2-digit", minute: "2-digit" }) : "";
 
-function homePage(kid, st, kidQS) {
+function homePage(kid, st, kidQS, ctx) {
   const rem = st.rem?.remaining_min ?? 0;
   const unlimited = (st.rem?.budget_min || 0) >= 999;
   const inet = st.cats.find(c => c.category === "internet");
@@ -765,7 +823,11 @@ function homePage(kid, st, kidQS) {
     ? `<h1>🌙 Goodnight</h1>
        <div class="who">Hi ${esc(kid.name)}. The internet is off for the night. It comes back on
          by itself at <b>${esc(clock(bed.ends_at))}</b>, so there is nothing you need to do.</div>`
-    : inet
+    // `|| outOfTime`: a clock at zero is time's up whether or not the
+    // gateway's reconciler has written the block yet (it runs every 15s at
+    // home; the demo has no gateway at all). Saying "your time, your call"
+    // over a zero is the one thing this page must never do.
+    : inet || (outOfTime && !unlimited)
     ? `<h1>${outOfTime ? "⏳ Time's up" : "⏸️ Internet paused"}</h1>
        <div class="who">Hi ${esc(kid.name)}. ${outOfTime ? "You've used today's time, but you can earn more below." : "Some things are switched off right now. You can still earn time for later."}</div>`
     : `<h1>👋 Kia ora ${esc(kid.name)}</h1><div class="who">Your time, your call. Earn more below whenever you like.</div>`;
@@ -848,16 +910,17 @@ function homePage(kid, st, kidQS) {
       <div class="rem">${unlimited ? "∞" : Math.max(0, rem)}<small> ${unlimited ? "no daily limit" : "min left today"}</small></div>
       ${bedLine}
       ${slowLine}
+      <a class="badge-teaser" href="/learn${kidQS}">📚 Learning by year</a>
       <a class="badge-teaser" href="/badges${kidQS}">🏅 My badges</a></div>
     <div class="card"><h2>🎓 Earn time: quizzes (instant)</h2>${quizCards
       || '<div class="small">No quizzes on your list right now. Ask Dad to switch one back on.</div>'}
-      <div class="small">Pass a round to get minutes straight away.${bonus > 0 ? ` Perfect round = +${bonus} bonus.` : ""} Up to ${cap} min a day from quizzes; you've earned ${st.quizEarnedToday} today.</div></div>
+      <div class="small">Pass a round to get minutes straight away.${bonus > 0 ? ` Perfect round = +${bonus} bonus.` : ""} Up to ${cap} min a day from quizzes; you've earned ${st.quizEarnedToday} today. The same banks sit by school year and subject on <a class="back" href="/learn${kidQS}">Learning</a>, with what you have done and what is next.</div></div>
     <div class="card"><h2>🧺 Earn time: jobs</h2>${chores || '<div class="small">No jobs set up yet.</div>'}
       <div class="small">${anyTrusted ? "Some of these land on your clock straight away. The rest wait for Dad to say yes." : "Tap one when it is done and Dad gets asked."} One go at each a day.</div></div>
-    `);
+    `, ctx);
 }
 
-async function quizPage(kid, bank, kidQS, perMin, bonus) {
+async function quizPage(kid, bank, kidQS, perMin, bonus, ctx) {
   const ramped = isRamped(bank);
   const profile = ramped ? await rampProfile(kid.id, bank.id) : null;
   const pick = ramped
@@ -867,56 +930,93 @@ async function quizPage(kid, bank, kidQS, perMin, bonus) {
   const round = { childId: kid.id, bankId: bank.id, profile, expires: Date.now() + 15 * 60_000, questions: [] };
   const qhtml = pick.map((qq, i) => {
     const order = [0, 1, 2, 3].sort(() => Math.random() - 0.5);        // shuffle choices per round
-    round.questions.push({ qid: qq.id, answer: order.indexOf(qq.answer_index), difficulty: ramped ? lvlOf(qq) : null });
+    // `order` is kept so the result page can show the words a child picked
+    // next to the right answer, not a slot number.
+    round.questions.push({ qid: qq.id, answer: order.indexOf(qq.answer_index), difficulty: ramped ? lvlOf(qq) : null, order });
     return `<div class="q"><p><b>${i + 1}.</b> ${esc(qq.prompt)}</p>
       ${order.map((oi, j) => `<label><input type=radio name="q${i}" value="${j}" required>${esc(qq.choices[oi])}</label>`).join("")}</div>`;
   }).join("");
   rounds.set(token, round);
   return page(`<div class="card"><h1>${esc(bank.emoji || "")} ${esc(bank.title)}</h1>
-    <div class="who">${round.questions.length} questions. Get ${bank.pass_mark} right to earn ${perMin} minutes.${bonus > 0 ? ` All ${round.questions.length} right = +${bonus} bonus.` : ""}${ramped ? " They start easy and get harder as you go, so treat the first few as a warm-up." : ""}</div>
+    <div class="meta">${esc(learn.yearsLabel(bank))} · <a class="back" href="/study/${esc(bank.id)}${kidQS}">Read up first</a></div>
+    <div class="who">${round.questions.length} questions. Get ${bank.pass_mark} right to earn ${perMin} minutes.${bonus > 0 ? ` All ${round.questions.length} right = +${bonus} bonus.` : ""}${ramped ? " They start easy and get harder as you go, so treat the first few as a warm-up." : ""} Every one you miss comes back with the answer and why.</div>
     <form method="post" action="/quiz/submit${kidQS}"><input type=hidden name=t value="${token}">${qhtml}
     <button class="go">Check my answers</button></form>
-    <p><a class="back" href="/${kidQS}">← back</a></p></div>`);
+    <p><a class="back" href="/${kidQS}">← back</a></p></div>`, ctx);
 }
 
-async function gradeRound(kid, form, kidQS) {
+async function gradeRound(kid, form, kidQS, ctx) {
   const round = rounds.get(form.get("t") || "");
   if (!round || round.childId !== kid.id || round.expires < Date.now())
-    return page(`<div class="card"><div class="msg">That round expired. No worries, grab a fresh one.</div><p><a class="back" href="/${kidQS}">← back</a></p></div>`);
+    return page(`<div class="card"><div class="msg">That round expired. No worries, grab a fresh one.</div><p><a class="back" href="/${kidQS}">← back</a></p></div>`, ctx);
   rounds.delete(form.get("t"));                                       // one grading per round, ever
   const bank = banks.get(round.bankId);
-  let right = 0;
-  round.questions.forEach((qq, i) => { qq.got = Number(form.get(`q${i}`)) === qq.answer; if (qq.got) right++; });
-  const total = round.questions.length, passed = right >= (bank.pass_mark || 8);
-  let creditedMsg = "", credited = 0;
+  const byId = new Map(bank.questions.map(qq => [qq.id, qq]));
+  let right = 0; const missed = [];
+  round.questions.forEach((qq, i) => {
+    const picked = Number(form.get(`q${i}`));
+    qq.got = picked === qq.answer;
+    if (qq.got) right++;
+    else if (byId.has(qq.qid)) missed.push(learn.missedItem(byId.get(qq.qid), qq.order, picked));
+  });
+  const total = round.questions.length, passMark = bank.pass_mark || 8, passed = right >= passMark;
+  // The status is read whether or not they passed: the "what you earned and
+  // why" line quotes the cap and today's total either way.
+  const st = await status(kid.id);
+  const cap = st.set.quiz_daily_cap_min, bonus = st.set.mastery_bonus_min;
+  let why = "", credited = 0;
   if (passed) {
-    const st = await status(kid.id);
     const coolMs = (st.lastPassAt[bank.id] || 0) + st.set.quiz_cooldown_min * 60_000 - Date.now();
-    const capLeft = Math.max(0, st.set.quiz_daily_cap_min - st.quizEarnedToday);
-    if (!quizOn(st, bank)) creditedMsg = "This one is off your list just now, so no minutes this time. Try another quiz.";
-    else if (coolMs > 0) creditedMsg = "You already passed this one recently, so no minutes this time. Try another quiz.";
-    else if (capLeft <= 0) creditedMsg = `You've hit today's ${st.set.quiz_daily_cap_min} minute quiz cap. Nice work, back tomorrow.`;
+    const capLeft = Math.max(0, cap - st.quizEarnedToday);
+    if (!quizOn(st, bank)) why = `<b>No minutes</b> this time: this bank is off your list just now. The pass still counts, and another bank pays as usual.`;
+    else if (coolMs > 0) why = `<b>No minutes</b> this time: you already passed this one at ${esc(clock(st.lastPassAt[bank.id]))}, and each bank pays once every ${Math.round(st.set.quiz_cooldown_min / 60)} hours. It is ready again at ${esc(clock(st.lastPassAt[bank.id] + st.set.quiz_cooldown_min * 60_000))}. Another bank pays now.`;
+    else if (capLeft <= 0) why = `<b>No minutes</b> this time: you have hit today's ${cap} minute quiz cap. Nice work, back tomorrow.`;
     else {
-      const mins = Math.min(quizMinutes(st, bank), capLeft) + (right === total ? st.set.mastery_bonus_min : 0);
+      const base = Math.min(quizMinutes(st, bank), capLeft);
+      const mins = base + (right === total ? bonus : 0);
       await credit(kid.id, mins, `quiz:${bank.id}`);
       credited = mins;
-      creditedMsg = `+${mins} minutes earned${right === total ? " (perfect round bonus included)" : ""}. It's already on your clock.`;
+      why = `<b>+${mins} minutes</b>, already on your clock. ${right} of ${total} with a pass mark of ${passMark} earns ${base}${
+        base < quizMinutes(st, bank) ? ` (that is what was left of today's ${cap})` : ""}${
+        right === total ? `, and every one right adds the +${bonus} bonus` : bonus > 0 ? `. All ${total} right would have added +${bonus}` : ""}. Up to ${cap} a day from quizzes; ${st.quizEarnedToday + mins} so far today.`;
     }
+  } else {
+    why = `<b>No minutes</b> this time: ${right} of ${total}, and the pass mark is ${passMark}. The questions change every round, and the ones you missed are below with the answer and why. Reading is free.`;
   }
   await logRound(round, right, credited, passed);
   // Once per graded round, never a sweep over the whole history. Badges are
   // a nice-to-have, so a failure here must not swallow a round the child has
   // genuinely earned.
   let earned = [];
-  try { earned = await awardBadges(q, kid.id, round.bankId); }
+  try { earned = await awardBadges(q, kid.id, bank, right, total, passed); }
   catch (e) { console.error("badges:", e.message); }
   const won = earned.length
     ? `<div class="msg">${earned.length === 1 ? "New badge" : "New badges"}: ${
         earned.map(b => `${b.emoji || "🏅"} ${esc(b.title)}`).join(", ")}</div>`
     : "";
+  // What to do next: practise the missed ones (worth nothing, on purpose),
+  // and the Learning home's own pick for this child's year.
+  const practiceToken = learn.startPractice(kid.id, bank.id, missed.map(m => m.qid));
+  let nextHtml = "";
+  try {
+    const own = kidYear(kid);
+    if (own) {
+      const prog = await learn.progress(kid.id);
+      const inYear = [...banks.values()].filter(b => learn.fits(b, own.year) && b.id !== bank.id);
+      const next = learn.pickNext(inYear, prog, st);
+      if (next) nextHtml = `<a class="go alt" href="/quiz/${esc(next.bank.id)}${kidQS}">Next for Year ${own.year}: ${esc(next.bank.emoji || "")} ${esc(next.bank.title)}</a>`;
+    }
+  } catch { /* the suggestion is a nicety */ }
   return page(`<div class="card"><div class="score">${right} / ${total}</div>${won}
-    <div class="msg">${passed ? "🎉 Passed. " + esc(creditedMsg) : `Not this time, you need ${bank.pass_mark}. Have another go, the questions change.`}</div>
-    <p style="text-align:center"><a class="back" href="/${kidQS}">← back to Genkan</a></p></div>`);
+    <div class="msg">${passed ? "🎉 Passed." : `Not this time. You need ${passMark}.`}</div>
+    <div class="earned">${why}</div>
+    ${learn.missedBlock(missed)}
+    <div class="actions">
+      ${practiceToken ? `<a class="go" href="/practice/${practiceToken}${kidQS}">Try the ${missed.length === 1 ? "one" : missed.length} you missed (practice, no minutes)</a>` : ""}
+      ${!missed.length ? `<a class="go" href="/learn${kidQS}">Every one right. What is next?</a>` : ""}
+      ${nextHtml}
+      <a class="go alt" href="/learn${kidQS}">📚 Learning</a></div>
+    <p style="text-align:center"><a class="back" href="/${kidQS}">← back to Genkan</a></p></div>`, ctx);
 }
 
 // ---- server --------------------------------------------------------------
@@ -933,6 +1033,23 @@ const server = createServer(async (req, res) => {
     PREVIEW_OK = PREVIEW_TOKEN !== "" && url.searchParams.get("preview") === PREVIEW_TOKEN;
     const kid = await whoIs(ip, kidOverride);
     const send = html => { res.writeHead(200, { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" }); res.end(html); };
+    const ctx = { kid, path: url.pathname };
+    // The demo has no devices, so a visitor with no ?kid= used to be told the
+    // device was not recognised, which is true and useless. Send them to the
+    // child with the least time left, which by the seed is the one who is out
+    // of time: the screen the demo exists to show. A redirect rather than a
+    // silent default, so the URL says who is being looked at and the switcher
+    // can highlight them. Demo only: at home an unrecognised device gets the
+    // claim page or the "ask Dad" page exactly as before.
+    if (!kid && DEMO && !kidOverride && req.method === "GET") {
+      const [pick] = await q(`SELECT c.name FROM children c
+          LEFT JOIN time_remaining t ON t.child_id=c.id
+          WHERE c.kind='child' AND c.active ORDER BY t.remaining_min NULLS LAST, c.name LIMIT 1`).catch(() => []);
+      if (pick) {
+        url.searchParams.set("kid", pick.name);
+        res.writeHead(302, { location: url.pathname + "?" + url.searchParams.toString() }); return res.end();
+      }
+    }
     if (!kid) {
       // Claiming is only offered when the household has switched it on. With
       // it off, an unclaimed device has full internet anyway and a page asking
@@ -951,13 +1068,18 @@ const server = createServer(async (req, res) => {
       return send(page(`<div class="card"><h1>Genkan</h1><div class="msg">This device isn't recognised on the kids network yet. Ask Dad to add it.</div></div>`));
     }
     if (req.method === "POST") {
-      if (!kid.real && !DEMO) return send(page(`<div class="card"><div class="msg">Earning only works from your own device on the network.</div></div>`));
+      if (!kid.real && !DEMO && url.pathname !== "/practice/submit")
+        return send(page(`<div class="card"><div class="msg">Earning only works from your own device on the network.</div></div>`));
       if ((lastPost.get(kid.id) || 0) > Date.now() - 1500) return send(page(`<div class="card"><div class="msg">Slow down a wee bit.</div></div>`));
       lastPost.set(kid.id, Date.now());
       let b = ""; req.on("data", c => { if ((b += c).length > 10_000) req.destroy(); });
       await new Promise(r => req.on("end", r));
       const form = new URLSearchParams(b);
-      if (url.pathname === "/quiz/submit") return send(await gradeRound(kid, form, kidQS));
+      if (url.pathname === "/quiz/submit") return send(await gradeRound(kid, form, kidQS, ctx));
+      // A practice round is graded for the child to read and credits nothing,
+      // so it does not need the device match that earning does. It still
+      // needs a real child, which the top of this handler guarantees.
+      if (url.pathname === "/practice/submit") return send(learn.gradePractice(kid, form, kidQS, ctx));
       if (url.pathname === "/claim") {
         // Only a job that is actually on THIS child's list, at THEIR price.
         const taskId = Number(form.get("task"));
@@ -991,15 +1113,30 @@ const server = createServer(async (req, res) => {
       const kids = on ? await q(
         `SELECT id, name FROM children WHERE kind IN ('child','guest-child') AND active ORDER BY name`) : [];
       const board = on ? await boardData(q, kids) : null;
-      return send(badgesPage(kid, mine, board, kidQS));
+      return send(badgesPage(kid, mine, board, kidQS, ctx));
     }
+
+    // The Learning home: the shelf laid out as a school year, subject by
+    // subject, with what this child has done and what is next. ?year= shows
+    // another year; the child's own comes from their record (kidYear). It
+    // links to the same study and quiz routes as the hub and earns nothing
+    // itself.
+    if (url.pathname === "/learn") {
+      const own = kidYear(kid);
+      const asked = Number(url.searchParams.get("year"));
+      const year = (Number.isInteger(asked) && asked >= 1 && asked <= 13) ? asked : (own?.year || 7);
+      const [st, prog] = await Promise.all([status(kid.id), learn.progress(kid.id)]);
+      return send(learn.learnPage({ kid, year, own, st, prog, kidQS, ctx }));
+    }
+    const pm = url.pathname.match(/^\/practice\/([a-f0-9]{24})$/);
+    if (pm) return send(learn.practicePage(kid, pm[1], kidQS, ctx));
 
     const sm = url.pathname.match(/^\/study\/([a-z0-9-]+)$/);
     if (sm && banks.has(sm[1])) {
       // Noting that they read up is what makes the "read it, then passed it"
       // badge mean something. It is never used to police anybody.
       recordStudyVisit(q, kid.id, sm[1]).catch(() => {});
-      return send(studyPage(banks.get(sm[1]), kidQS));
+      return send(studyPage(banks.get(sm[1]), kidQS, await status(kid.id), ctx));
     }
 
     const m = url.pathname.match(/^\/quiz\/([a-z0-9-]+)$/);
@@ -1008,9 +1145,9 @@ const server = createServer(async (req, res) => {
       const [p] = await q("SELECT enabled,minutes FROM quiz_settings WHERE child_id=$1 AND bank_id=$2", [kid.id, bank.id]);
       if (p && p.enabled === false)
         return send(page(`<div class="card"><div class="msg">That one is off your list just now. There are others.</div>
-          <p style="text-align:center"><a class="back" href="/${kidQS}">← back to Genkan</a></p></div>`));
+          <p style="text-align:center"><a class="back" href="/${kidQS}">← back to Genkan</a></p></div>`, ctx));
       const set = await earnSettings(kid.id);
-      return send(await quizPage(kid, bank, kidQS, p?.minutes ?? (bank.minutes_per_pass || set.default_minutes_per_pass), set.mastery_bonus_min));
+      return send(await quizPage(kid, bank, kidQS, p?.minutes ?? (bank.minutes_per_pass || set.default_minutes_per_pass), set.mastery_bonus_min, ctx));
     }
     // A recent Tor/darknet/drugs flag replaces the ordinary page with the warm
     // one. Only on the fall-through GET, so an in-progress quiz and every POST
@@ -1021,7 +1158,7 @@ const server = createServer(async (req, res) => {
       if (flag) return send(warmPage(kid, flag, kidQS));
     }
     // Everything else, including OS captive-portal probes, gets the home page.
-    return send(homePage(kid, await status(kid.id), kidQS));
+    return send(homePage(kid, await status(kid.id), kidQS, ctx));
   } catch (e) { res.writeHead(500, { "content-type": "text/plain" }); res.end("portal error: " + e.message); }
 });
 server.listen(PORT, BIND, () => console.log(`kid portal on http://${BIND}:${PORT}`));

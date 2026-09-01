@@ -18,7 +18,8 @@ this way.
 |---|---|
 | `compose.yaml` | Three containers: `genkan-demo-db` (its own Postgres, its own volume, its own network), `genkan-demo-dashboard` and `genkan-demo-portal` (both node:22-slim, the repo's `dashboard/` mounted read only). |
 | `seed.sql` | The made-up household, six weeks of it, all written relative to `now()`. One child is deliberately out of time. |
-| `reseed.sh` | Empties the demo database, loads every `config/db/schema*.sql` in order, then `seed.sql`. |
+| `seed-learn.sql` | The children's learning history in the banks written for their own school years: rounds, study visits and badges, so the portal's Learning home shows a child part way through a year rather than a wall of "not started". It also writes the out-of-time child's internet block, which at home the gateway would write and the demo has no gateway to do. Runs after `seed.sql`. |
+| `reseed.sh` | Empties the demo database, loads every `config/db/schema*.sql` in order, then `seed.sql`. It needs to run `seed-learn.sql` after that as well (not yet wired in: see below). |
 | `../dashboard/live-demo.mjs` | The synthetic sampler that keeps the Right Now page moving. |
 | `../dashboard/sys-demo.mjs` | The invented box the System page describes: four cores, 8 GB, a 128 GB disk, three containers. Not this host. |
 
@@ -70,6 +71,13 @@ rather than nothing:
 - **Every portal page carries a banner** saying it is a demo with an invented
   family. Without it a screenshot of a child's name beside a real-looking clock
   would travel as the real thing.
+- **The portal shows a child switcher.** Under the banner, a row of the
+  invented children with their school years, and a link to the Learning home
+  where a year can be picked. A visitor with no `?kid=` at all is sent to the
+  child with the least time left, which is the one who is out of time. At
+  home none of this renders: the child is whoever the device belongs to, and a
+  page that let a child pick a sibling would let them read that sibling's
+  minutes.
 
 Writes the demo *can* do are writes to its own throwaway database: setting a
 goal, acknowledging an alert, editing a job on the Learn to earn page. That is
@@ -110,6 +118,11 @@ systemctl --user start genkan-demo-reseed.service   # the same thing, logged
   means the charts are always showing the last six weeks rather than the six
   weeks before whenever it was last touched, and
 - anything a visitor changed goes back the way it was.
+
+`seed-learn.sql` has to be loaded after `seed.sql`, the same way (`"${PSQL[@]}"
+< seed-learn.sql`). Until `reseed.sh` does that itself, run it by hand after a
+reseed, or the Learning home shows the children with no history in their own
+years and Rangi's page says "kia ora" over a clock at zero.
 
 It takes about three seconds and drops the schema first, because the repo's
 schema files are individually idempotent but the whole set is not re-runnable

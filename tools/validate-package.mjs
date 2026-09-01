@@ -335,7 +335,10 @@ function checkFile(path, strict) {
   }
 
   const known = new Set(["id", "title", "emoji", "suggested_age_min", "minutes_per_pass",
-                         "pass_mark", "questions_per_round", "questions", "package", "source_note"]);
+                         "pass_mark", "questions_per_round", "questions", "package", "source_note",
+                         // Where it sits in the NZ curriculum (FORMAT.md). Optional
+                         // for a package: validate-quizzes.mjs checks the values.
+                         "subject", "year_from", "year_to", "year_note"]);
   for (const k of Object.keys(bank)) if (!known.has(k)) err(`unknown top level field "${k}"`);
 
   checkBankText(err, bank);

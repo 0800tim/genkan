@@ -58,5 +58,9 @@ done
 
 echo "==> demo household"
 "${PSQL[@]}" < seed.sql
+# The learning history (rounds, study visits, badges, the out-of-time child)
+# sits in its own file so the family and its learning can change separately.
+echo "==> demo learning history"
+"${PSQL[@]}" < seed-learn.sql
 
 echo "==> done"

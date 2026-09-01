@@ -2475,3 +2475,68 @@ owner's call, and the page marks every one of them as not built.
 Nothing in this entry is built. The Learning home and the AI child summary
 are in progress on other branches. Everything else on `docs/LEARNING.md` is a
 design, and the table at the end of that page says so line by line.
+
+## The Learning home: a year, a curriculum, and what is next (2026-09-02)
+
+The public demo showed one child, and a flat list of forty banks sorted by
+age. A parent looking at it saw a quiz app with a long menu. The owner's
+words: "it needs a dropdown for what year their kids are in and then actually
+show the study for that in the curriculum, so that a parent goes, oh, this is
+actually an e-learning tool as well."
+
+**Every bank now says where it sits.** `subject` (one of the eight NZ learning
+areas, or `general`, or `other-countries`), `year_from` and `year_to` (NZ
+school years, 1 to 13), and a `year_note` saying how that was chosen. The
+band was chosen by reading each bank against `research/curriculum-nz.md`,
+not by a formula: a bank titled "Years 7 and 8" is a match, a bank written
+"for ages 12 to 15" is age minus four and the note says so, and chess is
+"not on any curriculum, playable from about Year 4" with a band wide enough
+to be honest. `tools/validate-quizzes.mjs` checks the values when they are
+present and only warns when they are absent, because a bank written on the
+dashboard has none and must keep playing.
+
+**A page per year, not a filter on the hub.** `/learn` lays the shelf out as
+a school year: the curriculum level that year is, the subjects with the banks
+that fit, and for each bank what this child has done (passed, best score,
+last round, read up). One "next up", chosen by a rule a child can understand:
+the bank whose last round was a fail, then a subject they have not opened,
+then the one they passed longest ago. The hub stays a flat list sorted by
+age. A child who has just run out of time wants the quickest route to
+minutes; the Learning home is for the other mood, and the time's-up page
+links to it. Nothing is locked: the year decides what sits at the top, and
+"other years" and "other countries" are one tap down.
+
+**The child's year comes from what a household already fills in.** There is
+no year column and this change adds none. A note on the child that says
+"Year 7" wins; otherwise age minus four, and the page says which it used.
+The chooser overrides it for a look at another year, and says so rather than
+pretending the child moved school.
+
+**The demo gets a switcher; a home does not.** Under the demo banner, a row
+of the invented children and their years, and a visitor with no `?kid=` is
+sent to the child who is out of time, because that was the screen the demo
+existed to show and it was showing "device not recognised" instead. All of it
+renders only under `GENKAN_DEMO`. At home the child is whoever the device
+belongs to, and a page that let a child tap a sibling's name would let them
+read that sibling's minutes, which is exactly what `whoIs()` refuses.
+
+**The result page teaches.** The explanations have been in every bank since
+the start and a child only ever saw the study page's copy of them. Now every
+missed question comes back on the result page with what they said, the
+answer and why; a line says exactly what was earned and why, or why not
+(the pass mark, the cooldown, the cap, in numbers); and "try the ones you
+missed" runs a practice round of just those. **Practice earns nothing, on
+purpose.** No minutes, no cooldown, and no row in `quiz_rounds`, because a
+practice set is the hard questions by construction and logging it would
+push the ramp towards "building" for a child who chose to redo them. The
+economics in LEARN-TO-EARN.md are untouched.
+
+Two things found on the way. `awardBadges` was being called with a bank id
+where it wanted the bank, and with no score, so no badge except "put in the
+hours" had ever been awarded from the portal; fixed. And the portal greeted
+a child with "your time, your call" over a clock at zero when the gateway
+had not yet written the block (the demo has no gateway; at home it is a
+fifteen second window). A zero is time's up whatever `category_state` says.
+
+Not built, and said on the page: study notes and tutoring. One sentence,
+that they are coming and that everything will stay in the house.

@@ -85,8 +85,14 @@ enable-https.sh.
 
 The learn-to-earn content is the largest part of the repo by volume: over 40
 quiz banks and more than 2,000 questions in portal/quizzes/ (every question
-carries a difficulty and an explanation, and every bank has a study page at
-/study/<bank> in the portal; count them, do not trust this number),
+carries a difficulty and an explanation, every bank carries a subject and an
+NZ year band, and every bank has a study page at /study/<bank> in the portal;
+count them, do not trust this number). The portal's Learning home, /learn
+(dashboard/portal-learn.mjs), lays the shelf out by school year and subject
+with what the child has done and one "next up"; the result page explains
+every missed question and offers a practice round that earns nothing. Under
+GENKAN_DEMO only, the portal shows a child switcher; at home it never lets a
+child pick another child. Also here:
 the reading list in config/db/schema-learn*.sql (scope='learn' rows in
 always_allow, reachable through a total cut), and badges in dashboard/badges.mjs
 plus config/db/schema-badges.sql. Badges' house board and device claiming

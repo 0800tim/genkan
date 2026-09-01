@@ -33,6 +33,19 @@ parent is glad they did.
 6. Badges, if the household has them on. Personal milestones, never a race
    against a sibling.
 
+7. **The Learning home**, at `/learn`. The same banks laid out as a school
+   year, subject by subject: pick a year (it opens on the child's own, worked
+   out from their record), see what is done, what was read up, what the last
+   round scored, and one plain "next up". Every bank now carries a `subject`
+   and a year band for this. Nothing is locked and nothing on the page earns;
+   it links to the same study and quiz pages as the hub.
+8. **The result page teaches.** Every question missed comes back with the
+   answer and the explanation, a line says exactly what was earned and why
+   (or why not: the pass mark, the cooldown, the cap), and "try the ones you
+   missed" runs a practice round of just those questions. Practice earns
+   nothing, has no cooldown and is not written to the round log, so there is
+   nothing in it to farm and it cannot push the ramp around.
+
 Step 4 is the one that took longest to see. Without it, learn-to-earn is a
 memory test: a child can only cash in what they already know, and the feature
 rewards recall rather than learning. `docs/READING-LIST.md` has the list, the
@@ -71,6 +84,15 @@ Every New Zealand learning area now has at least one bank, but depth varies a
 lot: maths has one per year band and te reo Māori has a single beginners bank.
 Languages other than te reo have nothing, and outside the five countries above
 there is nothing at all.
+
+Every bank is filed. `subject` is one of the eight learning areas (or
+`general`, or `other-countries`), `year_from` and `year_to` are the NZ school
+years it suits, and `year_note` says how that was decided: a bank titled "Years
+7 and 8" is a match, a bank written for "ages 12 to 15" is a translation (year
+is age minus four), and chess is "not on any curriculum, playable from about
+Year 4". The portal's Learning home groups by these; a bank without them still
+plays and is listed under "any year". The mapping between year, curriculum
+level and age is the table in `research/curriculum-nz.md`.
 
 Every bank ramps. Every question carries a `difficulty` from 1 to 5, and the
 portal builds each round easy to hard, adapting the mix to how that child has
@@ -228,6 +250,12 @@ ground. The road code bank exists because a teenager was learning to drive.
 | Over 40 banks, more than 2,000 questions, every one explained | built |
 | Difficulty ramp: easy to hard, adapted to recent form | built, every bank labelled |
 | Read up: every question, answer and explanation | built |
+| Every bank filed by subject and NZ year band | built, chosen by reading each bank, note on each |
+| The Learning home: a year, its subjects, what is done and what is next | built, `/learn` in the portal |
+| The result page: every missed question explained, what was earned and why | built |
+| Practice rounds of the questions you missed | built, earn nothing on purpose |
+| A child's year from their record | built from the age or a "Year N" note; there is no year column |
+| Study notes and tutoring | not built; everything will stay in the house when it is |
 | The reading list open during a block | built, around 40 sites |
 | Jobs and chores, parent-approved | built |
 | Per-child, per-bank enable and rate | built |
