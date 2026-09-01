@@ -51,6 +51,7 @@ esac
 tscol(){ case "$1" in
   dns_log|alerts|block_events|time_events|device_claims) echo ts;;
   quiz_rounds) echo ts;;
+  kid_summaries) echo created;;
   category_usage|service_usage) echo day;;
   dhcp_leases) echo ends;;
   *) echo "";; esac; }

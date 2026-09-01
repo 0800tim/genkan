@@ -237,3 +237,23 @@ GRANT SELECT ON release_log     TO kids_agent;
 -- read-only view for `genkan retention show`.
 GRANT SELECT, UPDATE ON retention      TO kids_agent;  -- genkan retention set
 GRANT SELECT         ON storage_status TO kids_agent;  -- genkan retention show
+
+-- ---------------------------------------------------------------------------
+-- kids_app, the dashboard's and the portal's role, on the oldest tables.
+-- schema.sql predates the role convention and never granted kids_app a thing,
+-- and every box that mattered had a kids_app that already owned or had been
+-- handed these tables by hand, so nobody saw it. A FRESH load.sh left the
+-- dashboard unable to read children, devices, dns_log or the ledger: Home
+-- answered 500 on a clean install (found 2026-09-02 by loading the schema
+-- into a throwaway database and asking, which test/schema-test.sh now does).
+-- Exactly what dashboard/*.mjs does with each, and nothing more: the
+-- dashboard's controls go through the CLI as kids_agent; these are its own
+-- reads, the ledger it credits, the audit rows it writes, and the people and
+-- devices it edits.
+GRANT SELECT ON children, devices, dhcp_leases, dns_log, time_ledger, time_events,
+                block_events, category_state, category_domains, time_remaining TO kids_app;
+GRANT INSERT ON time_ledger, time_events, block_events TO kids_app;   -- earning, and the audit trail
+GRANT UPDATE ON time_ledger, category_state TO kids_app;              -- crediting minutes, earned-back
+GRANT UPDATE, DELETE ON children TO kids_app;                          -- the Family page edits people
+GRANT UPDATE ON devices TO kids_app;                                   -- naming, sweeps, tiers, claims
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO kids_app;             -- the id columns behind the inserts

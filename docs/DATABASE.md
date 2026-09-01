@@ -68,6 +68,12 @@ create.
 | 28 to 30 | `schema-notify.sql`, `schema-release.sql`, `schema-retention.sql`, `schema-tor.sql` | notifications, the release log, retention, and the Tor relay table; see [NOTIFICATIONS.md](NOTIFICATIONS.md), [UPGRADING.md](UPGRADING.md) and [tor-and-safety.md](tor-and-safety.md). `schema-retention.sql` holds `retention` (one row per pruned table: `keep_days`, 1 to 3650, and the reason for the default) and the `storage_status` view (each rule's size on disk, the planner's row estimate and its oldest row), which the Settings page's Storage card and `genkan retention show` read. `bin/genkan-prune` enforces the rules nightly and is the only thing that deletes: `kids_agent` may update `keep_days` and nothing else |
 | 31 | `schema-settings.sql` | the Settings page. The AdGuard half of each filter level on `policies` (`adguard_parental`, `adguard_services`, `adguard_private`), `always_allow.added_by` and `added_ts`, the `always_allow_keep_safety` trigger that refuses to delete or narrow a safety row, and the ten Google search hosts. **Loading it changes nobody's filter**: the columns are filled with what the script used to hard-code |
 
+| 28 | `schema-notify.sql` | notifications to a parent's phone: `notify_routes`, `notify_wording`, `notify_sent`, `notify_log` and the `notify_pending` and `notify_route_state` views. See docs/NOTIFICATIONS.md |
+| 29 | `schema-release.sql` | `release_history` and the `release_current` and `release_log` views: what version the household is running and every version it has run. Written by `bin/genkan-upgrade` and `bin/genkan-rollback` |
+| 30 | `schema-retention.sql` | the `retention` table: how many days each table is kept, enforced nightly by `bin/genkan-prune`. See PRIVACY-CHARTER.md |
+| 31 | `schema-tor.sql` | `tor_nodes` and `tor_sync_state`: the public Tor relay list, so the firewall can be a projection of the database |
+| 32 | `schema-summaries.sql` | the child page's optional AI summary: `ai_summary_settings` (one row, **off by default**) and `kid_summaries`, one row per child per period per day holding the exact brief that was sent and the text that came back. Adds a `retention` row of 365 days. Nothing else on the child page depends on this file: every chart, finding and suggested reward is computed in the house by `dashboard/kid-insights.mjs` |
+
 These ordering constraints are load-bearing:
 
 - `schema-devices.sql` must come **after** `schema-people.sql`. Both define the
@@ -160,6 +166,10 @@ These ordering constraints are load-bearing:
   changes nobody's filter. Read by the Settings page and by
   `genkan-adguard-clients`, which falls back to its built-in table when the
   columns are absent.
+
+- `schema-summaries.sql` must come **after** `schema-retention.sql`, because
+  it inserts a `retention` row for `kid_summaries`, and after `schema.sql`,
+  because every summary belongs to a child.
 
 Load them:
 

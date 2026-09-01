@@ -1394,6 +1394,49 @@ Environment: `PG_CONTAINER` (default `postgres`), `GENKAN_DB` or
 service but not the script: the service runs it from the repo, and an
 installed `/usr/local/bin/genkan` finds it on `PATH` or fails saying so.
 
+## genkan-kid-summary
+
+    genkan-kid-summary                 yesterday's AI note, every household child
+    genkan-kid-summary --dry-run       print each brief and its size, send nothing
+    genkan-kid-summary --date DATE     a particular day (YYYY-MM-DD)
+    genkan-kid-summary --weekly        also last week, from its seven daily notes
+    genkan-kid-summary --force         rewrite a day that already has a note
+
+The one worker that can make an outbound request, and the only place in
+Genkan that does apart from the Tor relay fetch. It runs from
+`kids-summary.timer` at 06:30, which `deploy.sh` installs and deliberately
+does **not** enable. It makes a request only when all three hold: the
+household switched the card on (the child page, "Summary written by an AI",
+stored in `ai_summary_settings.enabled`), `GENKAN_AI_SUMMARY_KEY` is set in
+`secrets.env`, and the timer was enabled by hand. With any of them missing it
+prints one line and exits 0, so a timer left on by mistake is harmless.
+
+The bash half locates the repo and hands over to `dashboard/kid-summary.mjs`,
+so the brief is built by exactly the code the child page uses
+(`kidInsights` then `aiBrief` in `dashboard/kid-insights.mjs`) and the JSON a
+parent can read on the page under "What would leave the house" is the JSON
+that leaves. One day's brief per child, under about 1,500 tokens, never a raw
+log row and never a name. PRIVACY-CHARTER.md P1 lists every field.
+
+Per child per day it is idempotent: a complete note already stored is skipped
+unless `--force`. A child with nothing recorded that day (no lookups, no
+minutes, no earnings) is skipped, so a quiet day costs nothing. On a Monday it
+also writes last week's note for each child, built from that week's daily
+notes and nothing else (at least three of them, or it says so and skips).
+The journal line names a child by id, never by name.
+
+`GENKAN_AI_STUB=1` stores a canned note without a request, which is how the
+storage path is tested. Environment:
+
+| Variable | Default | Effect |
+|---|---|---|
+| `GENKAN_ROOT` | `/srv/projects/internal/kids-network` | where `dashboard/` is |
+| `KIDS_DB_URL` | from `secrets.env` | the database, as `kids_app` |
+| `GENKAN_AI_SUMMARY_KEY` | unset | the API key; unset means nothing is sent |
+| `GENKAN_AI_STUB` | unset | `1` stores a canned note and sends nothing |
+
+---
+
 ## The tools directory
 
 Not in `bin/`, not installed by `deploy.sh`, and not part of the running

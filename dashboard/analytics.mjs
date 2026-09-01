@@ -747,7 +747,7 @@ export async function kidDetail(q, name, days = 7) {
   const w = await weekBounds(q, null);
 
   const [devices, quizHistory, flags, recentAlerts, goalRows, blocks, totals] = await Promise.all([
-    safe(q, `SELECT label, hostname, mac, ip, device_kind, category, vendor,
+    safe(q, `SELECT id, label, hostname, mac, ip, device_kind, category, vendor,
                     (last_seen > now()-interval '5 minutes') AS online, last_seen
              FROM device_roster WHERE person_id = $1 ORDER BY label`,
       [child.id], [], notes, "devices"),

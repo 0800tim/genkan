@@ -207,6 +207,14 @@ install -m 0644 "$R/config/systemd-network/kids-notify.timer"   /etc/systemd/sys
 # read what it will do. See docs/HOUSEHOLD-SECURITY.md.
 install -m 0644 "$R/config/systemd-network/kids-iot-policy.service" /etc/systemd/system/
 install -m 0644 "$R/config/systemd-network/kids-iot-policy.timer"   /etc/systemd/system/
+# The nightly AI note per child. Installed but deliberately NOT enabled: it
+# is the one worker that can make an outbound request, and it runs only when
+# the household has switched the card on (a child's page), set a key
+# (secrets.env) and enabled this timer by hand. Off, it prints one line and
+# exits. See PRIVACY-CHARTER.md P1 and docs/OPERATIONS.md.
+install -m 0755 "$R/bin/genkan-kid-summary"  /usr/local/bin/genkan-kid-summary
+install -m 0644 "$R/config/systemd-network/kids-summary.service" /etc/systemd/system/
+install -m 0644 "$R/config/systemd-network/kids-summary.timer"   /etc/systemd/system/
 systemctl daemon-reload
 
 # The rest of the Hearth-era migration: the containers. The compose project

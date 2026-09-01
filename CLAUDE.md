@@ -59,13 +59,19 @@ every 15s. The admin dashboard (dashboard/server.mjs) binds the tailnet on
 the HOST, outside the island. bin/genkan is the CLI the agent drives; it was
 called kidnet until 2026-08-31 and bin/kidnet remains as a compat shim.
 
-bin/ holds eighteen scripts: genkan (the control surface), kidnet (the shim),
+bin/ holds nineteen scripts: genkan (the control surface), kidnet (the shim),
 genkan-report (the weekly digest), genkan-quiz (the learn-to-earn bank manager),
 genkan-quiz-suggest (the evidence briefing for writing new banks, which calls
-no AI service) and thirteen background workers driven by systemd timers.
-deploy.sh installs fifteen of them and enables six timers; the seventh,
-kids-iot-policy.timer, is installed but left disabled because the household
-IoT policy is switched on deliberately (docs/HOUSEHOLD-SECURITY.md).
+no AI service) and fourteen background workers driven by systemd timers.
+deploy.sh installs sixteen of them and enables seven timers; two more,
+kids-iot-policy.timer and kids-summary.timer, are installed but left disabled
+because the household IoT policy is switched on deliberately
+(docs/HOUSEHOLD-SECURITY.md) and the nightly AI note is the one worker that can
+make an outbound request, so it runs only when a parent has turned the card
+on, set a key and enabled the timer by hand (PRIVACY-CHARTER.md P1,
+docs/OPERATIONS.md). genkan-kid-summary is a bash wrapper around
+dashboard/kid-summary.mjs so the brief it sends is built by the same code the
+child page shows under "What would leave the house".
 genkan-report, genkan-quiz and genkan-quiz-suggest are run from the repo.
 docs/CLI.md is the reference.
 
@@ -161,7 +167,10 @@ deleting is bin/genkan-prune's alone, as the database owner, audited in
 block_events in the same statement as the delete. Until
 config/db/schema-retention.sql and grants.sql are re-run on this box, the
 live database has no `storage_status` view and kids_agent cannot read
-`retention`, so the card shows sizes and says the rules are missing. Portal: kids-portal.service (:8890) is the pre-deploy host copy;
+`retention`, so the card shows sizes and says the rules are missing. plus one page per child at /kid/<name> (dashboard/kid-insights.mjs: today,
+the fortnight, what changed, suggested rewards and the opt-in AI note written
+nightly by bin/genkan-kid-summary when a parent turns it on, reached from
+every child's name on Home, Family, Week and Trends). Portal: kids-portal.service (:8890) is the pre-deploy host copy;
 production is the container on island :80. DB: kids_network on the shared
 postgres container (creds in secrets.env).
 

@@ -20,7 +20,9 @@ install, and nobody's real child:
 
 - **[The parent's dashboard](https://demo.genkan.nz)** at
   `demo.genkan.nz`. Tonight's state and the controls, live traffic,
-  the week, trends per child, the device roster, and the health of the box.
+  the week, trends per child, a page per child (today, the fortnight, what
+  changed, suggested rewards, worked out in the house with no AI), the
+  device roster, and the health of the box.
 - **[The kid's portal](https://quiz-demo.genkan.nz)** at
   `quiz-demo.genkan.nz`. The page a child meets when their time has run
   out, and the quizzes that earn it back. One demo child is deliberately out of

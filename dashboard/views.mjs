@@ -29,6 +29,7 @@ import { SYS_CSS, SYS_JS, systemPage } from "./sysview.mjs";
 // same reason the IoT policy does: the rules about who may lift a block are
 // subtle and belong next to each other, not scattered through the page code.
 import { SCHEDULE_CSS, SCHEDULE_JS, schedulePanel, bedtimeLine } from "./schedule.mjs";
+import { KID_CSS, KID_JS, truthLine, chartsCard, changesCard, rewardsCard, aiCard, devicesCard, servicesCard } from "./kid-insights.mjs";
 import { ANALYTICS_CSS, ANALYTICS_JS } from "./analytics-page.mjs";
 import { SETTINGS_CSS, SETTINGS_JS } from "./settings.mjs";
 
@@ -1395,16 +1396,17 @@ export function digestText(dg) {
 // One kid, everything in one place. This is where a parent lands when they tap
 // a name, so it leads with the controls and only then explains the week.
 // ---------------------------------------------------------------------------
-export function kid(s, kd) {
+export function kid(s, kd, ins = null) {
   const c = kd.child;
   const st = kidState(c, s.cats, s.slow);
   const t = (s.times || []).find(x => x.child_id === c.id) || {};
   const out = (t.remaining_min ?? 0) <= 0 && (t.used_min || 0) > 0;
   const goalsMissing = kd.notes.some(n => n.startsWith("goals"));
   const wt = kd.weekTotals;
-  const today = kd.kid ? kd.kid.today : null;
 
-  const head = `<p class="crumb"><a href="/">‹ Home</a></p>
+  // The controls first, unchanged: a parent who came here to switch something
+  // off should not have to scroll past a chart to do it.
+  const head = `<p class="crumb"><a href="/">‹ Home</a> · <a href="/family">Family</a></p>
     <div class="card"><div class="kh">
       <h3 style="font-size:22px">${esc(c.name)} <span class="tag">${c.age} · ${esc(c.policy_tier)} tier</span></h3>
       ${st.study ? '<span class="pill study">Study mode</span>' : ""}
@@ -1416,40 +1418,19 @@ export function kid(s, kd) {
       ${catMeters(kd.kid)}
     </div>`;
 
-  const todayCard = `<div class="card"><h2>Today</h2>
-    ${today ? `<div class="tiles">
-      <div class="tile"><span class="lab">Online today</span><span class="val">${esc(fmt.min(today.online))}</span>
-        <span class="dlt">${esc(fmt.min(today.metered))} of it metered</span></div>
-      <div class="tile"><span class="lab">Earned today</span><span class="val">${esc(fmt.min(today.earned))}</span>
-        <span class="dlt">${today.quiz} min quizzes · ${today.chore} min chores</span></div>
-      <div class="tile"><span class="lab">Gaming</span><span class="val">${esc(fmt.min(today.gaming))}</span>
-        <span class="dlt">${kd.kid.budgets.gaming ? `of ${esc(fmt.min(kd.kid.budgets.gaming))} allowed` : "no daily cap set"}</span></div>
-      <div class="tile"><span class="lab">Video</span><span class="val">${esc(fmt.min(today.video))}</span>
-        <span class="dlt">${kd.kid.budgets.video ? `of ${esc(fmt.min(kd.kid.budgets.video))} allowed` : "no daily cap set"}</span></div>
-    </div>` : `<div class="empty">No figures for today yet. They appear as the meter runs.</div>`}</div>`;
-
-  const weekCard = `<div class="card"><h2>This week and the goal</h2>
-    <p class="sub">Week of ${esc(fmt.dayFull(kd.week.start))}${kd.week.current ? `, day ${kd.week.elapsed} of 7` : ""}.
-      <a href="/week">See the whole family's week</a>.</p>
-    <div class="tiles">
-      <div class="tile"><span class="lab">Online</span><span class="val">${esc(fmt.min(wt.online))}</span></div>
-      <div class="tile"><span class="lab">Metered</span><span class="val">${esc(fmt.min(wt.metered))}</span>
-        <span class="dlt">${esc(METERED.filter(c => wt[c] > 0).map(c => `${c} ${fmt.min(wt[c])}`).join(" · ") || "nothing metered")}</span></div>
-      <div class="tile"><span class="lab">Earned</span><span class="val">${esc(fmt.min(wt.earned))}</span>
-        <span class="dlt">quizzes ${esc(fmt.min(wt.quiz))} · chores ${esc(fmt.min(wt.chore))}</span></div>
-    </div>
+  // The week's goal, if one is set. Pace-aware, so mid-week it says "on track".
+  const goalsCard = `<div class="card"><h2>This week and the goal</h2>
+    <p class="sub">Week of ${esc(fmt.dayFull(kd.week.start))}${kd.week.current ? `, day ${kd.week.elapsed} of 7` : ""}:
+      ${esc(fmt.min(wt.online))} online, ${esc(fmt.min(wt.metered))} metered, ${esc(fmt.min(wt.earned))} earned.
+      <a href="/week">The whole family's week</a>.</p>
     ${goalsBlock(c, kd.goals, { unavailable: goalsMissing })}</div>`;
 
-  const charts = kd.kid
-    ? kidTrends(kd.kid, kd.window, { link: false })
-    : `<div class="card"><div class="empty">No analytics for ${esc(c.name)} yet.</div></div>`;
-
-  const quizzes = `<div class="card"><h2>Quizzes</h2>${kd.quizHistory.length
-    ? table(["When", "Topic", "Minutes"], kd.quizHistory.map(r =>
+  const quizzes = kd.quizHistory.length
+    ? `<div class="card"><h2>Quizzes passed</h2>${table(["When", "Topic", "Minutes"], kd.quizHistory.map(r =>
         [new Date(r.ts).toLocaleString("en-NZ", { weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }),
-          r.topic, r.minutes]), { summary: `The last ${kd.quizHistory.length} quizzes passed` })
-      + `<p class="cnote">Quizzes credit minutes straight away, with a daily cap and a cooldown per topic, so nobody can farm the same quiz all afternoon.</p>`
-    : `<div class="empty">No quizzes yet. The portal has times tables, world flags, science and the road code, and a pass credits minutes immediately.</div>`}</div>`;
+          r.topic, r.minutes]), { summary: `The last ${kd.quizHistory.length} quizzes passed` })}
+      <p class="cnote">Quizzes credit minutes straight away, with a daily cap and a cooldown per topic, so nobody can farm the same quiz all afternoon.</p></div>`
+    : "";
 
   const openAlerts = kd.alerts.filter(x => !x.acknowledged);
   const doneAlerts = kd.alerts.filter(x => x.acknowledged);
@@ -1466,21 +1447,34 @@ export function kid(s, kd) {
       : `<div class="empty">Nothing flagged for ${esc(c.name)}. That is the usual state of things.</div>`)
     + `</div>`;
 
-  const devices = `<div class="card"><h2>${esc(c.name)}'s devices (${kd.devices.length})</h2>`
-    + (kd.devices.length
-      ? kd.devices.map(d => `<div class="row drow">
-          <div class="dname">${d.online ? '<span class="dot-on"></span>' : ""}<b>${esc(d.label || d.hostname || "(unnamed)")}</b>
-            <span class="tag">${esc(d.device_kind || "device")}</span></div>
-          <div class="dmeta"><code>${esc([d.vendor, d.ip || "no reserved IP", d.mac].filter(Boolean).join(" · "))}</code></div>
-        </div>`).join("")
-      : `<div class="empty">No devices assigned yet. Until one is, none of ${esc(c.name)}'s time can be counted. Name it on the <a href="/devices">Devices</a> tab.</div>`)
-    + `</div>`;
-
   const actions = kd.blocks.length ? `<div class="card"><h2>Recent actions</h2>`
     + kd.blocks.map(b => `<div class="row"><span>${esc(c.name)} → ${esc(b.action)}</span>`
       + `<span class="r">${esc(b.source || "")} · ${esc(new Date(b.ts).toLocaleString("en-NZ"))}</span></div>`).join("")
     + `</div>` : "";
 
-  return head + todayCard + weekCard + charts + quizzes + flags + devices + actions
-    + measurementCard({ measurement: kd.measurement, notes: kd.notes });
+  // The insights are computed in the house (dashboard/kid-insights.mjs). If
+  // that layer failed outright the page still has its controls, its charts
+  // from the Trends data, and a line saying what is missing.
+  if (!ins) {
+    const charts = kd.kid ? kidTrends(kd.kid, kd.window, { link: false })
+      : `<div class="card"><div class="empty">No analytics for ${esc(c.name)} yet.</div></div>`;
+    const why = c.kind === "child"
+      ? "The insights for this page could not be computed. The charts below come from the Trends data."
+      : `${esc(c.name)} is a visitor, and a visit is not logged per person, so there are no insights, findings or rewards here. Their devices are filtered and time-controlled like anyone else's.`;
+    return head + `<div class="card"><div class="empty">${why}</div></div>`
+      + goalsCard + charts + quizzes + flags + actions
+      + measurementCard({ measurement: kd.measurement, notes: kd.notes });
+  }
+  return `<style>${KID_CSS}</style>` + head
+    + truthLine(ins)
+    + chartsCard(ins)
+    + servicesCard(kd.kid)
+    + changesCard(ins)
+    + goalsCard
+    + rewardsCard(ins)
+    + aiCard(ins)
+    + devicesCard(ins, kd.devices)
+    + flags + quizzes + actions
+    + measurementCard({ measurement: kd.measurement, notes: [...kd.notes, ...ins.notes] })
+    + `<script>${KID_JS}</script>`;
 }

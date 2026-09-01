@@ -1,0 +1,11 @@
+[Unit]
+Description=Genkan nightly AI note (06:30, only if the household turned it on)
+[Timer]
+# After the night's prune (03:20) and before anyone reads the dashboard over
+# breakfast. Persistent, so a box that was off at half past six writes the
+# note when it comes back rather than skipping the day.
+OnCalendar=*-*-* 06:30:00
+Persistent=true
+RandomizedDelaySec=300
+[Install]
+WantedBy=timers.target

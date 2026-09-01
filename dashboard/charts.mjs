@@ -70,6 +70,11 @@ const tip = rows => esc(JSON.stringify(rows));
 export function columns({
   cols, series, height = 132, showValues = null,
   diverging = false, upSeries = [], downSeries = [], title = "",
+  // Added for the child page's lookup charts: the y ticks default to
+  // minutes, which is what every chart here showed until then. A chart of
+  // counts passes its own formatter (fmt.count) so "15 lookups" is never
+  // labelled "15 min".
+  tickFormat = fmt.min,
 }) {
   const n = Math.max(1, cols.length);
   const slotPct = 100 / n;
@@ -107,7 +112,7 @@ export function columns({
       for (const dir of [-1, 1]) {
         const y = zeroY - dir * px(v);
         grid += `<line class="grid" x1="0" x2="100%" y1="${y}" y2="${y}"/>`;
-        tickAt(y, fmt.min(v));
+        tickAt(y, tickFormat(v));
       }
     }
     grid += `<line class="axis" x1="0" x2="100%" y1="${zeroY}" y2="${zeroY}"/>`;
@@ -116,7 +121,7 @@ export function columns({
     for (const t of ticks(scaleMax)) {
       const y = zeroY - px(t);
       grid += `<line class="grid" x1="0" x2="100%" y1="${y}" y2="${y}"/>`;
-      tickAt(y, t === 0 ? "0" : fmt.min(t));
+      tickAt(y, t === 0 ? "0" : tickFormat(t));
     }
     grid += `<line class="axis" x1="0" x2="100%" y1="${zeroY}" y2="${zeroY}"/>`;
   }
@@ -156,7 +161,7 @@ export function columns({
     c.i = i;
     const cx = (i + 0.5) * slotPct;
     const rows = (c.segs || []).filter(s => Number(s.value) > 0)
-      .map(s => [SERIES[s.key]?.label || s.key, fmt.min(s.value), s.key]);
+      .map(s => [SERIES[s.key]?.label || s.key, tickFormat(s.value), s.key]);
     if (!rows.length) rows.push(["Nothing recorded", "", null]);
     const marks = diverging
       ? stack(c, upSeries, 1) + stack(c, downSeries, -1)
@@ -164,7 +169,7 @@ export function columns({
 
     body += `<g class="col" style="--cx:${cx.toFixed(3)}%" tabindex="0"`
       + ` data-head="${esc(c.label)}" data-tip="${tip(rows)}">`
-      + `<title>${esc(c.label)}: ${esc(c.summary || fmt.min(total(c)))}</title>`
+      + `<title>${esc(c.label)}: ${esc(c.summary || tickFormat(total(c)))}</title>`
       + marks
       + `<rect class="hit" x="${(i * slotPct).toFixed(3)}%" width="${slotPct.toFixed(3)}%" y="0" height="${TOP + height}"/>`
       + `</g>`;

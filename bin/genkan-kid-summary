@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# genkan:summary=Write yesterday's AI note per child, if the household turned that on. Nightly.
+#
+# The only worker that can make an outbound request, and it makes one only
+# when all three of these are true: the household switched the card on
+# (ai_summary_settings.enabled, set on a child's page), a key is set
+# (GENKAN_AI_SUMMARY_KEY in secrets.env), and kids-summary.timer has been
+# enabled by hand. deploy.sh installs the timer and deliberately does not
+# enable it. See PRIVACY-CHARTER.md P1 and DECISIONS.md ("The child page").
+#
+# What it sends is one day's compact brief per child (under about 1,500
+# tokens: counts by kind, minutes if the meter has them, bedtime, a device
+# split, the in-house findings), never a raw log and never a name. The node
+# half, dashboard/kid-summary.mjs, builds that brief with exactly the code
+# the child page uses, so the brief a parent can read on the page under
+# "What would leave the house" is the brief that leaves.
+#
+#   genkan-kid-summary                 yesterday, every household child
+#   genkan-kid-summary --dry-run       print each brief and its size, send nothing
+#   genkan-kid-summary --date DATE     a particular day
+#   genkan-kid-summary --weekly        also last week, from its seven daily notes
+#   genkan-kid-summary --force         rewrite a day that already has a note
+#
+# A child with nothing recorded that day is skipped. A day already written is
+# skipped. Exit 0 with one line when the feature is off, so a timer left
+# enabled by mistake is harmless.
+set -uo pipefail
+ROOT="${GENKAN_ROOT:-/srv/projects/internal/kids-network}"
+# The timer's unit carries secrets.env as an EnvironmentFile; a shell that
+# runs this by hand may not, so read it here as well. Only ever the
+# household's own gitignored file.
+if [ -z "${KIDS_DB_URL:-}" ] && [ -f "$ROOT/secrets.env" ]; then
+  set -a; . "$ROOT/secrets.env"; set +a
+fi
+command -v node >/dev/null || { echo "genkan-kid-summary: node is not installed" >&2; exit 1; }
+[ -f "$ROOT/dashboard/kid-summary.mjs" ] || { echo "genkan-kid-summary: $ROOT/dashboard/kid-summary.mjs not found (set GENKAN_ROOT)" >&2; exit 1; }
+cd "$ROOT/dashboard" || exit 1
+exec node kid-summary.mjs "$@"

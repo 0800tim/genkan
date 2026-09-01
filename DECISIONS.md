@@ -2598,3 +2598,74 @@ figures and its buttons answer with the demo line, as every control there
 does. The charter's own words sit on the `dns_log` row: a family does not
 need a permanent archive of its children's browsing, and a longer window has
 to justify itself on its own terms, not on the charts looking better.
+
+## The child page: insights in the house, a summary by an AI only when asked, and what leaves (2026-09-02)
+
+The ask was an AI summary per child: click a name, get what they did today
+and this week, charts, trends, suggested rewards, and advice a parent can act
+on ("on the computer they are learning; on the phone, there are the things
+to talk about"). The first design decision was that almost none of that
+needs an AI, and the part that does must not be allowed to change what the
+project is.
+
+**The insights are computed in the house, with no AI, and they are the
+page.** `dashboard/kid-insights.mjs` turns the tables into today and the last
+seven days against the seven before: minutes from the meter (the only honest
+minutes, and "no minutes recorded" when it has none), minutes earned by
+quizzes and chores, rounds passed, study-page visits, lookups per kind and
+per device labelled as lookups, blocked counts by kind, whether bedtime ran
+and whether the phone was awake inside it, and which device is used for what.
+From that a rule-based "what changed" list, where every line says what it
+measured, and a short list of suggested rewards priced in the household's
+own learn-to-earn rate (a pass pays `default_minutes_per_pass`, so a bonus is
+two or three passes' worth), each with the exact command and its exact effect
+shown before the button does anything. Every write goes through `genkan
+bonus`, `genkan grant` or the existing bedtime extension. Nothing new can
+change a block. A badge is not a reward a parent can give, so it is not on
+the list (docs/GAMIFICATION.md). With the AI card off, which is how it ships,
+this is the whole page, and it is not a lesser version of anything.
+
+**The AI narrative is opt-in, small, once a day, and honest about what
+leaves.** PRIVACY-CHARTER.md P1 had one outbound request (the Tor relay
+list) and a plain sentence that a second would be a finding. This adds a
+second, and the charter is edited in the same change, in full: a parent turns
+the card on (a button that says what leaves), puts a key in the gitignored
+`secrets.env`, and enables `kids-summary.timer` by hand. Then
+`bin/genkan-kid-summary` sends one compact brief per child for yesterday to
+Anthropic's API each morning, stores the note that comes back, and on a
+Monday writes the week from the seven daily notes rather than from the data
+again. The brief is built by the same function the page uses to show "What
+would leave the house", so the JSON a parent reads is the JSON that goes,
+and the JSON that went is stored beside every note. It carries counts, an
+age, a filter level, device kinds and up to three top domains per kind. It
+does not carry a name (the model writes "the child" and the page puts the
+name back), a label, an address, a timestamp finer than a date, or any log
+row. It is kept under about 1,500 tokens, the model is a setting with the
+cheapest one as the default, and the page says what a note costs in cents,
+estimated before and actual after. The public demo refuses to send.
+
+**Why once a day and not on every page view.** A summary re-generated per
+view would be a running cost, a running leak, and a page that says something
+different each time it is opened. One row per child per day, written once
+and read many times, is cheaper, quieter, and gives a parent a stable thing
+to refer back to. The two on-demand buttons ("today so far", "this week so
+far") exist because Tim asked for them, and they write rows the worker later
+replaces with the finished day or week.
+
+**Why not a local model by default.** A model on the box (Ollama and a small
+instruct model) would keep even the brief in the house and would make the
+card safe to ship on. It is the better default and it is not built: the
+household boxes this runs on are small, a note that takes ten minutes to
+write is a note nobody waits for, and the quality gap for a warm, careful
+piece of prose is real today. Recorded here as the roadmap item it is: when
+a local model writes a decent note in under a minute on the kind of box
+Genkan runs on, it becomes the default and the API becomes the option.
+
+**What was deliberately left out.** No summary for a guest child (P12). No
+summary sent anywhere but the page (P6). No automatic reward: the model may
+say a reward is deserved, the button is still the parent's. No "advice" that
+diagnoses: the prompt forbids labels, moralising and health advice, and asks
+for questions to raise rather than conclusions to draw. And no attempt to
+measure minutes of learning: the gateway cannot see how long a child spent
+reading, so the page counts minutes earned by learning and lookups to
+learning sites, and says which is which.

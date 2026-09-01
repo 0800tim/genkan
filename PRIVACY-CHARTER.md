@@ -69,9 +69,41 @@ exception exists.
 
 **The only outbound requests Genkan's own code makes** are the daily fetch of
 the public Tor relay list (`onionoo.torproject.org`, with `dan.me.uk` as a
-fallback), which downloads a public list and uploads nothing. Everything else
-that leaves the box is either DNS resolution by AdGuard to its configured
-upstreams, or Docker pulling images. Any third destination is a finding.
+fallback), which downloads a public list and uploads nothing, and the one
+opt-in exception below. Everything else that leaves the box is either DNS
+resolution by AdGuard to its configured upstreams, or Docker pulling images.
+Any other destination is a finding.
+
+**The one opt-in exception, stated in full (added 2026-09-02).** The child
+page on the dashboard has a card, "Summary written by an AI", that ships
+switched off. If a parent switches it on (a button on that page, behind a
+confirmation that says what leaves), puts an API key in the gitignored
+`secrets.env` (`GENKAN_AI_SUMMARY_KEY`) and enables `kids-summary.timer` by
+hand, then once a day `bin/genkan-kid-summary` sends **one compact brief per
+child for the previous day** to `api.anthropic.com` and stores the note that
+comes back. The two buttons on the page ("today so far", "this week so far")
+send the same shape on demand. What the brief contains, and all it contains:
+the child's age and filter level (never their name); minutes per category
+from the meter if it has any; minutes earned by quizzes and chores, rounds
+passed, study-page visits; lookup counts by kind (learning, gaming, video,
+social, messaging, music, risky, other) and blocked counts by kind; late
+lookups after 9pm by kind; bedtime nights scheduled, run, lifted and lookups
+inside the window; per device, its kind (phone, laptop, tablet, console:
+never its label or address) and its share by kind; up to three top domains
+per kind for the week; the findings and reward suggestions the house already
+computed; and the same counts for the previous period. No raw log row, no
+timestamp finer than a date, no IP, no MAC, no name. The exact JSON is shown
+on the page under "What would leave the house" before anything is sent, and
+the exact JSON that was sent is stored beside every note in `kid_summaries`.
+A weekly note is written from the seven daily notes, so no count is sent
+twice. The model is a household setting; the default is the cheapest one.
+Nothing on the page, and nothing else in Genkan, depends on this: every
+chart, number, finding and reward suggestion on the child page is computed
+in the house with no AI, and stays exactly as it is with the card off. The
+public demo refuses the request outright. Everything the request contains
+is aggregated about one child and written for that child's own parent (P6);
+it is not telemetry about the household or the software, and it is never
+sent on a timer the parent did not enable.
 
 ### P2. No cloud dependency for anything that matters.
 
@@ -303,6 +335,11 @@ List every destination the diff introduces. The permitted set is short:
   relay list
 - DNS resolution of safety-net and reading-list domains by `allow-sync`
 - Docker registries, at build and deploy time only
+- `api.anthropic.com`, from `dashboard/kid-insights.mjs` only, carrying only
+  the brief P1 spells out, only with the household switch on, a key set and
+  a parent's button or a hand-enabled timer behind it. A change to what that
+  brief contains is a P1 change and edits the paragraph in P1 in the same
+  pull request.
 
 **Anything else is a P1 or P2 finding.** Ask what is in the request body. "It is
 only a GET" is not an answer: a URL is a payload.

@@ -290,6 +290,21 @@ done
   && ok "an alert category nobody has worded yet says the least it can" \
   || bad "the fallback notification wording is missing or would quote an alert it knows nothing about"
 
+# The dashboard's role must be able to read every table and view the
+# dashboard's code reads, on a FRESH load. schema.sql never granted kids_app
+# anything, and every box that mattered had a role that already owned the
+# tables, so a clean install answered 500 on Home and nobody saw it until
+# 2026-09-02. The list comes from the code, so a new query on a new table
+# fails here before it fails in a household.
+missing=""
+for t in $(grep -ohE '(FROM|JOIN)[[:space:]]+[a-z_]+' "$(dirname "$0")/../dashboard"/*.mjs | awk '{print $2}' | sort -u); do
+  [ "$(psql "SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='$t'")" = 1 ] || continue
+  [ "$(psql "SELECT 1 FROM information_schema.role_table_grants WHERE grantee='kids_app' AND privilege_type='SELECT' AND table_name='$t'")" = 1 ] \
+    || missing="$missing $t"
+done
+[ -z "$missing" ] && ok "the dashboard's role can read every table its code reads" \
+  || bad "kids_app cannot read, on a fresh load:$missing"
+
 echo
 echo "passed $pass, failed $fail"
 [ "$fail" = 0 ]

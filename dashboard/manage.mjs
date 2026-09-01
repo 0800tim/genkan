@@ -144,8 +144,13 @@ export function family(s, mg) {
     const b = budgets[c.id] || {};
     const n = counts[c.id] || 0;
     const t = times.get(c.id);
+    // A household child's name opens their page (today, the week, what
+    // changed, rewards). A guest's does not: a visit is not logged per person.
+    const heading = c.kind === "child"
+      ? `<a class="kidlink" href="/kid/${encodeURIComponent(c.name)}" title="Open ${esc(c.name)}'s page">${esc(c.name)}</a>`
+      : esc(c.name);
     return `<div class="mgcard">
-      <div class="mh"><h3>${esc(c.name)}</h3>
+      <div class="mh"><h3>${heading}</h3>
         ${c.active === false ? '<span class="pill">not here right now</span>' : ""}
         <span class="tag mgnum">${n} device${n === 1 ? "" : "s"}${t ? ` &middot; ${t.used_min || 0} min used today` : ""}</span></div>
       <div class="mg">

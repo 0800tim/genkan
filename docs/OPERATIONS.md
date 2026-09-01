@@ -180,8 +180,9 @@ raises a warning and starts the whole sequence again when it returns.
 
 ### The host-side units
 
-One service and seven timers. That is the entire host footprint, besides the
-`genkan` scripts in `/usr/local/bin` and `/etc/kids-network/`.
+One service and seven timers enabled, two more installed and left off. That is
+the entire host footprint, besides the `genkan` scripts in `/usr/local/bin` and
+`/etc/kids-network/`.
 
 | Unit | Cadence | What it runs |
 |---|---|---|
@@ -198,6 +199,28 @@ There is an eighth timer, `kids-iot-policy.timer`. `deploy.sh` installs it and
 deliberately does **not** enable it, because the household IoT layer is switched
 on by hand after you have watched it in observe mode. See
 [HOUSEHOLD-SECURITY.md](HOUSEHOLD-SECURITY.md).
+
+And a ninth, `kids-summary.timer` (daily, 06:30), installed and likewise **not**
+enabled. It runs `genkan-kid-summary`, the one worker that can make an outbound
+request: one compact brief per child for yesterday to Anthropic's API, and the
+note that comes back onto the child's page. Three things have to be true before
+it sends anything, and it prints one line and exits 0 otherwise:
+
+    # 1. the key, in the gitignored secrets.env, then restart the dashboard
+    GENKAN_AI_SUMMARY_KEY=sk-ant-...
+    # 2. the switch: a child's page, "Summary written by an AI", "Turn it on"
+    # 3. the timer
+    sudo systemctl enable --now kids-summary.timer
+
+To see what it did, or what it would send:
+
+    journalctl -u kids-summary.service --since yesterday
+    genkan-kid-summary --dry-run          # prints each brief, sends nothing
+
+Turning the card off on the dashboard is enough to stop it sending; disabling
+the timer as well keeps the journal quiet. What the brief contains is spelled
+out field by field in [PRIVACY-CHARTER.md](../PRIVACY-CHARTER.md) P1, and the
+exact JSON sent for every note is stored beside it in `kid_summaries`.
 
 `kids-schedule.timer` is installed **and** enabled, which is the opposite
 choice, and for a reason worth saying out loud: the switch there is the data,

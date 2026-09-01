@@ -40,6 +40,7 @@ import { earnData, earnPage, taskApi, quizApi, bankApi, earnSettingsApi, boardAp
 import { scheduleData, scheduleApi } from "./schedule.mjs";
 import { analyticsPage, analyticsApi } from "./analytics-page.mjs";
 import { settingsPage, settingsApi } from "./settings.mjs";
+import { kidInsights, kidApi } from "./kid-insights.mjs";
 import { dirname, join } from "node:path";
 import { versionFooter } from "./version.mjs";
 
@@ -295,7 +296,7 @@ const server = createServer(async (req, res) => {
 
     if (req.method === "POST" && ["/api/claim", "/api/act", "/api/assign", "/api/ack", "/api/goal",
       "/api/child", "/api/tier", "/api/device", "/api/household", "/api/task", "/api/quiz",
-      "/api/bank", "/api/earnsettings", "/api/board", "/api/schedule", "/api/settings"].includes(req.url) && !authed(req)) {
+      "/api/bank", "/api/earnsettings", "/api/board", "/api/schedule", "/api/settings", "/api/kid"].includes(req.url) && !authed(req)) {
       res.writeHead(403, { "content-type": "application/json" }); res.end('{"out":"forbidden"}'); return; }
     if (req.method === "POST" && req.url === "/api/assign") {
       let b = ""; req.on("data", c => b += c); await new Promise(r => req.on("end", r));
@@ -342,6 +343,16 @@ const server = createServer(async (req, res) => {
     // set_by precedence rules live in exactly one place. The nudge at the end
     // of each op runs that same worker, so a change a parent just made is in
     // force now rather than up to a minute from now.
+    // The child page's rewards and its optional AI summary. Rewards go through
+    // runKidnet (bonus, grant) so the CLI's gates and audit rows apply; the
+    // summary is the one outbound request on the dashboard, off by default.
+    // See dashboard/kid-insights.mjs.
+    if (req.method === "POST" && req.url === "/api/kid") {
+      const body = await readJson(req);
+      try { await kidApi(q, body, res, runKidnet); }
+      catch (e) { res.writeHead(500, { "content-type": "application/json" }); res.end(JSON.stringify({ ok: false, out: e.message })); }
+      return;
+    }
     if (req.method === "POST" && req.url === "/api/settings") {
       const body = await readJson(req);
       try { await settingsApi(q, body, res, runKidnet); }
@@ -651,7 +662,15 @@ const server = createServer(async (req, res) => {
       const days = url.searchParams.get("days") === "30" ? 30 : 7;
       const kd = await kidDetail(q, name, days);
       if (!kd) { res.writeHead(404, { "content-type": "text/plain" }); res.end("no such child"); return; }
-      html = shell({ tab: "/", title: `Genkan: ${kd.child.name}`, body: kidView(s, kd) });
+      // The in-house insights (today, the fortnight, what changed, rewards).
+      // Every query inside is guarded, so a null here means something worse
+      // than a missing table, and the page still renders its controls.
+      // A visiting child gets no insights at all: a visit is not logged per
+      // person (PRIVACY-CHARTER.md P12), and the page says so.
+      const ins = kd.child.kind === "child"
+        ? await kidInsights(q, kd.child).catch(e => { console.log(`kid insights: ${e.message}`); return null; })
+        : null;
+      html = shell({ tab: "/", title: `Genkan: ${kd.child.name}`, body: kidView(s, kd, ins) });
     } else if (url.pathname === "/notify") {
       html = shell({ tab: "/notify", title: "Genkan notifications", body: notifyPage(await notifyData(q)) });
     } else if (url.pathname === "/trends") {
