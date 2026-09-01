@@ -68,6 +68,41 @@ n=$(psql "SELECT count(*) FROM retention")
 [ "$(psql "SELECT keep_days FROM retention WHERE what='dns_log'")" -le 90 ] \
   && ok "the DNS log, the most sensitive table, is kept the shortest" \
   || bad "dns_log retention is longer than 90 days"
+# The storage view the Settings page and `genkan retention show` read: one
+# sized row per retention row, so a parent can see what each rule is holding.
+[ "$(psql "SELECT count(*) FROM storage_status WHERE bytes IS NOT NULL")" = "$n" ] \
+  && ok "storage_status has a sized row for every retention rule" \
+  || bad "storage_status does not cover every retention rule"
+
+# The pruner, end to end, on this throwaway. Two lookups: one older than its
+# retention, one from now. The old one goes, the new one stays, and the
+# deletion is audited in block_events in the same statement as the delete.
+psql "INSERT INTO dns_log(ts,domain,action) VALUES (now()-interval '400 days','old.example','allowed'),(now(),'new.example','allowed')" >/dev/null
+out=$(GENKAN_DB="$DB" PG_CONTAINER="$PG" bash "$R/bin/genkan-prune" --dry-run 2>&1)
+case "$out" in *"would delete 1 row(s) from dns_log"*) ok "genkan-prune --dry-run sees the row past its retention";;
+                *) bad "genkan-prune --dry-run did not see it: ${out:0:80}";; esac
+[ "$(psql "SELECT count(*) FROM dns_log")" = 2 ] && ok "a dry run deleted nothing" || bad "a dry run deleted something"
+out=$(GENKAN_DB="$DB" PG_CONTAINER="$PG" bash "$R/bin/genkan-prune" 2>&1)
+[ "$(psql "SELECT count(*) FROM dns_log WHERE domain='new.example'")" = 1 ] \
+  && [ "$(psql "SELECT count(*) FROM dns_log WHERE domain='old.example'")" = 0 ] \
+  && ok "the nightly prune deleted the old lookup and kept the new one" \
+  || bad "the nightly prune got the wrong rows: ${out:0:80}"
+[ "$(psql "SELECT count(*) FROM block_events WHERE target_ref='prune:dns_log' AND action='deleted:1' AND source='nightly'")" = 1 ] \
+  && ok "the deletion is audited in block_events" || bad "no audit row for the nightly deletion"
+# A one-off (`genkan prune dns-log <days>`): deletes only what is older than
+# the days it was given, and leaves the retention rule alone.
+psql "INSERT INTO dns_log(ts,domain,action) VALUES (now()-interval '10 days','older.example','allowed')" >/dev/null
+out=$(GENKAN_DB="$DB" PG_CONTAINER="$PG" bash "$R/bin/genkan-prune" dns_log 7 2>&1)
+[ "$(psql "SELECT count(*) FROM dns_log")" = 1 ] \
+  && ok "a one-off prune deletes only what is older than the days it was given" \
+  || bad "a one-off prune got the wrong rows: ${out:0:80}"
+[ "$(psql "SELECT keep_days FROM retention WHERE what='dns_log'")" = 30 ] \
+  && ok "a one-off prune leaves the retention rule alone" || bad "a one-off prune changed the retention rule"
+out=$(GENKAN_DB="$DB" PG_CONTAINER="$PG" bash "$R/bin/genkan-prune" dns_log 0 2>&1); rc=$?
+[ "$rc" != 0 ] && ok "genkan-prune refuses 0 days" || bad "genkan-prune accepted 0 days"
+out=$(GENKAN_DB="$DB" PG_CONTAINER="$PG" bash "$R/bin/genkan-prune" children 30 2>&1); rc=$?
+[ "$rc" != 0 ] && [ "$(psql "SELECT count(*) FROM children")" -gt 0 ] \
+  && ok "genkan-prune refuses a table with no retention rule" || bad "genkan-prune touched a table with no retention rule"
 
 n=$(psql "SELECT count(*) FROM always_allow WHERE scope='learn'")
 [ "${n:-0}" -gt 5 ] && ok "the reading list is seeded ($n reference sites a blocked child can read)" \

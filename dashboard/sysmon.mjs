@@ -25,6 +25,7 @@ import { readFile, readdir, statfs } from "node:fs/promises";
 import { request } from "node:http";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import pg from "pg";
 import { demoStatic, demoSample, demoBackfill } from "./sys-demo.mjs";
 
 // The public demo (demo/compose.yaml) runs this same file inside a container
@@ -163,6 +164,81 @@ async function disk() {
   return { total, used, avail, pct };
 }
 
+// The disk as the Settings page's Storage card wants it: the same reading the
+// tile uses, and in the demo the same invented disk the System page shows, so
+// the two pages can never disagree about how much room is left.
+export async function diskNow() {
+  return DEMO ? demoStatic().disk : disk();
+}
+
+// ---------------------------------------------------------------------------
+// The database's own size. This is the one number on this page that is not a
+// file read: it is one cheap catalogue query, on the slow clock, and it goes
+// through a pool of exactly one connection made only when first asked. The
+// sampler cannot borrow the server's pool without server.mjs handing it over,
+// and the server has never had to know what this module reads. Any error,
+// including no database at all, is a null and the page says so.
+// ---------------------------------------------------------------------------
+let dbPool = null;
+async function dbBytes() {
+  const url = process.env.IN_CONTAINER ? process.env.KIDS_DB_URL_DOCKER : process.env.KIDS_DB_URL;
+  if (!url) return null;
+  try {
+    if (!dbPool) dbPool = new pg.Pool({ connectionString: url, max: 1, idleTimeoutMillis: 20000 });
+    const r = await dbPool.query("SELECT pg_database_size(current_database())::bigint AS b");
+    const b = Number(r.rows[0]?.b);
+    return Number.isFinite(b) ? b : null;
+  } catch { return null; }
+}
+
+// Everything the Storage card shows, read through whichever query function
+// the caller has (the server's pool, on the Settings page). Every part is
+// guarded on its own: a box whose database has not been given
+// schema-retention.sql yet gets sizes and no retention rows, not an error.
+// Sizes and the rough row counts need no special rights: pg_database_size
+// needs CONNECT and pg_total_relation_size works for any role that can see
+// the table, which both kids_app and kids_agent can.
+export async function storageSnapshot(q) {
+  const one = (sql, dflt) => q(sql).then(r => r[0] ?? dflt).catch(() => dflt);
+  const many = sql => q(sql).catch(() => null);
+  const [db, tables, top, dns, cost] = await Promise.all([
+    one("SELECT pg_database_size(current_database())::bigint AS b", null),
+    many(`SELECT what, keep_days, note, bytes::bigint AS bytes, rows_about::bigint AS rows_about, oldest
+          FROM storage_status ORDER BY bytes DESC, what`),
+    many(`SELECT c.relname AS name, pg_total_relation_size(c.oid)::bigint AS bytes, s.n_live_tup::bigint AS rows_about
+          FROM pg_class c JOIN pg_stat_user_tables s ON s.relid = c.oid
+          WHERE c.relkind = 'r' AND c.relnamespace = 'public'::regnamespace
+          ORDER BY pg_total_relation_size(c.oid) DESC LIMIT 6`),
+    // The last seven days of dns_log, or however much of it there is: a box
+    // that started logging on Friday has four days, and dividing by seven
+    // would understate what it is really doing.
+    one(`SELECT count(*)::bigint AS n,
+                greatest(1, least(7, extract(epoch FROM now() - min(ts)) / 86400)) AS days
+         FROM dns_log WHERE ts > now() - interval '7 days'`, null),
+    // What one lookup costs on disk: the bytes of a typical recent row plus
+    // its header, times the table's index share. Not file size over rows:
+    // after a prune the file keeps its freed pages, and that arithmetic
+    // would tell a parent the log is growing ten times faster than it is.
+    one(`SELECT (SELECT avg(pg_column_size(l)) + 24 FROM (SELECT * FROM dns_log ORDER BY ts DESC LIMIT 500) l) AS row_bytes,
+                pg_total_relation_size('dns_log')::float / greatest(pg_relation_size('dns_log'), 1) AS share
+         FROM (SELECT 1) x`, null),
+  ]);
+  const n = v => (v === null || v === undefined ? null : Number(v));
+  const perRow = cost && n(cost.row_bytes) > 0 ? n(cost.row_bytes) * Math.max(1, n(cost.share) || 1) : null;
+  const perDay = dns && n(dns.n) > 0 ? n(dns.n) / Math.max(1, Number(dns.days) || 1) : 0;
+  return {
+    dbBytes: db ? n(db.b) : null,
+    retentionReady: Array.isArray(tables),
+    tables: (tables || []).map(t => ({
+      what: t.what, keep_days: n(t.keep_days), note: t.note || "",
+      bytes: n(t.bytes), rows: n(t.rows_about), oldest: t.oldest ? new Date(t.oldest).getTime() : null,
+    })),
+    top: (top || []).map(t => ({ name: t.name, bytes: n(t.bytes), rows: n(t.rows_about) })),
+    // Rows a day, and what that costs a month at today's bytes per row.
+    growth: dns ? { perDay, monthBytes: perRow === null ? null : perDay * perRow * 30 } : null,
+  };
+}
+
 // Temperature is a nice-to-have and plenty of boxes have no sensor at all, so
 // the path is looked up once and the tile simply does not appear if nothing
 // answers. Thermal zones first (that is where a Pi puts it), then the hwmon
@@ -247,7 +323,7 @@ export class SysMonitor {
     this.clients = new Set();
     this.history = [];            // ring buffer: { t, cpu, mem, down, up }
     this.now = null;              // the full latest reading, for the tiles
-    this.slow = { disk: null, containers: null, ifaces: [], cores: null, temp: null, model: null };
+    this.slow = { disk: null, containers: null, ifaces: [], cores: null, temp: null, model: null, db: null };
     this.tempPath = null;
     this.prevCpu = null;
     this.prevNet = null;
@@ -278,13 +354,17 @@ export class SysMonitor {
     const at = Date.now();
     if (!force && at - this.slowAt < SLOW_MS) return;
     this.slowAt = at;
-    if (DEMO) { this.slow = { ...this.slow, ...demoStatic() }; return; }
+    // The database is asked in the demo too: it is the demo's own throwaway
+    // database of a made-up family, and its size is a true and harmless number.
+    if (DEMO) { this.slow = { ...this.slow, ...demoStatic(), db: await dbBytes() }; return; }
     if (this.tempPath === null) this.tempPath = (await findTempPath()) || false;
-    const [d, c, ifaces, cpuinfo] = await Promise.all([
+    const [d, c, ifaces, cpuinfo, db] = await Promise.all([
       disk(), containers(), physicalIfaces(),
       this.slow.cores ? null : readFile("/proc/cpuinfo", "utf8").catch(() => ""),
+      dbBytes(),
     ]);
     this.slow.disk = d;
+    this.slow.db = db;
     this.slow.containers = c;
     this.slow.ifaces = ifaces;
     if (cpuinfo !== null) {
@@ -378,6 +458,7 @@ export class SysMonitor {
       temp: n.temp ?? null,
       tempLabel: n.tempLabel || null,
       disk: this.slow.disk,
+      db: this.slow.db,
       containers: this.slow.containers,
       net: n.net ? { down: n.net.down, up: n.net.up } : null,
       ifaces: (this.slow.ifaces || []).map(i => ({

@@ -806,6 +806,57 @@ Check first that their application connects as a named role and not as
 `PUBLIC`; the database's own owner keeps CONNECT either way. The cleanest
 answer, if you have the choice, is to give Genkan a Postgres of its own.
 
+## Storage and retention
+
+Everything Genkan records is one Postgres database on the box, and the table
+that grows is `dns_log`: every domain a device asked for, at roughly 15,000
+to 20,000 rows a day for a family, which is a few megabytes a month now and a
+few hundred a year if nothing prunes it. Something does.
+
+**Where to look.** The Settings page's Storage card, or:
+
+    genkan retention show      each rule: kept for how long, size, rough rows, oldest row
+    genkan prune status        the same, with exact counts, as the database owner sees it
+
+The System page shows the database's size beside the disk, and how much of
+the disk is free.
+
+**The rules.** One row per table in `retention` (`config/db/
+schema-retention.sql`), with the reason for each default written on the row.
+`dns_log` is thirty days, deliberately the shortest: PRIVACY-CHARTER.md (P5)
+asks that a longer window justify itself on its own terms. Change a rule on
+the Settings page or with:
+
+    genkan retention set dns_log 60         # 1 to 3650 days
+
+**The nightly prune.** `kids-prune.timer` runs `bin/genkan-prune` at 03:20
+(with up to ten minutes of random delay) and deletes what is older than each
+rule. `deploy.sh` enables it. Check it is there with
+`systemctl list-timers kids-prune.timer`; if it is not, the Settings card
+says so, and nothing is pruned until it is enabled.
+
+**Pruning now.** From the Settings card or the command line:
+
+    genkan prune preview                    # what tonight would delete; changes nothing
+    genkan prune now                        # the nightly prune, now
+    genkan prune dns-log 7                  # a one-off: lookups older than a week go, the rule stays
+
+Every deletion writes a `prune:<table>` row to the block log with the count,
+so the Analytics page shows what went and when.
+
+**Space.** After a delete, Postgres keeps the freed pages for new rows. The
+table's file shrinks only when the empty pages are at its end, so the size on
+the card often stays where it was after a prune and simply stops growing.
+That is normal. To hand the space back to the disk today:
+
+    docker exec -i postgres psql -U postgres -d kids_network -c "VACUUM FULL dns_log"
+
+It rewrites the table and locks it while it does, which on a family's
+database is seconds. Nothing runs it automatically.
+
+**What a prune cannot undo.** A deleted row is gone. Genkan keeps no copy and
+makes no backup of its own; the section below is the backup, and it is yours.
+
 ## Backing up and restoring
 
 There are three things worth keeping. Only the first is irreplaceable.

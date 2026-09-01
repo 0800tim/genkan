@@ -12,6 +12,7 @@
 import { existsSync } from "node:fs";
 import { esc } from "./charts.mjs";
 import { TIERS } from "./household.mjs";
+import { storageSnapshot, diskNow } from "./sysmon.mjs";
 
 // The vocabulary, kept identical to bin/genkan's gates so a value this page
 // accepts is a value the CLI accepts. Anything else is refused here with a
@@ -22,6 +23,44 @@ const NOTE_RE = /^[A-Za-z0-9_:+.,' -]{0,80}$/;
 const SERVICE_RE = /^[a-z0-9_]{1,40}$/;
 const MODES = ["off", "observe", "enforce"];
 const TIER_ORDER = ["young", "standard", "teen", "guest", "adult"];
+// Retention: a table name as the retention table spells it, and a day count
+// inside the CHECK the table itself carries (1 to 3650). bin/genkan checks
+// both again, and bin/genkan-prune a third time.
+const WHAT_RE = /^[a-z_]{1,32}$/;
+const DAY_PRESETS = [7, 14, 30, 60, 90, 180, 365];
+const days = v => {
+  const n = Number(v);
+  return Number.isInteger(n) && n >= 1 && n <= 3650 ? n : undefined;
+};
+// What each retained table is, in a parent's words. The row's own note says
+// why its default is what it is; this is just the name on the row.
+const WHAT_LABEL = {
+  dns_log: "DNS lookups: every domain a device asked for",
+  alerts: "Alerts",
+  block_events: "The block log (the audit trail)",
+  time_events: "Minutes earned, spent and taken away",
+  quiz_rounds: "Quiz rounds, with their answers",
+  category_usage: "Daily minutes per category",
+  service_usage: "Daily minutes per service",
+  dhcp_leases: "Which address each device had",
+  device_claims: "Device claims, including the wrong PINs",
+};
+const human = b => {
+  b = Number(b || 0);
+  if (b <= 0) return "0";
+  const u = ["B", "KB", "MB", "GB", "TB"];
+  const i = Math.min(u.length - 1, Math.floor(Math.log(b) / Math.log(1024)));
+  const v = b / Math.pow(1024, i);
+  return `${i === 0 || v >= 100 ? Math.round(v) : v.toFixed(1)} ${u[i]}`;
+};
+// "about 67,000", never "about 67,059": the count is the planner's estimate.
+const about = n => {
+  n = Number(n || 0);
+  if (n < 1000) return String(Math.round(n));
+  const p = Math.pow(10, Math.floor(Math.log10(n)) - 1);
+  return (Math.round(n / p) * p).toLocaleString("en-NZ");
+};
+const dateNZ = ms => new Date(ms).toLocaleDateString("en-NZ", { day: "numeric", month: "short", year: "numeric" });
 const tierLabel = t => (TIERS.find(x => x[0] === t) || [t, String(t).charAt(0).toUpperCase() + String(t).slice(1)])[1];
 const tierNote = t => (TIERS.find(x => x[0] === t) || [])[2] || "";
 // "" / null mean "no limit"; anything else must be a sane count of minutes.
@@ -96,12 +135,16 @@ export async function settingsData(q) {
     safe("SELECT current_setting('TIMEZONE') AS tz", [{}]),
     safe("SELECT name, quiet_start_min, quiet_end_min, quiet_urgent FROM notify_routes WHERE enabled ORDER BY name"),
   ]);
+  const [storage, disk] = await Promise.all([storageSnapshot(q), diskNow()]);
   return {
     dns, policies, allow, allowReady,
     claim: claim?.mode ?? null, iot: iot?.mode ?? null, board: board?.enabled ?? null,
     slow: slow?.rate_kbit ? slow : null, tz: tz?.tz || "", routes,
     services: await blockedServices(),
     iotTimer: existsSync("/etc/systemd/system/timers.target.wants/kids-iot-policy.timer"),
+    storage, disk,
+    pruneTimer: existsSync("/etc/systemd/system/timers.target.wants/kids-prune.timer"),
+    demo: process.env.GENKAN_DEMO === "1",
   };
 }
 
@@ -214,6 +257,32 @@ export async function settingsApi(q, body, res, runKidnet) {
     return send(200, out.join(" ") || "Nothing changed on the slow lane.", true);
   }
 
+  // Storage. The page never deletes a row itself: a retention change is
+  // `genkan retention set`, and every prune is bin/genkan-prune by way of
+  // `genkan prune`, which is where the superuser path and the audit row live.
+  if (op === "retention") {
+    const what = String(b.what || "");
+    const d = days(b.days);
+    if (!WHAT_RE.test(what)) return send(400, "which table?");
+    if (d === undefined) return send(400, "Keep it for a whole number of days, from 1 to 3650.");
+    const r = await run(["retention", "set", what, String(d)]);
+    return send(r.ok ? 200 : 400, r.out.replace(/^genkan: /gm, "") || "could not save it", r.ok);
+  }
+  if (op === "prune-preview") {
+    const r = await run(["prune", "preview"]);
+    return send(r.ok ? 200 : 500, r.out || "no answer from the pruner", r.ok);
+  }
+  if (op === "prune-run") {
+    const r = await run(["prune", "now"]);
+    return send(r.ok ? 200 : 500, r.out || "no answer from the pruner", r.ok);
+  }
+  if (op === "prune-dns") {
+    const d = days(b.days);
+    if (d === undefined) return send(400, "A whole number of days, from 1 to 3650.");
+    const r = await run(["prune", "dns-log", String(d)]);
+    return send(r.ok ? 200 : 400, r.out.replace(/^genkan: /gm, "") || "no answer from the pruner", r.ok);
+  }
+
   return send(400, "bad request");
 }
 
@@ -255,6 +324,29 @@ export const SETTINGS_CSS = `
 .stcannot li{margin:4px 0;font-size:13px;color:var(--ink-2);line-height:1.45}
 .stwait{font-size:12.5px;color:var(--ink-2);background:color-mix(in oklab,var(--warn,#c98a2b) 10%,var(--surface));
   border:1px solid var(--line);border-radius:10px;padding:8px 11px;margin:8px 0 0}
+/* Storage */
+.stst{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin:10px 0 4px}
+.stst>div{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:var(--surface-2)}
+.stst .k{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-muted);font-weight:600}
+.stst .v{font-size:24px;font-weight:600;letter-spacing:-.02em;line-height:1.15;margin-top:2px;font-variant-numeric:tabular-nums}
+.stst .v.off{font-size:16px;color:var(--ink-muted)}
+.stst .s{font-size:11.5px;color:var(--ink-muted);margin-top:2px;line-height:1.35}
+.stret{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 16px;align-items:start;padding:11px 0;border-top:1px solid var(--line)}
+.stret:first-of-type{border-top:0}
+.stret h4{margin:0;font-size:13.5px;font-weight:600}
+.stret h4 code{font-size:12px;font-weight:400;color:var(--ink-muted);margin-left:6px}
+.stret .facts{font-size:12.5px;color:var(--ink-2);margin:2px 0 0;font-variant-numeric:tabular-nums}
+.stret .why{grid-column:1/-1;font-size:12.5px;color:var(--ink-muted);line-height:1.45;margin:2px 0 0;max-width:78ch}
+.stret .ctl{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.stret .ctl input[type=number]{width:5.5em}
+.stret .ctl .d{font-size:12.5px;color:var(--ink-muted)}
+.stret .sens{color:var(--crit);border-color:color-mix(in oklab,var(--crit) 40%,var(--line))}
+@media(max-width:600px){.stret{grid-template-columns:1fr}.stret .ctl{justify-content:flex-start}}
+.sttop{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--ink-2);margin:4px 0 0;font-variant-numeric:tabular-nums}
+.sttop span b{font-weight:600}
+.stout{white-space:pre-wrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px;line-height:1.5;
+  color:var(--ink-2);background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:9px 11px;margin:10px 0 0;
+  max-height:220px;overflow:auto}
 `;
 
 export const SETTINGS_JS = `
@@ -297,6 +389,47 @@ function stIot(){
 }
 function stBoard(on){mgPost('/api/board',{enabled:!!on},on?'turning the board on\\u2026':'turning the board off\\u2026');}
 function stSlow(){mgPost('/api/settings',{op:'slow',rate:stVal('st_rate'),timeout:stVal('st_timeout')},'saving the slow lane\\u2026');}
+/* Storage. The preset picker and the number box are two views of one value:
+   picking a preset fills the box, typing in the box moves the picker to
+   "other". Save reads the box, so whatever is typed is what is sent. */
+function stRetPick(w){var s=document.getElementById('stp_'+w),n=document.getElementById('std_'+w);
+  if(s&&n&&s.value!=='other')n.value=s.value;}
+function stRetTyped(w){var s=document.getElementById('stp_'+w),n=document.getElementById('std_'+w);if(!s||!n)return;
+  var has=false;for(var i=0;i<s.options.length;i++){if(s.options[i].value===n.value)has=true;}
+  s.value=has?n.value:'other';}
+function stRetSave(w){var d=stVal('std_'+w);
+  if(!d){say('How many days should '+w+' be kept?');return;}
+  mgPost('/api/settings',{op:'retention',what:w,days:d},'saving '+w+'\\u2026');}
+function stPruneOut(t){var o=document.getElementById('st_prune');if(o){o.hidden=false;o.textContent=t;}}
+async function stPrunePreview(){
+  stPruneOut('asking the pruner what is past its retention\\u2026');
+  var x=await post('/api/settings',{op:'prune-preview'});
+  var t=((x.j&&x.j.out)||'').trim();
+  if(!x.r.ok||(x.j&&x.j.ok===false)){stPruneOut(t||('That did not work (HTTP '+x.r.status+')'));return null;}
+  stPruneOut(t||'Nothing is past its retention.');
+  return t;}
+async function stPruneNow(){
+  var t=await stPrunePreview(); if(t===null)return;
+  if(/demo/i.test(t)){say(t);return;}
+  var lines=t.split('\\n').filter(function(l){return /would delete/.test(l);});
+  if(!lines.length){say('Nothing is past its retention, so there is nothing to delete.');return;}
+  if(!confirm('Delete these rows now?\\n\\n'+lines.map(function(l){return '\\u2022 '+l.trim().replace(/^would /,'');}).join('\\n')
+    +'\\n\\nThis is exactly what tonight\\u2019s prune would do. Genkan keeps no copy: only a backup you made yourself can bring a row back.'))return;
+  stPruneOut('deleting\\u2026');
+  var y=await post('/api/settings',{op:'prune-run'});
+  stPruneOut(((y.j&&y.j.out)||'').trim()||'no answer');
+  done(y.r,y.j,3000);}
+async function stPruneDns(){
+  var d=stVal('std_dns');
+  if(!d){say('How many days of lookups should stay?');return;}
+  if(!confirm('Delete every DNS lookup older than '+d+' days?\\n\\n'
+    +'\\u2022 They go now, not tonight.\\n'
+    +'\\u2022 The retention setting for dns_log does not change.\\n'
+    +'\\u2022 Genkan keeps no copy: only a backup you made yourself can bring them back.'))return;
+  stPruneOut('deleting lookups older than '+d+' days\\u2026');
+  var y=await post('/api/settings',{op:'prune-dns',days:d});
+  stPruneOut(((y.j&&y.j.out)||'').trim()||'no answer');
+  done(y.r,y.j,3000);}
 `;
 
 const chk = (id, label, on, extra = "") =>
@@ -504,6 +637,96 @@ function switchesPanel(d) {
   </div>`;
 }
 
+// A days picker: the presets, plus "other" for whatever is typed in the box
+// beside it. Both carry the same value; the box is what Save reads.
+function daysPicker(id, val) {
+  const opts = DAY_PRESETS.map(d => `<option value="${d}"${d === val ? " selected" : ""}>${d} days</option>`).join("");
+  const other = DAY_PRESETS.includes(val) ? "" : " selected";
+  return `<select id="stp_${esc(id)}" aria-label="preset" onchange="stRetPick('${esc(id)}')">${opts}<option value="other"${other}>other</option></select>
+    <input id="std_${esc(id)}" type="number" inputmode="numeric" min="1" max="3650" value="${esc(String(val))}"
+      aria-label="days" oninput="stRetTyped('${esc(id)}')"> <span class="d">days</span>`;
+}
+
+function storagePanel(d) {
+  const s = d.storage || {};
+  const disk = d.disk;
+  const g = s.growth;
+  const stat = (k, v, sub, off = false) => `<div><div class="k">${k}</div><div class="v${off ? " off" : ""}">${v}</div><div class="s">${sub}</div></div>`;
+  const stats = `<div class="stst">
+    ${s.dbBytes !== null && s.dbBytes !== undefined
+      ? stat("The database", esc(human(s.dbBytes)), "everything Genkan has recorded, on this box")
+      : stat("The database", "could not ask", "the size query did not answer", true)}
+    ${disk
+      ? stat("Free on the disk", esc(human(disk.avail)), `${esc(human(disk.used))} of ${esc(human(disk.total))} used${disk.pct >= 90 ? ", which is nearly full" : ""}`)
+      : stat("Free on the disk", "not readable", "the filesystem did not answer", true)}
+    ${g && g.perDay > 0
+      ? stat("Growing by", g.monthBytes === null ? "unknown" : `about ${esc(human(g.monthBytes))} a month`,
+        `${esc(about(Math.round(g.perDay)))} lookups a day this week, at what a typical lookup row costs on disk`)
+      : stat("Growing by", "nothing yet", "no lookups in the last seven days", true)}
+  </div>`;
+
+  const wait = s.retentionReady ? "" : `<div class="stwait">The retention rows are missing: load
+    <code>config/db/schema-retention.sql</code> (or re-run <code>config/db/load.sh</code>) and the nightly prune has
+    something to read. Until then nothing is pruned, which is the safe way for it to fail.</div>`;
+
+  const rows = (s.tables || []).map(t => {
+    const sens = t.what === "dns_log";
+    return `<div class="stret">
+      <div><h4>${esc(WHAT_LABEL[t.what] || t.what)}<code>${esc(t.what)}</code>${sens ? ' <span class="pill sens">the sensitive one</span>' : ""}</h4>
+        <p class="facts">${esc(human(t.bytes))} &middot; about ${esc(about(t.rows))} rows${t.oldest ? ` &middot; oldest ${esc(dateNZ(t.oldest))}` : " &middot; empty"}</p></div>
+      <div class="ctl">${daysPicker(t.what, t.keep_days)}<button class="btn" type="button" onclick="stRetSave('${esc(t.what)}')">Save</button></div>
+      <p class="why">${esc(t.note || "")}${sens ? ` <b>Its default is the shortest for a reason:</b> a family does not need a permanent
+        archive of its children's browsing, and a longer window has to justify itself on its own terms, not on the charts
+        looking better (<code>PRIVACY-CHARTER.md</code>, P5).` : ""}</p>
+    </div>`;
+  }).join("");
+
+  const top = (s.top || []).length
+    ? `<div class="sttop">${s.top.map(t => `<span><b>${esc(t.name)}</b> ${esc(human(t.bytes))}, about ${esc(about(t.rows))} rows</span>`).join("")}</div>
+       <p class="mghint">Tables without a retention row are reference data or settings (the category and vendor lists, the quiz banks,
+         the Tor relay list, who lives here) and are never pruned.</p>`
+    : "";
+
+  const timer = d.demo ? "" : d.pruneTimer
+    ? `<code>kids-prune.timer</code> is enabled on this box and runs at 03:20 each night.`
+    : `<b><code>kids-prune.timer</code> is not enabled on this box</b>, so nothing runs nightly until <code>deploy.sh</code>
+       is run again or the timer is enabled by hand; the buttons below still work.`;
+
+  return `<div class="card" id="storage"><h2>Storage</h2>
+    <p class="sub">How big the database is, what is in it, and how long each kind of record is kept. Everything
+      Genkan records lives in one Postgres database on this box and never leaves the house. It does not have to stay
+      forever either: a complete record of a child's adolescence sitting in a cupboard is not what anybody agreed to.</p>
+    ${stats}
+    ${wait}
+    <div class="mgsec">What is kept, and for how long</div>
+    <p class="mghint">One rule per table. The nightly prune deletes whatever is older than the rule and nothing else.
+      ${timer} Pick a preset or type any number of days from 1 to 3650. A change is audited in the block log like every
+      other save on this page.</p>
+    ${rows || '<div class="empty">No retention rows.</div>'}
+    ${top ? `<div class="mgsec">The largest tables</div>${top}` : ""}
+
+    <div class="mgsec">Prune now, rather than tonight</div>
+    <p class="mghint">The preview asks the pruner what it would delete and changes nothing. Delete runs the same
+      nightly prune now, after showing you the numbers.</p>
+    <div class="mgacts">
+      <button class="btn" type="button" onclick="stPrunePreview()">Show what would go</button>
+      <button class="decline" type="button" onclick="stPruneNow()">Delete it now</button>
+    </div>
+    <pre class="stout" id="st_prune" hidden></pre>
+
+    <div class="mgsec">Delete DNS lookups older than a number of days</div>
+    <p class="mghint">A one-off for the table that grows fastest. It does not change the rule above: keep 30 days as
+      the rule and clear back to 7 today, if that is what you want.</p>
+    <div class="mgacts">${daysPicker("dns", 30)}<button class="decline" type="button" onclick="stPruneDns()">Delete older lookups</button></div>
+
+    <p class="mghint" style="margin-top:14px"><b>What a prune cannot undo.</b> A deleted row is gone. Genkan keeps no
+      copy and makes no backup of its own; <code>docs/OPERATIONS.md</code> has the one-line <code>pg_dump</code> that
+      does, and the backup is yours to keep in the house. After a delete, Postgres keeps the freed space for new rows,
+      so the sizes here shrink straight away only when the rows at the end of a table have gone; the rest is reused
+      rather than returned. ${d.demo ? "<b>This is the demo:</b> the figures are the demo's own database, and the buttons change nothing." : ""}</p>
+  </div>`;
+}
+
 function cannotPanel() {
   return `<div class="card"><h2>What this page cannot do</h2>
     <ul class="stcannot">
@@ -532,5 +755,6 @@ export async function settingsPage(q, s) {
     ${levelsPanel(s, d)}
     ${allowPanel(d)}
     ${switchesPanel(d)}
+    ${storagePanel(d)}
     ${cannotPanel()}`;
 }

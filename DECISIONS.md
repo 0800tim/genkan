@@ -2540,3 +2540,61 @@ fifteen second window). A zero is time's up whatever `category_state` says.
 
 Not built, and said on the page: study notes and tutoring. One sentence,
 that they are coming and that everything will stay in the house.
+
+## Storage a parent can see, retention a parent can set
+
+**2026-09-02.** The parent asked for "database pruning tools in the settings
+or system page where parents can see how big their database is and how much
+space is left on disk", with buttons for 30, 60, "whatever days, with
+dropdowns, but they can type in any number as well", and the observation
+that "as months and years go by, the logs will get stupidly big". The nightly
+pruner and the `retention` table already existed (PRIVACY-CHARTER.md named
+the gap and the pruner closed it); what did not exist was any way for a
+parent to see what it holds or to change a rule without SQL. Four decisions.
+
+**The page reads a view; only the owner deletes.** Sizes need no special
+rights (`pg_database_size` wants CONNECT, `pg_total_relation_size` works for
+any role that can see the table), so the Storage card reads a
+`storage_status` view in `schema-retention.sql`: each rule's size, the
+planner's row estimate, and its oldest row. It says "about 67,000 rows"
+because `n_live_tup` is an estimate and a `count(*)` over a year of
+`dns_log` is not something a settings page should do on every load. The
+deleting stayed exactly where it was: `bin/genkan-prune`, as the database
+owner. `kids_agent` was given UPDATE on `retention.keep_days` for `genkan
+retention set` and nothing else, not INSERT or DELETE on `retention` (a
+table without a rule is never pruned, and inventing or removing a rule is
+owner work) and still no DELETE on `dns_log`. The Settings page's prune
+buttons therefore run `genkan prune`, which runs the pruner, which gates
+every argument a second time because a script on the superuser path must
+not trust that it was called by `genkan`. `test/db-role-test.sh` proves the
+fence and the gates; `test/schema-test.sh` runs the pruner end to end on its
+throwaway.
+
+**Delete and audit in one statement.** The dashboard gives a command eight
+seconds; a year of lookups on a small box, then a vacuum, can take longer.
+So each deletion is one statement that deletes and writes the
+`block_events` row (`prune:<table>`, `deleted:<n>`, the reason) together,
+and `genkan prune now|dns-log` runs the pruner detached, waits six seconds,
+and if it is still going says so and points at the block log, rather than
+being killed mid-sentence. A run nobody watched still recorded what it did,
+and a run that was watched cannot have deleted without recording it.
+
+**The one-off does not touch the rule.** "Delete lookups older than 7 days"
+today and "keep 30 days" as the rule are different wishes, and a household
+has both at once. `genkan prune dns-log <days>` deletes and leaves
+`retention` alone; the row it writes says so. The dropdown is presets and
+the box beside it takes any number inside the table's own CHECK (1 to
+3650), and Save reads the box, so what is typed is what is sent.
+
+**The card says what a prune cannot do.** Postgres keeps freed pages for new
+rows and shrinks a file only when the empty pages sit at its end, so after
+most prunes the size on the card does not fall, it stops rising. The pruner
+runs `VACUUM (ANALYZE)` and reports the size before and after honestly
+rather than claiming space it did not free; `VACUUM FULL` locks the table
+and is a line in docs/OPERATIONS.md, not a button. A deleted row is gone,
+Genkan makes no backup of its own, and the backup line in OPERATIONS.md is
+the parent's to run. The demo shows the card with its own database's true
+figures and its buttons answer with the demo line, as every control there
+does. The charter's own words sit on the `dns_log` row: a family does not
+need a permanent archive of its children's browsing, and a longer window has
+to justify itself on its own terms, not on the charts looking better.

@@ -43,6 +43,11 @@
 #                                  is that exact host and nothing under it
 #   genkan allow remove <domain>   take back a site a parent added. Never a
 #                                  safety row, never a shipped one
+#   genkan retention show          how long each table is kept, how big it is, its oldest row
+#   genkan retention set <table> <days>   keep that table for <days> (1 to 3650)
+#   genkan prune status|preview    what the nightly prune holds, or would delete tonight
+#   genkan prune now               run the nightly prune now (deletes; audited)
+#   genkan prune dns-log <days>    one-off: delete DNS lookups older than <days>
 #   genkan tier show [tier]        what each filter level means, DNS side and minutes
 #   genkan tier set <tier> <field> <value>   parental|safesearch|private true|false,
 #                                  services <id,id,...|none>, school|weekend <min|none>
@@ -443,6 +448,67 @@ allow_verb(){ local sub="${1:-list}" d scope cat note row
     *) echo "usage: genkan allow list | allow add <domain> <learn|search> [note] | allow remove <domain>"; exit 1;;
   esac; }
 
+# --- Retention, and the prune -------------------------------------------------
+# How long each table is kept is a row in `retention` (config/db/
+# schema-retention.sql), and this is the one write path to it. The deleting
+# itself is NOT done here: kids_agent has no DELETE on dns_log or any other
+# retained table, on purpose, so `genkan prune` hands over to bin/genkan-prune,
+# which runs as the database owner and gates every argument again itself.
+ck_days(){ ck_int "$1"
+  [ "$1" -ge 1 ] && [ "$1" -le 3650 ] || { echo "genkan: days must be between 1 and 3650" >&2; exit 1; }; }
+retention_show(){
+  psqll "SELECT rpad(what,16)||lpad(keep_days::text,5)||' days  '||lpad(pg_size_pretty(bytes),8)
+                ||'  about '||rows_about||' rows'||coalesce(', oldest '||oldest::date,'')
+         FROM storage_status ORDER BY bytes DESC" 2>/dev/null | sed 's/^/  /' \
+    || { echo "genkan: retention needs config/db/schema-retention.sql and config/db/grants.sql loaded into this database first." >&2; exit 1; }
+  echo "  database: $(psqll "SELECT pg_size_pretty(pg_database_size(current_database()))")"; }
+retention_set(){ local w="${1:?table}" d="${2:?days}" cur
+  ck_name "$w"; ck_days "$d"
+  cur=$(psqll "SELECT keep_days FROM retention WHERE what='$w'" 2>/dev/null) \
+    || { echo "genkan: retention needs config/db/schema-retention.sql and config/db/grants.sql loaded into this database first." >&2; exit 1; }
+  [ -n "$cur" ] || { echo "genkan: '$w' has no retention row. 'genkan retention show' lists the tables that do." >&2; exit 1; }
+  if [ "$cur" = "$d" ]; then echo "genkan: $w is already kept for $d days. Nothing changed."; exit 0; fi
+  psqll "UPDATE retention SET keep_days=$d WHERE what='$w'" >/dev/null
+  audit household "retention:$w" "days:$d" agent
+  if [ "$d" -gt "$cur" ]; then
+    echo "genkan: $w is kept for $d days now (was $cur). Nothing is deleted by a longer window; rows simply stay longer."
+    [ "$w" != dns_log ] || echo "  dns_log is every domain a device asked for. PRIVACY-CHARTER.md (P5) asks that a longer window justify itself on its own terms."
+  else
+    echo "genkan: $w is kept for $d days now (was $cur). The nightly prune (03:20) deletes what is now past it; 'genkan prune preview' shows how much."
+  fi; }
+# bin/genkan-prune lives beside this script in the repo. deploy.sh does not
+# copy it to /usr/local/bin, so an installed genkan falls back to PATH.
+prune_bin(){ local p; p="$(dirname "$0")/genkan-prune"
+  [ -x "$p" ] || p="$(command -v genkan-prune 2>/dev/null || true)"
+  [ -n "$p" ] && [ -x "$p" ] || { echo "genkan: genkan-prune is not installed beside this script or on PATH" >&2; exit 1; }
+  echo "$p"; }
+# A real delete can outlive the eight seconds the dashboard gives a command
+# (a year of dns_log on a small box, then a VACUUM). So it runs detached with
+# its output in a file, this waits up to six seconds for it, and if it is
+# still going says so honestly rather than being killed mid-sentence. The
+# audit row is written in the same statement as the delete, so a run this
+# stops watching still records what it did.
+prune_detached(){ local bin log pid i
+  bin=$(prune_bin); log=$(mktemp /tmp/genkan-prune.XXXXXX)
+  GENKAN_DB="$DB_NAME" PG_CONTAINER="$PG_CONTAINER" setsid "$bin" "$@" >"$log" 2>&1 < /dev/null &
+  pid=$!
+  for i in $(seq 1 60); do kill -0 "$pid" 2>/dev/null || break; sleep 0.1; done
+  if kill -0 "$pid" 2>/dev/null; then
+    disown "$pid" 2>/dev/null || true
+    echo "genkan: the prune is still running (a big table takes a while). It finishes on its own; the block log shows a 'prune' row with the count when it does."
+    cat "$log" 2>/dev/null; rm -f "$log"; return 0
+  fi
+  wait "$pid" 2>/dev/null || { cat "$log"; rm -f "$log"; return 1; }
+  cat "$log"; rm -f "$log"; }
+prune_verb(){ local sub="${1:-status}" bin
+  case "$sub" in
+    status)  bin=$(prune_bin); GENKAN_DB="$DB_NAME" PG_CONTAINER="$PG_CONTAINER" "$bin" --status;;
+    preview) bin=$(prune_bin); GENKAN_DB="$DB_NAME" PG_CONTAINER="$PG_CONTAINER" "$bin" --dry-run;;
+    now)     prune_detached;;
+    dns-log) ck_days "${2:?days}"; prune_detached dns_log "$2";;
+    *) echo "usage: genkan prune status | prune preview | prune now | prune dns-log <days>"; exit 1;;
+  esac; }
+
 # --- The filter levels, as data -----------------------------------------------
 # What 'young', 'standard', 'teen' and 'guest' mean on the DNS side used to be
 # a dict inside bin/genkan-adguard-clients. It is a row in policies now
@@ -715,6 +781,12 @@ case "${1:-}" in
            FROM device_roster WHERE $col3" | sed 's/^/  /';;
   allow-sync)   allow_sync;;
   allow)  shift; allow_verb "$@";;
+  retention) case "${2:-show}" in
+            show) retention_show;;
+            set)  retention_set "${3:?table}" "${4:?days}";;
+            *) echo "usage: genkan retention show | genkan retention set <table> <days>"; exit 1;;
+          esac;;
+  prune)  shift; prune_verb "$@";;
   tier)   case "${2:-show}" in
             show) tier_show "${3:-}";;
             set)  tier_set "${3:?tier}" "${4:?field}" "${5:?value}";;

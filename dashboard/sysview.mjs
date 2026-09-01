@@ -291,6 +291,14 @@ export function systemPage(data) {
       r.up === null ? "n/a" : rate(r.up)]),
     { summary: "Show the last few readings as numbers" });
 
+  // One line under the tiles for the thing on that disk a parent can actually
+  // do something about. The buttons live on Settings, so the line points there.
+  const dbLine = n.db
+    ? `The Genkan database is <b id="sysDbSize">${esc(size(n.db))}</b> of that disk${
+      n.disk ? `, and <span id="sysDbFree">${esc(size(n.disk.avail))}</span> is free` : ""}. How long each kind of record
+      is kept, and the buttons that delete old logs, are on the <a href="/settings#storage">Settings page</a>.`
+    : `The dashboard could not ask the database how big it is just now.`;
+
   return `<div id="sys" data-tick="${data.tickMs || 10000}">
   <div class="card syshead">
     <div class="shl"><h2>The box Genkan runs on</h2>
@@ -300,6 +308,7 @@ export function systemPage(data) {
   </div>
 
   <div class="stiles">${tiles}</div>
+  <p class="sysdb">${dbLine}</p>
 
   ${charts}
 
@@ -382,6 +391,7 @@ export const SYS_CSS = `
 .stval.off{color:var(--ink-muted);font-size:24px}
 .stsub{font-size:11.5px;color:var(--ink-muted);margin-top:2px;line-height:1.35;
   overflow:hidden;text-overflow:ellipsis}
+.sysdb{font-size:12.5px;color:var(--ink-2);margin:-4px 2px 14px;line-height:1.5}
 
 /* ---- the three charts ---- */
 .syscharts{display:grid;grid-template-columns:repeat(auto-fit,minmax(252px,1fr));gap:12px;margin-bottom:12px}
@@ -536,7 +546,9 @@ function tiles(d){
   if(d.disk){
     setVal('sysDisk',Math.round(d.disk.pct)+'%');
     setText('sysDisks',size(d.disk.used)+' of '+size(d.disk.total)+' used, '+size(d.disk.avail)+' free');
+    setText('sysDbFree',size(d.disk.avail));
     setTint('sysDisk',d.disk.pct>=90?'crit':'disk');}
+  if(d.db) setText('sysDbSize',size(d.db));
   if(d.uptime!==null&&d.uptime!==undefined) setVal('sysUp',dur(d.uptime));
   if(d.containers){
     var up=d.containers.filter(function(c){return c.up;}).length;

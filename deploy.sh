@@ -146,6 +146,8 @@ install -m 0755 "$R/bin/genkan-tor-sync"    /usr/local/bin/genkan-tor-sync
 install -m 0755 "$R/bin/genkan-iot-policy"  /usr/local/bin/genkan-iot-policy
 install -m 0755 "$R/bin/genkan-schedule"    /usr/local/bin/genkan-schedule
 install -m 0755 "$R/bin/genkan-notify"      /usr/local/bin/genkan-notify
+# The pruner: nightly by timer, and what `genkan prune` hands over to.
+install -m 0755 "$R/bin/genkan-prune"       /usr/local/bin/genkan-prune
 # The release tooling. genkan-health is read-only and is the one a worried
 # parent runs; the other two are how a household updates and how it goes back.
 # The shared library is sourced by both, so it has to sit beside them.

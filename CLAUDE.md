@@ -116,8 +116,9 @@ the kids_unclaimed nft set) are both OFF BY DEFAULT and must stay that way.
 - After ANY change to kids.nft, gateway/ or genkan: run
   sudo test/firewall-test.sh (46 checks) and sudo test/container-test.sh
   (26 checks). Both must pass 100% before commit. After ANY change to
-  config/db/: test/schema-test.sh (88 checks) and test/db-role-test.sh
-  (77 checks), neither needing root. After ANY change to something that
+  config/db/ or bin/genkan-prune: test/schema-test.sh (103 checks, which
+  run the pruner end to end on the throwaway) and test/db-role-test.sh
+  (105 checks), neither needing root. After ANY change to something that
   raises an alert or to bin/genkan-dnslog: test/alerts-test.sh (20 checks,
   five of which push one AdGuard-shaped entry through the real ingest). Run suites ONE AT A
   TIME: several build a throwaway database or a namespace with a fixed
@@ -150,9 +151,17 @@ Settings
 (dashboard/settings.mjs) edits the filter levels, the allow list a parent can
 grow but not narrow, and the household switches, and writes ONLY through
 `genkan tier set`, `genkan allow add|remove`, `genkan claim-mode`, `genkan iot
-mode` and `genkan slow-rate|slow-timeout` (runKidnet); the levels' AdGuard
+mode`, `genkan slow-rate|slow-timeout`, `genkan retention set` and `genkan
+prune preview|now|dns-log` (runKidnet); the levels' AdGuard
 half lives in policies since config/db/schema-settings.sql, and the database
-wins over hand tuning in the AdGuard UI. Portal: kids-portal.service (:8890) is the pre-deploy host copy;
+wins over hand tuning in the AdGuard UI. Its Storage card (database size,
+disk free, growth, one editable retention rule per table from `retention`,
+a dry-run preview and the prune buttons) reads the `storage_status` view;
+deleting is bin/genkan-prune's alone, as the database owner, audited in
+block_events in the same statement as the delete. Until
+config/db/schema-retention.sql and grants.sql are re-run on this box, the
+live database has no `storage_status` view and kids_agent cannot read
+`retention`, so the card shows sizes and says the rules are missing. Portal: kids-portal.service (:8890) is the pre-deploy host copy;
 production is the container on island :80. DB: kids_network on the shared
 postgres container (creds in secrets.env).
 

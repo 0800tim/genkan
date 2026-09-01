@@ -174,6 +174,17 @@ refused "$ROLE cannot invent a filter level"  "INSERT INTO policies(tier) VALUES
 refused "$ROLE cannot drop a filter level"    "DELETE FROM policies WHERE tier='young'"
 refused "$ROLE cannot edit an allow-list row into a different promise" \
         "UPDATE always_allow SET scope='safety' WHERE domain='wikipedia.org'"
+# Retention: the role may change how long a table is kept and read what each
+# rule is holding, and nothing more. A table without a retention row is never
+# pruned, so inventing or removing a row is owner work; and the deleting
+# itself stays on the owner path, so a bad argument here cannot erase history.
+out=$(agent_sql "WITH u AS (UPDATE retention SET keep_days=keep_days WHERE what='dns_log' RETURNING 1) SELECT count(*) FROM u")
+[ "${out:-0}" = 1 ] && ok "$ROLE can change how long a table is kept (genkan retention set)" || bad "$ROLE cannot change a retention rule: ${out:0:70}"
+out=$(agent_sql "SELECT count(*) FROM storage_status")
+case "$out" in ''|*[!0-9]*) bad "$ROLE cannot read storage_status: ${out:0:70}";; *) ok "$ROLE can read storage_status (genkan retention show)";; esac
+refused "$ROLE cannot remove a retention rule"  "DELETE FROM retention WHERE what='dns_log'"
+refused "$ROLE cannot invent a retention rule"  "INSERT INTO retention(what,keep_days) VALUES('roletest',1)"
+refused "$ROLE cannot delete from dns_log: pruning stays on the owner path" "DELETE FROM dns_log WHERE ts < now()"
 
 
 # ---- the gates in bin/kidnet ------------------------------------------------
@@ -187,7 +198,7 @@ gated(){ local what="$1"; shift; local out rc
   out=$(GENKAN_DB="$DB" PG_CONTAINER="$PG" GW_CONTAINER=genkan-no-such-container \
         ADGUARD_PASS="" bash "$R/bin/kidnet" "$@" 2>&1); rc=$?
   case "$out" in
-    *"bad name"*|*"bad number"*|*"bad text"*|*"bad id"*|*"bad domain"*|*"bad filter level"*|*"bad services"*|*"is not a MAC"*|*"is not an IPv4"*|*usage:*)
+    *"bad name"*|*"bad number"*|*"bad text"*|*"bad id"*|*"bad domain"*|*"bad filter level"*|*"bad services"*|*"is not a MAC"*|*"is not an IPv4"*|*"between 1 and 3650"*|*"no retention row"*|*usage:*)
       [ "$rc" != 0 ] && ok "$what" || bad "$what (refused but exited 0)";;
     *) bad "$what (NOT refused: ${out:0:80})";;
   esac; }
@@ -217,6 +228,13 @@ gated "allow remove refuses an injected domain"   allow remove "$PAYLOAD"
 gated "tier set refuses an injected level"        tier set "$PAYLOAD" parental true
 gated "tier set refuses an injected value"        tier set young services "$PAYLOAD"
 gated "guest leave refuses an injected name"      guest leave "$PAYLOAD"
+gated "retention set refuses an injected table"   retention set "$PAYLOAD" 30
+gated "retention set refuses injected days"       retention set dns_log "$PAYLOAD"
+gated "retention set refuses 0 days"              retention set dns_log 0
+gated "retention set refuses 9999 days"           retention set dns_log 9999
+gated "retention set refuses a table with no rule" retention set children 30
+gated "prune dns-log refuses injected days"       prune dns-log "$PAYLOAD"
+gated "prune dns-log refuses 0 days"              prune dns-log 0
 if docker exec -i "$PG" test -e /tmp/genkan-gate-test 2>/dev/null; then
   bad "one of the payloads reached the server and ran"
   docker exec -i "$PG" rm -f /tmp/genkan-gate-test

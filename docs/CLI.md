@@ -351,6 +351,39 @@ many it touched. A minutes change applies from each person's next day. The
 their own. The global blocklists are not part of a level and cannot be, because
 AdGuard applies a filter list to every client or to none.
 
+### Storage and retention
+
+    genkan retention show                how long each table is kept, how big it is, its oldest row
+    genkan retention set <table> <days>  keep that table for <days>, 1 to 3650
+    genkan prune status                  every rule: rows, size, oldest, keep
+    genkan prune preview                 what tonight's prune would delete (deletes nothing)
+    genkan prune now                     run the nightly prune now
+    genkan prune dns-log <days>          one-off: delete DNS lookups older than <days>
+
+How long each table is kept is a row in `retention`
+(config/db/schema-retention.sql), one per pruned table, and `retention set`
+is the one write path to it. `<table>` must already have a row (a table
+without one is never pruned, which is the safe way to fail, so a row cannot
+be invented from here) and `<days>` must be a whole number inside the CHECK
+the table itself carries. Setting a row to what it already is changes nothing
+and says so. A change is audited in `block_events` as
+`retention:<table>` / `days:<n>`. Making `dns_log` longer prints the
+charter's reminder (PRIVACY-CHARTER.md, P5).
+
+`retention show` and the Settings page read the `storage_status` view: the
+size on disk of each rule's table, the planner's row estimate (so "about"),
+and the oldest row.
+
+The `prune` verbs hand over to `bin/genkan-prune`, which runs as the database
+owner: `kids_agent` has no DELETE on `dns_log` or any other retained table,
+on purpose, so nothing in this script can erase history by itself. `now` and
+`dns-log` run the pruner detached and wait up to six seconds for it; a big
+table on a small box can take longer than the eight seconds the dashboard
+gives a command, and the verb then says the prune is still running rather
+than being killed mid-sentence. The audit row is written in the same
+statement as the delete, so a run nobody watched still recorded what it did.
+`dns-log <days>` refuses fewer than 1 day and leaves the retention row alone.
+
 ### Household devices
 
     genkan iot status                    what the policy is, and what it has refused
@@ -1322,6 +1355,45 @@ correct: there is nothing to go on until the kids have taken some rounds and
 
 ---
 
+## genkan-prune
+
+    genkan-prune                  delete what is past its retention (the nightly run)
+    genkan-prune --dry-run        say what would go, delete nothing
+    genkan-prune --status         every rule: rows, size, oldest row, keep days, and the database size
+    genkan-prune <table> <days>   one-off: delete that table's rows older than <days>. The rule is not changed
+
+Run by `kids-prune.timer` at 03:20 each night (`config/systemd-network/`),
+and by `genkan prune`. It reads the `retention` table and, for each row whose
+table exists and whose age column it knows (`ts`, `day` or `ends`; a table it
+does not know is skipped and said so), deletes what is older than
+`keep_days`. Nothing else in the repo deletes a row of history.
+
+**The superuser path, deliberately.** It connects as `postgres`, because
+deleting a child's history is owner work and the least-privilege `kids_agent`
+role has no DELETE on any retained table. So it gates its own arguments
+again, whatever gated them upstream: the table name must be a plain
+identifier with a retention row and a known age column, and the day count
+digits between 1 and 3650.
+
+**Delete and audit in one statement.** Each deletion is a single statement
+that deletes and inserts the `block_events` row (`prune:<table>`,
+`deleted:<n>`, source `nightly` or `agent`, with the reason), so a run
+killed between the two cannot delete without recording it. Nothing is
+written when nothing was deleted.
+
+**Then a vacuum.** After a real delete it runs `VACUUM (ANALYZE)` on the
+table and reports the size before and after. Postgres keeps freed space for
+new rows and returns it to the disk only when the empty pages sit at the end
+of the table, so the honest report after most prunes is "the file did not
+shrink, the space is reused". `VACUUM FULL`, which does shrink the file, locks
+the table and is not run automatically; a household that wants the space
+back today runs it by hand (docs/OPERATIONS.md).
+
+Environment: `PG_CONTAINER` (default `postgres`), `GENKAN_DB` or
+`KIDS_DB_NAME` (default `kids_network`). `deploy.sh` installs the timer and
+service but not the script: the service runs it from the repo, and an
+installed `/usr/local/bin/genkan` finds it on `PATH` or fails saying so.
+
 ## The tools directory
 
 Not in `bin/`, not installed by `deploy.sh`, and not part of the running
@@ -1522,8 +1594,8 @@ were doing exactly that on any machine without netcat. See DECISIONS.md.
     sudo test/iot-policy-test.sh      39 checks: the household IoT policy, real packets, six namespaces
     sudo test/meter-test.sh            8 checks: category minutes, budget enforcement, grant
     sudo test/service-meter-test.sh    6 checks: per-service bytes, active minutes, idle ignored
-    test/schema-test.sh               88 checks: a fresh install, every schema file into an empty database
-    test/db-role-test.sh              77 checks: the CLI's role cannot leave the database it is given
+    test/schema-test.sh              103 checks: a fresh install, every schema file into an empty database, and the pruner end to end
+    test/db-role-test.sh             105 checks: the CLI's role cannot leave the database it is given
     test/schedule-test.sh             57 checks: bedtimes, the morning restore, and who may lift what
     test/notify-test.sh               41 checks: what may reach a phone, and what may never reach a lock screen
     test/package-test.sh              31 checks: a community learning package treated as hostile input

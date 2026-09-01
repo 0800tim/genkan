@@ -6,24 +6,45 @@
 # complete record of a child's adolescence sitting in a cupboard is not what a
 # parent agreed to even if it never leaves the cupboard.
 #
-#   genkan-prune            delete what is past its retention
-#   genkan-prune --dry-run  say what would go, delete nothing
-#   genkan-prune --status   how much is held, and how old
+#   genkan-prune                  delete what is past its retention
+#   genkan-prune --dry-run        say what would go, delete nothing
+#   genkan-prune --status         how much is held, how big, and how old
+#   genkan-prune <table> <days>   one-off: delete that table's rows older than
+#                                 <days>, once. The retention row is not changed.
 #
 # Retention lives in the `retention` table, one row per thing, editable by the
-# household. Adding a table here without adding a row is deliberately a no-op:
-# the table decides, not this script.
+# household (`genkan retention set`). Adding a table here without adding a row
+# is deliberately a no-op: the table decides, not this script.
+#
+# SUPERUSER PATH, on purpose. Deleting a child's history is owner work, and
+# the least-privilege kids_agent role has no DELETE on dns_log or any other
+# retained table (config/db/grants.sql), so that a bad argument in an ordinary
+# genkan verb can never erase a day of anything. That means every value that
+# reaches SQL here is gated twice as hard: the table name must be a plain
+# identifier AND have a retention row AND have a known age column; the day
+# count must be digits AND inside the CHECK the retention table itself uses.
+#
+# Every deletion is audited in block_events, in the same statement as the
+# delete. One statement, so a run that is killed between the two (the
+# dashboard gives a command eight seconds) can never delete without recording
+# that it did.
 set -euo pipefail
 PG="${PG_CONTAINER:-postgres}"
-DB="${KIDS_DB_NAME:-kids_network}"
+DB="${GENKAN_DB:-${KIDS_DB_NAME:-kids_network}}"
 # < /dev/null matters. Both loops below read their table list from a process
 # substitution, and `docker exec -i` inherits and consumes stdin, so without
 # this the first query swallows the rest of the list and the loop runs exactly
 # once. It looked like the script working on a small database.
 psqll(){ docker exec -i "$PG" psql -U postgres -d "$DB" -tAc "$1" < /dev/null; }
 
-MODE=run
-case "${1:-}" in --dry-run|-n) MODE=dry;; --status|-s) MODE=status;; esac
+MODE=run; ONE_WHAT=""; ONE_DAYS=""
+case "${1:-}" in
+  --dry-run|-n) MODE=dry;;
+  --status|-s)  MODE=status;;
+  "") ;;
+  -*) echo "usage: genkan-prune [--dry-run | --status | <table> <days>]" >&2; exit 1;;
+  *)  MODE=one; ONE_WHAT="$1"; ONE_DAYS="${2:-}";;
+esac
 
 # what -> the column that carries its age. A table whose age column is not
 # listed here is never pruned, which is the safe direction to fail.
@@ -34,18 +55,71 @@ tscol(){ case "$1" in
   dhcp_leases) echo ends;;
   *) echo "";; esac; }
 
+human(){ psqll "SELECT pg_size_pretty(${1}::bigint)"; }
+tsize(){ psqll "SELECT coalesce(pg_total_relation_size(to_regclass('public.$1')),0)"; }
+
+# Delete and audit in ONE statement. Returns the number of rows that went.
+# source is 'nightly' from the timer and 'agent' for a one-off the CLI or the
+# dashboard asked for, the same vocabulary the rest of block_events uses.
+prune_rows(){ local what="$1" col="$2" days="$3" source="$4" reason="$5"
+  psqll "WITH d AS (DELETE FROM $what WHERE $col < now() - interval '$days days' RETURNING 1),
+              n AS (SELECT count(*) AS n FROM d),
+              a AS (INSERT INTO block_events(target_type,target_ref,action,source,actor,reason)
+                    SELECT 'household','prune:$what','deleted:'||n,'$source','the Genkan box','$reason'
+                    FROM n WHERE n > 0)
+         SELECT n FROM n"; }
+
+# After a real delete the space is only marked reusable. VACUUM makes it
+# reusable now and hands back to the disk whatever sits at the end of the
+# table; the rest is kept by Postgres for new rows, which is the honest thing
+# to say to a parent watching the size. VACUUM cannot run inside a
+# transaction, and psql -c on its own is exactly one statement, so this works.
+vacuum_after(){ local what="$1" before after
+  before=$(tsize "$what")
+  psqll "VACUUM (ANALYZE) $what" >/dev/null 2>&1 || { echo "  (vacuum of $what did not run; the nightly one will)"; return 0; }
+  after=$(tsize "$what")
+  if [ "${before:-0}" -gt "${after:-0}" ]; then
+    echo "  $what is $(human "$after") now, $(human $((before-after))) handed back to the disk"
+  else
+    echo "  $what is $(human "$after"); Postgres keeps the freed space for new rows, so the file shrinks only when rows at its end have gone"
+  fi; }
+
 if [ "$MODE" = status ]; then
-  printf '  %-16s %8s  %-12s %s\n' table rows oldest keep
+  printf '  %-16s %10s %8s  %-12s %s\n' table rows size oldest keep
   while IFS='|' read -r what days; do
     [ -n "$what" ] || continue
     col=$(tscol "$what"); [ -n "$col" ] || continue
-    read -r n oldest <<<"$(psqll "SELECT count(*)||' '||coalesce(min($col)::date::text,'-') FROM $what" 2>/dev/null || echo "- -")"
-    printf '  %-16s %8s  %-12s %s days\n' "$what" "$n" "$oldest" "$days"
+    # A '|' separator, because pg_size_pretty says "16 MB" with a space in it.
+    IFS='|' read -r n sz oldest <<<"$(psqll "SELECT count(*)||'|'||pg_size_pretty(pg_total_relation_size('public.$what'::regclass))||'|'||coalesce(min($col)::date::text,'-') FROM $what" 2>/dev/null || echo "-|-|-")"
+    printf '  %-16s %10s %8s  %-12s %s days\n' "$what" "$n" "$sz" "$oldest" "$days"
   done < <(psqll "SELECT what||'|'||keep_days FROM retention ORDER BY what")
+  echo "  database: $(psqll "SELECT pg_size_pretty(pg_database_size(current_database()))")"
   exit 0
 fi
 
-total=0
+if [ "$MODE" = one ]; then
+  # Both arguments gated here, whatever gated them upstream. This script runs
+  # as the superuser and must not trust that it was called by genkan.
+  [[ "$ONE_WHAT" =~ ^[a-z_]{1,32}$ ]] || { echo "genkan-prune: bad table name '$ONE_WHAT'" >&2; exit 1; }
+  [[ "$ONE_DAYS" =~ ^[0-9]{1,4}$ ]]   || { echo "genkan-prune: bad number of days '$ONE_DAYS'" >&2; exit 1; }
+  [ "$ONE_DAYS" -ge 1 ] && [ "$ONE_DAYS" -le 3650 ] || { echo "genkan-prune: days must be between 1 and 3650" >&2; exit 1; }
+  col=$(tscol "$ONE_WHAT")
+  [ -n "$col" ] || { echo "genkan-prune: '$ONE_WHAT' is not a table this script prunes" >&2; exit 1; }
+  [ "$(psqll "SELECT count(*) FROM retention WHERE what='$ONE_WHAT'")" = 1 ] \
+    || { echo "genkan-prune: '$ONE_WHAT' has no retention row, so nothing prunes it" >&2; exit 1; }
+  [ "$(psqll "SELECT to_regclass('public.$ONE_WHAT') IS NOT NULL")" = t ] \
+    || { echo "genkan-prune: there is no table called $ONE_WHAT in this database" >&2; exit 1; }
+  n=$(prune_rows "$ONE_WHAT" "$col" "$ONE_DAYS" agent "a parent asked for rows older than $ONE_DAYS days to go; the retention row is unchanged")
+  if [ "${n:-0}" -gt 0 ]; then
+    echo "  deleted $n row(s) from $ONE_WHAT older than $ONE_DAYS days"
+    vacuum_after "$ONE_WHAT"
+  else
+    echo "  nothing in $ONE_WHAT is older than $ONE_DAYS days"
+  fi
+  exit 0
+fi
+
+total=0; touched=""
 while IFS='|' read -r what days; do
   [ -n "$what" ] || continue
   col=$(tscol "$what")
@@ -58,10 +132,12 @@ while IFS='|' read -r what days; do
   if [ "$MODE" = dry ]; then
     echo "  would delete $n row(s) from $what older than $days days"
   else
-    psqll "DELETE FROM $what WHERE $col < now() - interval '$days days'" >/dev/null
+    n=$(prune_rows "$what" "$col" "$days" nightly "past its retention of $days days")
     echo "  deleted $n row(s) from $what older than $days days"
+    touched="$touched $what"
   fi
   total=$((total+n))
 done < <(psqll "SELECT what||'|'||keep_days FROM retention ORDER BY what")
 
+for what in $touched; do vacuum_after "$what"; done
 [ "$total" -gt 0 ] || echo "genkan-prune: nothing past its retention"

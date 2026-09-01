@@ -225,3 +225,15 @@ GRANT SELECT, INSERT ON release_history TO kids_agent;
 GRANT USAGE ON SEQUENCE release_history_id_seq TO kids_agent;
 GRANT SELECT ON release_current TO kids_agent;
 GRANT SELECT ON release_log     TO kids_agent;
+
+-- Retention (config/db/schema-retention.sql). `genkan retention set` changes
+-- how many days a table is kept, so UPDATE on the one row; never INSERT or
+-- DELETE, because a table without a retention row is a table that is never
+-- pruned, and that is the safe direction to fail. Note what is still NOT
+-- granted: DELETE on dns_log and the other retained tables. The pruning
+-- itself (bin/genkan-prune, nightly and `genkan prune`) stays on the
+-- superuser path, because deleting a child's history is owner work and a
+-- bad argument in this role must not be able to do it. storage_status is a
+-- read-only view for `genkan retention show`.
+GRANT SELECT, UPDATE ON retention      TO kids_agent;  -- genkan retention set
+GRANT SELECT         ON storage_status TO kids_agent;  -- genkan retention show
