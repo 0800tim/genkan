@@ -55,6 +55,26 @@ psql "UPDATE category_state SET blocked=false WHERE set_by='adgtest'" >/dev/null
 "$KN/genkan-adguard" apply >/dev/null; sleep 2
 want fortnite.com 192.168.60.241 NotFilteredNotFound "11 gaming restored after unblock"
 
+# A whole-internet cut. The firewall allows the safety net and the reading
+# list by ADDRESS, and addresses are shared (Google search is the same machines
+# as YouTube and Gmail), so while a device is cut every name must go to the
+# portal except the allow list, which must still resolve. Keyed by the cut
+# device's address, from blocked_device_ips, exactly as the firewall is.
+psql "INSERT INTO category_state(child_id,category,blocked,set_by)
+      VALUES((SELECT id FROM children WHERE name='$KID1'),'internet',true,'adgtest')
+      ON CONFLICT(child_id,category) DO UPDATE SET blocked=true,set_by='adgtest'" >/dev/null
+"$KN/genkan-adguard" apply >/dev/null; sleep 2
+echo "A cut device: every name to the portal, except the allow list"
+want youtube.com        192.168.60.241 RewriteRule          "cut: youtube -> portal"
+want mail.google.com    192.168.60.241 RewriteRule          "cut: gmail -> portal (shares google's addresses)"
+want www.google.com     192.168.60.241 NotFilteredWhiteList "cut: google search still resolves (exact host)"
+want en.wikipedia.org   192.168.60.241 NotFilteredWhiteList "cut: the reading list still resolves"
+want 1737.org.nz        192.168.60.241 NotFilteredWhiteList "cut: the help line still resolves"
+want youtube.com        192.168.60.243 NotFilteredNotFound  "not cut: youtube untouched on the other child"
+psql "UPDATE category_state SET blocked=false WHERE set_by='adgtest'" >/dev/null
+"$KN/genkan-adguard" apply >/dev/null; sleep 2
+want youtube.com        192.168.60.241 NotFilteredNotFound  "cut lifted: youtube resolves again"
+
 psql "DELETE FROM category_state WHERE set_by='adgtest'" >/dev/null
 # Remove the fixture devices and put AdGuard's clients back as they were.
 psql "DELETE FROM devices WHERE label LIKE 'adgtest-%'" >/dev/null

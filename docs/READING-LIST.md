@@ -211,3 +211,16 @@ and run it past the five tests above. If the domain you want is a subdomain
 (the real content lives at `study.example.org`, not `example.org`), add that
 exact subdomain rather than the bare domain: `genkan allow-sync` looks up
 literally what is stored, nothing more clever than that.
+
+## Allowed by address, filtered by name
+
+The firewall lets a cut-off child reach these sites by address, and
+addresses are shared: a site behind Cloudflare sits on two addresses that
+thousands of other sites use, and Google's search page runs on the same
+machines as YouTube and Gmail. So while a child is cut, the DNS layer answers
+every name with the portal's address except the names on this list, which
+resolve normally (`bin/genkan-adguard`). A browser cannot reach a neighbour
+it cannot resolve. The remaining door is a hosts-file entry, which is
+bug-bounty territory, not an accident. Rows with `category='search'` are
+matched as exact hosts, so `google.com` on the list does not bring
+`mail.google.com` with it; every other row covers its subdomains.

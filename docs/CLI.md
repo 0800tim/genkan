@@ -898,18 +898,27 @@ words, are in [NOTIFICATIONS.md](NOTIFICATIONS.md).
 
 ## genkan-adguard
 
-    genkan-adguard [apply|render]
+    genkan-adguard [apply [--force]|render]
 
 `render` prints the rules it would install. `apply` (the default) POSTs them to
-AdGuard. `genkan` calls `apply` after any change that affects the DNS layer.
+AdGuard. `genkan` calls `apply` after any change that affects the DNS layer,
+and `genkan-meter` calls it every minute so the DNS layer follows the packet
+layer for cuts nothing else announces (the whole-house cut lifting on its
+clock). `apply` hashes what it rendered and skips the write when AdGuard
+already holds it (it checks AdGuard's live rule count too, so a reseeded
+AdGuard is not fooled by a stale hash on our side); `--force` always writes.
 
 AdGuard's custom rule list is a single global list, so this **renders the whole
 list from the database every time**: one API call, no drift, idempotent. In
 order:
 
-1. Safety-net exceptions for every `scope='safety'` domain, as both
-   `@@||domain^$important` and `@@||domain^$dnsrewrite`. The first beats every
-   blocklist, the second beats the portal catch-all.
+1. Allow-list exceptions for every `scope='safety'` and `scope='learn'`
+   domain, as both `@@||domain^$important` and `@@||domain^$dnsrewrite`. The
+   first beats every blocklist, the second beats the portal catch-alls.
+   Rows with `category='search'` are matched as exact hosts (an anchored
+   regex) rather than with `||`, so `google.com` on the list lets a child
+   search without bringing `mail.google.com` along; every other row covers
+   its subdomains, which is what lets `wikipedia.org` mean `en.wikipedia.org`.
 2. Flagged Tor, darknet and drugs on-ramps, redirected to the portal for every
    child, always. A plain blocklist entry gives a dead connection; the portal
    gives the warm "come find me, you are not in trouble" page. Self-harm
@@ -917,6 +926,14 @@ order:
    blocking page.
 3. Every active per-child category block, as a `$client` rewrite to the portal
    address.
+4. A catch-all for every address the firewall is cutting right now
+   (`blocked_device_ips`, the same view the gateway builds `@kids_block`
+   from): every name answers with the portal's address, except the allow list
+   above. The firewall allows the safety net and the reading list by address,
+   and addresses are shared (Google search is the same machines as YouTube;
+   a school behind Cloudflare shares its two addresses with thousands of
+   sites), so this is what makes a cut precise. See "Allowed by address,
+   filtered by name" in DECISIONS.md.
 
 | Variable | Default |
 |---|---|

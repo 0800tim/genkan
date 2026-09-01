@@ -41,3 +41,14 @@ kids=$(psqll "$BASE$SLOW" 2>/dev/null) || kids=$(psqll "$BASE")
 for kid in $kids; do
   bash "$KN" spend "$kid" 1 >/dev/null || true
 done
+
+# The DNS layer follows the packet layer within a minute: whoever the firewall
+# is cutting (a child out of time, dinner, a bedtime, the whole-house cut and
+# its clock) gets every name answered with the portal, except the allow list.
+# genkan-adguard hashes its output and skips the write when nothing changed,
+# so this costs one small GET a minute. A failure is said out loud, because a
+# refresh that silently stopped would leave a cut child's DNS wide open.
+if [ -n "${ADGUARD_PASS:-}" ]; then
+  d="$(dirname "$0")/genkan-adguard"
+  [ -x "$d" ] && { "$d" apply >/dev/null || echo "genkan-meter: the AdGuard rule refresh FAILED" >&2; }
+fi

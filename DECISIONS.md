@@ -1949,6 +1949,45 @@ calm it had not established. The first was `genkan-alerts`. Both are the same
 mistake in different clothes: **the failure of a check must never be able to
 look like the success of a check.**
 
+## Allowed by address, filtered by name
+
+**2026-09-02.** Two requests in one evening showed the limit of allowing
+things by address: a school site behind Cloudflare (two addresses shared with
+thousands of strangers), and "Google search but not Gmail or the messaging
+apps" (Google's search front ends are the same machines as YouTube, Gmail,
+Meet and Chat). The firewall's `@kids_allow` set is addresses, because
+nftables cannot see a name, so allowing the school or the search page by
+address alone would have quietly allowed every neighbour on those addresses
+to a child whose internet is off.
+
+So a whole-internet cut now has a name layer too. genkan-adguard renders,
+for every address in `blocked_device_ips` (the same view the gateway builds
+`@kids_block` from), a catch-all rule that answers every name with the
+portal's address, and exempts the allow list: `||` for ordinary rows so
+wikipedia.org covers en.wikipedia.org, and an anchored regex for
+`category='search'` rows so google.com covers google.com and nothing under
+it. The packet door stays open (the firewall still cannot tell one name from
+another), but walking through it means putting a name in a hosts file, which
+no browser does on its own and which this house pays a bounty for. The
+proper close, a proxy that reads the server name out of the TLS hello, is on
+the roadmap; Cloudflare's encrypted hello would make it a bigger job than it
+sounds.
+
+Two smaller things came with it. `genkan-adguard apply` now hashes what it
+rendered and skips the write when AdGuard already has it (and checks
+AdGuard's live rule count, so a reseeded AdGuard is not fooled by our stale
+hash), which is what lets the meter call it every minute so the DNS layer
+follows the packet layer within a minute for the whole-house cut and its
+clock, not only for commands that remember to call it. And the "search" rows
+are exact hosts, added deliberately one by one: the search page, its
+country twin, the SafeSearch alias it resolves to for children, and the
+static hosts the page pulls from. Not accounts.google.com, which is where a
+sign-in would start.
+
+The rule: **allowing by address is allowing the neighbours; a promise about
+a name needs a rule that reads the name.** test/adguard-test.sh proves both
+sides for a cut device.
+
 ## The reading list survives a cut now, not just on paper
 
 **2026-09-02.** Every document said a child who is out of time can still read
