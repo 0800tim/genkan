@@ -29,6 +29,8 @@ import { SYS_CSS, SYS_JS, systemPage } from "./sysview.mjs";
 // same reason the IoT policy does: the rules about who may lift a block are
 // subtle and belong next to each other, not scattered through the page code.
 import { SCHEDULE_CSS, SCHEDULE_JS, schedulePanel, bedtimeLine } from "./schedule.mjs";
+import { ANALYTICS_CSS, ANALYTICS_JS } from "./analytics-page.mjs";
+import { SETTINGS_CSS, SETTINGS_JS } from "./settings.mjs";
 
 // ---------------------------------------------------------------------------
 // Style. One block, no external anything.
@@ -80,11 +82,26 @@ a{color:inherit}
 .brand span{color:var(--ink-muted);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tbtn{background:var(--surface);border:1px solid var(--line);color:var(--ink-2);
   border-radius:999px;padding:6px 11px;font-size:12px;cursor:pointer;flex:none}
-nav{display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;scrollbar-width:none}
-nav::-webkit-scrollbar{display:none}
-nav a{flex:none;text-decoration:none;padding:8px 14px;border-radius:999px;font-size:13px;
-  border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-weight:500}
-nav a.sel{background:var(--ink);color:var(--plane);border-color:var(--ink)}
+/* The menu wraps rather than scrolls: nothing is ever cut off. The everyday
+   pages sit in the row; the rest live under More, which is a details element
+   so it works with no script and closes on its own when focus leaves. */
+nav{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;align-items:center}
+nav a,nav .more>summary{flex:none;text-decoration:none;padding:8px 14px;border-radius:999px;font-size:13px;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink-2);font-weight:500;cursor:pointer;list-style:none;white-space:nowrap}
+nav .more>summary::-webkit-details-marker{display:none}
+nav a.sel,nav .more.sel>summary{background:var(--ink);color:var(--plane);border-color:var(--ink)}
+nav .more{position:relative}
+nav .more>summary::after{content:" \\25BE";font-size:11px;opacity:.7}
+nav .more[open]>summary::after{content:" \\25B4"}
+nav .more>div{position:absolute;top:calc(100% + 6px);left:0;z-index:30;display:flex;flex-direction:column;gap:4px;min-width:180px;
+  padding:6px;border-radius:14px;border:1px solid var(--line);background:var(--surface);box-shadow:0 10px 30px rgba(0,0,0,.18)}
+nav .more>div a{border:0;background:transparent;border-radius:10px;padding:8px 12px}
+nav .more>div a:hover{background:color-mix(in oklab,var(--ink) 8%,transparent)}
+nav .more>div a.sel{background:var(--ink);color:var(--plane)}
+/* The theme button shows where a click takes you: a moon in the light, a sun in the dark. */
+.tbtn .sun{display:none}.tbtn .moon{display:inline}
+html[data-theme=dark] .tbtn .sun{display:inline}html[data-theme=dark] .tbtn .moon{display:none}
+@media (prefers-color-scheme:dark){html:not([data-theme=light]) .tbtn .sun{display:inline}html:not([data-theme=light]) .tbtn .moon{display:none}}
 .msg{font-size:12px;color:var(--ink-muted);min-height:16px;margin:-8px 0 10px;font-variant-numeric:tabular-nums}
 
 /* ---- cards ---- */
@@ -546,21 +563,27 @@ const DEMO_BAR = DEMO ? `<div class="demobar" role="note">
 </div>` : "";
 
 export function shell({ tab, body, title = "Genkan" }) {
-  const nav = [["/", "Home"], ["/live", "Right now"], ["/week", "Week"], ["/trends", "Trends"],
-    ["/earn", "Learn to earn"], ["/devices", "Devices"], ["/family", "Family"],
-    ["/notify", "Notifications"], ["/system", "System"]];
+  // The everyday pages in the row; the rest under More. Wrapping means a
+  // narrow screen shows two rows rather than cutting the last one off.
+  const nav = [["/", "Home"], ["/live", "Right now"], ["/week", "Week"],
+    ["/analytics", "Analytics and logs"], ["/earn", "Learn to earn"], ["/devices", "Devices"],
+    ["/family", "Family"], ["/settings", "Settings"]];
+  const more = [["/trends", "Trends"], ["/notify", "Notifications"], ["/system", "System"],
+    ["/speed", "Speed", "Measures the gateway's own wire, and its connection to the internet"]];
+  const link = ([h, l, t]) => `<a href="${h}"${tab === h ? ' class="sel" aria-current="page"' : ""}${t ? ` title="${esc(t)}"` : ""}>${esc(l)}</a>`;
+  const moreSel = more.some(([h]) => h === tab);
   return `<!doctype html><html lang="en-NZ"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light dark">
-<title>${esc(title)}</title><style>${CSS}${LOGO_CSS}${POLISH}${LIVE_CSS}${MANAGE_CSS}${HOUSEHOLD_CSS}${SYS_CSS}${SCHEDULE_CSS}${DEMO_CSS}</style></head><body>
+<title>${esc(title)}</title><style>${CSS}${LOGO_CSS}${POLISH}${LIVE_CSS}${MANAGE_CSS}${HOUSEHOLD_CSS}${SYS_CSS}${SCHEDULE_CSS}${ANALYTICS_CSS}${SETTINGS_CSS}${DEMO_CSS}</style></head><body>
 <div class="top"><div class="brand">${KANJI_SVG}${wordmarkSVG()}
   <span>the family router</span></div>
-  <button class="tbtn" onclick="toggleTheme()" aria-label="Switch light or dark">Theme</button></div>
-<nav>${nav.map(([h, l]) => `<a href="${h}"${tab === h ? ' class="sel" aria-current="page"' : ""}>${esc(l)}</a>`).join("")}<a href="/speed"${tab === "/speed" ? ' class="sel" aria-current="page"' : ""} title="Measures the gateway's own wire, and its connection to the internet">Speed</a></nav>
+  <button class="tbtn" onclick="toggleTheme()" aria-label="Switch light or dark" title="Light or dark"><span class="moon" aria-hidden="true">&#9790;</span><span class="sun" aria-hidden="true">&#9788;</span></button></div>
+<nav>${nav.map(link).join("")}<details class="more${moreSel ? " sel" : ""}"><summary aria-label="More pages">More</summary><div>${more.map(link).join("")}</div></details></nav>
 <div class="msg" id="msg" role="status" aria-live="polite"></div>
 ${DEMO_BAR}${body}
 <div id="tip" role="tooltip" aria-hidden="true"></div>
-<script>${JS}${MANAGE_JS}${HOUSEHOLD_JS}${LIVE_JS}${SYS_JS}${SCHEDULE_JS}</script></body></html>`;
+<script>${JS}${MANAGE_JS}${HOUSEHOLD_JS}${LIVE_JS}${SYS_JS}${SCHEDULE_JS}${ANALYTICS_JS}${SETTINGS_JS}</script></body></html>`;
 }
 
 // ---------------------------------------------------------------------------

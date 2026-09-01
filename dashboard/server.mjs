@@ -38,6 +38,8 @@ import { householdApi } from "./household.mjs";
 import { notifyData, notifyPage, notifyApi } from "./notify.mjs";
 import { earnData, earnPage, taskApi, quizApi, bankApi, earnSettingsApi, boardApi, decideClaim } from "./earn.mjs";
 import { scheduleData, scheduleApi } from "./schedule.mjs";
+import { analyticsPage, analyticsApi } from "./analytics-page.mjs";
+import { settingsPage, settingsApi } from "./settings.mjs";
 import { dirname, join } from "node:path";
 import { versionFooter } from "./version.mjs";
 
@@ -293,7 +295,7 @@ const server = createServer(async (req, res) => {
 
     if (req.method === "POST" && ["/api/claim", "/api/act", "/api/assign", "/api/ack", "/api/goal",
       "/api/child", "/api/tier", "/api/device", "/api/household", "/api/task", "/api/quiz",
-      "/api/bank", "/api/earnsettings", "/api/board", "/api/schedule"].includes(req.url) && !authed(req)) {
+      "/api/bank", "/api/earnsettings", "/api/board", "/api/schedule", "/api/settings"].includes(req.url) && !authed(req)) {
       res.writeHead(403, { "content-type": "application/json" }); res.end('{"out":"forbidden"}'); return; }
     if (req.method === "POST" && req.url === "/api/assign") {
       let b = ""; req.on("data", c => b += c); await new Promise(r => req.on("end", r));
@@ -340,6 +342,17 @@ const server = createServer(async (req, res) => {
     // set_by precedence rules live in exactly one place. The nudge at the end
     // of each op runs that same worker, so a change a parent just made is in
     // force now rather than up to a minute from now.
+    if (req.method === "POST" && req.url === "/api/settings") {
+      const body = await readJson(req);
+      try { await settingsApi(q, body, res, runKidnet); }
+      catch (e) { res.writeHead(500, { "content-type": "application/json" }); res.end(JSON.stringify({ ok: false, msg: e.message })); }
+      return;
+    }
+    if (req.method === "GET" && req.url.startsWith("/api/analytics")) {
+      try { await analyticsApi(q, new URL(req.url, "http://x"), res); }
+      catch (e) { res.writeHead(500, { "content-type": "application/json" }); res.end(JSON.stringify({ ok: false, msg: e.message })); }
+      return;
+    }
     if (req.method === "POST" && req.url === "/api/schedule") {
       const body = await readJson(req);
       try { await scheduleApi(q, body, res, runKidnet); }
@@ -644,6 +657,10 @@ const server = createServer(async (req, res) => {
     } else if (url.pathname === "/trends") {
       const days = url.searchParams.get("days") === "30" ? 30 : 7;
       html = shell({ tab: "/trends", title: "Genkan trends", body: trends(s, await analytics(q, days)) });
+    } else if (url.pathname === "/analytics") {
+      html = shell({ tab: "/analytics", title: "Genkan: analytics and logs", body: await analyticsPage(q, s, url) });
+    } else if (url.pathname === "/settings") {
+      html = shell({ tab: "/settings", title: "Genkan settings", body: await settingsPage(q, s) });
     } else if (url.pathname === "/live") {
       html = shell({ tab: "/live", title: "Genkan: right now", body: livePage(s) });
     } else if (url.pathname === "/family") {

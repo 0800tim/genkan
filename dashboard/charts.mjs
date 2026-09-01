@@ -428,3 +428,102 @@ export function linePath(values, max, plotH) {
     + ` L${last[0].toFixed(1)},${plotH} Z`;
   return { pts, area };
 }
+
+// ---------------------------------------------------------------------------
+// Stacked column chart for COUNTS: lookups per hour or per day, stacked by
+// person or by reason. The columns() chart above is for minutes and says so on
+// every tick and in every tooltip, which is exactly why it must not be reused
+// for a lookup count (analytics.mjs, HONESTY RULES: lookups are never labelled
+// as minutes). Same geometry, same gutter, same hit targets and tooltip
+// contract, different unit.
+//
+// cols:   [{ label, sub, values: { key: n } }]
+// series: [{ key, label }]  key names a palette slot (--s-<key>), label is
+//         whatever the slot stands for here (a person, a reason).
+// unit:   the word after the number in tooltips and titles.
+// ---------------------------------------------------------------------------
+function niceCount(v) {
+  if (!(v > 0)) return 10;
+  const p = Math.pow(10, Math.floor(Math.log10(v)));
+  for (const m of [1, 2, 2.5, 5, 10]) if (v <= m * p) return m * p;
+  return 10 * p;
+}
+function countTicks(max) {
+  const n = max % 4 === 0 && max >= 20 ? 4 : 2;
+  return Array.from({ length: n + 1 }, (_, i) => Math.round(max * (n - i) / n));
+}
+
+export function countColumns({ cols, series, height = 132, title = "", unit = "lookups", xEvery = null, showValues = null }) {
+  const n = Math.max(1, cols.length);
+  const slotPct = 100 / n;
+  const barPct = slotPct * BAR_FILL;
+  const TOP = 18, AXIS = 22;
+  const H = TOP + height + AXIS;
+  const direct = showValues === null ? n <= 10 : showValues;
+  const every = xEvery || (n <= 10 ? 1 : 5);
+  const val = (c, k) => Number((c.values || {})[k] || 0);
+  const total = c => series.reduce((a, s) => a + val(c, s.key), 0);
+  const scaleMax = niceCount(Math.max(0, ...cols.map(total)));
+  const zeroY = TOP + height;
+  const px = v => (scaleMax > 0 ? (v / scaleMax) * height : 0);
+
+  let grid = "", axis = "";
+  for (const t of countTicks(scaleMax)) {
+    const y = zeroY - px(t);
+    grid += `<line class="grid" x1="0" x2="100%" y1="${y}" y2="${y}"/>`;
+    axis += `<text class="tick" x="0" y="${y - 3}">${esc(t === 0 ? "0" : fmt.count(t))}</text>`;
+  }
+  grid += `<line class="axis" x1="0" x2="100%" y1="${zeroY}" y2="${zeroY}"/>`;
+
+  const geo = i => ` x="${((i + 0.5) * slotPct - barPct / 2).toFixed(3)}%" width="${barPct.toFixed(3)}%"`;
+  let body = "", labels = "";
+  cols.forEach((c, i) => {
+    const cx = (i + 0.5) * slotPct;
+    const drawn = series.map(s => ({ k: s.key, v: val(c, s.key) })).filter(s => s.v > 0);
+    let marks = "", cum = 0;
+    drawn.forEach((s, j) => {
+      const isEnd = j === drawn.length - 1;
+      const h0 = px(s.v);
+      const gap = j === 0 ? 0 : 2;
+      const h = Math.max(1, h0 - gap);
+      const y = zeroY - cum - h0;
+      cum += h0;
+      const fill = `var(--s-${s.k})`;
+      if (isEnd && h > 5) {
+        marks += `<rect class="seg" y="${y}" height="${h}" rx="4" fill="${fill}"${geo(i)}/>`;
+        marks += `<rect class="seg" y="${y + 4}" height="${Math.max(0, h - 4)}" fill="${fill}"${geo(i)}/>`;
+      } else {
+        marks += `<rect class="seg" y="${y}" height="${h}" fill="${fill}"${geo(i)}/>`;
+      }
+    });
+    const rows = series.filter(s => val(c, s.key) > 0)
+      .map(s => [s.label, `${fmt.count(val(c, s.key))} ${unit}`, s.key]);
+    if (!rows.length) rows.push(["Nothing recorded", "", null]);
+    const t = total(c);
+    body += `<g class="col" style="--cx:${cx.toFixed(3)}%" tabindex="0"`
+      + ` data-head="${esc(c.label)}" data-tip="${tip(rows)}">`
+      + `<title>${esc(c.label)}: ${esc(fmt.count(t))} ${esc(unit)}</title>`
+      + marks
+      + `<rect class="hit" x="${(i * slotPct).toFixed(3)}%" width="${slotPct.toFixed(3)}%" y="0" height="${TOP + height}"/>`
+      + `</g>`;
+    if (direct && t > 0) labels += `<text class="dval" x="${cx}%" y="${zeroY - px(t) - 5}">${esc(fmt.count(t))}</text>`;
+    if (i % every === 0 || i === n - 1) {
+      labels += `<text class="xlab" x="${cx}%" y="${TOP + height + 15}">${esc(c.sub || c.label)}</text>`;
+    }
+  });
+
+  return `<svg class="chart" width="100%" height="${H}" role="img" aria-label="${esc(title || "chart")}">`
+    + `<g class="ticks">${axis}</g>`
+    + `<svg class="plot" x="${GUTTER}" y="0" width="90%" height="${H}" overflow="visible"`
+    + ` style="width:calc(100% - ${GUTTER}px);--bw:min(${BAR_CAP}px,${barPct.toFixed(3)}%);--slot:${slotPct.toFixed(3)}%">`
+    + grid + body + labels + `</svg></svg>`;
+}
+
+// A legend whose labels are not the palette's own. legend() above reads the
+// label off SERIES, which is right for gaming/video/social and wrong when the
+// blue bar is a person. items: [{ key, label }].
+export function legendOf(items, { note = "" } = {}) {
+  const li = (items || []).map(s =>
+    `<li><span class="swatch" style="background:var(--s-${esc(s.key)})"></span>${esc(s.label)}</li>`).join("");
+  return (li ? `<ul class="legend">${li}</ul>` : "") + (note ? `<p class="cnote">${esc(note)}</p>` : "");
+}

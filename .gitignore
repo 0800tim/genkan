@@ -13,3 +13,5 @@ config.env.*
 !config.env.example
 secrets.env.*
 !secrets.env.example
+# Agent worktrees are working copies, never content.
+.claude/worktrees/

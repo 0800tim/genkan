@@ -479,6 +479,7 @@ separately by `genkan-catmeter`.
     genkan-schedule clear <kid>                      remove that child's bedtimes
     genkan-schedule enable|disable <kid>             keep the times, stop or start them firing
     genkan-schedule extend <kid> <min>               tonight only, no schedule edited
+    genkan-schedule tonight <kid>                    start tonight's bedtime again after a parent turned it on
     genkan-schedule holiday <from> <to> [name]       no bedtimes between those dates
     genkan-schedule holiday late <from> <to> <min> [name]
     genkan-schedule holiday clear                    end every override window now
@@ -792,7 +793,14 @@ No arguments. Run every two minutes by `kids-dnslog.timer`.
 Pages backwards through AdGuard's query log, newest first, stopping at the
 newest timestamp already in `dns_log`. Maps the client address to a device and
 then to a child, and inserts. `action` is `blocked` when AdGuard's reason starts
-with `Filtered` or `Rewrite`, otherwise `allowed`.
+with `Filtered` or `Rewrite`, otherwise `allowed`. Since 2026-09-02 it also
+stores the reason itself in `dns_log.reason` and, for a blocklist hit, the name
+of the list that matched in `dns_log.filter_list` (read once per run from
+AdGuard's `/control/filtering/status`; a blocked service is stored as
+`service:<name>`, Genkan's own rules as `Genkan rules`). That is what lets the
+dashboard's Analytics page say "adult site, blocked" rather than "blocked".
+AdGuard stamps entries in UTC; the offset is kept, because dropping it once
+put every row twelve hours in the past (DECISIONS.md).
 
 Domains only, never content, because the network cannot see inside HTTPS. If
 AdGuard is briefly unavailable (a restart, an upgrade) the run exits cleanly

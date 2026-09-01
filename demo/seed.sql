@@ -367,40 +367,93 @@ INSERT INTO alerts (ts, child_id, severity, category, domain, detail, acknowledg
 -- DNS history, so the top sites and the per-service breakdowns have something
 -- to count. Domains only: Genkan never records what was on a page.
 -- ---------------------------------------------------------------------------
-CREATE TEMP TABLE d_domains (domain text, category text, weight numeric, blockrate numeric);
+-- reason and filter_list are what genkan-dnslog stores from AdGuard: WHY a
+-- blocked row was blocked, and which list said so. The adult and gambling
+-- names are made up on a reserved test domain, because a public seed file is
+-- not the place to type real ones; the list names are AdGuard's real ones.
+CREATE TEMP TABLE d_domains (domain text, category text, weight numeric, blockrate numeric,
+                             reason text, filter_list text);
 INSERT INTO d_domains VALUES
- ('youtube.com','video',34,0.00), ('googlevideo.com','video',30,0.00), ('ytimg.com','video',14,0.00),
- ('netflix.com','video',9,0.00),  ('nflxvideo.net','video',7,0.00),    ('disneyplus.com','video',5,0.00),
- ('tiktok.com','video',6,0.02),   ('twitch.tv','video',4,0.00),
- ('roblox.com','gaming',26,0.00), ('rbxcdn.com','gaming',20,0.00),     ('minecraft.net','gaming',9,0.00),
- ('epicgames.com','gaming',6,0.00), ('steampowered.com','gaming',4,0.00),
- ('snapchat.com','social',16,0.00), ('instagram.com','social',13,0.00), ('cdninstagram.com','social',9,0.00),
- ('discord.com','social',7,0.00),
- ('spotify.com','audio',15,0.00), ('scdn.co','audio',12,0.00),
- ('khanacademy.org','schoolwork',11,0.00), ('classroom.google.com','schoolwork',9,0.00),
- ('docs.google.com','schoolwork',10,0.00), ('education.govt.nz','schoolwork',3,0.00),
- ('wikipedia.org','other',8,0.00), ('bbc.co.uk','other',4,0.00), ('rnz.co.nz','other',3,0.00),
- ('apple.com','other',6,0.00),    ('gstatic.com','other',18,0.00),    ('googleapis.com','other',16,0.00),
- ('cloudflare.com','other',5,0.00),
+ ('youtube.com','video',34,0.00,NULL,NULL), ('googlevideo.com','video',30,0.00,NULL,NULL), ('ytimg.com','video',14,0.00,NULL,NULL),
+ ('netflix.com','video',9,0.00,NULL,NULL),  ('nflxvideo.net','video',7,0.00,NULL,NULL),    ('disneyplus.com','video',5,0.00,NULL,NULL),
+ ('tiktok.com','video',6,0.08,'FilteredBlockedService','service:tiktok'), ('twitch.tv','video',4,0.00,NULL,NULL),
+ ('roblox.com','gaming',26,0.00,NULL,NULL), ('rbxcdn.com','gaming',20,0.00,NULL,NULL),     ('minecraft.net','gaming',9,0.00,NULL,NULL),
+ ('epicgames.com','gaming',6,0.00,NULL,NULL), ('steampowered.com','gaming',4,0.00,NULL,NULL),
+ ('snapchat.com','social',16,0.00,NULL,NULL), ('instagram.com','social',13,0.05,'FilteredBlockedService','service:instagram'),
+ ('cdninstagram.com','social',9,0.00,NULL,NULL), ('discord.com','social',7,0.00,NULL,NULL),
+ ('spotify.com','audio',15,0.00,NULL,NULL), ('scdn.co','audio',12,0.00,NULL,NULL),
+ ('khanacademy.org','schoolwork',11,0.00,NULL,NULL), ('classroom.google.com','schoolwork',9,0.00,NULL,NULL),
+ ('docs.google.com','schoolwork',10,0.00,NULL,NULL), ('education.govt.nz','schoolwork',3,0.00,NULL,NULL),
+ ('wikipedia.org','other',8,0.00,NULL,NULL), ('bbc.co.uk','other',4,0.00,NULL,NULL), ('rnz.co.nz','other',3,0.00,NULL,NULL),
+ ('apple.com','other',6,0.00,NULL,NULL),    ('gstatic.com','other',18,0.00,NULL,NULL),    ('googleapis.com','other',16,0.00,NULL,NULL),
+ ('cloudflare.com','other',5,0.00,NULL,NULL),
  -- The blocked end of the list. High block rates, low volume: that is what a
  -- filter that is working looks like.
- ('doubleclick.net','ads',9,1.00), ('googleadservices.com','ads',6,1.00),
- ('adservice.google.com','ads',5,1.00), ('scorecardresearch.com','ads',3,1.00),
- ('nordvpn.com','proxy-vpn',1,1.00), ('torproject.org','tor',1,1.00),
- ('poki.com','gaming',3,0.35), ('crazygames.com','gaming',3,0.35);
+ ('doubleclick.net','ads',9,1.00,'FilteredBlackList','AdGuard DNS filter (ads and trackers)'),
+ ('googleadservices.com','ads',6,1.00,'FilteredBlackList','AdGuard DNS filter (ads and trackers)'),
+ ('adservice.google.com','ads',5,1.00,'FilteredBlackList','AdGuard DNS filter (ads and trackers)'),
+ ('scorecardresearch.com','ads',3,1.00,'FilteredBlackList','AdGuard DNS filter (ads and trackers)'),
+ ('nordvpn.com','proxy-vpn',1,1.00,'FilteredBlackList','HaGeZi DoH/VPN/Proxy bypass (filter evasion)'),
+ ('torproject.org','tor',1,1.00,'FilteredBlackList','Genkan rules'),
+ ('poki.com','gaming',3,0.35,'FilteredBlackList','Genkan rules'),
+ ('crazygames.com','gaming',3,0.35,'FilteredBlackList','Genkan rules'),
+ ('late-clips.example','adult',0.6,1.00,'FilteredBlackList','OISD NSFW (adult)'),
+ ('hot-cams.example','adult',0.4,1.00,'FilteredBlackList','OISD NSFW (adult)'),
+ ('spin-casino.example','gambling',0.5,1.00,'FilteredBlackList','HaGeZi Gambling'),
+ ('bet-now.example','gambling',0.3,1.00,'FilteredBlackList','HaGeZi Gambling');
 
-INSERT INTO dns_log (ts, device_id, client_ip, domain, category, action)
-SELECT now() - (random() * interval '6 days'),
+-- Lookups happen when people are awake and home: a little before school, a
+-- lot after it, most of all in the evening. Four weeks of it, so the 30 day
+-- view on the Analytics page has a shape and not a stub.
+CREATE TEMP TABLE d_hours AS
+SELECT h AS hour,
+       CASE WHEN h BETWEEN 7 AND 8 THEN 3 WHEN h BETWEEN 9 AND 14 THEN 1.5
+            WHEN h BETWEEN 15 AND 17 THEN 6 WHEN h BETWEEN 18 AND 21 THEN 8
+            WHEN h = 22 THEN 2 ELSE 0.05 END AS weight
+FROM generate_series(0, 23) h;
+
+INSERT INTO dns_log (ts, device_id, client_ip, domain, category, action, reason, filter_list)
+SELECT CASE WHEN t.ts > now() THEN t.ts - interval '1 day' ELSE t.ts END,
        dv.id, dv.reserved_ip, dm.domain, dm.category,
-       CASE WHEN random() < dm.blockrate THEN 'blocked' ELSE 'allowed' END
-FROM generate_series(1, 5200) s
+       CASE WHEN hh.r < dm.blockrate THEN 'blocked' ELSE 'allowed' END,
+       CASE WHEN hh.r < dm.blockrate THEN dm.reason ELSE 'NotFilteredNotFound' END,
+       CASE WHEN hh.r < dm.blockrate THEN dm.filter_list ELSE NULL END
+FROM generate_series(1, 16000) s
+-- Every pick below references the outer row (s.s > 0, always true). Without
+-- that the planner is free to run a lateral subquery once for the whole
+-- insert, and did: sixteen thousand lookups of roblox.com from one tablet.
+-- The block roll (hh.r) comes out of the same per-row subquery for the same
+-- reason: a bare `SELECT random() < blockrate` was rolled once for the lot.
 CROSS JOIN LATERAL (
   SELECT id, reserved_ip FROM devices
-  WHERE category='personal' AND is_active ORDER BY random() LIMIT 1
+  WHERE category='personal' AND is_active AND s.s > 0 ORDER BY random() LIMIT 1
 ) dv
 CROSS JOIN LATERAL (
-  SELECT domain, category, blockrate FROM d_domains
-  ORDER BY -ln(random()) / weight LIMIT 1
+  SELECT domain, category, blockrate, reason, filter_list FROM d_domains
+  WHERE s.s > 0 ORDER BY -ln(random()) / weight LIMIT 1
+) dm
+CROSS JOIN LATERAL (
+  SELECT hour, random() AS r, (random() * 27)::int AS ago,
+         (random() * 59)::int AS mins, (random() * 59)::int AS secs
+  FROM d_hours WHERE s.s > 0 ORDER BY -ln(random()) / weight LIMIT 1
+) hh
+CROSS JOIN LATERAL (
+  SELECT (CURRENT_DATE - hh.ago) + make_interval(hours => hh.hour, mins => hh.mins, secs => hh.secs) AS ts
+) t;
+
+-- Rangi is out of time today, so for the last few hours every name that
+-- device asked for was answered with the portal's address. That is what a cut
+-- looks like in the log: reason RewriteRule, from Genkan's own rules.
+INSERT INTO dns_log (ts, device_id, client_ip, domain, category, action, reason, filter_list)
+SELECT now() - random() * interval '3 hours',
+       dv.id, dv.reserved_ip, dm.domain, dm.category, 'blocked', 'RewriteRule', 'Genkan rules'
+FROM generate_series(1, 140) s
+CROSS JOIN LATERAL (
+  SELECT id, reserved_ip FROM devices
+  WHERE child_id = (SELECT id FROM children WHERE name='Rangi') AND s.s > 0 ORDER BY random() LIMIT 1
+) dv
+CROSS JOIN LATERAL (
+  SELECT domain, category FROM d_domains WHERE blockrate = 0 AND s.s > 0 ORDER BY -ln(random()) / weight LIMIT 1
 ) dm;
 
 -- ---------------------------------------------------------------------------
@@ -432,6 +485,7 @@ ON CONFLICT DO NOTHING;
 
 DROP TABLE d_days;
 DROP TABLE d_domains;
+DROP TABLE d_hours;
 
 COMMIT;
 

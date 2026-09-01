@@ -108,7 +108,8 @@ the kids_unclaimed nft set) are both OFF BY DEFAULT and must stay that way.
   (26 checks). Both must pass 100% before commit. After ANY change to
   config/db/: test/schema-test.sh (88 checks) and test/db-role-test.sh
   (77 checks), neither needing root. After ANY change to something that
-  raises an alert: test/alerts-test.sh (15 checks). Run suites ONE AT A
+  raises an alert or to bin/genkan-dnslog: test/alerts-test.sh (20 checks,
+  five of which push one AdGuard-shaped entry through the real ingest). Run suites ONE AT A
   TIME: several build a throwaway database or a namespace with a fixed
   name, so two at once collide and report failures that are not real.
 - Never oversell. If a feature is half built, say which half. The project's
@@ -127,9 +128,14 @@ deploy.sh and left disabled on purpose. Dashboard: systemd --user
 kids-dashboard.service (private network :8899, unit lives on the box; the repo
 ships an EXAMPLE at config/systemd-user/genkan-dashboard.service that nothing
 installs), with genkan-dashboard-tls.service fronting it on :8443. Its pages
-are Home, Right now, Week, Trends, Learn to earn, Devices, Family, System and
-Speed; /speed proxies the gateway's speed test, which can only run inside the
-island. Portal: kids-portal.service (:8890) is the pre-deploy host copy;
+are Home, Right now, Week, Trends, Analytics and logs (dashboard/
+analytics-page.mjs: lookups over time, blocked by reason, top sites, the
+meter's minutes, and the filterable dns_log itself), Learn to earn, Devices,
+Family, Settings, Notifications, System and Speed; /speed proxies the
+gateway's speed test, which can only run inside the island. dns_log.reason
+and dns_log.filter_list (why AdGuard blocked a name, and which list) exist in
+the schema since 2026-09-02; until config/db/schema.sql is re-run on the box
+and the current genkan-dnslog is installed, the live rows have neither. Portal: kids-portal.service (:8890) is the pre-deploy host copy;
 production is the container on island :80. DB: kids_network on the shared
 postgres container (creds in secrets.env).
 

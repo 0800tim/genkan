@@ -59,6 +59,15 @@ dangerous than no block:
   national censors; a home gateway will not beat them.
 - **Other roads exist.** Cellular data, a friend's wifi, a USB-booted OS.
   PLAN.md is honest about all of these for the network generally.
+- **A VPN or a "private DNS" app makes a device invisible to every layer
+  here.** Cloudflare WARP (the 1.1.1.1 app), Tailscale with its own
+  resolver, a school or work VPN client: each carries the device's lookups
+  and traffic inside an encrypted tunnel to somewhere else, so the DNS
+  forcing sees nothing, the filter sees nothing, the log records nothing,
+  and a cut only stops the tunnel itself. Seen on 2026-09-02 with WARP on a
+  parent's laptop: AdGuard never received a single query from it. That is
+  fine on an adult's machine and is exactly why a child's device must not
+  carry one; the proxy-vpn flag category exists to notice the attempt.
 
 So what is the point? The block stops the casual, low-effort path, which
 is the path nearly every kid takes. And the moment a kid puts in the

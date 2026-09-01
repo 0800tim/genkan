@@ -62,6 +62,20 @@ CREATE TABLE IF NOT EXISTS dns_log (
 );
 CREATE INDEX IF NOT EXISTS dns_log_ts_idx ON dns_log (ts DESC);
 CREATE INDEX IF NOT EXISTS dns_log_dev_idx ON dns_log (device_id, ts DESC);
+-- WHY a lookup was blocked, in AdGuard's own words (FilteredBlackList,
+-- FilteredBlockedService, FilteredSafeSearch, RewriteRule, NotFilteredWhiteList,
+-- NotFilteredNotFound), and for a blocklist hit WHICH list matched, by the name
+-- AdGuard gives it ("OISD NSFW (adult)", "HaGeZi Gambling"). Without these the
+-- log could only say "blocked", and an advert, an adult site and a child sent
+-- to the portal because their time ran out all looked the same. Both are null
+-- on rows ingested before the columns existed, and the Analytics page says so
+-- rather than guessing. Added 2026-09-02.
+ALTER TABLE dns_log ADD COLUMN IF NOT EXISTS reason      text;
+ALTER TABLE dns_log ADD COLUMN IF NOT EXISTS filter_list text;
+-- The log page filters by exact domain (click a site, see every lookup of it)
+-- and by reason; both need to stay quick at thirty days of a busy household.
+CREATE INDEX IF NOT EXISTS dns_log_domain_idx ON dns_log (domain, ts DESC);
+CREATE INDEX IF NOT EXISTS dns_log_action_idx ON dns_log (action, ts DESC);
 
 CREATE TABLE IF NOT EXISTS alerts (
   id        bigserial PRIMARY KEY,

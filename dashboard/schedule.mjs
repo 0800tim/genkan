@@ -155,6 +155,18 @@ export async function scheduleApi(q, body, res, runKidnet) {
     return send(200, `Tonight only: back on until ${localTime(rows[0].until_ts)}. Tomorrow is unchanged.`, true);
   }
 
+  if (op === "tonight") {
+    const cid = Number(b.child_id);
+    if (!Number.isInteger(cid) || cid <= 0) return send(400, "which child?");
+    const [child] = await q("SELECT id, name FROM children WHERE id=$1", [cid]);
+    if (!child) return send(404, "no such child");
+    // The worker owns this: it forgets tonight's release and asserts again,
+    // through the same code the timer runs.
+    const r = await runKidnet(["schedule", "tonight", child.name]);
+    const out = String(r?.out || r?.stdout || r || "").trim();
+    return send(/back on for tonight/.test(out) ? 200 : 400, out || "no answer from the scheduler", /back on for tonight/.test(out));
+  }
+
   if (op === "holiday") {
     const starts = String(b.starts || ""), ends = String(b.ends || "");
     const mode = b.mode === "late" ? "late" : "off";
@@ -219,6 +231,10 @@ function extendBedtime(id){
   if(!(m>0)){say('How many extra minutes?');return;}
   mgPost('/api/schedule',{op:'extend',child_id:id,minutes:m},'granting tonight\\u2026');
 }
+function bedtimeTonight(id){
+  if(!confirm('Start the bedtime again now? It was turned back on earlier tonight; this puts it back until the morning.'))return;
+  mgPost('/api/schedule',{op:'tonight',child_id:id},'starting bedtime\\u2026');
+}
 function saveHoliday(){
   var mode=btVal('hol_mode');
   mgPost('/api/schedule',{op:'holiday',starts:btVal('hol_from'),ends:btVal('hol_to'),
@@ -270,6 +286,7 @@ function kidBedtime(c, rows, next, extUntil) {
       <span class="grow"></span>
       <input id="bx_${c.id}" type="number" min="1" max="720" placeholder="min" style="width:5.5em" aria-label="Extra minutes for ${esc(c.name)} tonight">
       <button class="btn" type="button" onclick="extendBedtime(${c.id})">Extra time, tonight only</button>
+      ${next && next.in_window ? `<button class="btn" type="button" onclick="bedtimeTonight(${c.id})" title="It was turned back on tonight; this puts it back until the morning">Start bedtime again now</button>` : ""}
     </div>
   </div>`;
 }

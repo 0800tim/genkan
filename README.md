@@ -151,9 +151,10 @@ Every parental control product should have this section and almost none do.
   end to end encrypted. If bullying is your worry, this is not the tool.
 - **It cannot touch mobile data.** A phone on 4G never comes near your network.
   That needs something on the device itself, like Family Link.
-- **A determined kid with a VPN can hide their destinations.** We block the
-  easy routes and alert you, and the bug bounty turns the attempt into a
-  conversation. There is no product on earth that truly stops a motivated
+- **A determined kid with a VPN can hide their destinations.** So can the
+  1.1.1.1 app (Cloudflare WARP) or any "private DNS" app: an encrypted tunnel
+  carries everything past the filter and the log. We block the easy routes
+  and alert you, and the bug bounty turns the attempt into a conversation. There is no product on earth that truly stops a motivated
   sixteen year old, and any that claims otherwise is selling something.
 
 ## Getting started

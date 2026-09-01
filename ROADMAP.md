@@ -141,6 +141,16 @@ These are real gaps, sized roughly, and each is genuinely useful.
 - **Per-app control on the device.** The network cannot see inside apps. A
   consenting companion app could, and would need to be as privacy-respecting as
   the rest of this.
+- **A content registry.** Quiz packages exist and install cleanly; nothing
+  else does, and there is nowhere to find one except this repo. The design in
+  `docs/COMMUNITY.md` proposes a public, git-backed registry of signed static
+  files (never a database we run), four more package kinds (reading-list
+  rules, filter rule sets and tier presets, bedtime presets, and project
+  modules such as a model boat with steps a parent signs off), and `genkan
+  pack search|info|install|update|remove`. Every line of it is labelled
+  proposed, and the table at the end of that page says which is built. The
+  index repo and the signing are the first pieces to build, because the
+  kinds are worth little without a place to put them.
 
 ---
 

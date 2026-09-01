@@ -316,6 +316,26 @@ case "${1:-apply}" in
     fi
     apply
     echo "genkan-schedule: $2 can stay on until $u tonight. Tomorrow is unchanged.";;
+  tonight)
+    # A parent turned a child back on during tonight's window (genkan on,
+    # resume, the dashboard), which the worker records as a release and
+    # honours until morning. This is the way back: forget the release for
+    # tonight's window and assert again now. Idempotent, and it never invents
+    # a window: a child with no bedtime tonight is told so.
+    cid=$(tid "${2:?kid}"); [ -n "$cid" ] || { echo "genkan-schedule: nobody called '$2'"; exit 1; }
+    if [ -z "$(psqll "SELECT 1 FROM schedule_next WHERE child_id=$cid AND in_window")" ]; then
+      echo "genkan-schedule: $2 is not inside a bedtime window right now, so there is nothing to start"; exit 1
+    fi
+    # Deleted, not cleared: the release step treats an asserted window whose
+    # category is unblocked as a fresh parental override, so a row left with
+    # asserted_ts set would be released again in the same apply. With no row,
+    # the window is new to the worker and it asserts.
+    psqlq "DELETE FROM schedule_state st USING schedule_next n
+            WHERE n.child_id=st.child_id AND n.schedule_id=st.schedule_id
+              AND st.child_id=$cid AND n.in_window"
+    psqlq "DELETE FROM schedule_extensions WHERE child_id=$cid AND until_ts > now()"
+    apply
+    echo "genkan-schedule: $2's bedtime is back on for tonight";;
   holiday) case "${2:-}" in
       clear) psqlq "UPDATE schedule_overrides SET enabled=false WHERE enabled"
              apply; echo "genkan-schedule: override windows ended, normal bedtimes from now";;

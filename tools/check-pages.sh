@@ -14,7 +14,7 @@
 # This does what the browser does, with node, for every page, in a second.
 set -uo pipefail
 BASE="${1:-http://127.0.0.1:9275}"
-PAGES=(/ /now /week /trends /learn /devices /family /system)
+PAGES=(/ /now /week /trends /analytics /learn /devices /family /system)
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 fail=0
 for pg in "${PAGES[@]}"; do

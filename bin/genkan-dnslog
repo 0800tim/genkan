@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # genkan:summary=Pull AdGuard's DNS query log into the dns_log table.
 # Timer-driven. Newest-first paging, stops at the last stored timestamp, maps
-# client IP -> device -> child, inserts. Powers the per-kid "what sites" view
-# and category metering. Logs DOMAINS only, never content.
+# client IP -> device -> child, inserts, keeping AdGuard's reason
+# (FilteredBlackList, RewriteRule...) and the name of the blocklist that
+# matched, so the log can say WHY. Powers the per-kid "what sites" view, the
+# Analytics page and category metering. Logs DOMAINS only, never content.
 set -euo pipefail
 : "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}" "${ADGUARD_PASS:?set ADGUARD_PASS}"
 PAGES="${DNSLOG_PAGES:-20}"
@@ -27,19 +29,54 @@ def get(u):
     except Exception as e:
         print(f"genkan-dnslog: AdGuard unavailable ({e}); will retry next tick", file=sys.stderr)
         raise SystemExit(0)
+# Which blocklist is which. AdGuard's log entry names a list only by number
+# (1001, 1002...) and the numbers are whatever this box's config assigned, so
+# the name is looked up once per run and stored with the row. That is what
+# lets the Analytics page say "blocked by OISD NSFW (adult)" instead of
+# "blocked by list 1001", and it costs one small request every two minutes.
+# Missing it is not fatal: the reason is still stored, the list name is not.
+lists={}
+try:
+    r=urllib.request.Request(url+"/control/filtering/status"); r.add_header("Authorization","Basic "+auth)
+    for f in (json.load(urllib.request.urlopen(r,timeout=10)).get("filters") or []):
+        if f.get("id") is not None and f.get("name"): lists[int(f["id"])]=str(f["name"])
+except Exception as e:
+    print(f"genkan-dnslog: could not read AdGuard's filter list names ({e}); storing reasons without them", file=sys.stderr)
+def which_list(e):
+    # The first matching rule's list. 0 is AdGuard's own custom rules, which
+    # on this box are the rules genkan-adguard renders; -2 is a blocked
+    # service (TikTok, Instagram...), where the service name is the useful part.
+    for rule in (e.get("rules") or []):
+        fid=rule.get("filter_list_id")
+        if fid is None: continue
+        fid=int(fid)
+        if fid in lists: return lists[fid]
+        if fid==0: return "Genkan rules"
+        if fid==-2: return "service:"+str(e.get("service_name") or "")
+    if e.get("service_name"): return "service:"+str(e.get("service_name"))
+    return ""
 rows=[]; older=None; stop=False
 for _ in range(pages):
     u=url+"/control/querylog?limit=100"+(f"&older_than={urllib.parse.quote(older)}" if older else "")
     d=get(u); data=d.get("data") or []
     if not data: break
     for e in data:
-        t=(e.get("time") or "")[:19]
+        # AdGuard stamps entries in UTC with a Z suffix and nanoseconds. Keep
+        # the offset: this value lands in a timestamptz column through a
+        # session whose TimeZone is the household's, and a bare "13:19:44"
+        # was read as 13:19 local, twelve hours early for New Zealand, for
+        # every row since the first one (found 2026-09-02). Postgres takes at
+        # most six fractional digits, so the rest are cut, not rounded.
+        raw=(e.get("time") or "")
+        t=raw[:19]
         if since and t<=since: stop=True; break
+        frac=raw[19:].rstrip("Z").split("+")[0].split("-")[0]
+        stamp=t+frac[:7]+("Z" if raw.endswith("Z") else raw[raw.rfind("+"):] if "+" in raw[19:] else raw[raw.rfind("-"):])
         name=((e.get("question") or {}).get("name") or "").rstrip(".").lower()
         if not name: continue
         reason=e.get("reason") or ""
         action="blocked" if (reason.startswith("Filtered") or reason.startswith("Rewrite")) else "allowed"
-        rows.append((t.replace("T"," "), e.get("client") or "", name, action))
+        rows.append((stamp, e.get("client") or "", name, action, reason, which_list(e)))
     older=d.get("oldest") or (data[-1].get("time") if data else None)
     if stop or not older: break
 # CSV, not COPY's text format. A DNS label can legitimately contain a dot, and
@@ -57,10 +94,11 @@ PY
 # Stage + join client IP to device/child, then insert.
 ERRF="$(mktemp -t genkan-dnslog.XXXXXX)"; trap 'rm -f "$ERRF"' EXIT
 if ! printf '%s\n' "$TSV" | "${DB_EXEC[@]}" -qc "
-CREATE TEMP TABLE _dl(ts timestamptz, client_ip inet, domain text, action text);
+CREATE TEMP TABLE _dl(ts timestamptz, client_ip inet, domain text, action text, reason text, filter_list text);
 COPY _dl FROM STDIN WITH (FORMAT csv);
-INSERT INTO dns_log(ts, device_id, client_ip, domain, action)
-SELECT dl.ts, d.id, dl.client_ip, dl.domain, dl.action
+INSERT INTO dns_log(ts, device_id, client_ip, domain, action, reason, filter_list)
+SELECT dl.ts, d.id, dl.client_ip, dl.domain, dl.action,
+       NULLIF(dl.reason,''), NULLIF(dl.filter_list,'')
 FROM _dl dl LEFT JOIN devices d ON host(d.reserved_ip)=host(dl.client_ip);
 " 2>"$ERRF"; then
   # Loud, because the damage of this failing is invisible. genkan-alerts reads

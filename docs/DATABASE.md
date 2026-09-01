@@ -38,7 +38,7 @@ create.
 
 | # | File | What it adds |
 |---|---|---|
-| 1 | `schema.sql` | children, policies, devices, schedules, dhcp_leases, dns_log, alerts, block_events, always_allow |
+| 1 | `schema.sql` | children, policies, devices, schedules, dhcp_leases, dns_log, alerts, block_events, always_allow. Since 2026-09-02 `dns_log` also carries `reason` (AdGuard's own word for what it did: `FilteredBlackList`, `FilteredBlockedService`, `FilteredSafeSearch`, `RewriteRule`, `NotFilteredWhiteList`, `NotFilteredNotFound`) and `filter_list` (the name of the blocklist that matched, as AdGuard names it, or `service:<name>` for a blocked service, or `Genkan rules`), both nullable and both added with `ADD COLUMN IF NOT EXISTS`, plus indexes on `(domain, ts)` and `(action, ts)` for the log page. Rows ingested before the columns existed have null in both, and the dashboard's Analytics page shows them as "reason not recorded" rather than guessing |
 | 2 | `schema-categories.sql` | category_state, category_domains, category_ips, category_usage, category_budgets, and the seeded domain map (about 175 domains across gaming, video, download, social, audio, messaging and schoolwork) |
 | 3 | `schema-time.sql` | time_ledger, time_events, tasks, the time_remaining view |
 | 4 | `schema-safety.sql` | the `always_allow` scope split: `safety` versus `category`, and later the `learn` scope uses the same column |

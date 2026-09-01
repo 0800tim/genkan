@@ -1949,6 +1949,29 @@ calm it had not established. The first was `genkan-alerts`. Both are the same
 mistake in different clothes: **the failure of a check must never be able to
 look like the success of a check.**
 
+## The DNS log was twelve hours in the past, so no alert ever fired
+
+**2026-09-02.** AdGuard stamps every query log entry in UTC with a Z suffix.
+genkan-dnslog cut the string to nineteen characters and inserted it into a
+timestamptz column through a session whose TimeZone is the household's, so
+13:19:44Z became 13:19:44 New Zealand time: twelve hours early, for every row
+since the first one. Nothing looked wrong. The ingest paged correctly,
+because it compared against a maximum that was wrong by the same amount. The
+week and trends charts looked plausible, because a whole day shifted by half
+a day still looks like a day. What did not work was anything that asked "in
+the last fifteen minutes": genkan-alerts, which is the only road from a
+flagged lookup to a parent's phone, and which has therefore never fired on
+real traffic. Its test passed, because the test writes its own rows with
+now().
+
+The ingest keeps the offset now, the 66,819 existing rows were shifted
+forward twelve hours with the timer paused, and the first real scan ran on
+real rows. The rule, again, and this is the third time this file has had to
+say it in a week: **a test that fabricates its own input proves the code
+path, not the data.** The alert test now needs a case that ingests one real
+AdGuard entry through genkan-dnslog and finds it within the window, and
+test/alerts-test.sh will get one.
+
 ## Allowed by address, filtered by name
 
 **2026-09-02.** Two requests in one evening showed the limit of allowing
@@ -2101,3 +2124,156 @@ document and a few posts. And `research/` keeps the old name throughout:
 those files are dated snapshots, one of them records the naming exploration
 itself, and editing history to agree with a decision made later would falsify
 the record.
+
+## Content lives in a registry, not in the product (2026-09-02)
+
+The ask, once the shelf held a worked example and the curriculum passed forty
+banks: modules are going to arrive all the time, hopefully without every one
+needing a contributor to the product. Should they all be in the repo and
+pulled from there, or in a central database? The wider hope was a plug-in
+space in the manner of Omarchy's marketplace or Shopify's apps, where somebody
+writes a woodworking module or a model boat module, families download it, and
+a community of learning children grows around it.
+
+**Decision: a public, git-backed registry of signed static files. Not the
+product repo, and not a database we run.** The design is `docs/COMMUNITY.md`;
+this entry is the why.
+
+### Why not the product repo
+
+Two reasons already recorded in "Anyone should be able to teach something"
+and they still hold: `portal/quizzes/` is tracked in git, so a `git pull`
+deletes or overwrites a family's content, and content tied to the repo is
+tied to releases. A dated release train is the right cadence for a firewall
+and the wrong one for a fix to a single wrong answer. There is a third: a
+repo holding thousands of questions makes every clone heavier for the parent
+who wanted the gateway, and makes content review and firewall review the
+same queue, read by the same people, when they are not the same people.
+
+### Why not a central live database
+
+It was the obvious answer and it is the one thing this project cannot build.
+A database that every house queries sees which house asked for what and when.
+It goes down when we do. It is where an account eventually appears "to make
+things easier". `PRIVACY-CHARTER.md` P1 and P2 both forbid it, and the honest
+answer to "how do I know you are not watching my kids" (read the code, it
+never sends anything) stops being available the moment it exists. The
+registry had to be something a household could clone with git and carry into
+the house on a USB stick, and something that keeps working if genkan.nz is
+gone. Static files, mirrored into the index repo, are that.
+
+### What was decided about the shape
+
+- The product repo keeps a **starter set** so a fresh install teaches
+  something on day one with no network: the banks, the reading list, the
+  default tiers. Those same items become the registry's first entries, which
+  is also the answer to the empty-category problem.
+- The **house database holds only what is installed.** Installing is a
+  database write through a narrow `SECURITY DEFINER` function per kind, the
+  pattern `install_quiz_package()` set. A package is JSON, never executes,
+  and removal deletes exactly the rows tagged with its id.
+- **Five kinds**, one file each: quiz banks (built), reading-list rules,
+  filter rule sets and tier presets, bedtime presets, and project modules
+  with steps, materials, evidence a parent confirms, an earn value and a
+  badge. Every kind is validated as hostile input with the rules the quiz
+  validator already applies, and every kind has a line it cannot cross: a
+  package can never touch a `scope='safety'` row, never set `force_dns`
+  false, never change who may lift a block, and never carry a link off the
+  reading list.
+- **Trust is a mechanism, not us.** Pinned hashes in the index, a registry
+  signature that means "passed CI and was merged", an optional author
+  signature, and a review flag that is a named person saying they read every
+  answer. The registry public key ships in the product repo so the first
+  fetch is verified against something the box already had.
+- **The fetch is a charter change.** P1 lists one outbound request today
+  (the Tor relay list). A registry fetch is a second, the same shape
+  (download a public file, upload nothing), from the host and never the
+  island, only when a parent types the command, and it has to be written
+  into P1 in the same pull request that adds it. No counts, no beacon, no
+  timer. If the community ever wants install counts, that is opt-in, off,
+  identifier-free, a second charter change, and this entry recommends
+  against it.
+- **The dashboard stays read-only for packages.** The earlier decision that a
+  stranger's writing goes in front of a child by a deliberate act at a
+  terminal stands. An install button for reviewed packages is a fair ask and
+  is recorded as an open question, not quietly built.
+
+### What was deliberately not decided
+
+Whether the forty banks should eventually leave the product repo entirely
+and be pinned from the registry instead; whether tier and bedtime presets
+belong in the same registry as learning content or in a separate, smaller
+one with a higher review bar; and whether `checked` needs more than one name
+on it before a package about a country's curriculum gets the flag. Each
+needs a real registry running before the answer is worth anything.
+
+Nothing in this entry is built beyond the quiz package. `docs/COMMUNITY.md`
+ends with the table that says so.
+
+## Analytics and logs: the whole log, and every number says what it is
+
+**2026-09-02.** The parent asked for "an analytics page where we can see all
+traffic and graphs and what's been viewed", to "go deep into the logs", and to
+see time on gaming, TikTok, Instagram and the like, and "attempted porn
+sites". The dashboard already had the pieces (Trends, Week, the kid page) but
+no way to start from a chart and end at one row. The new page
+(dashboard/analytics-page.mjs, /analytics) is that road: lookups over time
+per hour or per day stacked by person, blocked lookups by reason, the top
+sites per person, the meter's minutes per category, a "worth a look" strip,
+and under it the log itself, filterable by person, device, category, allowed
+or blocked, reason, site and free text, newest first, with older rows
+fetched from /api/analytics without a reload. Click a child, then a site, and
+every lookup of it is on the screen.
+
+What it refuses to claim, and why, because "what's been viewed" is not
+something a DNS server knows:
+
+- **A lookup is a lookup.** It means a device asked for a name. It is not a
+  minute, not a byte, not a page view and not proof a person looked at
+  anything: apps ask for names in the background all day, and one embedded
+  advert can ask for an adult domain more times than a child ever would. The
+  charts and the tiles say "lookups", and the count chart is a new primitive
+  (countColumns in charts.mjs) rather than the minutes chart with a different
+  title, so no tick or tooltip can ever say "min" over a count.
+- **The only minutes are the meter's.** The minutes-per-category chart reads
+  category_usage, the same figures as Trends, and says so. On a box where the
+  meter has not run it says there are none, and does not offer lookups as a
+  stand-in.
+- **"Blocked" means unanswered.** Nothing about what would have loaded.
+- **The reason is AdGuard's word, stored, not inferred.** dns_log only held
+  allowed or blocked, so an advert, an adult site, a child's TikTok being
+  switched off and a child sent to the portal because their time ran out were
+  indistinguishable. genkan-dnslog now stores AdGuard's `reason` and, for a
+  blocklist hit, the name of the list that matched (`filter_list`, read once
+  per run from AdGuard's filter status, so the page never has to ask AdGuard
+  anything live). "Adult" on the page means the OISD NSFW list matched;
+  "gambling" means HaGeZi Gambling did. A household that renamed its lists
+  gets "blocked by a blocklist", which is the direction to fail in. Rows from
+  before the columns existed show as "reason not recorded" rather than being
+  guessed at from the domain.
+- **Safe search is not a block.** AdGuard reports a FilteredSafeSearch rewrite
+  as filtered, and genkan-dnslog has always stored that as blocked. The page
+  labels it "safe search enforced (the site still worked)" rather than
+  changing what `action` means under the alerts and the Trends counts.
+- **Unattributed stays visible.** Lookups from a device nobody has named are a
+  grey band on the chart and a section of their own, never dropped and never
+  spread across the children.
+- **A VPN, Cloudflare WARP, a browser's own DNS-over-HTTPS or mobile data make
+  all of it blind**, and the page says so in the same words as
+  docs/tor-and-safety.md. It shows the bypass names Genkan blocked, which is
+  the honest extent of what it can do.
+
+Two smaller things came with it. test/alerts-test.sh now feeds one entry
+shaped exactly like AdGuard's (UTC, Z suffix, nanoseconds) through
+genkan-dnslog itself, from a stand-in AdGuard on a local port, and checks the
+stored row is stamped now, with the reason and list kept: the twelve-hour bug
+above was invisible to a test that wrote its own rows. And the demo seed's
+DNS history was found to be sixteen thousand lookups of one domain from one
+tablet, because a lateral subquery that does not reference the outer row is
+evaluated once; every pick now does, and the demo shows four weeks with an
+evening shape and a few blocked adult and gambling names on a reserved test
+domain, because a public seed file is not the place to type real ones.
+
+The rule: **a page that shows a parent "what was viewed" must say, on the
+page, that it cannot see that, and must store the reason rather than infer
+it.**
