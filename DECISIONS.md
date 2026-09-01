@@ -2210,6 +2210,23 @@ needs a real registry running before the answer is worth anything.
 Nothing in this entry is built beyond the quiz package. `docs/COMMUNITY.md`
 ends with the table that says so.
 
+## The log hides the chatter and collapses the echoes
+
+**2026-09-02.** The first real look at the log was mostly noise: every name
+twice (a device asks for the IPv4 answer and the IPv6 one), and pages of
+googleapis, samsung cloud, time servers, certificate checks and a password
+manager's polling, which say nothing about the person holding the device.
+The log and the top sites now hide that chatter by default (a suffix list in
+dashboard/analytics-page.mjs, display only, never touching what is blocked,
+metered or alerted, and never hiding a name in a metered category), and
+consecutive lookups for the same name from the same device within a few
+seconds become one row with a count. One tick shows everything again.
+
+The list lives in code for now. If households want to tune it, it becomes
+its own category in category_domains and a Settings card. The bigger answer
+to "nobody reads a log" is the child page's daily summary, written once a
+day by a cheap model from an aggregated brief, which is being built.
+
 ## Analytics and logs: the whole log, and every number says what it is
 
 **2026-09-02.** The parent asked for "an analytics page where we can see all
@@ -2332,3 +2349,129 @@ cannot do", is there for the same reason every limits section in this repo is:
 a settings page that implies a per-device blocklist, an HTTPS portal or sight
 through a VPN would be lying, and the credibility of the rest rests on not
 lying there.
+
+## Learning is the other half of the product, and the tutor stays in the house (2026-09-02)
+
+The ask, in the owner's words: think about how we can create a really good
+e-learning area, because that is going to be just as big a selling point as
+the filter, especially once AI agents really understand the kid and help
+train and tutor them. Community-driven, anyone can add to it, out to schools,
+schools' notes for each year loaded in as study notes. All free; parents pay
+only for AI tokens, their own key or ours at a small markup that covers
+development. The key thing: the data and everything is in control in their
+house, and the tutors call out to Anthropic or other models to provide
+world-class tutoring.
+
+**Decision: learning is the other half of the product, built in the open,
+and the tutor runs in the house with the smallest possible thing leaving
+it.** The design is `docs/LEARNING.md`; this entry is the why.
+
+### Why learning is the other half and not a feature
+
+Every screen-time product ends at the same place: the clock runs out and the
+argument starts. Learn-to-earn was the way out of that, and the moment the
+banks passed forty it stopped being a doorway and started being somewhere a
+child spends real time. "A curriculum, not a demo" recorded that. The next
+honest observation is that a child who spends real time somewhere deserves a
+place built for it, not a shelf of cards sorted by age. That is the Learning
+home, and it is being built as this entry is written.
+
+The filter is the reason a family installs Genkan. The learning is the reason
+they keep it, and it is the part a school or a teacher can contribute to
+without knowing what nftables is. Those two audiences are different, which is
+also why content review and firewall review are already separate queues in
+the registry design.
+
+### Why the tutor stays in the house, and what that means exactly
+
+The obvious build is a tutoring service: the child's history goes to a
+server, the server talks to a model, the family gets a tutor that knows the
+child. It is the one thing this project cannot build, for the reason recorded
+under "Content lives in a registry": a server we run that every house talks to
+is the first thing in Genkan that watches households. A tutoring server would
+be worse than a registry server, because what it would hold is not which
+packages a house asked for but what each child does not understand.
+
+So the shape is fixed by the constraint rather than by convenience:
+
+- **The tutor process runs on the box**, on the parent's side, next to the
+  dashboard, never inside the island. It is the one place in Genkan that may
+  open a connection to a model, so "what can reach a model" is one process
+  with one configured destination and a test can prove the island cannot.
+- **The child's work never leaves.** Quiz history, what they read, what they
+  keep getting wrong, the tutor's own notes about how they learn: all in the
+  household database and nowhere else. The runbook already held this line
+  (`docs/runbooks/ai-tutor.md`); the built-in tutor inherits it.
+- **What leaves is one exchange**: the question at hand, the minimum context
+  for a lesson, to one model the parent chose with the parent's own key.
+  `docs/LEARNING.md` writes the may-send and never-send lists as lists,
+  because a list can be checked and a paragraph cannot. The DNS log, the
+  device list, the time ledger and anything about another child are on the
+  never side by any setting.
+- **The parent sees the request, not a summary of it.** Every request is
+  stored on the box before it goes, and a "show me first" mode holds each
+  one for the parent to read and send by hand. That mode is also how a
+  reviewer checks the lists are true.
+- **Off by default, behind a rules page, per child**, and off again after an
+  upgrade until a parent says otherwise. A child cannot switch it on.
+- **A local model is a first-class choice**, and with it nothing leaves at
+  all. It is a weaker tutor and the page says so.
+- **The tutor has no power.** It never marks, never credits, never blocks. A
+  tutor a child trusts must have no ability to punish, which the runbook
+  said first and which becomes structural: it has no write path to the
+  ledger and is never wired into enforcement.
+
+### Why bring-your-own-key comes first, and what "not about money" has to mean
+
+The owner's position is that the platform is free and parents pay only for
+tokens, their own or ours at a small markup. The order matters. BYO key
+first, because it is the version where Genkan sees no key, no account and no
+bill, and where the honest answer to "how do I know you are not monetising my
+kids" stays "read the code". A local model second, because it is the version
+where nothing leaves. A hosted token option last and maybe never, and only
+on terms the charter states in public: a published price and margin, compute
+and not data, never required.
+
+That last one cannot be built quietly. The charter's P10 says there is
+nothing to buy, and the roadmap says the same. Both would have to be
+rewritten in the open, on their own, before any token is sold, and
+`docs/LEARNING.md` section 6 proposes the wording so the decision is a
+decision rather than a drift. Commercial thinking about the token option and
+the schools channel lives in the private repository, as everything commercial
+does, and nothing from it lands here.
+
+### Why a school is a source and never a recipient
+
+A school's notes are the most useful content a family could install, and a
+school is also exactly the kind of "concerned adult" recipient P6 was written
+to refuse. The design holds both: the school hands over text, names a teacher
+who reads the finished package and signs it, and gets its name on it and
+nothing back. Not a completion report, not a class view, not an install
+count. The registry has no counts and recommends against building them. The
+draft newsletter paragraph in `docs/LEARNING.md` says so to parents in the
+school's own voice, and it is written now so the promise is on the page
+before any school is asked to make it.
+
+### Why social is later, and what "later" is allowed to look like
+
+The house board is not a leaderboard, for reasons `docs/GAMIFICATION.md`
+records, and a board between houses inherits every one of them with an
+audience. Anything social is opt-in per child and per friend, house to house
+over the households' own connections, never through a server we run, and
+carries the board's rules whole: no ranks, no totals, no streaks, no last
+place. Nothing is designed, because there is not yet a Learning home to be
+social about.
+
+### What this entry does not decide
+
+Whether the charter changes proposed in `docs/LEARNING.md` are adopted as
+written; whether a hosted token option is ever offered; which three providers
+ship first (the page names Anthropic, OpenAI and Google as the intended set);
+what the shipped retention for tutor sessions is (the page says weeks, not
+years, and leaves the number); and whether a `notes` package kind or an
+extended read-first page is the right home for a school's notes. Each is the
+owner's call, and the page marks every one of them as not built.
+
+Nothing in this entry is built. The Learning home and the AI child summary
+are in progress on other branches. Everything else on `docs/LEARNING.md` is a
+design, and the table at the end of that page says so line by line.

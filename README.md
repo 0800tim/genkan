@@ -119,6 +119,17 @@ anything. It is a large, carefully fact-checked set of questions meant to sit
 alongside school, not to replace any of it. `LEARN-TO-EARN.md` has the design,
 the economics and what is still missing.
 
+**Learning is the other half of the product**, and it is being built in the
+open. The plan is a Learning home organised by year and subject, study notes a
+school can publish for its own families as a package, and an AI tutor that
+runs on the family's box and sends only the question at hand to a model the
+parent chose with their own key, or to a local model that sends nothing at
+all. Nothing about a child goes to a model unless a parent switches it on, and
+the parent can read every word that left. A school gets its notes in front of
+its families and no data about any child, ever. Most of that is not built yet.
+`docs/LEARNING.md` says which parts are, what the privacy charter would have
+to say first, and how a teacher or a school can help.
+
 ## The bit people find surprising
 
 Your teenager will try to get around it. Of course they will.
@@ -402,6 +413,7 @@ losing everything since the backup, including minutes the children earned.
 | `docs/OPERATIONS.md` | health checks, timers, logs, troubleshooting, backups |
 | `DECISIONS.md` | every design decision and why, including the mistakes |
 | `LEARN-TO-EARN.md` | the quizzes, the reading list, the economics, and what is not built |
+| `docs/LEARNING.md` | the e-learning plan: the Learning home, school notes, AI tutors that stay in the house, and what is not built |
 | `portal/quizzes/FORMAT.md` | the quiz bank format, and how to write a good one |
 | `docs/READING-LIST.md` | what a blocked child can still read, and what was rejected |
 | `docs/GAMIFICATION.md` | badges, and why the house board is not a leaderboard |

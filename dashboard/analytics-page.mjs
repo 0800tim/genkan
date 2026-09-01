@@ -57,7 +57,7 @@ export const WHY = [
   ["ads", "Advert or tracker, blocked", "other", "Ads"],
   ["safesearch", "Safe search enforced (the site still worked, in its safe version)", "other", "Safe search"],
   ["blocklist", "Blocked by a blocklist, which one was not recorded", "other", "Blocklist"],
-  ["blocked", "Blocked, reason not recorded (before 2026-09-02)", "other", "Not recorded"],
+  ["blocked", "Blocked, reason not recorded (logged before reasons were kept)", "other", "Not recorded"],
   ["whitelist", "Allowed by an allow rule (the safety net or the reading list)", "social", "Allow rule"],
   ["allowed", "Allowed", "gaming", "Allowed"],
 ];
@@ -91,6 +91,31 @@ const WHY_SQL = `CASE
   WHEN l.reason = 'FilteredBlackList' THEN 'blocklist'
   WHEN l.reason IS NULL THEN 'blocked'
   ELSE 'blocked' END`;
+
+// Background chatter: names a device asks for on its own, all day, that say
+// nothing about the person holding it (app stores and updates, cloud sync,
+// time servers, connectivity checks, certificate checks, CDN edges, password
+// managers, crash reporters). Hidden from the log and the top sites by
+// default so the names a person actually chose are what a parent sees; one
+// tick shows them. Suffix matches, so a.b.googleapis.com is chatter and
+// googleapis.com itself is. This is display only: nothing here changes what
+// is blocked, metered or alerted, and a name in a metered category is never
+// treated as chatter. Kept as a list in code for now; if households want to
+// tune it, it moves to category_domains as its own category.
+const NOISE = [
+  "googleapis.com", "gstatic.com", "gvt1.com", "gvt2.com", "googleadservices.com", "app-measurement.com",
+  "apple.com", "mzstatic.com", "icloud-content.com",
+  "samsungcloud.com", "samsungvisioncloud.com", "samsungosp.com", "samsungapps.com", "samsungrs.com", "samsungqbe.com",
+  "mediatek.com", "ntp.org", "time.windows.com", "msftconnecttest.com", "msftncsi.com", "windowsupdate.com", "update.microsoft.com",
+  "akamaiedge.net", "akamaihd.net", "akamai.net", "akadns.net", "edgekey.net", "edgesuite.net",
+  "detectportal.firefox.com", "mozilla.net", "mozilla.org", "mozilla.com",
+  "digicert.com", "letsencrypt.org", "pki.goog", "globalsign.com", "sectigo.com", "usertrust.com", "comodoca.com", "entrust.net",
+  "crashlytics.com", "firebaseio.com", "sentry.io", "datadoghq.com", "bugsnag.com",
+  "lastpass.com", "1password.com", "bitwarden.com",
+  "connectivitycheck.gstatic.com", "captive.apple.com", "nmcheck.gnome.org", "connectivity-check.ubuntu.com",
+];
+// SQL fragment: true when the name is chatter. $n is a text[] parameter.
+const noiseSql = (col, param) => `EXISTS (SELECT 1 FROM unnest(${param}::text[]) b WHERE ${col} = b OR ${col} LIKE '%.' || b)`;
 
 // Attribution, the same rule analytics.mjs uses (its IPMAP is not exported,
 // and the two must stay identical, so this is a copy with a pointer): a
@@ -157,6 +182,7 @@ function readFilters(url) {
     child,
     device: int("device", 1, 1e9),
     cat: text("cat", /^(?:flag:|why:)?[a-z0-9-]{1,32}$/, 40),
+    noise: p.get("noise") === "show" ? "show" : "",
     action: ["allowed", "blocked"].includes(p.get("action")) ? p.get("action") : "",
     why: WHY_BY.has(p.get("why")) ? p.get("why") : "",
     site: text("site", /^[a-z0-9._-]{1,253}$/, 253),
@@ -170,7 +196,7 @@ function readFilters(url) {
 // Build a query string from a filter set, with overrides. Empty values are
 // dropped so links stay readable.
 function qs(f, over = {}) {
-  const o = { range: f.range, child: f.child, device: f.device, cat: f.cat, action: f.action,
+  const o = { range: f.range, child: f.child, device: f.device, cat: f.cat, action: f.action, noise: f.noise,
               why: f.why, site: f.site, domain: f.domain, n: f.n === 100 ? "" : f.n, ...over };
   const parts = [];
   for (const [k, v] of Object.entries(o)) {
@@ -222,6 +248,7 @@ async function logRows(q, f, hasReason) {
        AND (n.domain = cd.domain OR n.domain LIKE '%.' || cd.domain))`;
     outer.push("d.domain IN (SELECT domain FROM catdoms)");
   }
+  if (f.noise !== "show") outer.push(`NOT ${noiseSql("d.domain", add(NOISE))}`);
   const limit = add(f.n);
   const sql = `WITH ${IPMAP}, ${dnsCte(hasReason, where.length ? "AND " + where.join(" AND ") : "")}${catCte},
     picked AS (
@@ -241,7 +268,25 @@ async function logRows(q, f, hasReason) {
       WHERE p.domain = cd.domain OR p.domain LIKE '%.' || cd.domain
       ORDER BY length(cd.domain) DESC LIMIT 1) cat ON true
     ORDER BY p.ts DESC, p.id DESC`;
-  return q(sql, params);
+  return collapse(await q(sql, params));
+}
+
+// A device asks for a name twice in the same instant (the IPv4 answer and
+// the IPv6 one), and an app retries. Consecutive rows for the same device,
+// name and outcome within a few seconds become one row with a count, so the
+// log reads as what happened rather than as a packet capture. The last row
+// of a page keeps the oldest id and time, which is what "show older" keys on.
+function collapse(rows) {
+  const out = [];
+  for (const r of rows) {
+    const prev = out[out.length - 1];
+    if (prev && prev.device_id === r.device_id && prev.domain === r.domain && prev.why === r.why
+        && prev.child_id === r.child_id && Math.abs(new Date(prev.ts) - new Date(r.ts)) <= 5000) {
+      prev.n = (prev.n || 1) + 1; prev.ts = r.ts; prev.id = r.id; continue;
+    }
+    out.push({ ...r, n: 1 });
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------------------
@@ -268,14 +313,14 @@ async function overview(q, f, hasReason) {
              t AS (SELECT d.child_id, d.domain, COUNT(*) AS n,
                           COUNT(*) FILTER (WHERE d.action = 'blocked') AS blocked,
                           ROW_NUMBER() OVER (PARTITION BY d.child_id ORDER BY COUNT(*) DESC, d.domain) AS rn
-                   FROM dns d GROUP BY 1, 2)
+                   FROM dns d ${f.noise === "show" ? "" : "WHERE NOT " + noiseSql("d.domain", "$" + (P.length + 1))} GROUP BY 1, 2)
              SELECT t.child_id, t.domain, t.n, t.blocked, cat.category
              FROM t
              LEFT JOIN LATERAL (
                SELECT cd.category FROM category_domains cd
                WHERE t.domain = cd.domain OR t.domain LIKE '%.' || cd.domain
                ORDER BY length(cd.domain) DESC LIMIT 1) cat ON true
-             WHERE t.rn <= 10 ORDER BY t.child_id, t.n DESC`, P, [], notes, "top sites"),
+             WHERE t.rn <= 10 ORDER BY t.child_id, t.n DESC`, (f.noise === "show" ? P : [...P, NOISE]), [], notes, "top sites"),
     safe(q, `WITH ${IPMAP}, ${dnsCte(hasReason)}
              SELECT d.why, COUNT(*) AS n, COUNT(DISTINCT d.domain) AS domains,
                     COUNT(DISTINCT d.child_id) AS people, MAX(d.ts) AS last_ts
@@ -582,6 +627,7 @@ function logCard(o, f, rows, devices, cats, flagCats = []) {
   if (f.cat) active.push(f.cat.startsWith("why:") ? `blocked: ${whyShort(f.cat.slice(4))}` : f.cat.startsWith("flag:") ? `watch list: ${f.cat.slice(5)}` : `category: ${f.cat}`);
   if (f.action) active.push(f.action);
   if (f.why) active.push(whyLabel(f.why));
+  if (f.noise === "show") active.push("background chatter shown");
   if (f.site) active.push(`site: ${f.site}`);
   if (f.domain) active.push(`contains: ${f.domain}`);
 
@@ -589,7 +635,7 @@ function logCard(o, f, rows, devices, cats, flagCats = []) {
       <td class="anwhen">${esc(r.when_txt)}</td>
       <td>${r.child_id === null ? '<span class="tag">unattributed</span>' : esc(r.person || "")}</td>
       <td class="andev">${esc(r.device || "")}</td>
-      <td class="andom"><a href="/analytics${qs(f, { site: r.domain, domain: "" })}#log">${esc(r.domain)}</a></td>
+      <td class="andom"><a href="/analytics${qs(f, { site: r.domain, domain: "" })}#log">${esc(r.domain)}</a>${r.n > 1 ? `<span class="tag" title="${r.n} lookups within a few seconds"> ×${r.n}</span>` : ""}</td>
       <td>${esc(r.category || "")}</td>
       <td class="anwhy-${esc(r.why)}">${esc(whyLabel(r.why))}${r.filter_list && !["portal", "category", "service"].includes(r.why) ? `<span class="tag"> ${esc(r.filter_list)}</span>` : ""}${r.why === "service" && r.filter_list ? `<span class="tag"> ${esc(r.filter_list.replace(/^service:/, ""))}</span>` : ""}</td>
     </tr>`;
@@ -608,6 +654,7 @@ function logCard(o, f, rows, devices, cats, flagCats = []) {
       <div><label for="an_child">Person</label><select id="an_child" name="child">${opt("", "Anyone", f.child)}${people}</select></div>
       <div><label for="an_device">Device</label><select id="an_device" name="device">${opt("", "Any device", f.device)}${devs}</select></div>
       <div><label for="an_cat">Category</label><select id="an_cat" name="cat">${opt("", "Any category", f.cat)}${catOpts}</select></div>
+      <div class="wide"><label for="an_noise">Background chatter</label><select id="an_noise" name="noise">${opt("", "Hidden (app updates, cloud sync, time and certificate checks)", f.noise)}${opt("show", "Shown", f.noise)}</select></div>
       <div><label for="an_action">Allowed or blocked</label><select id="an_action" name="action">${opt("", "Both", f.action)}${opt("allowed", "Allowed", f.action)}${opt("blocked", "Blocked", f.action)}</select></div>
       <div class="wide"><label for="an_why">What happened</label><select id="an_why" name="why">${opt("", "Anything", f.why)}${whyOpts}</select></div>
       <div><label for="an_site">Site (this name and anything under it)</label><input id="an_site" name="site" value="${esc(f.site)}" placeholder="e.g. tiktok.com"></div>
@@ -635,7 +682,7 @@ function measurementCard(o, hasReason) {
     ["Minutes come from the meter.", "The only minutes on this page are the meter's, from firewall counters. They are never derived from lookups, and the two are not to be added together."],
     ["Blocked means unanswered.", "A blocked lookup is a name AdGuard refused, or answered with the portal's address for a child whose internet is off. What would have loaded is unknown."],
     ["Why is AdGuard's word.", hasReason
-      ? "Each row keeps the reason AdGuard gave and the name of the list that matched. Rows from before 2026-09-02 have neither and show as \"reason not recorded\"."
+      ? "Each row keeps the reason AdGuard gave and the name of the list that matched. Rows logged before reasons were kept (2026-09-02) have neither and show as \"reason not recorded\"."
       : "This box's database does not have the reason columns yet. Load config/db/schema.sql and install the current genkan-dnslog, and every new row will say why."],
     ["A blocklist can be wrong.", "Adult and gambling are the names of public blocklists. They are good and not perfect: a false positive is a blocked lookup with a scary label, and a lookup from an embedded advert is not a person typing."],
     ["A VPN makes all of this blind.", "So does Cloudflare WARP, a browser's own DNS-over-HTTPS, or mobile data. Genkan blocks the known bypass names and says so here when it does, and that is the honest extent of it."],

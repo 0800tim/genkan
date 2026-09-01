@@ -28,6 +28,10 @@ MIT, no telemetry, all data stays in the house. Sibling project: unrot.
   bank format; CONTRIBUTING.md is what makes a good explanation.
 - docs/READING-LIST.md: what a blocked child can still read, the five tests a
   site must pass, and the well-known school sites that were rejected.
+- docs/LEARNING.md: the e-learning plan. The Learning home, school notes as
+  packages, AI tutors that run on the box and send only the question at hand
+  to a model the parent chose, the proposed charter wording, and the table of
+  what is built. Almost none of it is built; do not describe it as if it were.
 - docs/GAMIFICATION.md: badges, and why the house board is not a leaderboard.
   Off by default.
 - docs/DEVICE-IDENTITY.md: device claiming, and why a child's claim grants

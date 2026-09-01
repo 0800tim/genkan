@@ -81,6 +81,8 @@ the holes are.
 | Curriculum coverage | Over 40 banks is a real curriculum and it is not an even one. Every New Zealand learning area has at least one bank now, but depth varies: maths has one per year band and te reo Māori has a single beginners bank. Languages beyond te reo have nothing, and no country outside NZ, the UK, the US, Australia, Canada and Ireland is covered. It is also not validated against any syllabus document, and nobody should say otherwise. |
 | Getting a bank into the dashboard | A parent types a database bank in one question at a time. There is no bulk import, so a whole bank written as JSON has to go in as a file through `genkan-quiz install`. |
 | Device claiming in a real house | Off by default, with observe mode, 5 packet-level checks and the reasoning written up. Nobody has yet run it enforcing for a month in a house full of guests, so what it costs in day-to-day annoyance is genuinely unknown. |
+| The Learning home | In progress (2026-09-02). One page per child, organised by year and subject, listing the banks and Read up pages for that year band and what the child has read and passed, with a parent setting the year. Until it lands the portal is a shelf of cards sorted roughly by age. `docs/LEARNING.md` describes the intent so the result can be checked against it. |
+| AI tutoring | A runbook only (`docs/runbooks/ai-tutor.md`): a parent hands it to their own agent, which reads the household database read-only and keeps a plain text profile per child. Nothing a child can open from the portal. The built-in tutor is designed in `docs/LEARNING.md` and not built. |
 
 ---
 
@@ -151,6 +153,33 @@ These are real gaps, sized roughly, and each is genuinely useful.
   proposed, and the table at the end of that page says which is built. The
   index repo and the signing are the first pieces to build, because the
   kinds are worth little without a place to put them.
+- **School notes as a package.** A school hands over the notes it already
+  gives out, per year and subject, as plain text; a named teacher reads the
+  finished package and puts their name on it; families install it like any
+  other package, or point at a registry the school runs itself. The school
+  gets its notes in front of its families and no data about any child, not
+  even a count, because the charter's P6 bans a school integration that
+  reports a child and this does not weaken it. Not built: there is no
+  `notes` package kind and no school has been approached.
+  `docs/LEARNING.md`, section 3.
+- **AI tutors that stay in the house.** A tutor a child can open from the
+  Learning home, running on the family's box, sending only the question at
+  hand plus the minimum context for a lesson to one model the parent chose.
+  In order: bring-your-own-key for Anthropic, OpenAI and Google, with a
+  spending limit at the provider as a setup step; a local model through
+  Ollama for a household that wants nothing to leave at all; and, possibly
+  and much later, a hosted token option at cost plus a small published
+  margin for a family with no API account, never required. Off by default,
+  behind a rules page a parent reads, every request stored on the box where
+  the parent can read it, and the tutor never marks, credits or blocks. It
+  cannot be built before the privacy charter is changed in the open, and the
+  proposed wording is in `docs/LEARNING.md`, section 6. Nothing is built.
+- **Anything social between houses.** Friends, sharing a bank, saying well
+  done on a finished project. Roadmap only, not designed, opt-in per child and
+  per friend if it ever exists, house to house and never through a server we
+  run. A leaderboard between houses inherits every reason the house board is
+  not one (`docs/GAMIFICATION.md`), with strangers' children as the audience.
+  `docs/LEARNING.md`, section 5.
 
 ---
 
@@ -168,7 +197,12 @@ Worth stating plainly, because they get requested.
   messages. If a feature only works when the kid does not know about it, it is
   the wrong feature. Tell them the network is filtered. It works better anyway.
 - **A paid tier, or a cloud service.** There is nothing to buy and nothing to
-  subscribe to.
+  subscribe to. One honest note: `docs/LEARNING.md` raises a hosted token
+  option for the AI tutor, for a family with no API account of their own. If
+  it is ever offered it would sell model compute at a published price and
+  margin, carry nothing about a household, and never be required, and this
+  line and the charter's P10 would have to be rewritten in the open first.
+  It is not built and not decided.
 
 ## How to help
 
