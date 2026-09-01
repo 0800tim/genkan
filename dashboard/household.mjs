@@ -223,23 +223,23 @@ function guestRemove(id,name){
 /* The whole-house cut. The confirm spells out what it does NOT reach, because
    the button says "everything off" and that is not literally true. */
 function houseOff(min){
-  if(!confirm('Turn the house off for '+min+' minutes?\n\n'
-    +'\u2022 Every device ticked for it loses the internet.\n'
-    +'\u2022 The smart home, the appliances and the access point are untouched.\n'
-    +'\u2022 The help lines still answer on every device.\n'
-    +'\u2022 It comes back on by itself after '+min+' minutes.'))return;
-  hhPost({op:'house',act:'off',minutes:min},'cutting the house\u2026');
+  if(!confirm('Turn the house off for '+min+' minutes?\\n\\n'
+    +'\\u2022 Every device ticked for it loses the internet.\\n'
+    +'\\u2022 The smart home, the appliances and the access point are untouched.\\n'
+    +'\\u2022 The help lines still answer on every device.\\n'
+    +'\\u2022 It comes back on by itself after '+min+' minutes.'))return;
+  hhPost({op:'house',act:'off',minutes:min},'cutting the house\\u2026');
 }
-function houseOn(){hhPost({op:'house',act:'on'},'bringing it back\u2026');}
+function houseOn(){hhPost({op:'house',act:'on'},'bringing it back\\u2026');}
 /* One tick box. Sent as it is clicked: there is no Save button on this page and
    adding one for two check boxes would be worse. */
 function setSweep(mac,sweep,on){
-  hhPost({op:'device-sweep',mac:mac,sweep:sweep,on:!!on},'saving\u2026');
+  hhPost({op:'device-sweep',mac:mac,sweep:sweep,on:!!on},'saving\\u2026');
 }
 /* A shared device's own filter level. */
 function setDeviceTier(mac){
   var t=document.getElementById('dtier_'+mac);if(!t)return;
-  hhPost({op:'device-tier',mac:mac,tier:t.value},'saving the filter level\u2026');
+  hhPost({op:'device-tier',mac:mac,tier:t.value},'saving the filter level\\u2026');
 }
 /* The naming queue can now answer "it is not a person at all". */
 async function assignClass(mac,cls){

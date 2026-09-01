@@ -537,8 +537,7 @@ async function doClaim(dev, ip, form) {
     <div class="msg">${confirmed
       ? "This device is yours now, and your time is already on it."
       : "Noted, thank you. A grown-up sees this on their screen and can say yes, and then your time is on it."}</div>
-    <p><a class="back" href="/">Go to my page</a></p>
-    ${helpFoot}</div>`);
+    <p><a class="back" href="/">Go to my page</a></p></div>`);
 }
 
 // A PIN is a shared secret between a child and their parent, not a password,
@@ -573,8 +572,7 @@ async function claimPage(mac, ip, hostname, msg) {
         <input name="pin" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="optional"></label>` : ""}
     </form>
     <div class="foot">${esc(hostname || "this device")} is asking. If that is not your
-      device, leave it alone and tell a grown-up.</div>
-    ${helpFoot}</div>`);
+      device, leave it alone and tell a grown-up.</div></div>`);
 }
 
 // ---------------------------------------------------------------------------
@@ -624,12 +622,15 @@ function studyPage(bank, kidQS) {
     ${readFirstBlock(bank)}
     <div class="study">${items}</div>
     <p><a class="back" href="/quiz/${esc(bank.id)}${kidQS}">I am ready, start a round</a></p>
-    <p><a class="back" href="/${kidQS}">Back</a></p>
-    ${helpFoot}</div>`);
+    <p><a class="back" href="/${kidQS}">Back</a></p></div>`);
 }
 
-const helpFoot = `<div class="foot">Need to talk to someone? Free, any time: call or text <b>1737</b>,
- or Youthline <b>0800 376 633</b>. These always work, even when your internet is off.</div>`;
+// The ordinary portal pages carry no help-line footer (a parent's call,
+// 2026-09-02: the page a child sees at dinner time is not the place for it).
+// The help lines themselves stay reachable through every cut, from every
+// device, via the safety scope of always_allow; and the "come find me" page
+// below, which a Tor or drugs flag turns on, still shows them, because that
+// page exists for a child who may need one.
 
 // ---- the "come find me" page ----------------------------------------------
 // A Tor/darknet/drugs flag turns the ordinary portal page into a warm one.
@@ -727,8 +728,7 @@ function badgesPage(kid, got, board, kidQS) {
     ${todo.length ? `<div class="card"><h2>Still to get</h2>
       <div class="badges">${todo.map(b => chip(b, false)).join("")}</div></div>` : ""}
     ${boardHtml}
-    <p><a class="back" href="/${kidQS}">← back</a></p>
-    ${helpFoot}`);
+    <p><a class="back" href="/${kidQS}">← back</a></p>`);
 }
 
 // The time as a child reads a clock, not as a database prints one.
@@ -854,7 +854,7 @@ function homePage(kid, st, kidQS) {
       <div class="small">Pass a round to get minutes straight away.${bonus > 0 ? ` Perfect round = +${bonus} bonus.` : ""} Up to ${cap} min a day from quizzes; you've earned ${st.quizEarnedToday} today.</div></div>
     <div class="card"><h2>🧺 Earn time: jobs</h2>${chores || '<div class="small">No jobs set up yet.</div>'}
       <div class="small">${anyTrusted ? "Some of these land on your clock straight away. The rest wait for Dad to say yes." : "Tap one when it is done and Dad gets asked."} One go at each a day.</div></div>
-    <div class="card">${helpFoot}</div>`);
+    `);
 }
 
 async function quizPage(kid, bank, kidQS, perMin, bonus) {
@@ -948,7 +948,7 @@ const server = createServer(async (req, res) => {
         }
         return send(await claimPage(dev?.mac, ip, dev?.hostname));
       }
-      return send(page(`<div class="card"><h1>Genkan</h1><div class="msg">This device isn't recognised on the kids network yet. Ask Dad to add it.</div>${helpFoot}</div>`));
+      return send(page(`<div class="card"><h1>Genkan</h1><div class="msg">This device isn't recognised on the kids network yet. Ask Dad to add it.</div></div>`));
     }
     if (req.method === "POST") {
       if (!kid.real && !DEMO) return send(page(`<div class="card"><div class="msg">Earning only works from your own device on the network.</div></div>`));

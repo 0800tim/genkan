@@ -21,14 +21,16 @@ auth=base64.b64encode(f'{os.environ["ADGUARD_USER"]}:{os.environ["ADGUARD_PASS"]
 r=urllib.request.Request(url+"/control/dhcp/status"); r.add_header("Authorization","Basic "+auth)
 try: d=json.load(urllib.request.urlopen(r,timeout=8))
 except Exception as e: print(f"devicescan: cannot read DHCP status: {e}",file=sys.stderr); sys.exit(0)
-w=csv.writer(sys.stdout,delimiter="\t")
+w=csv.writer(sys.stdout,delimiter="\t",lineterminator="\n")
 for L in (d.get("leases") or [])+(d.get("static_leases") or []):
     mac=(L.get("mac") or "").lower(); ip=L.get("ip") or ""; host=L.get("hostname") or ""
     if mac and ip: w.writerow([mac,ip,host])
 PY
 )
 [ -z "$TSV" ] && { echo "genkan-devicescan: no DHCP leases (server not serving yet?)"; exit 0; }
-printf '%s\n' "$TSV" | "${DB[@]}" -qc "
+# ON_ERROR_STOP plus the exit check: a write that fails must fail the unit,
+# not print a cheerful device count over a table that stopped updating.
+printf '%s\n' "$TSV" | "${DB[@]}" -v ON_ERROR_STOP=1 -qc "
 CREATE TEMP TABLE _lease(mac text, ip inet, hostname text);
 COPY _lease FROM STDIN WITH (FORMAT text);
 -- New MAC -> create an unassigned device row. Known MAC -> refresh seen +
@@ -37,8 +39,10 @@ COPY _lease FROM STDIN WITH (FORMAT text);
 -- cannot apply ON CONFLICT to the same row twice within one statement.
 --
 -- last_seen is refreshed from the LEASE list, and a lease outlives the device
--- that holds it, so last_seen alone can never mean "here right now". Presence
--- is decided separately, from the neighbour table, further down.
+-- that holds it, so last_seen alone can never mean here-right-now. Presence
+-- is decided separately, from the neighbour table, further down. (No double
+-- quotes in these comments: the SQL sits inside a bash double-quoted string,
+-- and a quote here silently cut the statement in half for three days.)
 INSERT INTO devices(mac, hostname, kind, is_active, first_seen, last_seen)
 SELECT DISTINCT ON (mac) mac::macaddr, NULLIF(hostname,''), 'unknown', true, now(), now()
   FROM _lease ORDER BY mac, hostname DESC NULLS LAST
@@ -60,7 +64,8 @@ UPDATE devices d SET reserved_ip = l.ip
    AND (d.reserved_ip IS NULL OR d.reserved_ip IS DISTINCT FROM l.ip);
 -- Stale leases for addresses a device no longer holds.
 UPDATE dhcp_leases SET active=false
- WHERE active AND ip NOT IN (SELECT ip FROM _lease);"
+ WHERE active AND ip NOT IN (SELECT ip FROM _lease);" \
+  || { echo "genkan-devicescan: the database write FAILED; the device table is stale" >&2; exit 1; }
 # Presence, from the gateway's neighbour table rather than the lease list. A
 # device in that table answered ARP recently, so it is genuinely on the wire.
 # A lease proves only that we gave it an address once.

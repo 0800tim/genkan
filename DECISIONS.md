@@ -1949,6 +1949,63 @@ calm it had not established. The first was `genkan-alerts`. Both are the same
 mistake in different clothes: **the failure of a check must never be able to
 look like the success of a check.**
 
+## The reading list survives a cut now, not just on paper
+
+**2026-09-02.** Every document said a child who is out of time can still read
+Wikipedia: scope='learn' rows in always_allow, "reachable through a total
+cut". The firewall said otherwise. `genkan allow-sync` loaded both scopes
+into @kids_allow at deploy, but the gateway's own hourly refresh loaded only
+scope='safety' and flushed the set first, so the reading list lasted an hour
+after each deploy and then vanished for the life of the box. A comment in
+bin/genkan named a kids-allow-sync.timer that never existed. Found because a
+parent asked for exactly that promise on the night the devices page broke.
+
+The gateway now rebuilds the set from both scopes and says so in its log
+line. The portal's ordinary pages no longer carry a help-line footer (the
+parent's call: the dinner-time page is not the place for it); the help lines
+themselves stay reachable through every cut, and the "come find me" page
+that a Tor or drugs flag turns on still shows them, because that page exists
+for a child who may need one.
+
+The rule: **a promise about what survives a cut is a claim about a firewall
+set, and only `nft list set` can confirm it.** `genkan allow-status` prints
+it; checking it should be part of reading the documents that make the claim.
+
+## Two quiet failures the browser and the shell hid
+
+**2026-09-02.** Both found in one sitting, because a MacBook could not get
+online and did not appear on the dashboard.
+
+**The device scanner wrote nothing for three days.** On 2026-08-29 a comment
+was added inside genkan-devicescan's SQL: `-- ... can never mean "here right
+now"`. The SQL sits inside a bash double-quoted string, so the two inner
+double quotes closed the string early. psql received CREATE TEMP TABLE and
+the COPY; the INSERT and UPDATEs that follow arrived as stray positional
+arguments. No error, exit 0, and `saw 11 device(s)` printed every minute
+while `devices` sat at 29 Aug 17:12. New devices never appeared, so they
+could not be assigned, so they got the portal. It is the same trap as the
+`#` comment that killed the alert path (above), from the other side: the
+first rule was "bash does not strip a # inside a string"; the second is "a
+double quote inside a string ends it". tools/lint-sql-comments.py now refuses
+both, the scanner runs psql with ON_ERROR_STOP and fails its unit if the
+write fails, and the CSV writer no longer emits carriage returns into the
+hostname column.
+
+**The devices page's Assign button did nothing.** dashboard/household.mjs
+builds the page's script inside a JavaScript template literal, and the
+house-off confirm text was written with `\n` where the literal needed
+`\\n`. The served page therefore contained a single-quoted string broken
+across real newlines, one syntax error, and every function declared after it
+(including `assign`) did not exist. The browser was the only thing that ever
+parsed that script. tools/check-pages.sh now fetches every dashboard page and
+runs `node --check` over each inline script, which is what the browser does,
+and it runs against the demo dashboard so it needs no household.
+
+The rule under both: **a write or a script that fails must fail visibly, and
+the check has to run in the place the failure happens.** A count of devices
+seen is not a count of devices written; a module that parses is not a page
+that runs.
+
 ## The warden remembers where the dongle is
 
 **2026-08-31.** Three times in one night the kids' USB NIC was in neither the

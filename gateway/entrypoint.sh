@@ -250,9 +250,6 @@ sync_state(){
   apply_slow_rate
 }
 
-# Resolve the scope='safety' always_allow domains (NZ youth help lines,
-# schoolwork) into @kids_allow so they survive a cut. Same rules as
-# `kidnet allow-sync` on the host; both may run, both converge.
 # The Tor relay list. Reconciled here rather than in sync_state because it is
 # thousands of addresses that change once a day, and diffing that every fifteen
 # seconds would be work for nothing.
@@ -273,10 +270,21 @@ sync_tor_nodes(){
   reconcile_set tor_nodes "SELECT host(ip) FROM tor_nodes"
 }
 
+# Resolve the always_allow domains that must survive a cut into @kids_allow:
+# scope='safety' (the NZ youth help lines and schoolwork) AND scope='learn'
+# (the reading list: Wikipedia, Te Ara, NASA and friends). Same rules as
+# `genkan allow-sync` on the host; both may run, both converge.
+#
+# Until 2026-09-02 this loaded the safety scope only, and it FLUSHES the set
+# first, so the reading list that `genkan allow-sync` had put there at deploy
+# was gone within the hour, for the life of the box, while every document said
+# a child out of time could still read Wikipedia. The set is rebuilt from both
+# scopes now, and the log line says how many of each, so a count of zero for
+# either is visible rather than silent.
 sync_safety_net(){
   [ -n "$DB" ] || return 0
   local d ip list="" ips
-  for d in $(timeout 5 psql "$DB" -tAc "SELECT domain FROM always_allow WHERE scope='safety'" 2>/dev/null); do
+  for d in $(timeout 5 psql "$DB" -tAc "SELECT domain FROM always_allow WHERE scope IN ('safety','learn') ORDER BY scope, domain" 2>/dev/null); do
     for ip in $(getent ahostsv4 "$d" 2>/dev/null | awk '{print $1}'); do
       case "$ip" in 0.0.0.0|127.*) continue;; esac
       list="$list$ip\n"
@@ -286,7 +294,7 @@ sync_safety_net(){
   if [ -n "$ips" ]; then
     nft flush set inet kids kids_allow
     nft add element inet kids kids_allow "{ $ips }"
-    log "safety net: $(printf "%b" "$list" | sort -u | grep -c .) addresses loaded"
+    log "safety net: $(printf "%b" "$list" | sort -u | grep -c .) addresses loaded (help lines, schoolwork and the reading list)"
   else
     alert warn "safety net: resolved 0 addresses; help-line allowlist is EMPTY until next sync"
   fi

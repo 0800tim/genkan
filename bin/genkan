@@ -322,8 +322,10 @@ house(){ local act="${1:-status}" min="${2:-60}" ip left
 # the point of it. See config/db/schema-learn.sql.
 # must stay reachable through a total cut: genkan off, dinner, bedtime, out of
 # time. The firewall matches addresses, not names, so resolve them and load them
-# into @kids_allow. Run at deploy and hourly (kids-allow-sync.timer): these are
-# CDN-hosted and the addresses move.
+# into @kids_allow. Run at deploy; the gateway itself redoes it hourly from the
+# same two scopes (gateway/entrypoint.sh sync_safety_net), because these are
+# CDN-hosted and the addresses move. There is no kids-allow-sync.timer, and a
+# comment here once said there was.
 #
 # scope='category' rows (Spotify) are deliberately NOT here. Audio outlives
 # 'media off' and study mode, enforced at the DNS layer. It does not outlive
