@@ -1407,8 +1407,7 @@ Genkan that does apart from the Tor relay fetch. It runs from
 `kids-summary.timer` at 06:30, which `deploy.sh` installs and deliberately
 does **not** enable. It makes a request only when all three hold: the
 household switched the card on (the child page, "Summary written by an AI",
-stored in `ai_summary_settings.enabled`), `GENKAN_AI_SUMMARY_KEY` is set in
-`secrets.env`, and the timer was enabled by hand. With any of them missing it
+stored in `ai_summary_settings.enabled`), the Claude CLI is signed in for the checkout's owner (no key in any file), and
 prints one line and exits 0, so a timer left on by mistake is harmless.
 
 The bash half locates the repo and hands over to `dashboard/kid-summary.mjs`,
@@ -1432,7 +1431,7 @@ storage path is tested. Environment:
 |---|---|---|
 | `GENKAN_ROOT` | `/srv/projects/internal/kids-network` | where `dashboard/` is |
 | `KIDS_DB_URL` | from `secrets.env` | the database, as `kids_app` |
-| `GENKAN_AI_SUMMARY_KEY` | unset | the API key; unset means nothing is sent |
+| `GENKAN_CLAUDE_BIN` | `claude` | the Claude CLI; the sign-in of the checkout's owner is what sends |
 | `GENKAN_AI_STUB` | unset | `1` stores a canned note and sends nothing |
 
 ---

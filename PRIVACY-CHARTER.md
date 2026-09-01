@@ -78,7 +78,7 @@ Any other destination is a finding.
 page on the dashboard has a card, "Summary written by an AI", that ships
 switched off. If a parent switches it on (a button on that page, behind a
 confirmation that says what leaves), puts an API key in the gitignored
-`secrets.env` (`GENKAN_AI_SUMMARY_KEY`) and enables `kids-summary.timer` by
+the Claude CLI signed in on the box (no key in any file) and runs `genkan-kid-summary` or enables `kids-summary.timer` by
 hand, then once a day `bin/genkan-kid-summary` sends **one compact brief per
 child for the previous day** to `api.anthropic.com` and stores the note that
 comes back. The two buttons on the page ("today so far", "this week so far")

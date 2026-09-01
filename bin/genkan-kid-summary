@@ -2,10 +2,12 @@
 # genkan:summary=Write yesterday's AI note per child, if the household turned that on. Nightly.
 #
 # The only worker that can make an outbound request, and it makes one only
-# when all three of these are true: the household switched the card on
-# (ai_summary_settings.enabled, set on a child's page), a key is set
-# (GENKAN_AI_SUMMARY_KEY in secrets.env), and kids-summary.timer has been
-# enabled by hand. deploy.sh installs the timer and deliberately does not
+# when both of these are true: the household switched the card on
+# (ai_summary_settings.enabled, set on a child's page), and either a parent
+# ran this by hand or kids-summary.timer has been enabled by hand. The
+# request goes through the Claude CLI signed in on this box, as the user who
+# owns the checkout (the same sign-in the household's agent uses); there is
+# no key in any file. Run as root (the timer), it re-runs itself as that user. deploy.sh installs the timer and deliberately does not
 # enable it. See PRIVACY-CHARTER.md P1 and DECISIONS.md ("The child page").
 #
 # What it sends is one day's compact brief per child (under about 1,500
@@ -26,6 +28,12 @@
 # enabled by mistake is harmless.
 set -uo pipefail
 ROOT="${GENKAN_ROOT:-/srv/projects/internal/kids-network}"
+# The CLI's sign-in lives in the checkout owner's home, so root hands over.
+if [ "$(id -u)" = 0 ]; then
+  owner="$(stat -c %U "$ROOT" 2>/dev/null || echo "")"
+  if [ -n "$owner" ] && [ "$owner" != root ]; then exec sudo -u "$owner" -H GENKAN_ROOT="$ROOT" "$0" "$@"; fi
+fi
+export PATH="$HOME/.local/bin:$PATH"
 # The timer's unit carries secrets.env as an EnvironmentFile; a shell that
 # runs this by hand may not, so read it here as well. Only ever the
 # household's own gitignored file.

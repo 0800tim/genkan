@@ -342,8 +342,8 @@ export async function kidInsights(q, child, { asOf = null } = {}) {
     devices: deviceList, late: { week: lateWeek, prev: latePrev, weekTotal: lateWeekTotal, prevTotal: latePrevTotal },
     bedtime, topByKind, hours, badges: badgeList, badgeTotal: num(badgeCount[0]?.n),
     budgets: budgetMap, earnRules, notes,
-    summaries, ai: { enabled: !!settings[0]?.enabled, model: settings[0]?.model || "claude-sonnet-5",
-      hasKey: !!process.env.GENKAN_AI_SUMMARY_KEY, stub: process.env.GENKAN_AI_STUB === "1" },
+    summaries, ai: { enabled: !!settings[0]?.enabled, model: settings[0]?.model || "claude-haiku-4-5-20251001",
+      hasCli: cliPresent(), stub: process.env.GENKAN_AI_STUB === "1" },
   };
   base.changes = findings(base);
   base.rewards = rewards(base);
@@ -636,32 +636,49 @@ What went well
 Worth a chat (the phone versus the computer, late nights, anything blocked: suggest what to ask, not what to conclude)
 Reward? (say plainly whether the week earned one and which fits: extra minutes, a later bedtime, a chore-free evening, or none yet)`;
 
-// The one outbound request. GENKAN_AI_STUB=1 answers with a canned note and
-// sends nothing, so the storage and the page can be proved without a key.
-// GENKAN_DEMO=1 refuses outright: the public demo must never make an
-// outbound request on a visitor's click.
+// The one outbound request, and it goes through the Claude CLI signed in on
+// this box (the same sign-in the household's agent uses), never through an
+// API key in a file: `claude -p --model <haiku> --output-format json`, the
+// brief on stdin, our own system prompt in place of the CLI's. GENKAN_AI_STUB=1
+// answers with a canned note and sends nothing, so the storage and the page
+// can be proved without a sign-in. GENKAN_DEMO=1 refuses outright: the public
+// demo must never make an outbound request on a visitor's click.
+import { execFile } from "node:child_process";
+import { existsSync } from "node:fs";
+// Is the Claude CLI where this user would have it? A presence check only; a
+// sign-in cannot be checked without making a request, and the first write
+// says so plainly if it is missing.
+export function cliPresent() {
+  const home = process.env.HOME || "";
+  if (existsSync(`${home}/.local/bin/claude`)) return true;
+  return (process.env.PATH || "").split(":").some(d => d && existsSync(`${d}/claude`));
+}
 export async function aiCall({ model, system, user, stubText }) {
   if (process.env.GENKAN_DEMO === "1") return { ok: false, out: "This is the demo, so nothing is sent anywhere. At home this sends the brief shown under \"What would leave the house\" and nothing else." };
   if (process.env.GENKAN_AI_STUB === "1") return { ok: true, text: stubText, model: "stub", tokensIn: estimateTokens(system + user), tokensOut: estimateTokens(stubText) };
-  const key = process.env.GENKAN_AI_SUMMARY_KEY || "";
-  if (!key) return { ok: false, out: "No API key is set on the box (GENKAN_AI_SUMMARY_KEY in secrets.env), so nothing was sent." };
-  let r, j;
+  const home = process.env.HOME || "";
+  const bin = process.env.GENKAN_CLAUDE_BIN || "claude";
+  const args = ["-p", "--model", model, "--output-format", "json", "--system-prompt", system, "--exclude-dynamic-system-prompt-sections"];
+  const env = { ...process.env, PATH: `${home}/.local/bin:${process.env.PATH || "/usr/local/bin:/usr/bin:/bin"}` };
+  let out;
   try {
-    r = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model, max_tokens: 1024, system, messages: [{ role: "user", content: user }] }),
-      signal: AbortSignal.timeout(90000),
+    out = await new Promise((resolve, reject) => {
+      const child = execFile(bin, args, { env, cwd: home || "/", timeout: 180000, maxBuffer: 4 * 1024 * 1024 },
+        (err, stdout, stderr) => err ? reject(Object.assign(err, { stderr })) : resolve(stdout));
+      child.stdin.on("error", () => {});
+      child.stdin.end(user);
     });
-    j = await r.json().catch(() => ({}));
   } catch (e) {
-    return { ok: false, out: `Could not reach the API: ${e.message}. Nothing was stored.` };
+    const why = e.code === "ENOENT" ? "the Claude CLI is not installed for this user" : (e.stderr || e.message || "").toString().trim().split("\n").pop();
+    return { ok: false, out: `Could not run the Claude CLI: ${why}. Nothing was stored.` };
   }
-  if (!r.ok) return { ok: false, out: `The API answered ${r.status}${j?.error?.message ? `: ${j.error.message}` : ""}. Nothing was stored.` };
-  if (j.stop_reason === "refusal") return { ok: false, out: "The model declined to write this one. Nothing was stored." };
-  const text = (j.content || []).filter(c => c.type === "text").map(c => c.text).join("\n").trim();
-  if (!text) return { ok: false, out: "The API sent back no text. Nothing was stored." };
-  return { ok: true, text, model: j.model || model, tokensIn: j.usage?.input_tokens ?? null, tokensOut: j.usage?.output_tokens ?? null };
+  let j; try { j = JSON.parse(out); } catch { return { ok: false, out: "The CLI answered with something that was not its JSON. Nothing was stored." }; }
+  if (j.is_error || j.subtype !== "success") return { ok: false, out: `The CLI reported ${j.subtype || "an error"}${j.result ? `: ${String(j.result).slice(0, 200)}` : ""}. Nothing was stored.` };
+  const text = String(j.result || "").trim();
+  if (!text) return { ok: false, out: "The model sent back no text. Nothing was stored." };
+  const used = j.usage || {};
+  const modelUsed = Object.keys(j.modelUsage || {})[0] || model;
+  return { ok: true, text, model: modelUsed, tokensIn: used.input_tokens ?? null, tokensOut: used.output_tokens ?? null, costUsd: j.total_cost_usd ?? null };
 }
 
 async function store(q, { childId, period, day, complete, brief, text, model, tokensIn, tokensOut, by }) {
@@ -961,11 +978,11 @@ export function aiCard(ins) {
   const costLine = `A day's brief is about ${tokens.toLocaleString("en-NZ")} tokens (the cap is ${BRIEF_TOKEN_CAP.toLocaleString("en-NZ")}). With the instructions and the reply that is roughly ${cost.cents < 0.1 ? "a tenth of a cent" : cost.cents.toFixed(1) + " cents"} per child per day at ${esc(ai.model)}${cost.known ? "" : " (priced at the Haiku rate, the model name is not one this page knows)"}, about ${(cost.cents * 30).toFixed(0)} cents a month.`;
   const briefBlock = `<details class="leave"><summary>What would leave the house (the exact brief for ${esc(ins.today)}, nothing else)</summary>
     <pre>${esc(briefJson)}</pre>
-    <p class="cnote">Sent to api.anthropic.com over HTTPS with the key from secrets.env, only when a summary is written. The reply is stored in kid_summaries next to this brief and never re-sent. ${esc(c.name)}'s name is not in it; it is put back when the page renders. A weekly note is written from the seven daily notes, so no count is sent twice.</p></details>`;
+    <p class="cnote">Sent through the Claude CLI signed in on this box (the same sign-in the household\u2019s agent uses; it talks to api.anthropic.com), only when a summary is written. The reply is stored in kid_summaries next to this brief and never re-sent. ${esc(c.name)}'s name is not in it; it is put back when the page renders. A weekly note is written from the seven daily notes, so no count is sent twice.</p></details>`;
 
   if (!ai.enabled) {
     return `<div class="card"><h2>Summary written by an AI</h2>
-      <p class="sub">Off. Everything above was worked out in the house with no AI. If you turn this on, a small worker sends one day's brief of the numbers above to Claude (Anthropic's API) each morning and stores the note it writes back: what went well, what to talk about, whether a reward is deserved. On Mondays it writes the week from those seven notes. It is the only thing on this dashboard that would ever leave the house.</p>
+      <p class="sub">Off. Everything above was worked out in the house with no AI. If you turn this on, a small worker sends one day's brief of the numbers above to Claude, through the Claude CLI signed in on this box, each morning and stores the note it writes back: what went well, what to talk about, whether a reward is deserved. On Mondays it writes the week from those seven notes. It is the only thing on this dashboard that would ever leave the house.</p>
       <p class="cnote">${costLine}</p>
       <div class="acts"><button class="btn" onclick="kiAi('ai-enable',${c.id})">Turn it on for this household</button></div>
       ${briefBlock}
@@ -983,7 +1000,7 @@ export function aiCard(ins) {
     + dayRows.slice(1).map(s => one(s, false)).join("")
     + weekRows.map(s => one(s, false)).join("");
   const keyLine = ai.stub ? `<p class="cnote">GENKAN_AI_STUB=1 is set, so every write stores a canned note and sends nothing.</p>`
-    : ai.hasKey ? "" : `<p class="cnote">On, but no key is set on the box (GENKAN_AI_SUMMARY_KEY in secrets.env, then restart the dashboard). Nothing is sent until it is.</p>`;
+    : ai.hasCli ? "" : `<p class="cnote">On, but the Claude CLI is not installed for the user the dashboard runs as (it looks for <code>claude</code> on the path and in <code>~/.local/bin</code>). Nothing is sent until it is, and signed in.</p>`;
   return `<div class="card"><h2>Summary written by an AI</h2>
     <p class="sub">On for this household. The nightly worker writes yesterday's note at 06:30 once <code>kids-summary.timer</code> is enabled (<code>sudo systemctl enable --now kids-summary.timer</code>), and the week's note on Mondays from the seven daily ones. Opening this page never sends anything.</p>
     ${shown || `<div class="empty">No summary written for ${esc(c.name)} yet. The worker writes yesterday's each morning; the buttons below write one now.</div>`}

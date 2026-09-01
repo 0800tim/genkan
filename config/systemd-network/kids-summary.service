@@ -3,7 +3,8 @@ Description=Genkan nightly AI note per child (only if the household turned it on
 After=docker.service
 [Service]
 Type=oneshot
-# Carries KIDS_DB_URL and, if the household set one, GENKAN_AI_SUMMARY_KEY.
-# Without the key the worker prints one line and exits 0.
+# Carries KIDS_DB_URL. The worker re-runs itself as the checkout's owner, whose
+# Claude CLI sign-in is what sends the brief; with the card off it prints one
+# line and exits 0.
 EnvironmentFile=/srv/projects/internal/kids-network/secrets.env
 ExecStart=/usr/local/bin/genkan-kid-summary

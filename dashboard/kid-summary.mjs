@@ -33,9 +33,6 @@ try {
   const [settings] = await q("SELECT enabled, model FROM ai_summary_settings").catch(() => [null]);
   if (!settings) { log("the summaries table is not loaded (config/db/schema-summaries.sql); nothing to do"); process.exit(0); }
   if (!settings.enabled) { log("switched off on the dashboard; nothing sent, nothing written"); process.exit(0); }
-  if (!process.env.GENKAN_AI_SUMMARY_KEY && process.env.GENKAN_AI_STUB !== "1" && !DRY) {
-    log("on, but GENKAN_AI_SUMMARY_KEY is not set in secrets.env; nothing sent"); process.exit(0);
-  }
   settings.model = settings.model || DEFAULT_MODEL;
 
   // Yesterday by the database clock, which is the household's clock.
