@@ -156,7 +156,7 @@ function readFilters(url) {
     range: range[0], rangeLabel: range[1], days: range[2],
     child,
     device: int("device", 1, 1e9),
-    cat: text("cat", /^[a-z0-9-]{1,32}$/, 32),
+    cat: text("cat", /^(?:flag:|why:)?[a-z0-9-]{1,32}$/, 40),
     action: ["allowed", "blocked"].includes(p.get("action")) ? p.get("action") : "",
     why: WHY_BY.has(p.get("why")) ? p.get("why") : "",
     site: text("site", /^[a-z0-9._-]{1,253}$/, 253),
@@ -199,8 +199,22 @@ async function logRows(q, f, hasReason) {
   // A category is a suffix match against category_domains. Matching the
   // distinct names in the window first keeps it to a few thousand
   // comparisons rather than a few million.
+  // Three kinds of "category" share one dropdown, because a parent thinks of
+  // them as one question ("show me the drugs lookups"): a metered category
+  // (suffix match against category_domains), a Genkan flag list
+  // (flag:<category>, the same pattern match genkan-alerts uses), or a
+  // reason AdGuard gave (why:<group>, the WHY grouping above).
   let catCte = "";
-  if (f.cat) {
+  if (f.cat && f.cat.startsWith("why:")) {
+    const w = f.cat.slice(4);
+    if (WHY_BY.has(w)) outer.push(`d.why = ${add(w)}`);
+  } else if (f.cat && f.cat.startsWith("flag:")) {
+    const p = add(f.cat.slice(5));
+    catCte = `, catdoms AS (
+      SELECT DISTINCT n.domain FROM (SELECT DISTINCT domain FROM dns) n
+      JOIN flag_domains fd ON fd.category = ${p} AND n.domain ILIKE '%' || fd.pattern)`;
+    outer.push("d.domain IN (SELECT domain FROM catdoms)");
+  } else if (f.cat) {
     const p = add(f.cat);
     catCte = `, catdoms AS (
       SELECT DISTINCT n.domain FROM (SELECT DISTINCT domain FROM dns) n
@@ -549,15 +563,23 @@ function blockedCard(o, f) {
 
 const opt = (v, label, cur) => `<option value="${esc(v)}"${String(v) === String(cur) ? " selected" : ""}>${esc(label)}</option>`;
 
-function logCard(o, f, rows, devices, cats) {
+function logCard(o, f, rows, devices, cats, flagCats = []) {
   const people = o.people.map(p => opt(p.id, p.name, f.child)).join("") + opt("none", "Unattributed", f.child);
   const devs = devices.map(d => opt(d.id, `${d.label || d.hostname || d.ip || "device " + d.id}${d.person ? " (" + d.person + ")" : ""}`, f.device)).join("");
-  const catOpts = cats.map(c => opt(c, c, f.cat)).join("");
+  // One dropdown, three groups: what the meter counts, what AdGuard's lists
+  // block, and what Genkan's own watch lists flag. The self-harm list is a
+  // care signal by policy: it never blocks, it only tells a parent.
+  const FLAG_LABEL = { tor: "Tor", darknet: "Darknet", drugs: "Drugs", "self-harm": "Self-harm (care signal, never blocked)",
+    extreme: "Extreme content", "proxy-vpn": "Proxy and VPN" };
+  const catOpts = `<optgroup label="Metered (the meter counts these)">${cats.map(c => opt(c, c, f.cat)).join("")}</optgroup>`
+    + `<optgroup label="Blocked by AdGuard's lists">${["adult", "gambling", "malware", "bypass", "ads", "service"]
+        .filter(w => WHY_BY.has(w)).map(w => opt("why:" + w, WHY_BY.get(w)[3], f.cat)).join("")}</optgroup>`
+    + (flagCats.length ? `<optgroup label="Genkan's watch lists">${flagCats.map(c => opt("flag:" + c, FLAG_LABEL[c] || c, f.cat)).join("")}</optgroup>` : "");
   const whyOpts = WHY.map(w => opt(w[0], w[1], f.why)).join("");
   const active = [];
   if (f.child) active.push(`person: ${personName(o, f.child)}`);
   if (f.device) { const d = devices.find(x => x.id === f.device); active.push(`device: ${d ? (d.label || d.hostname || d.ip) : f.device}`); }
-  if (f.cat) active.push(`category: ${f.cat}`);
+  if (f.cat) active.push(f.cat.startsWith("why:") ? `blocked: ${whyShort(f.cat.slice(4))}` : f.cat.startsWith("flag:") ? `watch list: ${f.cat.slice(5)}` : `category: ${f.cat}`);
   if (f.action) active.push(f.action);
   if (f.why) active.push(whyLabel(f.why));
   if (f.site) active.push(`site: ${f.site}`);
@@ -632,11 +654,12 @@ export async function analyticsPage(q, s, url) {
   const f = readFilters(url);
   const hasReason = await reasonColumns(q);
   const notes = [];
-  const [o, rows, devices, cats] = await Promise.all([
+  const [o, rows, devices, cats, flagCats] = await Promise.all([
     overview(q, f, hasReason),
     logRows(q, f, hasReason).catch(e => { notes.push(`log: ${e.message}`); return []; }),
     safe(q, `SELECT id, label, hostname, ip, person FROM device_roster ORDER BY person NULLS LAST, label, hostname`, [], [], notes, "devices"),
     safe(q, `SELECT DISTINCT category FROM category_domains ORDER BY 1`, [], [], notes, "categories"),
+    safe(q, `SELECT DISTINCT category FROM flag_domains ORDER BY 1`, [], [], notes, "flag categories"),
   ]);
   o.notes.push(...notes);
   return rangeBar(f)
@@ -646,7 +669,7 @@ export async function analyticsPage(q, s, url) {
     + blockedCard(o, f)
     + topSitesCard(o, f)
     + minutesCard(o, f)
-    + logCard(o, f, rows, devices, cats.map(c => c.category))
+    + logCard(o, f, rows, devices, cats.map(c => c.category), flagCats.map(c => c.category))
     + measurementCard(o, hasReason);
 }
 
