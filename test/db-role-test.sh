@@ -140,6 +140,41 @@ out=$(printf '203.0.113.251\tgaming\n' | docker exec -i "$PG" psql -U "$ROLE" -d
 case "$out" in *ERROR*) bad "$ROLE cannot do the temp-table COPY the timers use: ${out:0:70}";;
                *)       ok "$ROLE can do the temp-table COPY FROM STDIN the timers use";; esac
 
+# ---- the safety net cannot be narrowed, even by a role that may DELETE ------
+# grants.sql hands kids_agent DELETE on always_allow so a parent can take a
+# reading-list row back out (genkan allow remove). The trigger in
+# schema-settings.sql is what keeps that grant from ever reaching a help line,
+# so it is proved here on the row that matters most, and then proved for the
+# superuser too, because a trigger that only stops one role is a policy that
+# only stops one role.
+kept(){ local what="$1" sql="$2" who="$3" out
+  if [ "$who" = su ]; then out=$(su_sql "$sql"); else out=$(agent_sql "$sql"); fi
+  case "$out" in *"safety net"*) ok "$what";; *) bad "$what (it was NOT refused: ${out:0:90})";; esac; }
+kept "$ROLE cannot delete a safety row (1737.org.nz)" \
+     "DELETE FROM always_allow WHERE domain='1737.org.nz'" agent
+kept "$ROLE cannot delete every safety row in one statement" \
+     "DELETE FROM always_allow WHERE scope='safety'" agent
+kept "even the superuser cannot delete a safety row" \
+     "DELETE FROM always_allow WHERE domain='youthline.co.nz'" su
+kept "even the superuser cannot narrow a safety row to the reading list" \
+     "UPDATE always_allow SET scope='learn' WHERE domain='youthline.co.nz'" su
+n=$(su_sql "SELECT count(*) FROM always_allow WHERE scope='safety' AND domain IN ('1737.org.nz','youthline.co.nz')")
+[ "${n:-0}" = 2 ] && ok "both help lines are still in the safety net afterwards" \
+  || bad "a help line is missing from the safety net (${n:-?} of 2)"
+# And the grant is real for the thing it is for: a row a parent added can be
+# added and taken away again.
+out=$(agent_sql "WITH i AS (INSERT INTO always_allow(domain,scope,category,note,added_by,added_ts)
+                 VALUES('roletest.example','learn','reading','t','parent',now()) RETURNING 1) SELECT count(*) FROM i")
+[ "${out:-0}" = 1 ] && ok "$ROLE can add a reading-list row" || bad "$ROLE cannot add a reading-list row: ${out:0:70}"
+out=$(agent_sql "WITH d AS (DELETE FROM always_allow WHERE domain='roletest.example' AND added_by='parent' RETURNING 1) SELECT count(*) FROM d")
+[ "${out:-0}" = 1 ] && ok "$ROLE can remove the row it added" || bad "$ROLE cannot remove the row it added: ${out:0:70}"
+out=$(agent_sql "WITH u AS (UPDATE policies SET adguard_parental=adguard_parental WHERE tier='standard' RETURNING 1) SELECT count(*) FROM u")
+[ "${out:-0}" = 1 ] && ok "$ROLE can edit a filter level (genkan tier set)" || bad "$ROLE cannot edit a filter level: ${out:0:70}"
+refused "$ROLE cannot invent a filter level"  "INSERT INTO policies(tier) VALUES('roletest')"
+refused "$ROLE cannot drop a filter level"    "DELETE FROM policies WHERE tier='young'"
+refused "$ROLE cannot edit an allow-list row into a different promise" \
+        "UPDATE always_allow SET scope='safety' WHERE domain='wikipedia.org'"
+
 
 # ---- the gates in bin/kidnet ------------------------------------------------
 # The role fence is the second line. The first is that no argument reaches a
@@ -152,7 +187,7 @@ gated(){ local what="$1"; shift; local out rc
   out=$(GENKAN_DB="$DB" PG_CONTAINER="$PG" GW_CONTAINER=genkan-no-such-container \
         ADGUARD_PASS="" bash "$R/bin/kidnet" "$@" 2>&1); rc=$?
   case "$out" in
-    *"bad name"*|*"bad number"*|*"bad text"*|*"bad id"*|*"is not a MAC"*|*"is not an IPv4"*|*usage:*)
+    *"bad name"*|*"bad number"*|*"bad text"*|*"bad id"*|*"bad domain"*|*"bad filter level"*|*"bad services"*|*"is not a MAC"*|*"is not an IPv4"*|*usage:*)
       [ "$rc" != 0 ] && ok "$what" || bad "$what (refused but exited 0)";;
     *) bad "$what (NOT refused: ${out:0:80})";;
   esac; }
@@ -176,6 +211,11 @@ gated "game off refuses an injected name"         game off "$PAYLOAD"
 gated "time refuses an injected name"             time "$PAYLOAD"
 gated "confirm refuses an injected device"        confirm "$PAYLOAD"
 gated "claim-mode refuses an injected mode"       claim-mode "$PAYLOAD"
+gated "allow add refuses an injected domain"      allow add "$PAYLOAD" learn
+gated "allow add refuses an injected note"        allow add example.org learn "$PAYLOAD"
+gated "allow remove refuses an injected domain"   allow remove "$PAYLOAD"
+gated "tier set refuses an injected level"        tier set "$PAYLOAD" parental true
+gated "tier set refuses an injected value"        tier set young services "$PAYLOAD"
 gated "guest leave refuses an injected name"      guest leave "$PAYLOAD"
 if docker exec -i "$PG" test -e /tmp/genkan-gate-test 2>/dev/null; then
   bad "one of the payloads reached the server and ran"

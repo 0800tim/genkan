@@ -292,6 +292,65 @@ different and a parent should be able to reason about them separately:
 You rarely need to run this. The gateway container does the same sync at start
 and once an hour on its own.
 
+    genkan allow list                          every row, by scope and category
+    genkan allow add <domain> learn [note]     a reading-list site, subdomains included
+    genkan allow add <domain> search [note]    one exact host, nothing under it
+    genkan allow remove <domain>               take back a row a parent added
+
+The allow list a parent can grow but not narrow. This is what the dashboard's
+Settings page calls. `add` lowercases the domain, refuses anything that is not
+plainly a domain name (lowercase letters, digits, hyphens and dots, with at
+least one dot), refuses a domain already on the list, stamps the row
+`added_by='parent'`, resolves it and puts its addresses straight into
+`@kids_allow` (without flushing the set, so it is in force now), and reruns
+`genkan-adguard apply` so the name layer exempts it from a cut. A domain that
+does not resolve at that moment is still saved; the gateway's hourly refresh
+retries it.
+
+`learn` writes `scope='learn', category='reading'` and is matched by suffix,
+so `example.org` covers `www.example.org`. `search` writes `category='search'`
+and is matched exactly: the case it exists for is Google search, where
+`google.com` must not bring `mail.google.com` with it. Both survive a cut, and
+`add` says out loud what that means: the firewall allows by address, and
+whatever else lives on the same addresses is reachable too (DECISIONS.md,
+"Allowed by address, filtered by name").
+
+`remove` takes back only a row a parent added. A `scope='safety'` row is
+refused here and by a trigger in the database (`always_allow_keep_safety`,
+config/db/schema-settings.sql), which refuses the superuser as well. A row the
+schema shipped is refused too, with the reason: a deleted seed row comes
+straight back on the next schema reload, so the honest place to change the
+shipped reading list is `config/db/schema-learn.sql`. After a removal the set
+is flushed and rebuilt by `allow-sync`, because one domain's addresses may be
+shared with another still on the list and cannot be subtracted on their own.
+
+### Filter levels
+
+    genkan tier show [tier]                  what each level means, DNS side and minutes
+    genkan tier set <tier> parental true|false     AdGuard's adult-content category
+    genkan tier set <tier> safesearch true|false   SafeSearch forced on the search engines
+    genkan tier set <tier> private true|false      keep this level's clients out of the query log
+    genkan tier set <tier> services <id,id,...|none>   AdGuard blocked services
+    genkan tier set <tier> school <minutes|none>   the school-day allowance
+    genkan tier set <tier> weekend <minutes|none>
+
+What `young`, `standard`, `teen` and `guest` mean lives in the `policies` table
+since 2026-09-02 (config/db/schema-settings.sql), and this is the one write
+path to it; the dashboard's Settings page calls it. Each field is gated to its
+own vocabulary. Service ids are checked against AdGuard's own list
+(`/control/blocked_services/all`) when `ADGUARD_PASS` is in the environment,
+so a typo cannot be saved as a rule that blocks nothing; without the
+credentials only the spelling gate applies, and the command says so. A level
+cannot be created or dropped from here: `kids_agent` has UPDATE on `policies`
+and nothing else.
+
+After a DNS-side change the command runs `genkan-adguard-clients`, which
+rebuilds every AdGuard client on that level from the row, and reports how
+many it touched. A minutes change applies from each person's next day. The
+`adult` row is a record, not a rule: a household adult has no AdGuard client of
+their own. The global blocklists are not part of a level and cannot be, because
+AdGuard applies a filter list to every client or to none.
+
 ### Household devices
 
     genkan iot status                    what the policy is, and what it has refused
@@ -952,7 +1011,8 @@ order:
 
 ## genkan-adguard-clients
 
-No arguments. Run automatically by `genkan assign`.
+No arguments. Run automatically by `genkan assign`, `genkan tier set`, and
+the dashboard after any change to a person, a device or a level.
 
 AdGuard applies the age tier (SafeSearch, blocked services, per-client rules) by
 client, and a client is identified by IP address. This points each child's
@@ -964,9 +1024,22 @@ A child with no assigned devices is parked on a unique address in `192.0.2.0/24`
 thing AdGuard offers to "matches nothing". Leaving stale IDs behind is the exact
 bug this tool exists to fix. The guest catch-all client is never touched.
 
-If a child has no matching AdGuard client, the tool says so and moves on rather
-than creating one: client objects carry policy, and creating them silently
-would hide a misconfiguration.
+A person with no AdGuard client gets one created from their level, parked on an
+unroutable address until they have a device.
+
+**What a level means comes from the database, and the database wins.** Since
+2026-09-02 the tool reads each level's parental control, SafeSearch, blocked
+services and private flag from `policies` (config/db/schema-settings.sql), and
+brings any client whose settings have drifted from its level back to the level
+on every run, the same way the gateway rebuilds its firewall sets from the
+database. Before that an existing client was never re-templated, which meant
+a child moved from `young` to `teen` on the Family page kept the `young` client
+in AdGuard until somebody noticed. Tune a level with `genkan tier set` or on
+the Settings page, not in the AdGuard UI, where it will not last. Only the
+fields a level owns are written; upstreams, tags and the rest of the client
+are left alone. A database that has not loaded `schema-settings.sql` falls
+back to the tool's built-in table, which holds the same values, and the last
+line of output says which source was used.
 
 A **shared family device** gets a client of its own too, named after the device,
 on the level in `devices.policy_tier`. It belongs to nobody, so no person's tier

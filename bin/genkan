@@ -37,6 +37,15 @@
 #                                  device: the household's, not one child's
 #   genkan sweep <mac|ip> dinner|house on|off|default   the two tick boxes
 #   genkan allow-sync              refresh the safety net (always_allow -> nft)
+#   genkan allow list              the allow list: safety net, reading list, search hosts
+#   genkan allow add <domain> <learn|search> [note]   a site a cut-off child may
+#                                  still reach. learn covers subdomains; search
+#                                  is that exact host and nothing under it
+#   genkan allow remove <domain>   take back a site a parent added. Never a
+#                                  safety row, never a shipped one
+#   genkan tier show [tier]        what each filter level means, DNS side and minutes
+#   genkan tier set <tier> <field> <value>   parental|safesearch|private true|false,
+#                                  services <id,id,...|none>, school|weekend <min|none>
 #   genkan iot <status|apply|learn|show|set|allow|mode>   household IoT security
 #                                  policy: what each camera, lock and gadget may
 #                                  talk to. See docs/HOUSEHOLD-SECURITY.md.
@@ -353,6 +362,160 @@ allow_sync(){
   [ -z "$failed" ] || echo "genkan: did not resolve:$failed (keeping the rest)" >&2
 }
 
+# --- The allow list a parent can grow but not narrow ------------------------
+# Three promises in one table (config/db/schema-safety.sql, schema-learn.sql):
+# scope='safety' survives everything and is never narrowed here or anywhere;
+# scope='learn' is the reading list, reachable through a cut so a child out of
+# time can still go and read; and category='search' rows are exact hosts,
+# allowed by name and not by suffix (DECISIONS.md, "Allowed by address,
+# filtered by name"). A parent adds to the second and third from the Settings
+# page, through these verbs, and takes back only what a parent added: a
+# shipped row deleted by hand would come straight back on the next schema
+# reload, so the honest answer is to refuse and say why. The safety rows are
+# refused by a trigger in the database itself, not only by this script.
+#
+# A domain is the strictest gate in this file: lowercase letters, digits,
+# hyphens and dots, at least one dot, no label starting or ending with a
+# hyphen. Nothing else has any business in a DNS rule or an nft set.
+ck_domain(){ [[ "$1" =~ ^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$ ]] \
+  && [ "${#1}" -le 253 ] || { echo "genkan: bad domain '$1' (lowercase letters, digits, hyphens and dots)" >&2; exit 1; }; }
+ck_tier(){ [[ "$1" =~ ^[a-z]{2,16}$ ]] || { echo "genkan: bad filter level '$1'" >&2; exit 1; }
+  [ -n "$(psqll "SELECT 1 FROM policies WHERE tier='$1'")" ] || { echo "genkan: no filter level called '$1'" >&2; exit 1; }; }
+# Load ONE domain's addresses into @kids_allow without flushing the set. The
+# full resync (allow_sync) resolves every domain and takes seconds; a parent
+# who just pressed Add should see it in force now. The gateway's hourly
+# refresh rebuilds the whole set from the database anyway, so a domain that
+# does not resolve right now is picked up then.
+allow_add_addrs(){ local d="$1" ip n=0
+  have_nft || return 0
+  for ip in $(getent ahostsv4 "$d" 2>/dev/null | awk '{print $1}' | sort -u); do
+    case "$ip" in 0.0.0.0|127.*) continue;; esac
+    nftx add element $TABLE $ALLOWSET "{ $ip }" 2>/dev/null && n=$((n+1))
+  done
+  if [ "$n" -gt 0 ]; then echo "genkan: $d is in the firewall's allow set now ($n address(es))"
+  else echo "genkan: $d did not resolve just now; the gateway's hourly refresh will retry it" >&2; fi; }
+allow_verb(){ local sub="${1:-list}" d scope cat note row
+  case "$sub" in
+    list)
+      psqll "SELECT scope||'|'||coalesce(category,'')||'|'||domain||'|'||coalesce(added_by,'shipped')||'|'||coalesce(note,'')
+             FROM always_allow WHERE scope IN ('safety','learn') ORDER BY scope, category, domain" \
+        | awk -F'|' 'BEGIN{last=""} { key=$1" / "$2; if (key!=last) { print key; last=key }
+                     printf "  %-40s %-8s %s\n", $3, ($4=="parent"?"added":"shipped"), $5 }';;
+    add)
+      d="$(echo "${2:?domain}" | tr 'A-Z' 'a-z')"; ck_domain "$d"
+      case "${3:-}" in
+        learn)  scope=learn; cat=reading;;
+        search) scope=learn; cat=search;;
+        *) echo "genkan: say learn (the reading list, subdomains included) or search (this exact host)" >&2; exit 1;;
+      esac
+      note="${4:-added on the Settings page}"; ck_text "$note"
+      row=$(psqll "SELECT scope||' ('||coalesce(category,'')||')' FROM always_allow WHERE domain='$d'")
+      [ -z "$row" ] || { echo "genkan: $d is already on the allow list as $row"; exit 1; }
+      psqll "INSERT INTO always_allow(domain,scope,category,note,added_by,added_ts)
+             VALUES('$d','$scope','$cat','$note','parent',now())" >/dev/null
+      audit household "allow:$d" "add-$cat" agent
+      allow_add_addrs "$d"
+      adguard_sync
+      if [ "$cat" = search ]; then
+        echo "genkan: $d added as an exact host. A child who is cut off can reach that name and nothing under it."
+      else
+        echo "genkan: $d added to the reading list, subdomains included. A child who is cut off can still reach it."
+        echo "  The firewall allows it by address, and addresses are shared: whatever else lives on the same"
+        echo "  addresses is reachable too. The name layer (AdGuard) only answers for $d itself."
+      fi;;
+    remove)
+      d="$(echo "${2:?domain}" | tr 'A-Z' 'a-z')"; ck_domain "$d"
+      row=$(psqll "SELECT scope||'|'||coalesce(added_by,'') FROM always_allow WHERE domain='$d'")
+      [ -n "$row" ] || { echo "genkan: $d is not on the allow list"; exit 1; }
+      case "$row" in
+        safety\|*) echo "genkan: $d is part of the safety net (help lines and schoolwork). It cannot be removed, by anyone: the database refuses it."; exit 1;;
+        *\|parent) ;;
+        *) echo "genkan: $d shipped with Genkan, so removing it here would only last until the next schema reload."
+           echo "  The shipped reading list lives in config/db/schema-learn.sql and schema-learn-intl.sql."; exit 1;;
+      esac
+      psqll "DELETE FROM always_allow WHERE domain='$d' AND added_by='parent'" >/dev/null
+      audit household "allow:$d" remove agent
+      # The set is flushed and rebuilt, because one domain's addresses may be
+      # shared with another still on the list and cannot be subtracted alone.
+      allow_sync || true
+      adguard_sync
+      echo "genkan: $d removed from the allow list.";;
+    *) echo "usage: genkan allow list | allow add <domain> <learn|search> [note] | allow remove <domain>"; exit 1;;
+  esac; }
+
+# --- The filter levels, as data -----------------------------------------------
+# What 'young', 'standard', 'teen' and 'guest' mean on the DNS side used to be
+# a dict inside bin/genkan-adguard-clients. It is a row in policies now
+# (config/db/schema-settings.sql), and this is the one write path to it. Each
+# field is gated to its own vocabulary, the row is updated, and the AdGuard
+# clients on that level are rebuilt from it straight away.
+tier_show(){ local t="${1:-}" where=""
+  [ -z "$t" ] || { ck_tier "$t"; where="WHERE tier='$t'"; }
+  psqll "SELECT tier||': parental '||CASE WHEN adguard_parental THEN 'on' ELSE 'off' END
+           ||', safesearch '||CASE WHEN safesearch THEN 'on' ELSE 'off' END
+           ||', private '||CASE WHEN adguard_private THEN 'yes' ELSE 'no' END
+           ||', blocked services: '||coalesce(nullif(array_to_string(adguard_services,' '),''),'none')
+           ||', school '||coalesce(daily_budget_school_min::text||' min','no limit')
+           ||', weekend '||coalesce(daily_budget_weekend_min::text||' min','no limit')
+         FROM policies $where ORDER BY CASE tier WHEN 'young' THEN 1 WHEN 'standard' THEN 2 WHEN 'teen' THEN 3
+                                                 WHEN 'guest' THEN 4 WHEN 'adult' THEN 5 ELSE 6 END" 2>/dev/null \
+    || { echo "genkan: the filter levels need config/db/schema-settings.sql loaded into this database first." >&2; exit 1; }; }
+tier_set(){ local t="${1:?tier}" f="${2:?field}" v="${3:?value}" col val d said
+  ck_tier "$t"
+  case "$f" in
+    parental)   ck_bool "$v"; col=adguard_parental; val="$v";;
+    safesearch) ck_bool "$v"; col=safesearch;       val="$v";;
+    private)    ck_bool "$v"; col=adguard_private;  val="$v";;
+    services)
+      col=adguard_services
+      if [ "$v" = none ]; then val="ARRAY[]::text[]"
+      else
+        [[ "$v" =~ ^[a-z0-9_]{1,40}(,[a-z0-9_]{1,40}){0,150}$ ]] \
+          || { echo "genkan: bad services list: AdGuard ids separated by commas (tiktok,discord), or none" >&2; exit 1; }
+        # Checked against AdGuard's own list when AdGuard is reachable, so a
+        # typo cannot be saved as a rule that blocks nothing. Without the
+        # credentials the spelling gate above is all there is, and that is said.
+        if [ -n "${ADGUARD_PASS:-}" ]; then
+          bad=$(ADGUARD_URL="${ADGUARD_URL:-http://127.0.0.1:8853}" ADGUARD_USER="${ADGUARD_USER:-admin}" \
+                ADGUARD_PASS="$ADGUARD_PASS" IDS="$v" python3 - <<'PY' 2>/dev/null || echo "?"
+import os,json,base64,urllib.request
+r=urllib.request.Request(os.environ["ADGUARD_URL"]+"/control/blocked_services/all")
+r.add_header("Authorization","Basic "+base64.b64encode((os.environ["ADGUARD_USER"]+":"+os.environ["ADGUARD_PASS"]).encode()).decode())
+known={s["id"] for s in json.loads(urllib.request.urlopen(r,timeout=6).read()).get("blocked_services",[])}
+print(" ".join(i for i in os.environ["IDS"].split(",") if i not in known))
+PY
+)
+          case "$bad" in
+            "") ;;
+            "?") echo "genkan: could not ask AdGuard for its service list; saving the ids as typed" >&2;;
+            *) echo "genkan: AdGuard has no service called: $bad" >&2; exit 1;;
+          esac
+        fi
+        val="ARRAY['$(echo "$v" | sed "s/,/','/g")']::text[]"
+      fi;;
+    school)  col=daily_budget_school_min;  if [ "$v" = none ]; then val=NULL; else ck_int "$v"; [ "$v" -le 1440 ] || { echo "genkan: a day has 1440 minutes" >&2; exit 1; }; val="$v"; fi;;
+    weekend) col=daily_budget_weekend_min; if [ "$v" = none ]; then val=NULL; else ck_int "$v"; [ "$v" -le 1440 ] || { echo "genkan: a day has 1440 minutes" >&2; exit 1; }; val="$v"; fi;;
+    *) echo "genkan: field is parental, safesearch, private, services, school or weekend" >&2; exit 1;;
+  esac
+  psqll "UPDATE policies SET $col=$val WHERE tier='$t'" >/dev/null 2>&1 \
+    || { echo "genkan: could not save. The filter levels need config/db/schema-settings.sql loaded first." >&2; exit 1; }
+  audit household "tier:$t" "$f:$(echo "$v" | cut -c1-60)" agent
+  case "$f" in
+    school|weekend)
+      echo "genkan: $t level, $f minutes set to $v. It applies from each person's next day, not retroactively.";;
+    *)
+      # The AdGuard clients on this level are rebuilt from the row now. When
+      # AdGuard is not reachable the row is still right and the next run of
+      # genkan-adguard-clients (any assignment, any change here) catches up.
+      said=""
+      if [ -n "${ADGUARD_PASS:-}" ]; then
+        d="$(dirname "$0")/genkan-adguard-clients"
+        [ -x "$d" ] && said=$("$d" 2>&1 | grep -c "level applied" || true)
+      fi
+      echo "genkan: $t level, $f set to $v.${said:+ $said AdGuard client(s) rebuilt from it.}"
+      [ "$t" != adult ] || echo "  A household adult has no AdGuard client of their own, so this row is a record, not a rule.";;
+  esac; }
+
 # School-night budget Mon-Fri, weekend budget Sat-Sun. NULL budget = teen
 # tier, no cap, stored as 999 which the meter treats as unlimited.
 ensure_day(){ ck_id "$1"; psqll "INSERT INTO time_ledger(child_id,day,budget_min)
@@ -551,6 +714,12 @@ case "${1:-}" in
            ||CASE WHEN house_off_default THEN ' (default)' ELSE '' END
            FROM device_roster WHERE $col3" | sed 's/^/  /';;
   allow-sync)   allow_sync;;
+  allow)  shift; allow_verb "$@";;
+  tier)   case "${2:-show}" in
+            show) tier_show "${3:-}";;
+            set)  tier_set "${3:?tier}" "${4:?field}" "${5:?value}";;
+            *) echo "usage: genkan tier show [tier] | genkan tier set <tier> <parental|safesearch|private|services|school|weekend> <value>"; exit 1;;
+          esac;;
   # The household security layer lives in its own script, the same way the
   # meters do. Passed straight through so there is one control surface.
   iot) shift; exec "$(dirname "$0")/genkan-iot-policy" "$@";;

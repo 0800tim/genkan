@@ -28,7 +28,7 @@ FILES=(schema schema-categories schema-time schema-safety
        schema-badges seed schema-presence schema-appliance
        schema-roles schema-claim schema-shared schema-learn
        schema-learn-intl schema-schedule schema-slow schema-notify
-       schema-release schema-retention schema-tor)
+       schema-release schema-retention schema-tor schema-settings)
 
 echo "==> waiting for the demo database"
 for _ in $(seq 1 60); do

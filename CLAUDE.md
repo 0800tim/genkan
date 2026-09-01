@@ -135,7 +135,14 @@ Family, Settings, Notifications, System and Speed; /speed proxies the
 gateway's speed test, which can only run inside the island. dns_log.reason
 and dns_log.filter_list (why AdGuard blocked a name, and which list) exist in
 the schema since 2026-09-02; until config/db/schema.sql is re-run on the box
-and the current genkan-dnslog is installed, the live rows have neither. Portal: kids-portal.service (:8890) is the pre-deploy host copy;
+and the current genkan-dnslog is installed, the live rows have neither.
+Settings
+(dashboard/settings.mjs) edits the filter levels, the allow list a parent can
+grow but not narrow, and the household switches, and writes ONLY through
+`genkan tier set`, `genkan allow add|remove`, `genkan claim-mode`, `genkan iot
+mode` and `genkan slow-rate|slow-timeout` (runKidnet); the levels' AdGuard
+half lives in policies since config/db/schema-settings.sql, and the database
+wins over hand tuning in the AdGuard UI. Portal: kids-portal.service (:8890) is the pre-deploy host copy;
 production is the container on island :80. DB: kids_network on the shared
 postgres container (creds in secrets.env).
 

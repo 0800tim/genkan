@@ -2277,3 +2277,58 @@ domain, because a public seed file is not the place to type real ones.
 The rule: **a page that shows a parent "what was viewed" must say, on the
 page, that it cannot see that, and must store the reason rather than infer
 it.**
+
+## The filter levels are data, and the allow list grows but never narrows
+
+**2026-09-02.** The parent asked for a page "where we can configure what a
+young child is versus standard versus teen and what they can and can't do",
+and to add sites to the allow list. Three decisions came out of building it.
+
+**A level is a row, and the database wins.** What `young` meant on the DNS
+side (parental control, SafeSearch, twelve blocked services) was a Python dict
+inside `bin/genkan-adguard-clients`, and that script deliberately never
+re-templated an existing AdGuard client, so that a parent who had tuned one
+in the AdGuard UI kept the tuning. That was defensible while the levels were
+hard-coded and had a quiet cost: moving a child from `young` to `teen` on the
+Family page changed their minutes and nothing about their filter, because the
+client they already had was never touched. The AdGuard half of each level now
+sits on `policies` beside the minutes (`config/db/schema-settings.sql`, filled
+once with exactly the dict's values so an upgrade changes nobody's filter),
+`genkan tier set` is the one write path, and `genkan-adguard-clients` brings a
+drifted client back to its level on every run, the same way the gateway
+rebuilds its sets from the database rather than trusting what it finds. Tune
+a level on the Settings page, not in the AdGuard UI, where it will not last.
+First live run found the `safesearch` column, which nothing had enforced,
+disagreeing with the dict for the guest level; the schema sets the column to
+what was enforced, once, in the same guarded moment it fills the new columns.
+The global blocklists stay global, and the page says why: AdGuard applies a
+filter list to every client or to none.
+
+**The allow list can be grown by a parent and narrowed by nobody.** Three
+promises live in `always_allow` and the page shows them apart: the safety net
+(help lines and schoolwork, `scope='safety'`), the reading list (`learn`,
+suffix match), and the search hosts (`category='search'`, exact match, per
+"Allowed by address, filtered by name" above). A parent adds to the second and
+third through `genkan allow add`, which stamps `added_by='parent'`, and takes
+back only what a parent added: a shipped row deleted by hand would return on
+the next schema reload, so refusing with that reason is more honest than a
+removal that lasts until the next upgrade. The safety rows are refused by a
+trigger in the database, `always_allow_keep_safety`, which refuses DELETE and
+any UPDATE that narrows the scope, for every role including the superuser.
+`kids_agent` was granted DELETE on the table for the reading list, and the
+trigger is what keeps that grant from ever reaching 1737. Both are proved in
+`test/db-role-test.sh`. The page also says, next to the Add button, what
+adding a domain means: the firewall allows by address, and addresses are
+shared, so the neighbours come too; only the name layer is exact.
+
+**The switches that are off stay off.** Device claiming, the household IoT
+policy's enforcement and the house board each get a control on the page with
+the honest sentence beside it, and their defaults are untouched: `off`,
+`observe` with the timer left disabled, and `false`. Anything that lives in a
+file rather than the database (the portal's flag window, the timezone, the
+whole-house cut's length) is shown read-only with where it lives, rather than
+given a box that would save nothing. The card at the bottom, "What this page
+cannot do", is there for the same reason every limits section in this repo is:
+a settings page that implies a per-device blocklist, an HTTPS portal or sight
+through a VPN would be lying, and the credibility of the rest rests on not
+lying there.

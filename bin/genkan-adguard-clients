@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# genkan:summary=Sync AdGuard's per-child clients to the real assigned device IPs.
+# genkan:summary=Sync AdGuard's per-child clients to the real assigned device IPs and to their filter level.
 #
 # AdGuard applies the age tier (SafeSearch, blocked services, per-client rules)
 # by CLIENT, and a client is identified by IP. Those IPs must therefore track
@@ -7,8 +7,8 @@
 # tiers land on the wrong devices (a stale seed config had Cleo's tier pointed
 # at addresses that later belonged to a parent's phone).
 #
-# Run after any device assignment. Idempotent, and never touches the household
-# catch-all client.
+# Run after any device assignment and after any change to a filter level.
+# Idempotent, and never touches the household catch-all client.
 #
 # WHO GETS A CLIENT OF THEIR OWN (see docs/HOUSEHOLD-ROLES.md):
 #   child        yes, their age tier
@@ -30,11 +30,27 @@
 # which blocks ads and malware and nothing else. An unfiltered television in
 # the lounge is a worse outcome than a wrongly billed one, which is the whole
 # reason the shared class exists. Its level is devices.policy_tier, set by
-# `kidnet shared` or on the Devices page. Clear the level and the client is
+# `genkan shared` or on the Devices page. Clear the level and the client is
 # removed, the same as for a guest who has gone home.
 #
 # A shared device whose label is also a person's name is skipped: AdGuard keys
 # clients by name, so building it would overwrite that person's client.
+#
+# WHAT A LEVEL MEANS lives in the policies table since 2026-09-02
+# (config/db/schema-settings.sql): parental control, SafeSearch, the blocked
+# services and the private flag, edited with `genkan tier set` or on the
+# dashboard's Settings page. The database wins: a client whose settings differ
+# from its level is brought back to the level on every run, the same way the
+# gateway rebuilds its firewall sets from the database rather than trusting
+# what it finds. Before this date an existing client was never re-templated,
+# so a parent could tune one in the AdGuard UI and keep it; that is no longer
+# where the tuning lives, and the Settings page says so. Only the fields a
+# level owns are written (parental, SafeSearch, blocked services, the log
+# flags); upstreams, tags and anything else on the client are left alone.
+#
+# The global blocklists (OISD and friends) are NOT per client. AdGuard cannot
+# apply a filter list to one client and not another, so they stay global and
+# a level cannot change them.
 set -uo pipefail
 : "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}" "${ADGUARD_PASS:?set ADGUARD_PASS}"
 # Connects as kids_agent, a role with no superuser, no DDL and no
@@ -63,7 +79,16 @@ MAP=$(psqll "
     AND NOT EXISTS (SELECT 1 FROM children c WHERE lower(c.name)=lower(d.label))")
 [ -n "$MAP" ] || { echo "genkan-adguard-clients: nobody who needs a client of their own"; exit 0; }
 
-ADGUARD_URL="$ADGUARD_URL" ADGUARD_USER="$ADGUARD_USER" ADGUARD_PASS="$ADGUARD_PASS" MAP="$MAP" python3 <<'PY'
+# The levels themselves. A database that has not loaded schema-settings.sql
+# yet has no adguard_* columns, the query fails, and the script falls back to
+# the table it always carried, which holds the same values.
+TIERS=$(psqll "
+  SELECT tier||'|'||adguard_parental||'|'||safesearch||'|'
+         ||array_to_string(adguard_services,',')||'|'||adguard_private
+  FROM policies ORDER BY tier" 2>/dev/null) || TIERS=""
+
+ADGUARD_URL="$ADGUARD_URL" ADGUARD_USER="$ADGUARD_USER" ADGUARD_PASS="$ADGUARD_PASS" \
+MAP="$MAP" TIERS="$TIERS" python3 <<'PY'
 import os,json,base64,urllib.request
 BASE=os.environ["ADGUARD_URL"]
 auth=base64.b64encode(f'{os.environ["ADGUARD_USER"]}:{os.environ["ADGUARD_PASS"]}'.encode()).decode()
@@ -73,10 +98,9 @@ def call(path,data=None):
     r.add_header("Authorization","Basic "+auth); r.add_header("Content-Type","application/json")
     b=urllib.request.urlopen(r,timeout=10).read()
     return json.loads(b) if b else {}
-# The shipped filter level for each tier, used ONLY when a person has no
-# AdGuard client at all. An existing client is never re-templated: a parent who
-# has tuned one in the AdGuard UI keeps their tuning, and this tool goes on
-# doing the one job it has always done, which is keeping the addresses right.
+# The fallback filter level for each tier, used ONLY when the database has not
+# been given config/db/schema-settings.sql yet. These are the values that file
+# seeds, so the two can never disagree on a fresh box.
 #
 # 'adult' is absent on purpose: household adults get no client of their own.
 TEMPLATES={
@@ -91,24 +115,52 @@ TEMPLATES={
   # guest level makes.
   "guest":  dict(parental=True,  safesearch=False, services=[], private=True),
 }
+# What the database says a level means, when it can say. One line per level:
+# tier|parental|safesearch|service,service,...|private
+LEVELS={}
+for line in os.environ.get("TIERS","").splitlines():
+    if not line.strip(): continue
+    tier,parental,safesearch,services,private=line.split("|",4)
+    LEVELS[tier.strip()]=dict(parental=(parental.strip()=="true"), safesearch=(safesearch.strip()=="true"),
+                              services=[s for s in services.split(",") if s.strip()],
+                              private=(private.strip()=="true"))
+source="the database" if LEVELS else "the built-in table (schema-settings.sql not loaded)"
+def level(tier):
+    src=LEVELS or TEMPLATES
+    return src.get(tier) or src.get("standard") or TEMPLATES["standard"]
 # AdGuard's own tag vocabulary, so a client Genkan creates looks like one a
 # person created in the UI. Nothing here depends on the tag; it is there so the
 # AdGuard query log reads sensibly.
 TAGS={"young":["user_child"],"standard":["user_child"],"teen":["user_child"],
       "guest":["user_regular"],"adult":["user_admin"]}
-def template(name, tier, ips):
-    t=TEMPLATES.get(tier) or TEMPLATES["standard"]
+# The fields a level OWNS on a client. Everything else on the client object
+# (upstreams, tags, the name) is the client's own and is never touched.
+def policy(tier):
+    t=level(tier)
     ss=bool(t["safesearch"])
     return {
-      "name": name, "ids": ips, "tags": TAGS.get(tier,[]), "upstreams": [],
-      "use_global_settings": False, "filtering_enabled": True,
-      "safebrowsing_enabled": True, "parental_enabled": bool(t["parental"]),
+      "parental_enabled": bool(t["parental"]),
       "safesearch_enabled": ss,
       "safe_search": {"enabled": ss, "bing": True, "duckduckgo": True, "ecosia": True,
                       "google": True, "pixabay": True, "yandex": True, "youtube": True},
-      "use_global_blocked_services": False, "blocked_services": list(t["services"]),
+      "use_global_blocked_services": False, "blocked_services": sorted(t["services"]),
       "ignore_querylog": bool(t.get("private")), "ignore_statistics": bool(t.get("private")),
     }
+def template(name, tier, ips):
+    c={"name": name, "ids": ips, "tags": TAGS.get(tier,[]), "upstreams": [],
+       "use_global_settings": False, "filtering_enabled": True, "safebrowsing_enabled": True}
+    c.update(policy(tier))
+    return c
+# Which of a level's fields a client has drifted from. Compared field by field
+# so the log line can say what moved, and so a client AdGuard has decorated
+# with extra keys still compares equal when nothing that matters changed.
+def drift(c, pol):
+    out=[]
+    for k in ("parental_enabled","safesearch_enabled","use_global_blocked_services","ignore_querylog","ignore_statistics"):
+        if bool(c.get(k))!=pol[k]: out.append(k)
+    if sorted(c.get("blocked_services") or [])!=pol["blocked_services"]: out.append("blocked_services")
+    if bool((c.get("safe_search") or {}).get("enabled"))!=pol["safe_search"]["enabled"]: out.append("safe_search")
+    return out
 
 want={}
 for line in os.environ["MAP"].splitlines():
@@ -175,6 +227,7 @@ for name,(tier,role,active,ips) in want.items():
         except Exception as e:
             print(f"  {name}: could not create the AdGuard client ({e}); create one named {name} by hand")
         continue
+    new=dict(c); notes=[]
     if not ips:
         # A child with no assigned devices must match NOTHING. Leaving stale
         # IDs behind is the exact bug this tool exists to fix: the tier would
@@ -188,23 +241,27 @@ for name,(tier,role,active,ips) in want.items():
         PARK=park_address(c.get("ids"))
         if PARK and c.get("ids")!=[PARK]:
             for i in (c.get("ids") or []): in_use.discard(i)
-            new=dict(c); new["ids"]=[PARK]
-            try:
-                call("/control/clients/update",{"name":name,"data":new})
-                print(f"  {name}: no assigned devices, parked on {PARK} so it matches nothing")
-                changed+=1
-            except Exception as e:
-                print(f"  {name}: could not clear IDs ({e}); tier may still match old addresses")
-        else:
-            print(f"  {name}: no assigned devices")
+            new["ids"]=[PARK]
+            notes.append(f"no assigned devices, parked on {PARK} so it matches nothing")
+    elif sorted(c.get("ids") or [])!=sorted(ips):
+        for i in (c.get("ids") or []): in_use.discard(i)
+        for i in ips: in_use.add(i)
+        new["ids"]=ips
+        notes.append(f"ids -> {', '.join(ips)}")
+    # The level. The database wins over whatever the client currently says.
+    pol=policy(tier)
+    moved=drift(c,pol)
+    if moved:
+        new.update(pol)
+        notes.append(f"{tier} level applied ({', '.join(moved)})")
+    if not notes:
+        if not ips: print(f"  {name}: no assigned devices")
         continue
-    if sorted(c.get("ids") or [])==sorted(ips):
-        continue
-    for i in (c.get("ids") or []): in_use.discard(i)
-    for i in ips: in_use.add(i)
-    new=dict(c); new["ids"]=ips
-    call("/control/clients/update",{"name":name,"data":new})
-    print(f"  {name}: ids -> {', '.join(ips)}")
-    changed+=1
-print(f"genkan-adguard-clients: {changed} client(s) updated")
+    try:
+        call("/control/clients/update",{"name":name,"data":new})
+        print(f"  {name}: " + "; ".join(notes))
+        changed+=1
+    except Exception as e:
+        print(f"  {name}: could not update ({e}); " + "; ".join(notes) + " NOT applied")
+print(f"genkan-adguard-clients: {changed} client(s) updated, levels from {source}")
 PY

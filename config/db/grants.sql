@@ -56,10 +56,21 @@ DO $$ BEGIN
 END $$;
 
 -- Reference data the scripts only ever read.
-GRANT SELECT ON always_allow          TO kids_agent;  -- safety net, reading list
 GRANT SELECT ON category_domains      TO kids_agent;  -- genkan-adguard, genkan-catmap
 GRANT SELECT ON flag_domains          TO kids_agent;  -- genkan-alerts, genkan-report
-GRANT SELECT ON policies              TO kids_agent;  -- daily budgets by tier
+-- The allow list and the filter levels (config/db/schema-settings.sql). Both
+-- used to be SELECT only. `genkan allow add|remove` now grows the reading
+-- list and the search hosts, and `genkan tier set` edits what a level means,
+-- so the Settings page has a path that is not raw SQL from the web tier.
+-- DELETE on always_allow is granted knowing what it could reach: the trigger
+-- always_allow_keep_safety refuses to delete or narrow a scope='safety' row
+-- for every role, kids_agent included, and test/db-role-test.sh proves it.
+-- No UPDATE on always_allow: a row is added or removed, never edited into a
+-- different promise. No INSERT or DELETE on policies: a level is edited, never
+-- invented or dropped from a command line.
+GRANT SELECT, INSERT, DELETE ON always_allow TO kids_agent;  -- genkan allow add|remove
+GRANT USAGE ON SEQUENCE always_allow_id_seq TO kids_agent;
+GRANT SELECT, UPDATE         ON policies     TO kids_agent;  -- genkan tier set
 GRANT SELECT ON services              TO kids_agent;  -- genkan-servicemap/-servicemeter
 GRANT SELECT ON service_domains       TO kids_agent;
 GRANT SELECT ON tasks                 TO kids_agent;  -- kidnet earn, genkan-report

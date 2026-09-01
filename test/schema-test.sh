@@ -86,6 +86,27 @@ n=$(psql "SELECT count(*) FROM always_allow WHERE scope='learn' AND domain IN (
 n=$(psql "SELECT count(*) FROM always_allow WHERE scope='safety'")
 [ "${n:-0}" -gt 0 ] && ok "the safety net is seeded ($n domains a blocked child can still reach)" \
   || bad "always_allow has no safety rows, so a cut-off child could not reach a help line"
+# The Settings page (schema-settings.sql): the filter levels carry their
+# AdGuard half, filled with exactly what genkan-adguard-clients used to
+# hard-code, and the trigger that keeps the safety net whole is in place.
+n=$(psql "SELECT count(*) FROM policies WHERE adguard_parental IS NOT NULL AND adguard_services IS NOT NULL")
+[ "${n:-0}" -ge 5 ] && ok "every filter level carries its AdGuard settings ($n levels)" \
+  || bad "only ${n:-0} filter levels carry AdGuard settings; schema-settings.sql may not have loaded"
+[ "$(psql "SELECT array_length(adguard_services,1) FROM policies WHERE tier='young'")" = 12 ] \
+  && ok "the young level blocks the twelve services it always did" \
+  || bad "the young level's blocked services are not the shipped twelve"
+[ "$(psql "SELECT adguard_parental::text||' '||safesearch::text FROM policies WHERE tier='teen'")" = "false false" ] \
+  && ok "the teen level is light touch, as it always was (no parental control, no SafeSearch)" \
+  || bad "the teen level's filter changed on load"
+[ "$(psql "SELECT adguard_private FROM policies WHERE tier='guest'")" = t ] \
+  && ok "the guest level keeps visitors out of the per-client log" \
+  || bad "the guest level is no longer private"
+out=$(psql "DELETE FROM always_allow WHERE domain='1737.org.nz'")
+case "$out" in *"safety net"*) ok "the safety net cannot be narrowed, even by the superuser (trigger)";;
+  *) bad "a safety row could be deleted: ${out:0:80}";; esac
+n=$(psql "SELECT count(*) FROM always_allow WHERE category='search'")
+[ "${n:-0}" -ge 10 ] && ok "the Google search hosts are seeded ($n exact hosts)" \
+  || bad "only ${n:-0} search hosts, so a cut child cannot search"
 n=$(psql "SELECT count(*) FROM vendor_clouds")
 [ "${n:-0}" -gt 10 ] && ok "smart-home vendor clouds are seeded ($n)" || bad "vendor_clouds has ${n:-0} rows"
 # Scheduled bedtimes. The time maths lives in a database function so it can be

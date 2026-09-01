@@ -65,6 +65,8 @@ create.
 | 25 | `schema-learn-intl.sql` | the reading list, part two: the New Zealand, Australian, UK and US curriculum bodies, libraries, museums and science agencies. About forty `learn` domains between the two files |
 | 26 | `schema-schedule.sql` | scheduled bedtimes. Gives the long-unread `schedules` table the columns it was missing (`categories`, `updated_ts`, `set_by`) and its constraints, adds `schedule_overrides` (a holiday window), `schedule_extensions` (tonight only), `schedule_state` (the worker's memory of what it has asserted), the `schedule_windows(at)` time function and the `schedule_next` and `schedule_holding` views. Read by `bin/genkan-schedule`, the dashboard and the kid portal. **A fresh install has no rows, so it schedules nothing** |
 | 27 | `schema-slow.sql` | the slow lane. Adds `category_state.speed` (the third state between on and off), `slow_settings` (how slow, and whether running out of time cuts or slows), the `slow_lane_ips` view the gateway reconciles the four `slow_*` sets from, and `slow_lane_children`. `slow_lane_ips` returns **personal devices only**, which is the iron rule that stops a camera or a smart lock ever being throttled. **A fresh install throttles nobody and still cuts at zero** |
+| 28 to 30 | `schema-notify.sql`, `schema-release.sql`, `schema-retention.sql`, `schema-tor.sql` | notifications, the release log, retention, and the Tor relay table; see [NOTIFICATIONS.md](NOTIFICATIONS.md), [UPGRADING.md](UPGRADING.md) and [tor-and-safety.md](tor-and-safety.md) |
+| 31 | `schema-settings.sql` | the Settings page. The AdGuard half of each filter level on `policies` (`adguard_parental`, `adguard_services`, `adguard_private`), `always_allow.added_by` and `added_ts`, the `always_allow_keep_safety` trigger that refuses to delete or narrow a safety row, and the ten Google search hosts. **Loading it changes nobody's filter**: the columns are filled with what the script used to hard-code |
 
 These ordering constraints are load-bearing:
 
@@ -144,6 +146,20 @@ These ordering constraints are load-bearing:
   because they are pure content and nothing reads them at load time. Their rows
   reach the firewall through `genkan allow-sync` and the gateway's hourly
   refresh, not through the loader. See [READING-LIST.md](READING-LIST.md).
+- `schema-settings.sql` is **last in the list**, after `schema-tor.sql`. It
+  adds the AdGuard half of each filter level to `policies` (`adguard_parental`,
+  `adguard_services`, `adguard_private`; `safesearch` was already there), so
+  it must follow `seed.sql` and `schema-roles.sql`, which insert those rows.
+  It adds `added_by` and `added_ts` to `always_allow` and the
+  `always_allow_keep_safety` trigger, which refuses to delete or narrow a
+  `scope='safety'` row for every role including the superuser, so it must
+  follow `schema-safety.sql` and both `schema-learn` files. It also ships the
+  ten Google search hosts (`category='search'`, exact-host rules) that were
+  first added by hand. The columns are filled per level only where NULL, with
+  the values `bin/genkan-adguard-clients` used to hard-code, so loading it
+  changes nobody's filter. Read by the Settings page and by
+  `genkan-adguard-clients`, which falls back to its built-in table when the
+  columns are absent.
 
 Load them:
 
