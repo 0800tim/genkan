@@ -2210,6 +2210,41 @@ needs a real registry running before the answer is worth anything.
 Nothing in this entry is built beyond the quiz package. `docs/COMMUNITY.md`
 ends with the table that says so.
 
+## A minute of budget means the device was actually there
+
+**2026-09-02, evening.** A child was cut off as out of time on a day he had
+barely touched a device. The meter charged a minute to any child whose device
+was "seen" in the last two minutes, and seen meant `last_seen`, which
+genkan-devicescan refreshes from the DHCP lease list, and whose own comment
+says a lease can never mean here-right-now. A phone in a schoolbag with a
+day-old lease burned the whole budget by ten to six. Worse, the way out
+looked broken: the parent flipped the internet back on, and the next meter
+tick saw no minutes left and cut it again, which read, fairly, as "the
+dashboard does not work". The working path (bonus minutes) was not offered
+anywhere.
+
+Three changes. genkan-devicescan now also records `active_at`, written only
+for neighbours the kernel marks REACHABLE, which means the device answered
+on the wire moments ago. The meter spends against that, with a per-device
+fallback (presence, then the old lease behaviour) so an older box degrades
+rather than silently stopping enforcement. And the Internet chip, when the
+reason is out-of-time, says OUT OF TIME and offers minutes instead of a
+toggle that loses to the meter a minute later.
+
+A fourth change followed the next morning: the day rolls over at midnight
+and the budget comes back, but nothing lifted the block, so a child cut at
+23:53 was still cut at breakfast with a full budget showing (only earning
+lifted out-of-time). The meter now lifts an out-of-time block, and only
+that kind, the moment the child has minutes again, marked set_by='new-day'
+and audited. A bedtime or a parent's off is never touched.
+
+The rule: **the thing that charges must read the same evidence as the thing
+that answers "are you actually here", and a control that will be undone in
+a minute is worse than no control.** An idle-but-connected device still
+costs minutes when background traffic keeps it REACHABLE; the honest fix
+for that is counter-based activity, and METERING.md carries it as an open
+edge, not a solved one.
+
 ## The log hides the chatter and collapses the echoes
 
 **2026-09-02.** The first real look at the log was mostly noise: every name

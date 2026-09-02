@@ -70,11 +70,20 @@ UPDATE dhcp_leases SET active=false
 # device in that table answered ARP recently, so it is genuinely on the wire.
 # A lease proves only that we gave it an address once.
 GW="${GW_CONTAINER:-genkan-gw}"
-PRESENT=$(docker exec "$GW" ip neigh show dev kids0 2>/dev/null \
-  | grep -iE 'REACHABLE|STALE|DELAY|PROBE' | awk '{print $1}' | grep -E '^[0-9]' | paste -sd, || true)
-# PRESENT is interpolated into SQL, so it must be nothing but addresses and
+NEIGH=$(docker exec "$GW" ip neigh show dev kids0 2>/dev/null || true)
+PRESENT=$(printf '%s\n' "$NEIGH" | grep -iE 'REACHABLE|STALE|DELAY|PROBE' | awk '{print $1}' | grep -E '^[0-9]' | paste -sd, || true)
+# ACTIVE is the strict subset: REACHABLE means the device answered on the
+# wire moments ago. The meter spends budget against this one, not the lease
+# and not STALE, so a phone that left the house stops costing minutes.
+ACTIVE=$(printf '%s\n' "$NEIGH" | grep -i 'REACHABLE' | awk '{print $1}' | grep -E '^[0-9]' | paste -sd, || true)
+# Both are interpolated into SQL, so they must be nothing but addresses and
 # commas. `ip neigh` has never produced anything else, and this makes it so.
 case "${PRESENT:-}" in *[!0-9.,]*) PRESENT="";; esac
+case "${ACTIVE:-}" in *[!0-9.,]*) ACTIVE="";; esac
+if [ -n "${ACTIVE:-}" ]; then
+  "${DB[@]}" -qc "UPDATE devices SET active_at = now()
+                   WHERE host(reserved_ip) = ANY (string_to_array('$ACTIVE', ','))" 2>/dev/null || true
+fi
 if [ -n "${PRESENT:-}" ]; then
   "${DB[@]}" -qc "UPDATE devices SET present_at = now()
                    WHERE host(reserved_ip) = ANY (string_to_array('$PRESENT', ','))" 2>/dev/null || true

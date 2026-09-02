@@ -558,7 +558,7 @@ skipped), then calls `genkan spend <kid> 1`. At zero, `genkan` blocks their
 internet and marks the block `set_by='out-of-time'`, which is the only kind of
 block a quiz can lift.
 
-This is the whole-internet minute meter. Per-category minutes are counted
+This is the whole-internet minute meter. A minute is charged only when a device of the child's answered on the wire in the last three minutes (devices.active_at, kernel REACHABLE), never off the back of a DHCP lease. Per-category minutes are counted
 separately by `genkan-catmeter`.
 
 ---

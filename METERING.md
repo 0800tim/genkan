@@ -322,3 +322,13 @@ The household figure on that page comes from somewhere else again: the kids0
 byte counters in `/proc/net/dev` inside the gateway container. That is every
 byte that crossed the wire, named or not, which is why the household total is
 usually larger than the sum of the devices Genkan can attribute.
+
+## What "online" means to the whole-internet meter (2026-09-02)
+
+A minute is charged only when one of the child's personal devices was
+genuinely on the wire in the last three minutes: `devices.active_at`, written
+by genkan-devicescan for neighbours the kernel marks REACHABLE. Not the DHCP
+lease (a phone in a schoolbag holds one for a day), and not STALE presence.
+The honest edge that remains: a connected but idle device whose background
+traffic keeps it REACHABLE still costs minutes. Fixing that needs the same
+counter-based evidence the category meter uses, and is not built.

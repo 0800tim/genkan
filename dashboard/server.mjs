@@ -158,7 +158,7 @@ async function state() {
     // of the record, and a parent should be able to check what they already
     // dealt with without it shouting at them from the top of the page.
     q("SELECT id,ts,severity,category,domain,detail FROM alerts WHERE acknowledged ORDER BY ts DESC LIMIT 10"),
-    q("SELECT c.name kid, cs.category FROM category_state cs JOIN children c ON c.id=cs.child_id WHERE cs.blocked"),
+    q("SELECT c.name kid, cs.category, cs.set_by FROM category_state cs JOIN children c ON c.id=cs.child_id WHERE cs.blocked"),
     q("SELECT ts,target_ref,action,source FROM block_events ORDER BY ts DESC LIMIT 12"),
     q("SELECT child_id,name,budget_min,bonus_min,used_min,remaining_min FROM time_remaining"),
     q(`SELECT ec.id, c.name kid, t.name task, t.minutes, ec.ts FROM earn_claims ec

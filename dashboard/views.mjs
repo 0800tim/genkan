@@ -451,6 +451,11 @@ async function post(url,body){
   catch(e){return {r:{ok:false,status:0},j:{out:'Could not reach the dashboard: '+e.message}};}}
 async function act(cmd,who,arg){say('working...');
   const {r,j}=await post('/api/act',{cmd,who,arg});done(r,j,600);}
+function giveBack(who){
+  var m=prompt('Out of time. How many minutes to give back to '+who+'?','30');
+  if(m===null)return; m=parseInt(m,10);
+  if(!(m>0&&m<=1440)){say('A number of minutes, between 1 and 1440.');return;}
+  act('bonus',who,String(m));}
 async function assign(mac){const label=document.getElementById('lbl_'+mac).value||'device';
   const who=document.getElementById('who_'+mac).value;
   /* Never guess an owner. An empty picker used to fall through to whoever
@@ -603,7 +608,13 @@ function bedtimeChip(k, s) {
 }
 
 function kidState(k, cats, slow) {
-  const blocked = new Set(cats.filter(x => x.kid === k.name).map(x => x.category));
+  const mine = cats.filter(x => x.kid === k.name);
+  const blocked = new Set(mine.map(x => x.category));
+  // WHY the internet is off changes what the chip offers: a parent's off
+  // toggles back on; out-of-time toggles on and is re-cut by the meter one
+  // minute later (which read, fairly, as "the dashboard does not work"), so
+  // that state offers minutes instead.
+  const inetWhy = mine.find(x => x.category === "internet")?.set_by || "";
   const inetOff = blocked.has("internet");
   const gameOff = blocked.has("gaming");
   const mediaOff = blocked.has("video") || blocked.has("social");
@@ -614,7 +625,7 @@ function kidState(k, cats, slow) {
   const inetSlow = !inetOff && sl.has("internet");
   const gameSlow = !gameOff && sl.has("gaming");
   const mediaSlow = !mediaOff && (sl.has("video") || sl.has("social"));
-  return { blocked, inetOff, gameOff, mediaOff, inetSlow, gameSlow, mediaSlow,
+  return { blocked, inetOff, inetWhy, gameOff, mediaOff, inetSlow, gameSlow, mediaSlow,
            study: gameOff && mediaOff && !inetOff };
 }
 
@@ -644,8 +655,14 @@ function chips(k, st) {
     return `<button class="chip ${state}" title="${hint}" onclick="${call}">
        <span class="dot"></span>${label}: <b>${word}</b></button>`;
   };
+  // Out of time is not a parent's off: flipping it on lasts one meter tick.
+  // The honest control is minutes, so that is what the chip offers.
+  const inetChip = st.inetOff && st.inetWhy === "out-of-time"
+    ? `<button class="chip off" title="Out of time. Tap to give minutes back" onclick="giveBack('${esc(k.name)}')">
+         <span class="dot"></span>🌐 Internet: <b>OUT OF TIME</b></button>`
+    : chip("🌐 Internet", st.inetOff, st.inetSlow, "off", ["full", "internet"], ["slow", "internet"]);
   return `<div class="chips">
-    ${chip("🌐 Internet", st.inetOff, st.inetSlow, "off", ["full", "internet"], ["slow", "internet"])}
+    ${inetChip}
     ${chip("🎮 Gaming", st.gameOff, st.gameSlow, "game off", ["full", "gaming"], ["slow", "gaming"])}
     ${chip("📺 Media", st.mediaOff, st.mediaSlow, "media off", ["full", "media"], ["slow", "media"])}
     <button class="chip mode ${st.study ? "active" : ""}" onclick="act('${st.study ? "study off" : "study on"}','${esc(k.name)}')">

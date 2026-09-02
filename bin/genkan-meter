@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Runs every minute (systemd timer). For each child currently ALLOWED online
-# with a device active in the last ~2 min, spend 1 minute. kidnet flips them
+# with a device genuinely on the wire in the last ~3 min (kernel REACHABLE,
+# not a lease), spend 1 minute. kidnet flips them
 # to the captive portal at 0. Bonus/earn adds minutes back and reopens.
 set -euo pipefail
 KN="$(command -v kidnet || echo "$(dirname "$0")/kidnet")"
@@ -21,7 +22,15 @@ BASE="
   JOIN devices d ON d.child_id=c.id
   JOIN time_ledger l ON l.child_id=c.id AND l.day=CURRENT_DATE
   WHERE c.kind='child' AND c.active
-    AND d.last_seen > now() - interval '2 minutes'
+    -- A minute of budget means the device was actually on the wire:
+    -- active_at (kernel REACHABLE, written by genkan-devicescan) within the
+    -- last 3 minutes. Falls back per device for a box whose devicescan has
+    -- not written the newer columns yet: presence, then the old lease-based
+    -- last_seen, which is what burned a child's whole budget on 2026-09-02
+    -- while their phone sat in a schoolbag holding a day-old lease.
+    AND CASE WHEN d.active_at  IS NOT NULL THEN d.active_at  > now() - interval '3 minutes'
+             WHEN d.present_at IS NOT NULL THEN d.present_at > now() - interval '3 minutes'
+             ELSE d.last_seen > now() - interval '2 minutes' END
     AND d.reserved_ip IS NOT NULL      -- only meter what we can enforce on
     AND d.category = 'personal'        -- never meter smart home or infrastructure
     AND l.budget_min < 999
@@ -37,6 +46,23 @@ BASE="
 # than the one this clause fixes.
 SLOW="
     AND NOT EXISTS (SELECT 1 FROM slow_lane_children s WHERE s.child_id=c.id AND s.category='internet')"
+# The other half of the ledger's day: at midnight the budget resets, and
+# until 2026-09-03 nothing lifted the block, so a child cut at 23:53 was
+# still cut at breakfast with a full budget showing (only earning lifted
+# out-of-time). The meter now lifts an out-of-time block, and only that
+# kind, the moment the child has minutes again: a new day, or minutes given
+# by any road. A bedtime or a parent's off is never touched; the precedence
+# table in DECISIONS.md ("Bedtimes ran themselves") still holds.
+psqll "
+  WITH lifted AS (
+    UPDATE category_state cs SET blocked=false, since=now(), set_by='new-day'
+     FROM time_remaining r
+    WHERE r.child_id=cs.child_id AND cs.category='internet'
+      AND cs.blocked AND cs.set_by='out-of-time' AND r.remaining_min > 0
+    RETURNING cs.child_id)
+  INSERT INTO block_events(target_type, target_ref, action, source, actor)
+  SELECT 'child', c.name||':internet', 'on', 'meter', 'the meter (time again)'
+    FROM lifted l JOIN children c ON c.id=l.child_id" >/dev/null 2>&1 || true
 kids=$(psqll "$BASE$SLOW" 2>/dev/null) || kids=$(psqll "$BASE")
 for kid in $kids; do
   bash "$KN" spend "$kid" 1 >/dev/null || true
