@@ -2210,6 +2210,38 @@ needs a real registry running before the answer is worth anything.
 Nothing in this entry is built beyond the quiz package. `docs/COMMUNITY.md`
 ends with the table that says so.
 
+## A reserved address that was not reserved anywhere
+
+**2026-09-04.** `devices.reserved_ip` is the address every control resolves
+to: the firewall's `kids_known` set, the block set, the meter, the per-child
+filter level and the household IoT policy all reach a person or a rule
+through it. Nothing had ever reserved that address at the DHCP server.
+AdGuard was holding fourteen dynamic leases and no static ones, so the column
+was not a reservation, it was a note of where a device had last been seen. A
+device that came back on a different address was blocked, metered and
+filtered at the old one until the next scan caught up.
+
+`bin/genkan-adguard-leases`, reachable as `genkan reserve`, makes AdGuard
+hand each known device the same address every time. It pins a real,
+burned-in MAC and skips a randomised one, because a phone that invents a new
+MAC per network would have an address held for a MAC that never comes back,
+and it says how many it skipped and why rather than quietly doing less than
+asked. It never removes a reservation for a MAC that is not a device we
+know: a household may have pinned something by hand and that is theirs.
+
+Two things surfaced while identifying that household's devices, and both
+were the same shape: **derived data nobody re-derived.** `genkan-classify`
+had `3c:0b:59` as TP-Link when the registry says Tuya, so a bulb was
+described to its owner as a TP-Link device. And two MAC prefixes were
+claimed by two branches each, where a bash `case` takes the first match, so
+`50:14:79` (iRobot) sat under Philips-Hue and a Roomba without a give-away
+hostname would have been filed as a light. The table is corrected and
+deduplicated, `test/schema-test.sh` refuses a prefix claimed twice, and
+`genkan-classify --vendors` re-derives the vendor for every device while
+touching nothing a parent decided. The rule the old code got wrong is worth
+naming: **never overwriting a parent's choice must not mean never correcting
+our own guess.**
+
 ## The kids' wifi comes from a router somebody already owns
 
 **2026-09-04.** The access point is the second thing everybody gets wrong

@@ -37,6 +37,7 @@
 #                                  device: the household's, not one child's
 #   genkan sweep <mac|ip> dinner|house on|off|default   the two tick boxes
 #   genkan name <mac|ip> <name>    rename a device, changing nothing else
+#   genkan reserve [--dry-run|--list]  pin known devices to fixed addresses
 #   genkan allow-sync              refresh the safety net (always_allow -> nft)
 #   genkan allow list              the allow list: safety net, reading list, search hosts
 #   genkan allow add <domain> <learn|search> [note]   a site a cut-off child may
@@ -930,6 +931,12 @@ case "${1:-}" in
   # The address, the label and the optional reservation all land in SQL, so all
   # three are gated: a MAC or an IPv4 for the address, an IPv4 for the
   # reservation, plain text for the label a parent typed.
+  reserve)
+    # Static DHCP reservations, so a device comes back to the same address.
+    # Everything that enforces anything keys on devices.reserved_ip, and until
+    # this existed nothing reserved that address at the DHCP server, so the
+    # column recorded where a device had been rather than where it would be.
+    shift; exec "$(dirname "$0")/genkan-adguard-leases" "$@";;
   name)
     # Rename any device, and change nothing else about it. Every other verb
     # that can set a label also sets something structural (assign sets an

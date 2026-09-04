@@ -33,7 +33,15 @@
 # device we know is left alone, because a household may have pinned something
 # by hand in the AdGuard UI and that is their business.
 set -uo pipefail
-: "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}" "${ADGUARD_PASS:?set ADGUARD_PASS}"
+# Run by hand as often as by a caller that already has the environment, so it
+# reads the household's own gitignored secrets when AdGuard's password is not
+# already set. Same pattern as bin/genkan-kid-summary.
+ROOT="${GENKAN_ROOT:-/srv/projects/internal/kids-network}"
+if [ -z "${ADGUARD_PASS:-}" ] && [ -f "$ROOT/secrets.env" ]; then
+  set -a; . "$ROOT/secrets.env"; set +a
+fi
+: "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}"
+: "${ADGUARD_PASS:?the AdGuard password is not set; it lives in secrets.env as ADGUARD_PASS}"
 PG_CONTAINER="${PG_CONTAINER:-postgres}"
 DB_NAME="${GENKAN_DB:-kids_network}"
 DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"

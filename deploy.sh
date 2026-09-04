@@ -134,6 +134,7 @@ chmod 0755 /usr/local/bin/kidnet
 install -m 0755 "$R/bin/genkan-meter"    /usr/local/bin/genkan-meter
 install -m 0755 "$R/bin/genkan-adguard"  /usr/local/bin/genkan-adguard
 install -m 0755 "$R/bin/genkan-adguard-clients" /usr/local/bin/genkan-adguard-clients
+install -m 0755 "$R/bin/genkan-adguard-leases"  /usr/local/bin/genkan-adguard-leases
 install -m 0755 "$R/bin/genkan-dnslog"   /usr/local/bin/genkan-dnslog
 install -m 0755 "$R/bin/genkan-catmap"   /usr/local/bin/genkan-catmap
 install -m 0755 "$R/bin/genkan-catmeter" /usr/local/bin/genkan-catmeter

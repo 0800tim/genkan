@@ -419,6 +419,9 @@ camera, lock, speaker and vacuum is allowed to talk to. Read
     genkan unassigned                   devices with no owner set yet
     genkan leases                       current DHCP leases
     genkan name <mac|ip> <name>         rename a device, changing nothing else
+    genkan reserve                      pin known devices to fixed addresses
+    genkan reserve --dry-run            say what it would pin, change nothing
+    genkan reserve --list               what is pinned now
     genkan assign <mac|ip> <person> <label> [reserved-ip]
     genkan shared <mac|ip> [label] [tier]   file it as a shared family device
     genkan infra <mac>                  mark a device as infrastructure (an AP, a switch)
@@ -427,6 +430,19 @@ camera, lock, speaker and vacuum is allowed to talk to. Read
     genkan guest leave <name>           they have gone home
     genkan guest back <name>            they are visiting again
     genkan guest list                   the visitors here right now
+
+`reserve` makes AdGuard hand each known device the same address every time,
+which until 2026-09-04 nothing did. `devices.reserved_ip` is what the
+firewall's known-address set, the block set, the meter, the per-child filter
+level and the IoT policy all resolve to, and it was only ever a record of
+where a device had last been seen. AdGuard held fourteen dynamic leases and
+no static ones.
+
+It pins a device with a real, burned-in MAC and skips one with a randomised
+address, because a phone that invents a new MAC per network would have an
+address reserved for a MAC that never returns. It says how many it skipped
+and why. It never removes a reservation for a MAC that is not a device
+Genkan knows, so anything pinned by hand in the AdGuard UI is left alone.
 
 `name` changes a device's label and nothing else. It exists because every
 other verb that can set a label also sets something structural: `assign` sets
