@@ -256,6 +256,13 @@ DROP VIEW IF EXISTS device_roster;
 CREATE VIEW device_roster AS
 SELECT d.id, d.label, d.hostname, d.mac::text AS mac, host(d.reserved_ip) AS ip,
        d.kind AS device_kind, d.category, d.vendor, d.is_active, d.last_seen,
+       -- Evidence the device was actually ON THE WIRE, which last_seen is not:
+       -- that one is refreshed from the DHCP lease list, and a lease outlives
+       -- the device holding it by up to a day. present_at is any neighbour
+       -- entry, active_at a REACHABLE one. The dashboard's "online" badge
+       -- reads these; before 2026-09-04 it read last_seen and showed a phone
+       -- in a schoolbag as online.
+       d.present_at, d.active_at,
        c.id AS person_id, c.name AS person, c.kind AS person_kind, c.policy_tier,
        -- A shared device's own filter level, and the one that actually applies.
        d.policy_tier                          AS device_tier,

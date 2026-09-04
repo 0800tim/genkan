@@ -14,12 +14,21 @@
 # This does what the browser does, with node, for every page, in a second.
 set -uo pipefail
 BASE="${1:-http://127.0.0.1:9275}"
-PAGES=(/ /now /week /trends /analytics /learn /devices /family /settings /system)
+# The routes the dashboard actually serves. Two of these used to be wrong
+# (/now and /learn, which are /live and /earn), and because a 404 carries no
+# inline script the check passed on them for weeks. See the status check below.
+PAGES=(/ /live /week /trends /analytics /earn /devices /family /settings /notify /system)
 TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
 fail=0
 for pg in "${PAGES[@]}"; do
-  if ! curl -s --max-time 15 "$BASE$pg" -o "$TMP/page.html"; then
-    printf '  FAIL  %-10s did not answer\n' "$pg"; fail=1; continue
+  # The STATUS first. A page that 500s or 404s contains no inline script, so
+  # checking only that its scripts parse passed it silently: that is exactly
+  # how a dashboard broken by a missing column stayed green here while the
+  # parent looking at it saw an error (2026-09-04).
+  code=$(curl -s --max-time 15 -o "$TMP/page.html" -w '%{http_code}' "$BASE$pg")
+  if [ "$code" != 200 ]; then
+    printf '  FAIL  %-11s answered %s: %s\n' "$pg" "$code" "$(head -c 120 "$TMP/page.html" | tr -d '\n')"
+    fail=1; continue
   fi
   n=$(python3 - "$TMP/page.html" "$TMP" <<'PY'
 import re,sys
@@ -37,6 +46,6 @@ PY
     fi
     rm -f "$f"
   done
-  [ "$bad" = 0 ] && printf '  ok    %-10s %s inline script(s) parse\n' "$pg" "$n" || fail=1
+  [ "$bad" = 0 ] && printf '  ok    %-11s 200, %s inline script(s) parse\n' "$pg" "$n" || fail=1
 done
 [ "$fail" = 0 ] && echo "every page's scripts parse" || { echo "a page is serving JavaScript the browser cannot run"; exit 1; }
