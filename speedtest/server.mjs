@@ -120,7 +120,7 @@ const PAGE = `<!doctype html><html><head><meta charset="utf-8">
   STREAMS <select id="streams"><option>1</option><option selected>4</option><option>8</option></select>
 </div>
 <div class="stcard">
-  <div class="sthead"><div class="wordmark">HEA<span class="o">R</span>TH</div>
+  <div class="sthead"><div class="wordmark">GEN<span class="o">K</span>AN</div>
     <div class="stlabel">&#9889; YOUR HOME NETWORK</div></div>
   <div class="main">
     <div class="gaugebox"><svg id="gauge" viewBox="0 0 400 400"></svg><button id="gofab">GO</button></div>

@@ -84,7 +84,10 @@ lint-sql-comments.py (refuses a bash '#' comment written inside a SQL string,
 which is legal bash and once killed the whole flagged-domain alert path for a
 day), lint-pipefail-grep.py (refuses `printf | grep -q` in a script that sets
 pipefail: grep's early exit kills the producer with SIGPIPE and pipefail turns
-a successful match into a failure), check-pages.sh (fetches every dashboard
+a successful match into a failure), lint-brand.py (reads the pages we serve
+the way a person does, tags stripped, because the speed test said HEARTH for
+four days after the rename: its heading was HEA<span>R</span>TH so no search
+for the string ever found it), check-pages.sh (fetches every dashboard
 page and node --checks each inline script, because one unescaped \n in a
 template literal once left the devices page with no working buttons) and
 enable-https.sh.
