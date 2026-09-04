@@ -117,6 +117,11 @@ doors you did not mean to leave open.
 Save and let it reboot. From here on it answers at `192.168.60.2`, so the old
 address will stop working. That is correct.
 
+Two things you will notice at the new address, both normal: it serves its
+admin page over **https** now, and your browser will warn about the
+certificate because the router signs its own. It is your own hardware on your
+own wire, so accept the warning and carry on.
+
 **7. Cable it up, and watch Genkan check your work.** Power the Huawei off.
 Plug the cable from the Genkan box's kids side interface into **any yellow
 port**. Leave the blue port empty. Leave the DSL port empty. Power it back on.
@@ -230,8 +235,9 @@ output to your agent if something is wrong.
 The configuration itself is still yours to click through, for now. A scripted
 version for this model is being built, and the groundwork is done: on
 2026-09-04 a factory reset unit (hardware VER.B, firmware V100R001C222B011)
-was driven from a Genkan box on a dedicated cable, far enough to prove it is
-possible and to find every setting such a script will need.
+was configured end to end from a Genkan box on a dedicated cable: wifi name
+and password, DHCP server off, admin password changed, and the LAN address
+moved onto the island, each one verified by reading it back afterwards.
 
 For anyone building that, what the router's own interface does:
 
@@ -248,6 +254,20 @@ For anyone building that, what the router's own interface does:
   something.
 - A factory reset unit opens on its setup wizard, and the full menu only
   appears once that is past, so a script has to expect either.
+- The interface is an Ember application, and it commits the model on real
+  input events. Setting a field's value programmatically leaves the right
+  text on screen and saves **nothing**, with no error: the save posts the old
+  values. Type into the fields instead, and blur them, or drive the API.
+- Once the LAN address moves off its default, the admin page answers on
+  https with a self signed certificate and an old TLS stack, and it answers a
+  plain http request with a 307. A driver has to follow that to https and be
+  willing to talk to a legacy server.
+- Changing the admin password logs the session out, so do it last, or log in
+  again afterwards.
+
+Order matters when scripting it: the wifi and the DHCP server first, the
+admin password next, and the LAN address last, because that one takes the
+router off the address you are talking to it on.
 
 Whatever drives it must fingerprint the firmware first and refuse if it does
 not recognise what it is looking at. Half configuring somebody's router is
