@@ -2210,6 +2210,32 @@ needs a real registry running before the answer is worth anything.
 Nothing in this entry is built beyond the quiz package. `docs/COMMUNITY.md`
 ends with the table that says so.
 
+## Online meant "holds a lease", which is not the same thing at all
+
+**2026-09-04.** A parent looked at his own Devices page and said there were
+more things showing as online than there were devices in the house. He was
+right. The badge was `last_seen > now() - 5 minutes`, and
+`genkan-devicescan` refreshes `last_seen` from the DHCP lease list every
+minute, for every device holding a lease. A lease lasts a day. So a phone in
+a schoolbag, a Roomba on its dock and a laptop that left on Tuesday all read
+as online, and the one column that could have told the truth was sitting
+unused beside it.
+
+It now reads `GREATEST(active_at, present_at) > now() - 10 minutes`: the
+neighbour table, which only knows a device because it answered on the wire.
+The list went from every row lit up to eleven of twenty-three, which is a
+house. This is the same mistake the meter made two days earlier, in the
+display layer instead of the enforcement layer, and the same lesson: **a
+lease says we offered an address, never that anybody is holding it.**
+
+The cleanup that followed needed `genkan forget`, because there was no way
+to remove a device row except a DELETE by hand, and the CLI's role had no
+DELETE on `devices` (granted, with the reason: it fails safe, since a
+forgotten address leaves `kids_known` and loses the internet rather than
+gaining anything). It refuses a named or owned device without `--force`, and
+it releases the DHCP reservation, because a pin left behind holds an address
+for a device that has gone.
+
 ## A reserved address that was not reserved anywhere
 
 **2026-09-04.** `devices.reserved_ip` is the address every control resolves

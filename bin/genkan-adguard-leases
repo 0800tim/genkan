@@ -4,6 +4,7 @@
 #   genkan-adguard-leases              pin what should be pinned, print what changed
 #   genkan-adguard-leases --dry-run    say what it would do, change nothing
 #   genkan-adguard-leases --list       what AdGuard is pinning now
+#   genkan-adguard-leases --drop MAC   take one reservation back out
 #
 # WHY THIS EXISTS. `devices.reserved_ip` is the address every control keys on:
 # the firewall's kids_known set, the block set, the meter, the per-child filter
@@ -47,8 +48,12 @@ DB_NAME="${GENKAN_DB:-kids_network}"
 DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
 psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1" < /dev/null; }
 
-MODE=apply
-case "${1:-}" in --dry-run|-n) MODE=dry;; --list|-l) MODE=list;; esac
+MODE=apply; DROP=""
+case "${1:-}" in
+  --dry-run|-n) MODE=dry;;
+  --list|-l)    MODE=list;;
+  --drop)       MODE=drop; DROP="${2:?usage: --drop <mac>}";;
+esac
 
 # mac|ip|name  for every active device we know an address for. The name is
 # only a label for the AdGuard UI; nothing keys on it.
@@ -60,7 +65,7 @@ WANT=$(psqll "
    ORDER BY reserved_ip")
 
 ADGUARD_URL="$ADGUARD_URL" ADGUARD_USER="$ADGUARD_USER" ADGUARD_PASS="$ADGUARD_PASS" \
-MODE="$MODE" WANT="$WANT" python3 <<'PY'
+MODE="$MODE" DROP="$DROP" WANT="$WANT" python3 <<'PY'
 import os, json, base64, urllib.request, ipaddress, sys
 
 url  = os.environ["ADGUARD_URL"]
@@ -90,6 +95,23 @@ except Exception:
     net = None
 
 have = {l.get("mac", "").lower(): l for l in (st.get("static_leases") or [])}
+
+# Taking one back out, by MAC, when its device is forgotten. Only ever the
+# one named: a reservation for a MAC we no longer know might still be one a
+# household pinned by hand.
+if mode == "drop":
+    want = os.environ.get("DROP", "").lower()
+    cur = have.get(want)
+    if not cur:
+        print(f"  nothing was pinned for {want}")
+        raise SystemExit(0)
+    try:
+        call("/control/dhcp/remove_static_lease",
+             {"mac": want, "ip": cur.get("ip"), "hostname": cur.get("hostname", "")})
+        print(f'  released {cur.get("ip")} from {want}')
+    except Exception as e:
+        print(f"  could not release {want}: {e}", file=sys.stderr); raise SystemExit(1)
+    raise SystemExit(0)
 
 if mode == "list":
     if not have:

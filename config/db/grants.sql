@@ -257,3 +257,13 @@ GRANT UPDATE ON time_ledger, category_state TO kids_app;              -- crediti
 GRANT UPDATE, DELETE ON children TO kids_app;                          -- the Family page edits people
 GRANT UPDATE ON devices TO kids_app;                                   -- naming, sweeps, tiers, claims
 GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO kids_app;             -- the id columns behind the inserts
+
+-- DELETE on devices, for `genkan forget`. A phone that randomises its MAC
+-- leaves a row behind every time it rotates, and a household that never
+-- clears them out ends up unable to see the wood for the trees on its own
+-- Devices page. It fails in the safe direction: a deleted row drops out of
+-- the kids_known set, so that address loses the internet until the device
+-- asks for a lease again, rather than gaining anything. The verb refuses a
+-- device that has been named or given an owner unless --force, so the
+-- accident it guards against is forgetting somebody's phone silently.
+GRANT DELETE ON devices TO kids_agent;

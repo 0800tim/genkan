@@ -422,6 +422,7 @@ camera, lock, speaker and vacuum is allowed to talk to. Read
     genkan reserve                      pin known devices to fixed addresses
     genkan reserve --dry-run            say what it would pin, change nothing
     genkan reserve --list               what is pinned now
+    genkan forget <mac|ip> [--force]    remove a device row, and its reservation
     genkan assign <mac|ip> <person> <label> [reserved-ip]
     genkan shared <mac|ip> [label] [tier]   file it as a shared family device
     genkan infra <mac>                  mark a device as infrastructure (an AP, a switch)
@@ -430,6 +431,15 @@ camera, lock, speaker and vacuum is allowed to talk to. Read
     genkan guest leave <name>           they have gone home
     genkan guest back <name>            they are visiting again
     genkan guest list                   the visitors here right now
+
+`forget` removes a device row. A phone that randomises its address leaves one
+behind every time it rotates, so a household that never clears them cannot
+read its own Devices page. It refuses a device that has been named or given an
+owner unless you add `--force`, because forgetting a child's phone silently is
+how one ends up unfiltered, and it releases that device's DHCP reservation so
+an address is not held for something that has gone. It fails in the safe
+direction: a forgotten address drops out of `kids_known`, so it loses the
+internet until the device asks for a lease again.
 
 `reserve` makes AdGuard hand each known device the same address every time,
 which until 2026-09-04 nothing did. `devices.reserved_ip` is what the

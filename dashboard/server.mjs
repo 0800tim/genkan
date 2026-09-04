@@ -144,7 +144,13 @@ async function state() {
     // the page cannot draw a ticked box next to something that is in no sweep.
     q(`SELECT id,label,hostname,mac,ip,device_kind,category,vendor,person,person_kind,unassigned,
          device_tier,in_dinner,in_house_off,dinner_default,house_off_default,
-         (last_seen > now()-interval '5 minutes') AS online
+         -- Online means the device ANSWERED ON THE WIRE recently, not that it
+         -- holds a lease. genkan-devicescan refreshes last_seen from the lease
+         -- list every minute, and a lease outlives the device that holds it by
+         -- up to a day, so the old test showed a phone in a schoolbag as
+         -- online (2026-09-04, and the same mistake the meter made).
+         -- active_at is a REACHABLE neighbour, present_at any neighbour at all.
+         (GREATEST(active_at, present_at) > now()-interval '10 minutes') AS online
        FROM device_roster ORDER BY unassigned DESC, online DESC, person NULLS LAST, label`),
     q("SELECT name,kind FROM people WHERE active ORDER BY kind,name"),
     // Everyone, every role, past guests included: the Family page and the

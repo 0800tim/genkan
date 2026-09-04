@@ -38,6 +38,7 @@
 #   genkan sweep <mac|ip> dinner|house on|off|default   the two tick boxes
 #   genkan name <mac|ip> <name>    rename a device, changing nothing else
 #   genkan reserve [--dry-run|--list]  pin known devices to fixed addresses
+#   genkan forget <mac|ip> [--force]   remove a device row we no longer need
 #   genkan allow-sync              refresh the safety net (always_allow -> nft)
 #   genkan allow list              the allow list: safety net, reading list, search hosts
 #   genkan allow add <domain> <learn|search> [note]   a site a cut-off child may
@@ -937,6 +938,30 @@ case "${1:-}" in
     # this existed nothing reserved that address at the DHCP server, so the
     # column recorded where a device had been rather than where it would be.
     shift; exec "$(dirname "$0")/genkan-adguard-leases" "$@";;
+  forget)
+    # Devices accumulate: a phone that randomises its MAC leaves a row behind
+    # every time it rotates, and there was no way to clear one out except a
+    # DELETE by hand. Refuses anything a parent has claimed (an owner or a
+    # name) unless --force, because forgetting somebody's phone silently is
+    # how a child ends up unfiltered. The row goes; nothing else does, and the
+    # device simply reappears as new if it ever comes back.
+    key="${2:?mac-or-ip}"; ck_addr "$key"; force=0; [ "${3:-}" = "--force" ] && force=1
+    col=mac; case "$key" in *.*) col="host(reserved_ip)";; esac
+    row=$(psqll "SELECT coalesce(label,hostname,'(unnamed)')||'|'||coalesce(child_id::text,'')||'|'||coalesce(label,'')
+                   FROM devices WHERE ${col}::text='$key'")
+    [ -n "$row" ] || { echo "genkan: no device here has $key" >&2; exit 1; }
+    who=${row#*|}; owner=${who%%|*}; lbl=${who#*|}; nm=${row%%|*}
+    if [ "$force" = 0 ] && { [ -n "$owner" ] || [ -n "$lbl" ]; }; then
+      echo "genkan: '$nm' has been named or given an owner, so it is not forgotten by accident."
+      echo "  If you are sure:  genkan forget $key --force" >&2; exit 1
+    fi
+    mac=$(psqll "SELECT mac::text FROM devices WHERE ${col}::text='$key'")
+    psqll "DELETE FROM devices WHERE ${col}::text='$key'" >/dev/null
+    # A forgotten device must not keep an address reserved for it.
+    d="$(dirname "$0")/genkan-adguard-leases"
+    [ -x "$d" ] && [ -n "$mac" ] && "$d" --drop "$mac" 2>/dev/null || true
+    audit device "$key" forgotten
+    echo "genkan: forgot $key ($nm). It will come back as a new device if it ever returns.";;
   name)
     # Rename any device, and change nothing else about it. Every other verb
     # that can set a label also sets something structural (assign sets an
