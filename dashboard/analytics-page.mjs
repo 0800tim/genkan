@@ -584,7 +584,8 @@ function blockedCard(o, f) {
       <div class="empty">Nothing was blocked in this window.</div></div>`;
   }
   const chart = countColumns({
-    cols: o.whyCols, series: o.whySeries, unit: "blocked lookups", xEvery: o.byHour ? 6 : null,
+    cols: o.whyCols, series: o.whySeries.map(s => ({ ...s, short: whyShort(s.why) })),
+    unit: "blocked lookups", xEvery: o.byHour ? 6 : null,
     title: `Blocked lookups per ${o.byHour ? "hour" : "day"}, by reason`,
   });
   const list = o.whySeries.map(s => `<li><span class="swatch" style="background:var(--s-${esc(s.key)})"></span>

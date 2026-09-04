@@ -283,14 +283,23 @@ input,select{background:var(--surface-2);color:var(--ink);border:1px solid var(-
 
 /* ---- tooltip ---- */
 #tip{position:fixed;z-index:40;pointer-events:none;opacity:0;transition:opacity .1s;
-  background:var(--raise);color:var(--ink);border:1px solid var(--line);border-radius:10px;
-  padding:8px 10px;font-size:12.5px;box-shadow:0 8px 24px rgba(0,0,0,.22);max-width:230px}
+  background:var(--raise);color:var(--ink);border:1px solid var(--line);border-radius:12px;
+  padding:10px 12px;font-size:12.5px;box-shadow:0 10px 30px rgba(0,0,0,.28);
+  max-width:340px;min-width:190px}
 #tip.on{opacity:1}
-#tip .th{font-size:11px;color:var(--ink-muted);margin-bottom:4px}
-#tip .tr{display:flex;align-items:center;gap:7px;justify-content:space-between}
-#tip .tk{width:12px;height:2px;border-radius:2px;flex:none}
-#tip .tn{color:var(--ink-2);flex:1}
-#tip .tv{font-weight:600;font-variant-numeric:tabular-nums}
+#tip .th{font-size:11.5px;font-weight:600;color:var(--ink);letter-spacing:.02em;
+  padding-bottom:6px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+#tip .tr{display:grid;grid-template-columns:10px 1fr auto auto;align-items:baseline;
+  gap:8px;padding:2px 0}
+/* A square reads as a stacked segment; the old 2px rule read as a line series. */
+#tip .tk{width:10px;height:10px;border-radius:3px;flex:none;align-self:center}
+#tip .tn{color:var(--ink-2);overflow-wrap:anywhere}
+#tip .tv{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+#tip .tp{color:var(--ink-muted);font-variant-numeric:tabular-nums;font-size:11.5px;
+  white-space:nowrap;min-width:2.6em;text-align:right}
+#tip .tt{display:flex;justify-content:space-between;gap:12px;margin-top:6px;
+  padding-top:6px;border-top:1px solid var(--line);font-weight:600}
+#tip .tt span:last-child{font-variant-numeric:tabular-nums}
 
 .foot{color:var(--ink-muted);font-size:11.5px;margin-top:18px;line-height:1.6}
 /* ---- goals ---- */
@@ -515,19 +524,36 @@ function toggleTheme(){var d=document.documentElement;
     var rows;try{rows=JSON.parse(el.getAttribute('data-tip')||'[]');}catch(e){return;}
     tip.textContent='';
     var h=document.createElement('div');h.className='th';
-    h.textContent=el.getAttribute('data-head')||'';tip.appendChild(h);
+    var unit=el.getAttribute('data-unit')||'';
+    h.textContent=(el.getAttribute('data-head')||'')+(unit?' \u00b7 '+unit:'');
+    tip.appendChild(h);
     rows.forEach(function(r){
       var d=document.createElement('div');d.className='tr';
       var k=document.createElement('span');k.className='tk';
       if(r[2])k.style.background='var(--s-'+r[2]+')';else k.style.background='transparent';
       var n=document.createElement('span');n.className='tn';n.textContent=r[0];
       var v=document.createElement('span');v.className='tv';v.textContent=r[1];
-      d.appendChild(k);d.appendChild(n);d.appendChild(v);tip.appendChild(d);
+      var p=document.createElement('span');p.className='tp';
+      /* A share only means something when there is more than one segment. */
+      p.textContent=(rows.length>1&&r[3]!==undefined&&r[3]!==null)?r[3]+'%':'';
+      d.appendChild(k);d.appendChild(n);d.appendChild(v);d.appendChild(p);tip.appendChild(d);
     });
+    /* The total used to live only in the browser's own tooltip, which is the
+       one this replaces, so it has to be here or it is lost. */
+    var tot=el.getAttribute('data-total');
+    if(tot&&rows.length>1){
+      var f=document.createElement('div');f.className='tt';
+      var a=document.createElement('span');a.textContent='Total';
+      var b=document.createElement('span');b.textContent=tot;
+      f.appendChild(a);f.appendChild(b);tip.appendChild(f);
+    }
     tip.classList.add('on');
     var w=tip.offsetWidth,hh=tip.offsetHeight;
     tip.style.left=Math.max(8,Math.min(innerWidth-w-8,x-w/2))+'px';
-    tip.style.top=Math.max(8,y-hh-14)+'px';
+    /* Above the cursor by default, below it when there is no room, so a bar
+       near the top of the window does not get its tooltip pinned over itself. */
+    var above=y-hh-14;
+    tip.style.top=(above<8?Math.min(innerHeight-hh-8,y+18):above)+'px';
   }
   function hide(){tip.classList.remove('on');}
   document.addEventListener('pointermove',function(e){

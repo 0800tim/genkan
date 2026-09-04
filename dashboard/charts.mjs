@@ -168,8 +168,9 @@ export function columns({
       : stack(c, (series || []).map(s => s.key), 1);
 
     body += `<g class="col" style="--cx:${cx.toFixed(3)}%" tabindex="0"`
-      + ` data-head="${esc(c.label)}" data-tip="${tip(rows)}">`
-      + `<title>${esc(c.label)}: ${esc(c.summary || tickFormat(total(c)))}</title>`
+      + ` data-head="${esc(c.label)}" data-tip="${tip(rows)}"`
+      + ` data-total="${esc(c.summary || tickFormat(total(c)))}"`
+      + ` role="img" aria-label="${esc(c.label)}: ${esc(c.summary || tickFormat(total(c)))}">`
       + marks
       + `<rect class="hit" x="${(i * slotPct).toFixed(3)}%" width="${slotPct.toFixed(3)}%" y="0" height="${TOP + height}"/>`
       + `</g>`;
@@ -228,7 +229,7 @@ export function ranked(rows, { max = null, height = 34, title = "" } = {}) {
     // room: full width minus 96px. calc() is only valid in CSS, so the plain
     // percentage stays on the attribute as the fallback.
     const fill = r.key ? `var(--s-${r.key})` : "var(--ink-muted)";
-    out += `<g class="rrow" tabindex="0"><title>${esc(r.label)}: ${esc(r.display)}${r.sub ? " · " + esc(r.sub) : ""}</title>`
+    out += `<g class="rrow" tabindex="0" role="img" aria-label="${esc(r.label)}: ${esc(r.display)}${r.sub ? ", " + esc(r.sub) : ""}">`
       + `<text class="rlab" x="0" y="${y + 12}">${esc((r.emoji ? r.emoji + " " : "") + r.label)}</text>`
       + `<text class="rval" x="100%" y="${y + 12}">${esc(r.display)}</text>`
       + `<rect class="rtrack" x="0" y="${y + 18}" height="8" rx="4" width="86%"`
@@ -501,13 +502,22 @@ export function countColumns({ cols, series, height = 132, title = "", unit = "l
         marks += `<rect class="seg" y="${y}" height="${h}" fill="${fill}"${geo(i)}/>`;
       }
     });
-    const rows = series.filter(s => val(c, s.key) > 0)
-      .map(s => [s.label, `${fmt.count(val(c, s.key))} ${unit}`, s.key]);
-    if (!rows.length) rows.push(["Nothing recorded", "", null]);
+    // t first: the rows below use it for each segment's share, and a const
+    // read before its declaration is a temporal dead zone, not a hoist.
     const t = total(c);
+    // The tooltip gets the SHORT label when a caller supplies one, and the
+    // unit once in its heading rather than on every row. A legend can afford
+    // "Cut off (time up, bedtime or a block), sent to the portal"; a tooltip
+    // beside the cursor cannot, and it wrapped to one word per line.
+    const rows = series.filter(s => val(c, s.key) > 0)
+      .sort((a, b) => val(c, b.key) - val(c, a.key))
+      .map(s => [s.short || s.label, fmt.count(val(c, s.key)), s.key,
+                 t > 0 ? Math.round(val(c, s.key) * 100 / t) : 0]);
+    if (!rows.length) rows.push(["Nothing recorded", "", null]);
     body += `<g class="col" style="--cx:${cx.toFixed(3)}%" tabindex="0"`
-      + ` data-head="${esc(c.label)}" data-tip="${tip(rows)}">`
-      + `<title>${esc(c.label)}: ${esc(fmt.count(t))} ${esc(unit)}</title>`
+      + ` data-head="${esc(c.label)}" data-tip="${tip(rows)}"`
+      + ` data-total="${esc(fmt.count(t))}" data-unit="${esc(unit)}"`
+      + ` role="img" aria-label="${esc(c.label)}: ${esc(fmt.count(t))} ${esc(unit)}">`
       + marks
       + `<rect class="hit" x="${(i * slotPct).toFixed(3)}%" width="${slotPct.toFixed(3)}%" y="0" height="${TOP + height}"/>`
       + `</g>`;
