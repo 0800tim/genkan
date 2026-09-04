@@ -305,6 +305,16 @@ done
 [ -z "$missing" ] && ok "the dashboard's role can read every table its code reads" \
   || bad "kids_app cannot read, on a fresh load:$missing"
 
+# No OUI may appear in two branches of genkan-classify's vendor case. A bash
+# case takes the FIRST match, so a duplicate silently shadows the correct
+# entry: 50:14:79 is iRobot and was also listed under Philips-Hue, so a Roomba
+# whose hostname did not give it away would have been filed as a light
+# (found 2026-09-04 while identifying a household's devices).
+dups=$(sed -n '/vendor=\${vendor:-/p' "$(dirname "$0")/../bin/genkan-classify" \
+       | grep -oE '\b[0-9a-f]{2}:[0-9a-f]{2}:[0-9a-f]{2}\b' | sort | uniq -d | paste -sd' ')
+[ -z "$dups" ] && ok "no MAC prefix is claimed by two vendors in genkan-classify" \
+  || bad "genkan-classify claims these MAC prefixes twice, and the first branch silently wins:$dups"
+
 echo
 echo "passed $pass, failed $fail"
 [ "$fail" = 0 ]

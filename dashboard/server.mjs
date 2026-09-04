@@ -699,7 +699,27 @@ const server = createServer(async (req, res) => {
     } else if (url.pathname === "/earn") {
       html = shell({ tab: "/earn", title: "Genkan: learn to earn", body: earnPage(await earnData(q)) });
     } else if (url.pathname === "/devices") {
-      html = shell({ tab: "/devices", title: "Genkan devices", body: devicesView(s) });
+      // Everything we know that might help a parent put a name to a device
+      // they do not recognise: when it arrived, when it was last really here,
+      // and the handful of names it asked for, which is usually decisive
+      // (eufylife.com is a doorbell, roblox.com is a child). Only for the
+      // unnamed few, so this is a small query, and it fails soft: a device
+      // list that will not load helps nobody.
+      const clues = {};
+      try {
+        for (const r of await q(`
+          SELECT d.mac::text AS mac,
+                 to_char(d.first_seen, 'Dy DD Mon, HH24:MI') AS first_txt,
+                 to_char(d.active_at,  'Dy DD Mon, HH24:MI') AS active_txt,
+                 (SELECT count(*) FROM dns_log l WHERE l.client_ip = d.reserved_ip) AS lookups,
+                 (SELECT string_agg(x.domain, ', ') FROM (
+                    SELECT l.domain FROM dns_log l WHERE l.client_ip = d.reserved_ip
+                    GROUP BY l.domain ORDER BY count(*) DESC LIMIT 3) x) AS top_domains
+            FROM devices d
+           WHERE d.is_active AND d.category = 'personal'
+             AND (d.label IS NULL OR d.label = '') `)) clues[r.mac] = r;
+      } catch (e) { /* the page is more use without clues than not at all */ }
+      html = shell({ tab: "/devices", title: "Genkan devices", body: devicesView(s, clues) });
     } else if (url.pathname === "/" || url.pathname === "/index.html") {
       // Home leans on a short window for the "last 7 days" lines under each
       // kid; if the analytics query fails the controls must still render.

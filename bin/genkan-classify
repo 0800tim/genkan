@@ -21,12 +21,24 @@ psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$
 # a class or an owner, must never be overwritten by the guesser: filing the
 # SMS gateway as an appliance and finding it back under "personal" a minute
 # later is worse than never guessing at all.
-rows=$(psqll "SELECT id||'|'||coalesce(lower(hostname),'')||'|'||lower(mac::text)
-              FROM devices
-              WHERE kind IN ('unknown','')
-                AND category = 'personal'
-                AND child_id IS NULL
-                AND label IS NULL")
+# --vendors re-derives ONLY the vendor, for every device, and touches nothing
+# else. The rule above (never overwrite what a parent decided) is about kind,
+# category, owner and label. A vendor is not a decision, it is read off the
+# MAC, so a wrong one is simply wrong and should be corrected: 3c:0b:59 was
+# listed as TP-Link when the registry says Tuya, and that bulb was described
+# to a parent as a TP-Link device for two days (2026-09-04).
+VENDORS_ONLY=0; [ "${1:-}" = "--vendors" ] && VENDORS_ONLY=1
+if [ "$VENDORS_ONLY" = 1 ]; then
+  rows=$(psqll "SELECT id||'|'||coalesce(lower(hostname),'')||'|'||lower(mac::text)
+                FROM devices WHERE is_active")
+else
+  rows=$(psqll "SELECT id||'|'||coalesce(lower(hostname),'')||'|'||lower(mac::text)
+                FROM devices
+                WHERE kind IN ('unknown','')
+                  AND category = 'personal'
+                  AND child_id IS NULL
+                  AND label IS NULL")
+fi
 [ -n "$rows" ] || { echo "genkan-classify: no devices"; exit 0; }
 
 classify(){ # echoes: kind|category|vendor
@@ -58,16 +70,21 @@ classify(){ # echoes: kind|category|vendor
   # 2) OUI vendor (fills vendor, and IoT category when hostname was silent)
   if [ -z "$vendor" ] || [ -z "$kind" ]; then
     case "$oui" in
-      3c:0b:59|28:ee:52|50:c7:bf|a4:2b:b0|1c:61:b4|c0:06:c3) vendor=${vendor:-TP-Link};;
+      28:ee:52|50:c7:bf|a4:2b:b0|1c:61:b4|c0:06:c3) vendor=${vendor:-TP-Link};;
+      # Tuya is the white-label platform behind a great many own-brand
+      # plugs and bulbs, so the badge on the box is rarely 'Tuya'.
+      3c:0b:59|d4:a6:51|68:57:2d|10:d5:61) vendor=${vendor:-Tuya}; [ -z "$kind" ] && { kind=iot-generic; cat=iot; };;
+      # Anker's OUI, which is what a eufy lock, camera or doorbell wears.
+      8c:85:80|a0:76:4e|e0:63:da) vendor=${vendor:-eufy-Anker}; [ -z "$kind" ] && { kind=iot-generic; cat=iot; };;
       fc:65:de|68:37:e9|44:65:0d|4c:ef:c0|ac:63:be|f0:81:73|68:54:fd) vendor=${vendor:-Amazon}; [ -z "$kind" ] && { kind=speaker; cat=iot; };;
       18:b4:30|64:16:66|d8:eb:46) vendor=${vendor:-Google-Nest}; [ -z "$kind" ] && { kind=camera; cat=iot; };;
       50:32:37|dc:a6:32|b8:27:eb|e4:5f:01) vendor=${vendor:-RaspberryPi};;
       24:0a:c4|30:ae:a4|84:0d:8e|a0:20:a6|ec:fa:bc|c8:2b:96|f4:cf:a2) vendor=${vendor:-Espressif}; [ -z "$kind" ] && { kind=iot-generic; cat=iot; };;
       00:0d:b9|9c:8e:cd) vendor=${vendor:-Ring}; [ -z "$kind" ] && { kind=doorbell; cat=iot; };;
-      2c:aa:8e|50:14:79|d0:73:d5|00:17:88) vendor=${vendor:-Philips-Hue}; [ -z "$kind" ] && { kind=light; cat=iot; };;
+      2c:aa:8e|d0:73:d5|00:17:88) vendor=${vendor:-Philips-Hue}; [ -z "$kind" ] && { kind=light; cat=iot; };;
       94:9f:3e|b8:e9:37|54:2a:1b) vendor=${vendor:-Sonos}; [ -z "$kind" ] && { kind=speaker; cat=iot; };;
       50:14:79) vendor=${vendor:-iRobot}; [ -z "$kind" ] && { kind=vacuum; cat=iot; };;
-      dc:a6:32|e0:76:d0) vendor=${vendor:-WyzeLabs}; [ -z "$kind" ] && { kind=camera; cat=iot; };;
+      e0:76:d0) vendor=${vendor:-WyzeLabs}; [ -z "$kind" ] && { kind=camera; cat=iot; };;
     esac
   fi
   # 3) randomised MAC with no other signal => a personal phone hiding its MAC
@@ -92,7 +109,13 @@ for line in "${_devs[@]}"; do
   # this script's own literals. Quote-doubled anyway: one day somebody adds an
   # arm that reads a vendor name out of the database.
   vset=""; [ -n "$v" ] && vset=", vendor='$(printf '%s' "$v" | sed "s/'/''/g")'"
-  psqll "UPDATE devices SET kind='$k', category='$c'$vset WHERE id=$id" >/dev/null
+  if [ "$VENDORS_ONLY" = 1 ]; then
+    [ -n "$v" ] || continue
+    psqll "UPDATE devices SET vendor='$(printf '%s' "$v" | sed "s/'/''/g")' WHERE id=$id" >/dev/null
+  else
+    psqll "UPDATE devices SET kind='$k', category='$c'$vset WHERE id=$id" >/dev/null
+  fi
   n=$((n+1))
 done
-echo "genkan-classify: classified $n device(s)"
+[ "$VENDORS_ONLY" = 1 ] && echo "genkan-classify: refreshed the vendor on $n device(s)" \
+  || echo "genkan-classify: classified $n device(s)"

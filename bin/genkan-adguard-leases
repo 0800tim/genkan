@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+# genkan:summary=Make AdGuard hand each known device the same address every time.
+#
+#   genkan-adguard-leases              pin what should be pinned, print what changed
+#   genkan-adguard-leases --dry-run    say what it would do, change nothing
+#   genkan-adguard-leases --list       what AdGuard is pinning now
+#
+# WHY THIS EXISTS. `devices.reserved_ip` is the address every control keys on:
+# the firewall's kids_known set, the block set, the meter, the per-child filter
+# level and the household IoT policy all resolve a person or a rule to an
+# address through it. Until 2026-09-04 nothing reserved that address at the
+# DHCP server, so the column was not a reservation at all, it was a record of
+# where the device happened to be last. AdGuard held fourteen dynamic leases
+# and zero static ones. A device that came back on a different address was
+# metered, filtered and blocked at the old one until the next scan caught up.
+#
+# WHAT IT PINS, and what it deliberately does not:
+#
+#   * A device with a real, burned-in MAC and an address we already know.
+#     Those are the cameras, the locks, the consoles, the desktops: the things
+#     a household wants to find in the same place tomorrow.
+#
+#   * NOT a randomised MAC. Modern phones invent a new MAC per network and
+#     re-invent it on a schedule, so pinning one reserves an address for a
+#     device that will never ask for it again, and fills the pool with ghosts.
+#     Those are skipped and counted, and the reason is printed once, because
+#     "my phone still moves" has to be answerable.
+#
+#   * NOT an address outside this network. A reservation AdGuard cannot serve
+#     is worse than none: it looks set and does nothing.
+#
+# It never deletes a reservation it did not make: a lease whose MAC is not a
+# device we know is left alone, because a household may have pinned something
+# by hand in the AdGuard UI and that is their business.
+set -uo pipefail
+: "${ADGUARD_URL:=http://127.0.0.1:8853}" "${ADGUARD_USER:=admin}" "${ADGUARD_PASS:?set ADGUARD_PASS}"
+PG_CONTAINER="${PG_CONTAINER:-postgres}"
+DB_NAME="${GENKAN_DB:-kids_network}"
+DB_ROLE="${GENKAN_DB_ROLE:-kids_agent}"
+psqll(){ docker exec -i "$PG_CONTAINER" psql -U "$DB_ROLE" -d "$DB_NAME" -tAc "$1" < /dev/null; }
+
+MODE=apply
+case "${1:-}" in --dry-run|-n) MODE=dry;; --list|-l) MODE=list;; esac
+
+# mac|ip|name  for every active device we know an address for. The name is
+# only a label for the AdGuard UI; nothing keys on it.
+WANT=$(psqll "
+  SELECT mac::text||'|'||host(reserved_ip)||'|'||
+         regexp_replace(lower(coalesce(NULLIF(label,''), NULLIF(hostname,''), 'device')), '[^a-z0-9-]+', '-', 'g')
+    FROM devices
+   WHERE is_active AND reserved_ip IS NOT NULL
+   ORDER BY reserved_ip")
+
+ADGUARD_URL="$ADGUARD_URL" ADGUARD_USER="$ADGUARD_USER" ADGUARD_PASS="$ADGUARD_PASS" \
+MODE="$MODE" WANT="$WANT" python3 <<'PY'
+import os, json, base64, urllib.request, ipaddress, sys
+
+url  = os.environ["ADGUARD_URL"]
+mode = os.environ["MODE"]
+auth = base64.b64encode(f'{os.environ["ADGUARD_USER"]}:{os.environ["ADGUARD_PASS"]}'.encode()).decode()
+
+def call(path, body=None):
+    r = urllib.request.Request(url + path, data=json.dumps(body).encode() if body is not None else None)
+    r.add_header("Authorization", "Basic " + auth)
+    if body is not None: r.add_header("Content-Type", "application/json")
+    return urllib.request.urlopen(r, timeout=10)
+
+try:
+    st = json.load(call("/control/dhcp/status"))
+except Exception as e:
+    print(f"genkan-adguard-leases: cannot reach AdGuard ({e}); nothing changed", file=sys.stderr)
+    raise SystemExit(0)
+
+if not st.get("enabled"):
+    print("genkan-adguard-leases: AdGuard is not serving DHCP here, so there is nothing to reserve")
+    raise SystemExit(0)
+
+v4 = st.get("v4") or {}
+try:
+    net = ipaddress.ip_network(f'{v4.get("gateway_ip")}/{v4.get("subnet_mask")}', strict=False)
+except Exception:
+    net = None
+
+have = {l.get("mac", "").lower(): l for l in (st.get("static_leases") or [])}
+
+if mode == "list":
+    if not have:
+        print("  nothing is pinned; every device takes whatever address is free")
+    for m, l in sorted(have.items(), key=lambda kv: kv[1].get("ip", "")):
+        print(f'  {l.get("ip"):<16} {m}  {l.get("hostname","")}')
+    raise SystemExit(0)
+
+# A locally administered MAC is one a device made up for itself. Bit 0x02 of
+# the first octet says so, and every phone doing MAC randomisation sets it.
+def randomised(mac):
+    try: return bool(int(mac.split(":")[0], 16) & 0x02)
+    except Exception: return False
+
+added = skipped_random = skipped_range = already = failed = 0
+for line in os.environ["WANT"].splitlines():
+    if not line.strip(): continue
+    mac, ip, name = (line.split("|", 2) + ["", ""])[:3]
+    mac = mac.lower()
+    if randomised(mac):
+        skipped_random += 1; continue
+    if net is not None:
+        try:
+            if ipaddress.ip_address(ip) not in net:
+                skipped_range += 1; continue
+        except Exception:
+            skipped_range += 1; continue
+    cur = have.get(mac)
+    if cur and cur.get("ip") == ip:
+        already += 1; continue
+    if mode == "dry":
+        print(f'  would pin {ip:<16} {mac}  {name}' + ("  (moving it)" if cur else ""))
+        added += 1; continue
+    try:
+        if cur:  # it is pinned somewhere else; take the old one out first
+            call("/control/dhcp/remove_static_lease",
+                 {"mac": mac, "ip": cur.get("ip"), "hostname": cur.get("hostname", "")})
+        call("/control/dhcp/add_static_lease", {"mac": mac, "ip": ip, "hostname": name[:60]})
+        print(f'  pinned {ip:<16} {mac}  {name}')
+        added += 1
+    except Exception as e:
+        print(f'  FAILED {ip:<16} {mac}: {e}', file=sys.stderr)
+        failed += 1
+
+verb = "would pin" if mode == "dry" else "pinned"
+print(f'genkan-adguard-leases: {verb} {added}, {already} already right, '
+      f'{skipped_random} skipped (the device invents a new MAC each time, so pinning one is pointless), '
+      f'{skipped_range} skipped (address is not on this network), {failed} failed')
+raise SystemExit(1 if failed else 0)
+PY

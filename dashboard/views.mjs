@@ -280,6 +280,8 @@ input,select{background:var(--surface-2);color:var(--ink);border:1px solid var(-
   border-radius:8px;padding:7px 9px;font-size:13px;font-family:inherit;max-width:100%}
 .assign{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 .assign input{width:132px}
+.clues{margin-top:3px;font-size:12px;color:var(--ink-muted);line-height:1.5}
+.clues b{color:var(--ink-2);font-weight:600}
 
 /* ---- tooltip ---- */
 #tip{position:fixed;z-index:40;pointer-events:none;opacity:0;transition:opacity .1s;
@@ -814,6 +816,25 @@ const RANDOM_MAC_NOTE = "This phone gives the network a made-up address that it 
   + "On the phone, open the wifi settings for this network and turn off private or randomised "
   + "address. Then name it here once and it stays named.";
 
+// What we can say about a device nobody has named. Written as sentences a
+// parent can act on, not fields: "asked for eufylife.com" identifies a
+// doorbell in a way "vendor: Smart Innovation LLC" never does.
+function deviceClues(c) {
+  if (!c) return "";
+  const bits = [];
+  if (c.first_txt) bits.push(`first seen ${esc(c.first_txt)}`);
+  if (c.active_txt && c.active_txt !== c.first_txt) bits.push(`last here ${esc(c.active_txt)}`);
+  const n = Number(c.lookups || 0);
+  if (n > 0 && c.top_domains) {
+    bits.push(`asked for <b>${esc(c.top_domains)}</b>`);
+  } else if (n === 0) {
+    // Zero lookups is itself the clue, and the more important one: a device
+    // that never asks Genkan for a name is also not being filtered by it.
+    bits.push(`<span title="It resolves names somewhere else, so nothing here can identify it and the DNS filter does not apply to it">asked Genkan for nothing, so it is using its own DNS</span>`);
+  }
+  return bits.length ? `<div class="clues">${bits.join(" &middot; ")}</div>` : "";
+}
+
 function deviceAssignRow(d, people, opts = {}) {
   const key = esc(d.mac || "");
   const owner = d.person || "";
@@ -821,7 +842,8 @@ function deviceAssignRow(d, people, opts = {}) {
   return `<div class="row"><span><b>${esc(d.hostname || d.label || "(no name)")}</b> <code>${key}</code>
       ${d.vendor ? `<code>${esc(d.vendor)}</code>` : ""} ${d.online ? '<span class="dot-on"></span>online' : ""}
       ${owner ? `<span class="tag">now ${esc(owner)}${esc(roleTag(d.person_kind))}</span>` : ""}
-      ${randomMac(d.mac) ? `<span class="tag warn" title="${esc(RANDOM_MAC_NOTE)}">random address</span>` : ""}</span>
+      ${randomMac(d.mac) ? `<span class="tag warn" title="${esc(RANDOM_MAC_NOTE)}">random address</span>` : ""}
+      ${deviceClues(opts.clue)}</span>
     <span class="assign"><input id="lbl_${key}" value="${esc(name)}" placeholder="e.g. Ben phone" aria-label="Name for ${key}">
       <select id="who_${key}" aria-label="Owner for ${key}">${assignOptions(people, owner)}</select>
       <button class="approve" onclick="assign('${key}')">${opts.change ? "Change" : "Assign"}</button></span></div>`;
@@ -830,7 +852,7 @@ function deviceAssignRow(d, people, opts = {}) {
 // ---------------------------------------------------------------------------
 // Devices
 // ---------------------------------------------------------------------------
-export function devices(s) {
+export function devices(s, clues = {}) {
   // The order is the order a parent cares about them in: their kids' devices
   // first, then the ones the whole family shares, then the household's own kit.
   const groups = [
@@ -851,7 +873,7 @@ export function devices(s) {
 
   const naming = unassigned.length ? `<div class="card"><h2>\u{1F195} New devices to name (${unassigned.length})</h2>
     <p class="sub">Who owns what is deliberately manual. Only you know whose device is whose.</p>
-    ${unassigned.map(d => deviceAssignRow(d, s.people)).join("")}</div>` : "";
+    ${unassigned.map(d => deviceAssignRow(d, s.people, { clue: clues[d.mac] })).join("")}</div>` : "";
 
   // The two tick boxes. Shown only where they mean something: a camera, an
   // appliance and the access point are in no sweep at all, and offering a box
