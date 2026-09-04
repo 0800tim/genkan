@@ -717,10 +717,28 @@ const server = createServer(async (req, res) => {
           SELECT d.mac::text AS mac,
                  to_char(d.first_seen, 'Dy DD Mon, HH24:MI') AS first_txt,
                  to_char(d.active_at,  'Dy DD Mon, HH24:MI') AS active_txt,
-                 (SELECT count(*) FROM dns_log l WHERE l.client_ip = d.reserved_ip) AS lookups,
+                 -- Attributed to THIS device, not to whatever held the address
+                 -- before it. dns_log carries a device_id, and an address is
+                 -- reused: a phone that rejoined on 192.168.60.102 was shown
+                 -- the previous holder's browsing as its own clue, which is
+                 -- worse than no clue at all (2026-09-04).
+                 (SELECT count(*) FROM dns_log l
+                   WHERE l.device_id = d.id
+                      OR (l.device_id IS NULL AND l.client_ip = d.reserved_ip AND l.ts >= d.first_seen)) AS lookups,
                  (SELECT string_agg(x.domain, ', ') FROM (
-                    SELECT l.domain FROM dns_log l WHERE l.client_ip = d.reserved_ip
-                    GROUP BY l.domain ORDER BY count(*) DESC LIMIT 3) x) AS top_domains
+                    SELECT l.domain FROM dns_log l
+                     WHERE l.device_id = d.id
+                        OR (l.device_id IS NULL AND l.client_ip = d.reserved_ip AND l.ts >= d.first_seen)
+                    GROUP BY l.domain ORDER BY count(*) DESC LIMIT 3) x) AS top_domains,
+                 -- Plain words beat a clock face when a parent is matching a
+                 -- device to "who was in the house an hour ago".
+                 CASE WHEN GREATEST(d.active_at, d.present_at) IS NULL THEN NULL
+                      WHEN now() - GREATEST(d.active_at, d.present_at) < interval '2 minutes' THEN 'just now'
+                      WHEN now() - GREATEST(d.active_at, d.present_at) < interval '1 hour'
+                        THEN (extract(epoch from now() - GREATEST(d.active_at, d.present_at))/60)::int || ' minutes ago'
+                      WHEN now() - GREATEST(d.active_at, d.present_at) < interval '24 hours'
+                        THEN (extract(epoch from now() - GREATEST(d.active_at, d.present_at))/3600)::int || ' hours ago'
+                      ELSE to_char(GREATEST(d.active_at, d.present_at), 'Dy HH24:MI') END AS ago
             FROM devices d
            WHERE d.is_active AND d.category = 'personal'
              AND (d.label IS NULL OR d.label = '') `)) clues[r.mac] = r;

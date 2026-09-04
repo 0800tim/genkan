@@ -822,8 +822,9 @@ const RANDOM_MAC_NOTE = "This phone gives the network a made-up address that it 
 function deviceClues(c) {
   if (!c) return "";
   const bits = [];
+  if (c.ago) bits.push(`on the wire <b>${esc(c.ago)}</b>`);
+  else bits.push(`<span title="It holds an address but has never answered on the wire, so it may be long gone">never answered on the wire</span>`);
   if (c.first_txt) bits.push(`first seen ${esc(c.first_txt)}`);
-  if (c.active_txt && c.active_txt !== c.first_txt) bits.push(`last here ${esc(c.active_txt)}`);
   const n = Number(c.lookups || 0);
   if (n > 0 && c.top_domains) {
     bits.push(`asked for <b>${esc(c.top_domains)}</b>`);
