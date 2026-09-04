@@ -67,8 +67,24 @@ Nothing else should be plugged into the router yet.
 
 **3. Sign in.** Browse to `http://192.168.1.1`, which is where these answer
 after a reset. If that does not load, the address your computer calls "router"
-or "default gateway" is the right one. The username is usually `admin`. Try the WLAN Key from the label as the password first, then `admin`.
-If neither works the unit is locked by the ISP: skip to "When it will not
+or "default gateway" is the right one.
+
+**The admin password is not the WLAN Key on the label, and it is usually not
+`admin` either.** It depends on which ISP handed the unit out, and this is the
+step that stops most people. Tested on a real unit on 2026-09-04: the WLAN Key
+failed, `admin`/`admin` failed, and the ISP's own documented pair worked.
+
+| Where it came from | Username | Password |
+|---|---|---|
+| Voyager | `!!Huawei` | `@HuaweiHgw` |
+| Vodafone or One NZ | `Admin` | `VF-NZhg659`, or `@` and the last 8 of the serial on later builds |
+| Spark | `admin` | `admin` |
+| Unknown | try those three, in that order | |
+
+**Three wrong tries locks the login for a while**, so do not guess freely. If
+you run out, power cycle it or factory reset again, which clears the count.
+The surest answer is your own ISP's support page: search for the ISP's name
+with "HG659 default login". If none of them work, skip to "When it will not
 work" at the bottom.
 
 **4. Turn the DHCP server OFF.** Usually under Home Network, then LAN
@@ -211,8 +227,28 @@ it should, whether it is filed as infrastructure, and whether devices are
 getting leases. Run it after any change to the access point, and give the
 output to your agent if something is wrong.
 
-The configuration itself is still yours to click through. A scripted version
-for this exact model is being worked on: it can be done, because the Genkan
-box can put itself on the router's network before the island starts, but it
-has to recognise the firmware before it touches anything rather than guess.
-Until it exists, the seven steps above are the reliable path.
+The configuration itself is still yours to click through, for now. A scripted
+version for this model is being built, and the groundwork is done: on
+2026-09-04 a factory reset unit (hardware VER.B, firmware V100R001C222B011)
+was driven from a Genkan box on a dedicated cable, far enough to prove it is
+possible and to find every setting such a script will need.
+
+For anyone building that, what the router's own interface does:
+
+- Login is `POST /api/system/user_login` carrying
+  `sha256( username + base64(sha256(password)) + csrf_param + csrf_token )`.
+  The csrf pair comes from meta tags on the served page and rotates with
+  every reply. Answers are wrapped in `while(1); /*...*/` and must be
+  unwrapped before parsing.
+- The settings live at `/api/ntwk/lan_server` (the DHCP server, step 4),
+  `/api/ntwk/lan_host` (the address and mask, step 5), `/api/ntwk/WlanBasic`
+  (the wifi, step 6) and `/api/ntwk/lan_upnp`.
+- **The paths are case sensitive.** `WlanBasic` answers and `wlanbasic`
+  returns 404, which is a confusing way to conclude a firmware cannot do
+  something.
+- A factory reset unit opens on its setup wizard, and the full menu only
+  appears once that is past, so a script has to expect either.
+
+Whatever drives it must fingerprint the firmware first and refuse if it does
+not recognise what it is looking at. Half configuring somebody's router is
+worse than not touching it.
