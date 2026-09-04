@@ -418,6 +418,7 @@ camera, lock, speaker and vacuum is allowed to talk to. Read
     genkan devices                      the full roster, with owner and online state
     genkan unassigned                   devices with no owner set yet
     genkan leases                       current DHCP leases
+    genkan name <mac|ip> <name>         rename a device, changing nothing else
     genkan assign <mac|ip> <person> <label> [reserved-ip]
     genkan shared <mac|ip> [label] [tier]   file it as a shared family device
     genkan infra <mac>                  mark a device as infrastructure (an AP, a switch)
@@ -426,6 +427,21 @@ camera, lock, speaker and vacuum is allowed to talk to. Read
     genkan guest leave <name>           they have gone home
     genkan guest back <name>            they are visiting again
     genkan guest list                   the visitors here right now
+
+`name` changes a device's label and nothing else. It exists because every
+other verb that can set a label also sets something structural: `assign` sets
+an owner, `shared` sets a filter tier, `infra` sets an address. None of those
+fit a smart-home device, so until 2026-09-04 the only way to name a light bulb
+was to write to the database by hand, off the audited path. It takes a MAC or
+an address, records the change in `block_events` against the address rather
+than the new name (an identifier does not change), and refuses a name it
+cannot store safely.
+
+Names may carry brackets and question marks, which `ck_text` refuses
+everywhere else, so this has its own gate: `ck_label`. What that still refuses
+is the apostrophe and the backslash, because every label reaches SQL inside a
+single-quoted string and an apostrophe would end it. Widening `ck_text` itself
+would have loosened forty other callers in order to name one light bulb.
 
 `assign` maps a device to a person, then immediately runs
 `genkan-adguard-clients` so the age tier follows the device rather than lagging

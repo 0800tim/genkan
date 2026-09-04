@@ -36,6 +36,7 @@
 #   genkan shared <mac|ip> [label] [tier]  file a device as a shared family
 #                                  device: the household's, not one child's
 #   genkan sweep <mac|ip> dinner|house on|off|default   the two tick boxes
+#   genkan name <mac|ip> <name>    rename a device, changing nothing else
 #   genkan allow-sync              refresh the safety net (always_allow -> nft)
 #   genkan allow list              the allow list: safety net, reading list, search hosts
 #   genkan allow add <domain> <learn|search> [note]   a site a cut-off child may
@@ -114,6 +115,14 @@ ck_int(){ [[ "$1" =~ ^[0-9]{1,4}$ ]] || { echo "genkan: bad number '$1'" >&2; ex
 # was proven end to end before it was fixed. Adding a verb here means gating
 # every argument, including the ones that are obviously numbers.
 ck_text(){ [[ "$1" =~ ^[A-Za-z0-9_:+.,\ -]{0,80}$ ]] || { echo "genkan: bad text" >&2; exit 1; }; }
+# A device's name is written by a person for a person, so it gets brackets and
+# question marks that ck_text has no business allowing everywhere else. What it
+# still refuses is the apostrophe and the backslash: every label in this script
+# is interpolated into a single-quoted SQL string, so an apostrophe would end
+# that string, and that is the whole injection surface. Widening ck_text itself
+# would have loosened forty other callers to name one light bulb.
+ck_label(){ [[ -n "$1" && "$1" =~ ^[A-Za-z0-9_:+.,()\ ?!-]{1,60}$ ]] || {
+  echo "genkan: a name uses letters, numbers, spaces and ( ) . , : + - _ ? !, up to 60 characters" >&2; exit 1; }; }
 # A penalty is minutes with a minus in front, so the plain integer gate cannot
 # carry it. This one can, and nothing else about it is looser.
 ck_signed(){ [[ "$1" =~ ^-?[0-9]{1,4}$ ]] || { echo "genkan: bad number '$1'" >&2; exit 1; }; }
@@ -863,7 +872,7 @@ case "${1:-}" in
     case "$cls" in personal|shared) ;;
       iot)       echo "genkan: that is a smart home device. It is never caught by any control, so there is nothing to tick."; exit 1;;
       appliance) echo "genkan: that is an unrestricted device. It is never caught by any control, so there is nothing to tick."; exit 1;;
-      infra)     echo "genkan: that is network equipment. It is never caught by any control, so there is nothing to tick."; exit 1;;
+  infra)     echo "genkan: that is network equipment. It is never caught by any control, so there is nothing to tick."; exit 1;;
       *)         echo "genkan: a '$cls' device is never caught by any control, so there is nothing to tick."; exit 1;; esac
     n=$(psqll "WITH u AS (UPDATE devices SET $col=$v WHERE $col2 RETURNING 1) SELECT count(*) FROM u")
     [ "${n:-0}" = 0 ] && { echo "genkan: no device matching '$key'"; exit 1; }
@@ -921,6 +930,27 @@ case "${1:-}" in
   # The address, the label and the optional reservation all land in SQL, so all
   # three are gated: a MAC or an IPv4 for the address, an IPv4 for the
   # reservation, plain text for the label a parent typed.
+  name)
+    # Rename any device, and change nothing else about it. Every other verb
+    # that can set a label also sets something structural (assign sets an
+    # owner, shared sets a tier, infra sets an address), so there was no way
+    # to name a smart-home device without writing to the database by hand.
+    # That is how the lounge light got named on 2026-09-04, off the audited
+    # path, which is exactly what this exists to stop.
+    key="${2:?mac-or-ip}"; ck_addr "$key"; lbl="${3-}"
+    [ -n "$lbl" ] || { echo "genkan: usage: genkan name <mac|ip> \"A name\"" >&2; exit 1; }
+    ck_label "$lbl"
+    col=mac; case "$key" in *.*) col="host(reserved_ip)";; esac
+    was=$(psqll "SELECT coalesce(label,hostname,'(unnamed)') FROM devices WHERE ${col}::text='$key'")
+    if [ -z "$was" ]; then
+      echo "genkan: no device here has $key. 'genkan devices' lists what there is." >&2; exit 1
+    fi
+    psqll "UPDATE devices SET label='$lbl' WHERE ${col}::text='$key'" >/dev/null
+    # Keyed on the address, not the new name: audit's own gate is ck_text,
+    # which rightly refuses the brackets a name may carry, and an identifier
+    # is the better thing to record anyway because it does not change.
+    audit device "$key" renamed
+    echo "genkan: $key is now '$lbl' (was '$was')";;
   assign) key="${2:?mac-or-ip}"; rip="${5:-}"
     # Every argument is gated BEFORE the first query, not beside the statement
     # that uses it. A bad reservation used to get as far as the person lookup,
