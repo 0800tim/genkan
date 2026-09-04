@@ -270,6 +270,20 @@ same way the household IoT policy is. See [genkan-schedule](#genkan-schedule).
     genkan allow-sync      resolve scope='safety' and scope='learn' domains into @kids_allow
     genkan allow-status    print what is currently in that set
 
+### The access point
+
+    genkan ap-check        prove the kids' wifi is set up the way it should be
+
+Reads only. It never changes a setting, on the box or on the access point. It
+checks four things: that the island is up, that nothing else is serving DHCP or
+DNS on the kids' wire (the segment guard's own listen, with our own address
+excluded because by now AdGuard is serving), that an access point is filed as
+infrastructure and answers where it should, and that devices are taking
+addresses. It says plainly what it cannot check: whether the uplink is in a LAN
+port rather than the WAN port, and the access point's admin password.
+
+The setup itself is in [setup/ap-hg659.md](setup/ap-hg659.md).
+
 `allow-sync` resolves every `always_allow` row with `scope='safety'` or
 `scope='learn'` with `getent`, and loads the addresses into `@kids_allow`. It
 refuses to install an empty result: a resolver blip leaves the old list in place

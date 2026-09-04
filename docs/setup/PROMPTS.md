@@ -328,6 +328,12 @@ it into `secrets.env`. That file is gitignored and stays on this box.
 Physical step, then a check. The access point is the second thing everybody
 gets wrong.
 
+If you are using a spare Huawei HG659 (the gateway several New Zealand ISPs
+handed out for years, so there is often one in a drawer), there is a step by
+step guide for that exact model, including which port is which:
+[ap-hg659.md](ap-hg659.md). It ends with `genkan ap-check`, which proves the
+result from the box. The seven steps in it work on almost any old router.
+
 ```
 The island is deployed. Now the wifi.
 

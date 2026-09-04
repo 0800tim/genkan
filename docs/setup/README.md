@@ -2,7 +2,7 @@
 
 Genkan turns one small Linux box into your family's network gateway:
 filtered, time-budgeted internet for the kids, a learn-to-earn portal, and
-a CLI (`kidnet`) your AI agent drives from chat. These guides get you from
+a CLI (`genkan`) your AI agent drives from chat. These guides get you from
 bare hardware to a running island.
 
 ## Pick your platform
@@ -13,6 +13,12 @@ bare hardware to a running island.
 | [debian-ubuntu.md](debian-ubuntu.md) | A Debian or Ubuntu server, mini PC, or retired laptop. |
 | [generic-linux.md](generic-linux.md) | Any other distro. The contract, and how to adapt. |
 | [../SETUP-OMARCHY.md](../SETUP-OMARCHY.md) | Omarchy (Arch), the reference platform. |
+
+## The kids' wifi
+
+| Guide | For |
+|---|---|
+| [ap-hg659.md](ap-hg659.md) | A spare Huawei HG659, the router several NZ ISPs handed out. Also the seven steps that work on any old router. |
 
 ## The universal shape
 
@@ -81,7 +87,7 @@ From the repo root, once `config.env` and `secrets.env` exist:
 
     sudo ./deploy.sh                # validates, builds, installs, starts
     docker logs -f genkan-gw        # watch for the segment guard verdict
-    kidnet allow-status             # safety net populated?
+    genkan allow-status             # safety net populated?
     sudo test/container-test.sh     # full packet-level proof, 26 checks
 
 The segment guard matters: on every appearance of `kids0` the gateway

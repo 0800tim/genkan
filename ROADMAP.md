@@ -212,3 +212,53 @@ if you found a way around the filter rather than a bug in it.
 
 If you are a parent who got this running, the most useful thing you can do is
 tell us where it was annoying, and what your kids did to get around it.
+
+## Half an hour, and most of it the agent's
+
+The target for a first install is thirty minutes of a parent's attention on
+hardware they already have, not an afternoon. Today it is closer to a couple
+of hours, and the honest list of where that time goes, in order of how much
+each is worth fixing:
+
+1. **The access point, twelve clicks in a web interface.** Removed entirely
+   by a pre-configured unit (see below), and reducible for the common models
+   by a scripted path: the box can put itself on the router's own network
+   before the island starts, so the agent can drive it. It must recognise the
+   firmware before touching anything rather than guess.
+   `genkan ap-check` (built) already proves the result either way.
+2. **Flashing the OS and the first boot.** A prepared image with Docker and
+   Genkan already on it would halve this. It also brings a build pipeline and
+   a security update story with it, which is why it is not started.
+3. **Telling Genkan which network port is which.** Discoverable rather than
+   asked: the uplink is the one with a default route, the island leg is the
+   one with a cable and no route. `config.env` could be written for the
+   parent instead of by them.
+4. **One command instead of six.** `genkan setup` walking discovery, deploy
+   and the checks, with the existing prompts as the words it says.
+
+None of this is built beyond `genkan ap-check`. The order above is the order
+of value, not the order of difficulty.
+
+## Donated access points
+
+Proposed, not built. Old routers sit in drawers all over the country, and the
+access point is both the second thing everybody gets wrong and a cost that
+stops people trying at all. A unit somebody donates, that we factory reset
+and pre-configure (DHCP off, a fixed island address, a unique admin password
+on a sticker), arrives ready to plug into a yellow port with nothing to
+configure. That is the largest single saving in the list above, and it keeps
+working hardware out of landfill.
+
+Things that have to be true before this is more than a nice idea:
+
+- **The donor's privacy comes first.** A used router carries their wifi
+  password, possibly their broadband credentials, and their ISP's remote
+  management settings. A documented factory reset and verification is the
+  first step of intake, and the process must be written down before the first
+  unit is accepted.
+- **Every unit gets its own admin password.** A fleet shipped with one known
+  password is a fleet with one known way in.
+- **Second-hand electrical goods, sent by post, in New Zealand.** Sold as
+  seen, and think hard about power supplies before including them.
+- **It does not scale, and that is fine.** This is a community gesture with a
+  good story for schools, not a supply chain.

@@ -399,3 +399,35 @@ Related: [setup/README.md](setup/README.md) for the universal shape,
 [setup/PROMPTS.md](setup/PROMPTS.md) for the copy-and-paste prompts that drive
 an agent through the build, and your platform guide in [setup/](setup/) for the
 manual path.
+
+## The two mini boxes, and what each is good for (2026-09-04)
+
+Two shapes turn up again and again, and both work.
+
+**A fanless mini PC with two ethernet ports.** The best shape there is. Both
+network paths are built in, so the USB adapter and its whole class of problem
+(a dongle that vanishes from both the host and the container when a container
+restarts, which the warden has to reset) simply does not exist. The CPU in
+these is usually modest and that is fine: Genkan's steady load is a DNS
+resolver, a small Postgres, a node dashboard and a firewall the kernel
+enforces. The work is measured in packets per second at home broadband
+speeds, not in compute. Watch two things instead of the CPU: storage, where
+32GB is comfortable once the retention rules are set (`genkan retention show`,
+and the DNS log is by far the largest table), and whether the wifi card in it
+does AP mode if you plan to serve the wifi from the box itself. Boxes like
+this usually have external antenna connectors, which is the difference
+between one room and a house.
+
+**A Raspberry Pi with a USB ethernet adapter.** Also fine as the router: Pi
+onboard ethernet as the uplink, the USB adapter as the island leg, or the
+other way around. The honest limit is the wifi. The Pi's onboard radio is a
+single chain with a PCB antenna and no external connector, and in access
+point mode it is weaker still: it is fine for one room and a couple of
+devices, and it is not a house. If the Pi is the router, give the wifi to
+something with real antennas (an old router in access point mode, see
+[setup/ap-hg659.md](setup/ap-hg659.md)) and let the Pi do the routing it is
+good at.
+
+The general rule: **the box routes, something with antennas radiates.**
+Serving the wifi from the gateway itself is the tidy setup on paper and the
+disappointing one in a house with walls.

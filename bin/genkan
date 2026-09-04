@@ -344,6 +344,99 @@ house(){ local act="${1:-status}" min="${2:-60}" ip left
 # scope='category' rows (Spotify) are deliberately NOT here. Audio outlives
 # 'media off' and study mode, enforced at the DNS layer. It does not outlive
 # dinner. See config/db/schema-safety.sql.
+# Prove an access point is set up the way docs/setup/ap-hg659.md says. Reads
+# only: it never changes a setting, on the box or on the access point.
+#
+# The DHCP listen is the segment guard's own (gateway/entrypoint.sh), on
+# purpose, so the two can never disagree about what is on the wire. One
+# adaptation: the guard runs BEFORE the island is up, and by the time a parent
+# runs this our own AdGuard is serving DHCP, so our own address is excluded or
+# the check would trip on itself.
+ap_check(){
+  local gwip net out rc bad n fails=0
+  ok(){   printf '  OK    %s\n' "$1"; }
+  no(){   printf '  FAIL  %s\n' "$1"; fails=$((fails+1)); }
+  note(){ printf '        %s\n' "$1"; }
+
+  gwip=$(docker exec "$GW" ip -4 -o addr show kids0 2>/dev/null | awk '{print $4}')
+  if [ -z "$gwip" ]; then
+    echo "genkan: the island is not up, so there is nothing to check yet."
+    echo "        Start there: docker logs genkan-gw"
+    return 1
+  fi
+  # tcpdump's `net` wants the network, not the address with a prefix on it:
+  # "192.168.60.1/24" is refused as having non-network bits set.
+  net=$(python3 -c 'import ipaddress,sys; print(ipaddress.ip_interface(sys.argv[1]).network)' "$gwip" 2>/dev/null) || net=""
+  gwip="${gwip%%/*}"
+  [ -n "$net" ] || { echo "genkan: cannot work out the island network from $gwip"; return 1; }
+  ok "the island is up on kids0 ($net, gateway $gwip)"
+
+  # 1. Anything else serving addresses or names on the kids' wire? This is the
+  # mistake that matters: an access point with its own DHCP still switched on.
+  # `out=$(cmd); rc=$?` would EXIT here, not set rc: this script runs under
+  # set -e, and a failing command substitution in an assignment is fatal. The
+  # whole point of this call is that a non-zero answer is the good one.
+  rc=0
+  out=$(docker exec "$GW" timeout 8 tcpdump -Z root -ni kids0 -c 1 -q \
+          "(udp src port 67 and not src host $gwip) or (ip and not net $net and not net 224.0.0.0/4 and not host 255.255.255.255 and udp src port 53)" 2>&1) || rc=$?
+  if [ "$rc" = 0 ]; then
+    bad=$(printf '%s\n' "$out" | grep -v '^tcpdump:\|listening on\|packet' | head -1 || true)
+    no "something else is serving DHCP or DNS on this wire"
+    note "heard: $bad"
+    note "that is nearly always an access point with its own DHCP server left on."
+    note "docs/setup/ap-hg659.md step 4. Never switch the segment guard off to get past it."
+  elif [ "$rc" = 124 ]; then
+    ok "nothing else is serving DHCP or DNS on this wire (listened 8 seconds)"
+  else
+    no "could not listen on the wire (tcpdump said: $(printf '%s\n' "$out" | head -1 || true))"
+    note "this check cannot run, which is not the same as passing."
+  fi
+
+  # 2. The access point itself: filed as infrastructure, and answering.
+  n=$(psqll "SELECT count(*) FROM devices WHERE kind='ap' AND is_active" 2>/dev/null)
+  if [ "${n:-0}" = 0 ]; then
+    no "no access point is filed as infrastructure"
+    note "find its MAC in 'genkan devices', then: genkan infra <mac>"
+    note "until you do, a bedtime or the whole house cut can switch off your own wifi."
+  else
+    ok "$n access point(s) filed as infrastructure, so no control can cut them"
+    psqll "SELECT coalesce(label,hostname,'(unnamed)')||'|'||coalesce(host(reserved_ip),'')
+             FROM devices WHERE kind='ap' AND is_active" 2>/dev/null | (while IFS='|' read -r nm ip; do
+      [ -n "$ip" ] || { printf '        %s\n' "$nm has no address yet, so it cannot be checked"; continue; }
+      if docker exec "$GW" ping -c1 -W2 "$ip" >/dev/null 2>&1; then
+        printf '  OK    %s answers at %s\n' "$nm" "$ip"
+      else
+        printf '        %s does not answer at %s. That is fine if it has no management address,\n' "$nm" "$ip"
+        printf '        and a problem if you set one: check it is still %s.\n' "$ip"
+      fi
+    done) || true
+  fi
+
+  # 3. Is the wifi actually carrying anybody? A lease is the proof.
+  n=$(psqll "SELECT count(*) FROM dhcp_leases WHERE active" 2>/dev/null)
+  if [ "${n:-0}" = 0 ]; then
+    no "no device has taken an address on the island"
+    note "join a phone to the kids' wifi, then run this again. If it joins but never"
+    note "gets an address, docs/setup/ap-hg659.md has the order to work through."
+  else
+    ok "$n device(s) hold an address on the island"
+  fi
+
+  # 4. Everything on a yellow port is on the island. Say so once, plainly.
+  n=$(psqll "SELECT count(*) FROM devices WHERE kind='ap' AND is_active AND child_id IS NOT NULL" 2>/dev/null)
+  [ "${n:-0}" = 0 ] || no "an access point is assigned to a child; run 'genkan infra <mac>' to undo that"
+
+  echo
+  if [ "$fails" = 0 ]; then
+    echo "  Everything this can check is in order. What it cannot check: whether the"
+    echo "  cable is in a yellow port rather than the blue one (a single address for"
+    echo "  every device is the symptom), and the access point's admin password."
+  else
+    echo "  $fails thing(s) to fix. The lines marked FAIL say what to do."
+  fi
+  [ "$fails" = 0 ]
+}
+
 allow_sync(){
   local d ip got list="" ips resolved failed=""
   have_nft || { echo "genkan: firewall not loaded yet, nothing to sync"; return 0; }
@@ -799,6 +892,7 @@ case "${1:-}" in
   # are passed straight through so there is one control surface.
   schedule) shift; exec "$(dirname "$0")/genkan-schedule" "$@";;
   allow-status) if have_nft; then nftx list set $TABLE $ALLOWSET | sed -n 's/.*elements = //p'; else echo "(firewall not loaded)"; fi;;
+  ap-check) ap_check;;
   status) psqll "SELECT c.name||': '||string_agg(cs.category||CASE WHEN cs.blocked THEN '' ELSE ' (slow)' END,
                         ', ' ORDER BY cs.category)
                  FROM category_state cs JOIN children c ON c.id=cs.child_id

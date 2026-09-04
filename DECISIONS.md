@@ -2210,6 +2210,39 @@ needs a real registry running before the answer is worth anything.
 Nothing in this entry is built beyond the quiz package. `docs/COMMUNITY.md`
 ends with the table that says so.
 
+## The kids' wifi comes from a router somebody already owns
+
+**2026-09-04.** The access point is the second thing everybody gets wrong
+(the first is which cable goes where), and buying one is a cost that stops
+people trying Genkan at all. So the guide is written for a specific machine
+that is already in thousands of New Zealand drawers, the Huawei HG659 several
+ISPs handed out: docs/setup/ap-hg659.md. Seven steps, each with why it
+matters, and a closing section that generalises them to any old router.
+
+The load-bearing idea is one sentence: **it is a switch with an aerial, not a
+router.** Its DHCP goes off, it gets a static address inside the island, and
+the uplink goes into a LAN port. The WAN port stays empty forever, because
+anything plugged in there is routed and NATted by that box, which would put a
+second router between the children and Genkan and hide every device behind
+one address. Naming the symptom ("every device shows as one address") is
+worth more than naming the rule.
+
+`genkan ap-check` proves the result from the box and changes nothing. Its
+DHCP listen is the segment guard's own filter on purpose, so the two can
+never disagree about what is on the wire, with one adaptation: the guard runs
+before the island is up, and by the time a parent runs the check our own
+AdGuard is serving, so our own address is excluded or it would trip on
+itself. It ends by saying what it cannot check, which is the part that keeps
+it honest: whether the cable is in a LAN port rather than the WAN port, and
+the access point's admin password.
+
+That password is a real limit and the guide says so out loud. A child's
+device sits on the same wire as the access point, so its admin page is
+reachable without passing through Genkan and nothing here can block it. It is
+not a way around the filter, because there is no second path to the internet,
+but a child who signs in can change the wifi password or reset the box. A
+password that is not the one printed on the label is the whole defence.
+
 ## A minute of budget means the device was actually there
 
 **2026-09-02, evening.** A child was cut off as out of time on a day he had
