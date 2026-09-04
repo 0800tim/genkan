@@ -938,7 +938,35 @@ case "${1:-}" in
     d="$(dirname "$0")/genkan-adguard-clients"; [ -x "$d" ] && "$d" >/dev/null 2>&1 || true
     adguard_sync
     echo "genkan: assigned $n device(s) to $3 as '$4' (filtering tier applied)";;
-  infra) key="${2:?mac}"; ck_addr "$key"; psqll "UPDATE devices SET kind='ap', child_id=NULL, notes='infrastructure, do not assign or block' WHERE mac::text='$key'" >/dev/null; echo "genkan: marked $key as infrastructure";;
+  infra)
+    # An access point is usually given a STATIC address (docs/setup/ap-hg659.md
+    # step 5), so it never asks for a lease and genkan-devicescan, which reads
+    # the lease list, never sees it. That is why this can create the row: an
+    # address typed by a parent is a deliberate act. It is deliberately NOT
+    # automatic, because devices.reserved_ip feeds the kids_known set, and
+    # anything in that set is allowed on the island. Auto-adding whatever
+    # appears on the wire would hand access to exactly the static-IP dodge
+    # kids_known exists to stop.
+    key="${2:?mac}"; ck_addr "$key"; ip4="${3:-}"; lbl="${4:-access point}"
+    if [ -n "$ip4" ]; then ck_addr "$ip4"; ck_text "$lbl"; fi
+    n=$(psqll "UPDATE devices SET kind='ap', category='infra', child_id=NULL,
+                 label=COALESCE(NULLIF('$lbl','access point'), label),
+                 reserved_ip=COALESCE(NULLIF('$ip4','')::inet, reserved_ip),
+                 notes='infrastructure, do not assign or block'
+               WHERE mac::text='$key' RETURNING 1" | grep -c 1 || true)
+    if [ "${n:-0}" = 0 ]; then
+      [ -n "$ip4" ] || { echo "genkan: no device with the MAC $key is known yet."; \
+                         echo "  It has a static address, so it never asked for a lease and was never seen."; \
+                         echo "  Add it deliberately:  genkan infra $key <its-address> \"Its name\""; exit 1; }
+      psqll "INSERT INTO devices(mac, label, kind, category, reserved_ip, is_active, first_seen, last_seen, notes)
+             VALUES('$key','$lbl','ap','infra','$ip4',true,now(),now(),'infrastructure, do not assign or block')
+             ON CONFLICT (mac) DO UPDATE SET kind='ap', category='infra', reserved_ip=EXCLUDED.reserved_ip" >/dev/null
+      audit device "$lbl" "added as infrastructure"
+      echo "genkan: added $key as infrastructure at $ip4 ($lbl)."
+      echo "  That address is now allowed on the island, which is what an access point needs."
+    else
+      echo "genkan: $key is infrastructure${ip4:+ at $ip4}. No control can switch it off."
+    fi;;
   person) case "${2:-}" in
     add) ck_name "${3:?name}"; ck_name "${4:?role}"; tier="${5:-}"; role=$(canon_role "$4")
          # Default filter level from the role. A visiting child gets 'standard'

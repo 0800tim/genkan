@@ -137,18 +137,29 @@ up. If instead it says the guard **tripped**, its DHCP server is still on: go
 back to step 4. The guard is doing its job. Never switch it off to get past
 this.
 
-**8. Tell Genkan what the router is.** Once a device has joined the kids' wifi
-and the island is serving:
+**8. Tell Genkan what the router is.** Once the island is serving:
 
 ```bash
-genkan devices          # find the Huawei's MAC address in the list
-genkan infra <its-mac>  # file it as infrastructure
-genkan ap-check         # prove the whole setup from the box
+genkan infra <its-mac> 192.168.60.2 "Kids access point"
+genkan ap-check
 ```
 
-`genkan infra` matters more than it looks. It marks the router as
-infrastructure, so a bedtime, a dinner pause or the whole house cut can never
-switch off your own access point and take the island down with it.
+The MAC address is printed on the label underneath, and it is the one that
+starts with the same six digits as the router's own. Give the address and a
+name, because **the router will not appear in `genkan devices` on its own**:
+you gave it a static address in step 5, so it never asks Genkan for one, and
+the device list is built from the addresses Genkan hands out. That is why
+this command takes the address rather than looking it up.
+
+Adding it is deliberate on purpose. The address you type is allowed onto the
+island, which is exactly what an access point needs and exactly what a
+child's device must not get for free. Genkan will not add something it merely
+saw on the wire, because the firewall's list of known addresses is what stops
+a child setting a static address to dodge their own budget.
+
+`genkan infra` also marks the router as infrastructure, so a bedtime, a
+dinner pause or the whole house cut can never switch off your own access
+point and take the island down with it.
 
 ## What good looks like
 
